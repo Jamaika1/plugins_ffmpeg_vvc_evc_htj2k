@@ -41,10 +41,10 @@
 extern "C" {
 #endif
 
-#if defined(__GNUC__) && defined(CELT_BUILD)
+#if defined(CELT_BUILD)
+#define EXPORT __declspec(dllexport)
+#elif defined(__GNUC__) && !defined(_WIN32)
 #define EXPORT __attribute__ ((visibility ("default")))
-#elif defined(WIN32)
-#define EXPORT //__declspec(dllexport)
 #else
 #define EXPORT
 #endif
