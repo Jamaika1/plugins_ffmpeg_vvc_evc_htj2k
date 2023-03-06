@@ -5,21 +5,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -32,7 +32,7 @@
  * INCLUDING NEGLIGENCE OR OTHERWISE ARISING IN ANY WAY OUT OF THE USE OF THIS
  ****************************************************************************/
 
-/** 
+/**
  * \ingroup Control
  * \file
  * This file defines the public API of Kvazaar when used as a library.
@@ -47,10 +47,10 @@ extern "C" {
 #endif
 
 #if defined(KVZ_DLL_EXPORTS)
-  #if !defined(PIC)
+  //#if !defined(PIC)
     // Building static kvazaar library.
-    #define KVZ_PUBLIC
-  #elif defined(_WIN32) || defined(__CYGWIN__)
+    //#define KVZ_PUBLIC
+  #if defined(_WIN32) || defined(__CYGWIN__)
     // Building kvazaar DLL on Windows.
     #define KVZ_PUBLIC __declspec(dllexport)
   #elif defined(__GNUC__)
@@ -233,7 +233,7 @@ enum kvz_sao {
 enum kvz_scalinglist {
   KVZ_SCALING_LIST_OFF = 0,
   KVZ_SCALING_LIST_CUSTOM = 1,
-  KVZ_SCALING_LIST_DEFAULT = 2,  
+  KVZ_SCALING_LIST_DEFAULT = 2,
 };
 
 enum kvz_rc_algorithm
@@ -442,8 +442,8 @@ typedef struct kvz_config
   uint8_t early_skip;
 
   /** \brief Enable Machine learning CU depth prediction for Intra encoding. */
-  uint8_t ml_pu_depth_intra;  
-  
+  uint8_t ml_pu_depth_intra;
+
   /** \brief Used for partial frame encoding*/
   struct {
     uint8_t startCTU_x;
@@ -775,7 +775,7 @@ typedef struct kvz_api {
    * the bitstream, length of the bitstream, the reconstructed frame, the
    * original frame and frame info in data_out, len_out, pic_out, src_out and
    * info_out, respectively. Otherwise, set the output parameters to NULL.
-   * 
+   *
    * Region of interest (ROI) / delta QP map can be specified in the input
    * picture's ROI field but only when a ROI file is not used.
    *
