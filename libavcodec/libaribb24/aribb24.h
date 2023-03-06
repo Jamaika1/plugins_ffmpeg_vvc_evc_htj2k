@@ -32,24 +32,24 @@
 #if defined _WIN32 || defined __CYGWIN__
   #ifdef ARIBB24_DLL
     #ifdef ARIBB24_BUILD_DLL
-      #ifdef __GNUC__
-        #define ARIB_API __attribute__ ((dllexport))
-      #else
+      //#ifdef __GNUC__
+        //#define ARIB_API __attribute__ ((dllexport))
+      //#else
         #define ARIB_API __declspec(dllexport)
-      #endif
+      //#endif
     #else
-      #ifdef __GNUC__
-        #define ARIB_API __attribute__ ((dllimport))
-      #else
+      //#ifdef __GNUC__
+        //#define ARIB_API __attribute__ ((dllimport))
+      //#else
         #define ARIB_API __declspec(dllimport)
-      #endif
+      //#endif
     #endif
   #else
-    #if __GNUC__ >= 4
-      #define ARIB_API __attribute__ ((visibility ("default")))
-    #else
+    //#if __GNUC__ >= 4
+      //#define ARIB_API __attribute__ ((visibility ("default")))
+    //#else
       #define ARIB_API
-    #endif
+    //#endif
   #endif
   #define DLL_LOCAL
 #else
@@ -61,7 +61,7 @@
 #endif
 
 typedef struct arib_instance_private_t arib_instance_private_t;
-typedef struct arib_instance_t 
+typedef struct arib_instance_t
 {
     bool b_generate_drcs;
     bool b_use_private_conv;
@@ -73,7 +73,7 @@ typedef struct arib_decoder_t arib_decoder_t;
 typedef void(* arib_messages_callback_t)(void *, const char *);
 
 ARIB_API arib_instance_t * arib_instance_new( void * );
-ARIB_API void arib_instance_destroy( arib_instance_t * ); 
+ARIB_API void arib_instance_destroy( arib_instance_t * );
 
 ARIB_API void arib_set_base_path( arib_instance_t *, const char * );
 
