@@ -20,7 +20,11 @@
 #ifndef JXL_EXPORT_H_
 #define JXL_EXPORT_H_
 
+#ifdef JXL_DLL_EXPORTS
+#define JXL_EXPORT __declspec(dllexport)
+#else
 #define JXL_EXPORT
+#endif
 #define JXL_DEPRECATED __attribute__((__deprecated__))
 
 #endif /* JXL_EXPORT_H_ */
