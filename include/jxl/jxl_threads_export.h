@@ -20,6 +20,10 @@
 #ifndef JXL_THREADS_EXPORT_H_
 #define JXL_THREADS_EXPORT_H_
 
+#ifdef JXL_DLL_EXPORTS
+#define JXL_THREADS_EXPORT __declspec(dllexport)
+#else
 #define JXL_THREADS_EXPORT
+#endif
 
 #endif /* JXL_THREADS_EXPORT_H_ */
