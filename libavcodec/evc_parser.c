@@ -44,8 +44,7 @@ typedef struct RefPicListStruct {
 } RefPicListStruct;
 
 // chromaQP table structure to be signalled in SPS
-typedef struct ChromaQpTable
-{
+typedef struct ChromaQpTable {
     int chroma_qp_table_present_flag;       // u(1)
     int same_qp_table_for_chroma;           // u(1)
     int global_offset_flag;                 // u(1)
@@ -55,8 +54,7 @@ typedef struct ChromaQpTable
 } ChromaQpTable;
 
 // Hypothetical Reference Decoder (HRD) parameters, part of VUI
-typedef struct HRDParameters
-{
+typedef struct HRDParameters {
     int cpb_cnt_minus1;                             // ue(v)
     int bit_rate_scale;                             // u(4)
     int cpb_size_scale;                             // u(4)
@@ -70,8 +68,7 @@ typedef struct HRDParameters
 } HRDParameters;
 
 // video usability information (VUI) part of SPS
-typedef struct VUIParameters
-{
+typedef struct VUIParameters {
     int aspect_ratio_info_present_flag;             // u(1)
     int aspect_ratio_idc;                           // u(8)
     int sar_width;                                  // u(16)
@@ -349,29 +346,25 @@ static int get_temporal_id(const uint8_t *bits, int bits_size, AVCodecContext *a
 }
 
 // @see ISO_IEC_23094-1 (7.3.7 Reference picture list structure syntax)
-static int ref_pic_list_struct(GetBitContext* gb, RefPicListStruct* rpl)
+static int ref_pic_list_struct(GetBitContext *gb, RefPicListStruct *rpl)
 {
     uint32_t delta_poc_st, strp_entry_sign_flag = 0;
     rpl->ref_pic_num = get_ue_golomb(gb);
-    if (rpl->ref_pic_num > 0)
-    {
+    if (rpl->ref_pic_num > 0) {
         delta_poc_st = get_ue_golomb(gb);
 
         rpl->ref_pics[0] = delta_poc_st;
-        if (rpl->ref_pics[0] != 0)
-        {
+        if (rpl->ref_pics[0] != 0) {
             strp_entry_sign_flag = get_bits(gb, 1);
 
             rpl->ref_pics[0] *= 1 - (strp_entry_sign_flag << 1);
         }
     }
 
-    for (int i = 1; i < rpl->ref_pic_num; ++i)
-    {
+    for (int i = 1; i < rpl->ref_pic_num; ++i) {
         delta_poc_st = get_ue_golomb(gb);
-        if (delta_poc_st != 0) {
+        if (delta_poc_st != 0)
             strp_entry_sign_flag = get_bits(gb, 1);
-        }
         rpl->ref_pics[i] = rpl->ref_pics[i - 1] + delta_poc_st * (1 - (strp_entry_sign_flag << 1));
     }
 
@@ -379,12 +372,12 @@ static int ref_pic_list_struct(GetBitContext* gb, RefPicListStruct* rpl)
 }
 
 // @see  ISO_IEC_23094-1 (E.2.2 HRD parameters syntax)
-static int hrd_parameters(GetBitContext* gb, HRDParameters* hrd) {
+static int hrd_parameters(GetBitContext *gb, HRDParameters *hrd)
+{
     hrd->cpb_cnt_minus1 = get_ue_golomb(gb);
     hrd->bit_rate_scale = get_bits(gb, 4);
     hrd->cpb_size_scale = get_bits(gb, 4);
-    for (int SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++)
-    {
+    for (int SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++) {
         hrd->bit_rate_value_minus1[SchedSelIdx] = get_ue_golomb(gb);
         hrd->cpb_size_value_minus1[SchedSelIdx] = get_ue_golomb(gb);
         hrd->cbr_flag[SchedSelIdx] = get_bits(gb, 1);
@@ -398,38 +391,32 @@ static int hrd_parameters(GetBitContext* gb, HRDParameters* hrd) {
 }
 
 // @see  ISO_IEC_23094-1 (E.2.1 VUI parameters syntax)
-static int vui_parameters(GetBitContext* gb, VUIParameters* vui) {
+static int vui_parameters(GetBitContext *gb, VUIParameters *vui)
+{
     vui->aspect_ratio_info_present_flag = get_bits(gb, 1);
-    if (vui->aspect_ratio_info_present_flag)
-    {
+    if (vui->aspect_ratio_info_present_flag) {
         vui->aspect_ratio_idc = get_bits(gb, 8);
-        if (vui->aspect_ratio_idc == EXTENDED_SAR)
-        {
+        if (vui->aspect_ratio_idc == EXTENDED_SAR) {
             vui->sar_width = get_bits(gb, 16);
             vui->sar_height = get_bits(gb, 16);
         }
     }
     vui->overscan_info_present_flag = get_bits(gb, 1);
     if (vui->overscan_info_present_flag)
-    {
         vui->overscan_appropriate_flag = get_bits(gb, 1);
-    }
     vui->video_signal_type_present_flag = get_bits(gb, 1);
-    if (vui->video_signal_type_present_flag)
-    {
+    if (vui->video_signal_type_present_flag) {
         vui->video_format = get_bits(gb, 3);
         vui->video_full_range_flag = get_bits(gb, 1);
         vui->colour_description_present_flag = get_bits(gb, 1);
-        if (vui->colour_description_present_flag)
-        {
+        if (vui->colour_description_present_flag) {
             vui->colour_primaries = get_bits(gb, 8);
             vui->transfer_characteristics = get_bits(gb, 8);
             vui->matrix_coefficients = get_bits(gb, 8);
         }
     }
     vui->chroma_loc_info_present_flag = get_bits(gb, 1);
-    if (vui->chroma_loc_info_present_flag)
-    {
+    if (vui->chroma_loc_info_present_flag) {
         vui->chroma_sample_loc_type_top_field = get_ue_golomb(gb);
         vui->chroma_sample_loc_type_bottom_field = get_ue_golomb(gb);
     }
@@ -438,26 +425,19 @@ static int vui_parameters(GetBitContext* gb, VUIParameters* vui) {
     vui->field_seq_flag = get_bits(gb, 1);
 
     vui->timing_info_present_flag = get_bits(gb, 1);
-    if (vui->timing_info_present_flag)
-    {
+    if (vui->timing_info_present_flag) {
         vui->num_units_in_tick = get_bits(gb, 32);
         vui->time_scale = get_bits(gb, 32);
         vui->fixed_pic_rate_flag = get_bits(gb, 1);
     }
     vui->nal_hrd_parameters_present_flag = get_bits(gb, 1);
     if (vui->nal_hrd_parameters_present_flag)
-    {
         hrd_parameters(gb, &vui->hrd_parameters);
-    }
     vui->vcl_hrd_parameters_present_flag = get_bits(gb, 1);
     if (vui->vcl_hrd_parameters_present_flag)
-    {
         hrd_parameters(gb, &vui->hrd_parameters);
-    }
     if (vui->nal_hrd_parameters_present_flag || vui->vcl_hrd_parameters_present_flag)
-    {
         vui->low_delay_hrd_flag = get_bits(gb, 1);
-    }
     vui->pic_struct_present_flag = get_bits(gb, 1);
     vui->bitstream_restriction_flag = get_bits(gb, 1);
     if (vui->bitstream_restriction_flag) {
@@ -568,9 +548,9 @@ static EVCParserSPS *parse_sps(const uint8_t *bs, int bs_size, EVCParserContext 
             sps->log2_ref_pic_gap_length = get_ue_golomb(&gb);
     }
 
-    if (!sps->sps_rpl_flag) {
+    if (!sps->sps_rpl_flag)
         sps->max_num_tid0_ref_pics = get_ue_golomb(&gb);
-    } else {
+    else {
         sps->sps_max_dec_pic_buffering_minus1 = get_ue_golomb(&gb);
         sps->long_term_ref_pic_flag = get_bits(&gb, 1);
         sps->rpl1_same_as_rpl0_flag = get_bits(&gb, 1);
@@ -579,8 +559,7 @@ static EVCParserSPS *parse_sps(const uint8_t *bs, int bs_size, EVCParserContext 
         for (int i = 0; i < sps->num_ref_pic_list_in_sps[0]; ++i)
             ref_pic_list_struct(&gb, &sps->rpls[0][i]);
 
-        if (!sps->rpl1_same_as_rpl0_flag)
-        {
+        if (!sps->rpl1_same_as_rpl0_flag) {
             sps->num_ref_pic_list_in_sps[1] = get_ue_golomb(&gb);
             for (int i = 0; i < sps->num_ref_pic_list_in_sps[1]; ++i)
                 ref_pic_list_struct(&gb, &sps->rpls[1][i]);
@@ -596,19 +575,15 @@ static EVCParserSPS *parse_sps(const uint8_t *bs, int bs_size, EVCParserContext 
         sps->picture_crop_bottom_offset = get_ue_golomb(&gb);
     }
 
-    if (sps->chroma_format_idc != 0)
-    {
+    if (sps->chroma_format_idc != 0) {
         sps->chroma_qp_table_struct.chroma_qp_table_present_flag = get_bits(&gb, 1);
 
-        if (sps->chroma_qp_table_struct.chroma_qp_table_present_flag)
-        {
+        if (sps->chroma_qp_table_struct.chroma_qp_table_present_flag) {
             sps->chroma_qp_table_struct.same_qp_table_for_chroma = get_bits(&gb, 1);
             sps->chroma_qp_table_struct.global_offset_flag = get_bits(&gb, 1);
-            for (int i = 0; i < (sps->chroma_qp_table_struct.same_qp_table_for_chroma ? 1 : 2); i++)
-            {
+            for (int i = 0; i < (sps->chroma_qp_table_struct.same_qp_table_for_chroma ? 1 : 2); i++) {
                 sps->chroma_qp_table_struct.num_points_in_qp_table_minus1[i] = get_ue_golomb(&gb);;
-                for (int j = 0; j <= sps->chroma_qp_table_struct.num_points_in_qp_table_minus1[i]; j++)
-                {
+                for (int j = 0; j <= sps->chroma_qp_table_struct.num_points_in_qp_table_minus1[i]; j++) {
                     sps->chroma_qp_table_struct.delta_qp_in_val_minus1[i][j] = get_bits(&gb, 6);
                     sps->chroma_qp_table_struct.delta_qp_out_val[i][j] = get_se_golomb(&gb);
                 }
@@ -817,15 +792,6 @@ static EVCParserSliceHeader *parse_slice_header(const uint8_t *bs, int bs_size, 
     return sh;
 }
 
-/**
- *
- * Parse NAL unit
- *
- * @param s parser context
- * @param buf buffer with field/frame data
- * @param buf_size size of the buffer
- * @param avctx codec context
- */
 static int parse_nal_unit(AVCodecParserContext *s, const uint8_t *buf,
                           int buf_size, AVCodecContext *avctx)
 {
@@ -887,7 +853,7 @@ static int parse_nal_unit(AVCodecParserContext *s, const uint8_t *buf,
         SubGopLength = (int)pow(2.0, sps->log2_sub_gop_length);
         avctx->gop_size = SubGopLength;
 
-        avctx->delay = (sps->sps_max_dec_pic_buffering_minus1)?sps->sps_max_dec_pic_buffering_minus1-1:SubGopLength+sps->max_num_tid0_ref_pics-1;
+        avctx->delay = (sps->sps_max_dec_pic_buffering_minus1) ? sps->sps_max_dec_pic_buffering_minus1 - 1 : SubGopLength + sps->max_num_tid0_ref_pics - 1;
 
         if (sps->profile_idc == 1) avctx->profile = FF_PROFILE_EVC_MAIN;
         else avctx->profile = FF_PROFILE_EVC_BASELINE;
@@ -895,25 +861,25 @@ static int parse_nal_unit(AVCodecParserContext *s, const uint8_t *buf,
         ev->time_base = avctx->time_base.den;
 
         switch (sps->chroma_format_idc) {
-            case 0: /* YCBCR400_10LE */
-                av_log(avctx, AV_LOG_ERROR, "YCBCR400_10LE: Not supported chroma format\n");
-                s->format = AV_PIX_FMT_GRAY10LE;
-                return -1;
-            case 1: /* YCBCR420_10LE */
-                s->format = AV_PIX_FMT_YUV420P10LE;
-                break;
-            case 2: /* YCBCR422_10LE */
-                av_log(avctx, AV_LOG_ERROR, "YCBCR422_10LE: Not supported chroma format\n");
-                s->format = AV_PIX_FMT_YUV422P10LE;
-                return -1;
-            case 3: /* YCBCR444_10LE */
-                av_log(avctx, AV_LOG_ERROR, "YCBCR444_10LE: Not supported chroma format\n");
-                s->format = AV_PIX_FMT_YUV444P10LE;
-                return -1;
-            default:
-                s->format = AV_PIX_FMT_NONE;
-                av_log(avctx, AV_LOG_ERROR, "Unknown supported chroma format\n");
-                return -1;
+        case 0: /* YCBCR400_10LE */
+            av_log(avctx, AV_LOG_ERROR, "YCBCR400_10LE: Not supported chroma format\n");
+            s->format = AV_PIX_FMT_GRAY10LE;
+            return -1;
+        case 1: /* YCBCR420_10LE */
+            s->format = AV_PIX_FMT_YUV420P10LE;
+            break;
+        case 2: /* YCBCR422_10LE */
+            av_log(avctx, AV_LOG_ERROR, "YCBCR422_10LE: Not supported chroma format\n");
+            s->format = AV_PIX_FMT_YUV422P10LE;
+            return -1;
+        case 3: /* YCBCR444_10LE */
+            av_log(avctx, AV_LOG_ERROR, "YCBCR444_10LE: Not supported chroma format\n");
+            s->format = AV_PIX_FMT_YUV444P10LE;
+            return -1;
+        default:
+            s->format = AV_PIX_FMT_NONE;
+            av_log(avctx, AV_LOG_ERROR, "Unknown supported chroma format\n");
+            return -1;
         }
     } else if (nalu_type == EVC_PPS_NUT) {
         EVCParserPPS *pps;
@@ -941,21 +907,21 @@ static int parse_nal_unit(AVCodecParserContext *s, const uint8_t *buf,
         }
 
         switch (sh->slice_type) {
-            case EVC_SLICE_TYPE_B: {
-                s->pict_type =  AV_PICTURE_TYPE_B;
-                break;
-            }
-            case EVC_SLICE_TYPE_P: {
-                s->pict_type =  AV_PICTURE_TYPE_P;
-                break;
-            }
-            case EVC_SLICE_TYPE_I: {
-                s->pict_type =  AV_PICTURE_TYPE_I;
-                break;
-            }
-            default: {
-                s->pict_type =  AV_PICTURE_TYPE_NONE;
-            }
+        case EVC_SLICE_TYPE_B: {
+            s->pict_type =  AV_PICTURE_TYPE_B;
+            break;
+        }
+        case EVC_SLICE_TYPE_P: {
+            s->pict_type =  AV_PICTURE_TYPE_P;
+            break;
+        }
+        case EVC_SLICE_TYPE_I: {
+            s->pict_type =  AV_PICTURE_TYPE_I;
+            break;
+        }
+        default: {
+            s->pict_type =  AV_PICTURE_TYPE_NONE;
+        }
         }
 
         s->key_frame = (nalu_type == EVC_IDR_NUT) ? 1 : 0;
@@ -1039,20 +1005,12 @@ static int parse_nal_unit(AVCodecParserContext *s, const uint8_t *buf,
     return 0;
 }
 
-/**
- * @brief Reconstruct NAL Unit from incomplete data
- *
- * @param[in]  s parser context
- * @param[in]  data pointer to the buffer containg new data for current NALU prefix
- * @param[in]  data_size amount of bytes to read from the input buffer
- * @param[out] nalu_prefix assembled NALU length
- * @param[in ] avctx codec context
- *
- * Assemble the NALU prefix storing NALU length if it has been split between 2 subsequent buffers (input chunks) incoming to the parser.
- * This is the case when the buffer size is not enough for the buffer to store the whole NAL unit prefix.
- * In this case, we have to get part of the prefix from the previous buffer and assemble it with the rest from the current buffer.
- * Then we'll be able to read NAL unit size.
- */
+// Reconstruct NAL Unit from incomplete data
+//
+// Assemble the NALU prefix storing NALU length if it has been split between 2 subsequent buffers (input chunks) incoming to the parser.
+// This is the case when the buffer size is not enough for the buffer to store the whole NAL unit prefix.
+// In this case, we have to get part of the prefix from the previous buffer and assemble it with the rest from the current buffer.
+// Then we'll be able to read NAL unit size.
 static int evc_assemble_nalu_prefix(AVCodecParserContext *s, const uint8_t *data, int data_size,
                                     uint8_t *nalu_prefix, AVCodecContext *avctx)
 {
@@ -1061,50 +1019,6 @@ static int evc_assemble_nalu_prefix(AVCodecParserContext *s, const uint8_t *data
 
     // 1. pc->buffer contains previously read bytes of NALU prefix
     // 2. buf contains the rest of NAL unit prefix bytes
-    //
-    // ~~~~~~~
-    // EXAMPLE
-    // ~~~~~~~
-    //
-    // In the following example we assumed that the number of already read NAL Unit prefix bytes is equal 1
-    //
-    // ----------
-    // pc->buffer -> conatins already read bytes
-    // ----------
-    //              __ pc->index == 1
-    //             |
-    //             V
-    // -------------------------------------------------------
-    // |   0   |   1   |   2   |   3   |   4   | ... |   N   |
-    // -------------------------------------------------------
-    // |  0x00 |  0xXX |  0xXX |  0xXX |  0xXX | ... |  0xXX |
-    // -------------------------------------------------------
-    // |  PREF |       |       |       |       | ... |       |
-    // -------------------------------------------------------
-    //
-    // ----------
-    // buf -> contains newly read bytes
-    // ----------
-    // -------------------------------------------------------
-    // |   0   |   1   |   2   |   3   |   4   | ... |   N   |
-    // -------------------------------------------------------
-    // |  0x00 |  0x00 |  0x3C |  0xXX |  0xXX | ... |  0xXX |
-    // -------------------------------------------------------
-    // |  PREF |  PREF |  PREF |       |       | ... |       |
-    // -------------------------------------------------------
-    //
-    // ----------
-    // nalu_prefix
-    // ----------
-    // ---------------------------------
-    // |   0   |   1   |   2   |   3   |
-    // ---------------------------------
-    // |  0x00 |  0x00 |  0x00 |  0x3C |
-    // ---------------------------------
-    // | NALU LENGTH                   |
-    // ---------------------------------
-    // NAL Unit lenght =  60 (0x0000003C)
-    //
 
     for (int i = 0; i < EVC_NALU_LENGTH_PREFIX_SIZE; i++) {
         if (i < pc->index)
@@ -1116,20 +1030,11 @@ static int evc_assemble_nalu_prefix(AVCodecParserContext *s, const uint8_t *data
     return 0;
 }
 
-/**
- * @brief Reconstruct NALU from incomplete data
- * Assemble NALU if it is split between multiple buffers
- *
- * This is the case when buffer size is not enough for the buffer to store NAL unit.
- * In this case, we have to get parts of the NALU from the previous buffers stored in pc->buffer and assemble it with the rest from the current buffer.
- *
- * @param[in] s parser context
- * @param[in] data pointer to the buffer containg new data for current NALU
- * @param[in] data_size amount of bytes to read from the input buffer
- * @param[out] nalu pointer to the memory block for storing assembled NALU
- * @param[in] nalu_size assembled NALU length
- * @param[in ] avctx codec context
- */
+// Reconstruct NALU from incomplete data
+// Assemble NALU if it is split between multiple buffers
+//
+// This is the case when the buffer size is not enough to store the entire NAL unit.
+// In this scenario, we must retrieve parts of the NALU from the previous buffers stored in pc->buffer and assemble them with the remainder from the current buffer.
 static int evc_assemble_nalu(AVCodecParserContext *s, const uint8_t *data, int data_size,
                              uint8_t *nalu, int nalu_size,
                              AVCodecContext *avctx)
@@ -1137,64 +1042,20 @@ static int evc_assemble_nalu(AVCodecParserContext *s, const uint8_t *data, int d
     EVCParserContext *ctx = s->priv_data;
     ParseContext     *pc = &ctx->pc;
 
-    // 1. pc->buffer contains previously read bytes of the current NALU and previous NALUs that belongs to the current Access Unit.
+    // 1. pc->buffer contains previously read bytes of the current NALU and previous NALUs that belong to the current Access Unit.
     //
-    //    - prevoiusly read bytes are data that came with the previous incoming data chunks
+    //    - previously read bytes are data that came with the previous incoming data chunks.
     //
-    //    - pc->buffer contains bytes of the current NALU that have been already read while processing previous chunks of incoming data
-    //      and already read bytes of previous NALUs belonging to the same Access Unit.
+    //    - pc->buffer contains bytes of the current NALU that have already been read while processing previous chunks of incoming data,
+    //      as well as already read bytes of previous NALUs belonging to the same Access Unit.
     //
-    //    - The ctx->bytes_read is the index of the first element of the current NALU int the pc->buffer.
+    //    - ctx->bytes_read is the index of the the first element of the current NALU int the pc->buffer.
     //    - The pc->index is the index of the element located right next to the last element of the current NALU in the pc->buffer.
     //    - The elements of pc->buffer located before ctx->bytes_read index contain previously read NALUs of the current Access Unit.
     //
     // 2. buf contains the rest of the NAL unit bytestime_base
     //
     //    - ctx->to_read number of bytes to read from buf (the index of the element right next to the last element to read)
-    //
-    // ~~~~~~~
-    // EXAMPLE
-    // ~~~~~~~
-    //
-    // In the following example we assumed that the number of already read NAL Unit bytes is equal 1024-2
-    //
-    // ----------
-    // pc->buffer -> conatins already read bytes from prevois incoming data chunks
-    // ----------
-    //                       __ctx->bytes_read == 2                               __ pc->index == 1024
-    //                      |                                                    |
-    //                      V                                                    V
-    // -------------------------------------------------------------------------------
-    // |   0   |   1   |   2   |   3   |   4   |   5   |   6   | ... |  1023 |  1024 |
-    // -------------------------------------------------------------------------------
-    // |  0x00 |  0x01 |  0x02 |  0x03 |  0x04 |  0x05 |  0x06 | ... |  0xA0 |  0xA1 |
-    // -------------------------------------------------------------------------------
-    // |       |       |  NALU |  NALU |  NALU |  NALU |  NALU | ... |  NALU |       |
-    // -------------------------------------------------------------------------------
-    //
-    // ----------
-    // buf -> contains newly read bytes
-    // ----------
-    //                              __ctx->to_read == 3 (index of the element right next to last one)
-    //                             |
-    //                             V
-    // -------------------------------------------------------
-    // |   0   |   1   |   2   |   3   |   4   | ... |  1023 |
-    // -------------------------------------------------------
-    // |  0xB0 |  0xB1 |  0xB2 |  0xB3 |  0xB4 | ... |  0xFF |
-    // -------------------------------------------------------
-    // |  NALU |  NALU |  NALU |       |       | ... |       |
-    // -------------------------------------------------------
-    //
-    // ----------
-    // nalu (nalu size 1025)
-    // ----------
-    //
-    // ----------------------------------------------------------------------------
-    // |   0   |   1   |   2   |   3   |   4   | ... |  1021 | 1022 | 1023 | 1024 |
-    // ----------------------------------------------------------------------------
-    // |  0x02 |  0x03 |  0x04 |  0x05 |  0x06 | ... |  0xA0 | 0xB0 | 0xB1 | 0xB3 |
-    // ----------------------------------------------------------------------------
 
     uint8_t *prev_data = pc->buffer + ctx->bytes_read;
     int prev_data_size = pc->index - ctx->bytes_read;
@@ -1223,17 +1084,9 @@ static int end_of_access_unit_found(AVCodecParserContext *s, AVCodecContext *avc
     return 0;
 }
 
-/**
- * Find the end of the current frame in the bitstream.
- * The end of frame is the end of Access Unit.
- *
- * @param s parser context
- * @param buf buffer with field/frame data
- * @param buf_size size of the buffer
- * @param avctx codex context
- *
- * @return the position of the first byte of the next frame, or END_NOT_FOUND
- */
+// Find the end of the current frame in the bitstream.
+// The end of frame is the end of Access Unit.
+// Function returns the position of the first byte of the next frame, or END_NOT_FOUND
 static int evc_find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
                               int buf_size, AVCodecContext *avctx)
 {

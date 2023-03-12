@@ -249,6 +249,10 @@ void ff_vvc_sao_filter(VVCLocalContext *lc, int x, int y)
                                SAO_APPLIED);
                     copy_pixel(dst1 + pos, src1[src_idx] + pos, sh);
                 }
+            } else {
+                int left = 1 - left_edge;
+                uint8_t *dst1 = dst - dst_stride - (left << sh);
+                memset(dst1, 0, (2 + width) << sh);
             }
             if (!bottom_edge) {
                 int left = 1 - left_edge;
@@ -1156,29 +1160,26 @@ static void alf_prepare_buffer(VVCFrameContext *fc, uint8_t *_dst, const uint8_t
     alf_fill_border_v(dst, dst_stride, src,  dst - (1 << ps), border_pixels, height, ps, edges, edges[RIGHT]);
 }
 
-#define ALF_BLOCKS_IN_SUBBLOCK      (ALF_SUBBLOCK_SIZE / ALF_BLOCK_SIZE)
-#define ALF_SUBBLOCK_FILTER_SIZE    (ALF_BLOCKS_IN_SUBBLOCK * ALF_BLOCKS_IN_SUBBLOCK * ALF_NUM_COEFF_LUMA)
+#define ALF_MAX_BLOCKS_IN_CTU   (MAX_CTU_SIZE * MAX_CTU_SIZE / ALF_BLOCK_SIZE / ALF_BLOCK_SIZE)
+#define ALF_MAX_FILTER_SIZE     (ALF_MAX_BLOCKS_IN_CTU * ALF_NUM_COEFF_LUMA)
 
-static void alf_filter_luma(VVCLocalContext *lc, uint8_t *_dst, const uint8_t *_src,
-    const ptrdiff_t dst_stride, const ptrdiff_t src_stride, const int x0, const int y0,
-    const int width, const int height, const int vb_pos, ALFParams *alf)
+static void alf_get_coeff_and_clip(VVCLocalContext *lc, int8_t *coeff, int16_t *clip,
+    const uint8_t *src, ptrdiff_t src_stride, int width, int height, int vb_pos, ALFParams *alf)
 {
     const VVCFrameContext *fc   = lc->fc;
     const VVCSH *sh             = &lc->sc->sh;
-    const int ps                = fc->ps.sps->pixel_shift;
-    const int no_vb_height      = y0 + height > vb_pos ? vb_pos - y0 - ALF_VB_POS_ABOVE_LUMA : height;
-    int8_t coeff[ALF_SUBBLOCK_FILTER_SIZE];
-    int16_t clip[ALF_SUBBLOCK_FILTER_SIZE];
     uint8_t fixed_clip_set[ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA] = { 0 };
     const int8_t  *coeff_set;
     const uint8_t *clip_idx_set;
     const uint8_t *class_to_filt;
+    const int size = width * height / ALF_BLOCK_SIZE / ALF_BLOCK_SIZE;
+    int class_idx[ALF_MAX_BLOCKS_IN_CTU];
+    int transpose_idx[ALF_MAX_BLOCKS_IN_CTU];
 
     if (alf->ctb_filt_set_idx_y < 16) {
         coeff_set = &ff_vvc_alf_fix_filt_coeff[0][0];
         clip_idx_set = fixed_clip_set;
         class_to_filt = ff_vvc_alf_class_to_filt_map[alf->ctb_filt_set_idx_y];
-        //av_assert0(0 && "fixme");
     } else {
         const int id = sh->alf.aps_id_luma[alf->ctb_filt_set_idx_y - 16];
         const VVCALF *aps = (VVCALF *)fc->ps.alf_list[id]->data;
@@ -1186,34 +1187,35 @@ static void alf_filter_luma(VVCLocalContext *lc, uint8_t *_dst, const uint8_t *_
         clip_idx_set = aps->luma_clip_idx;
         class_to_filt = ff_vvc_alf_aps_class_to_filt_map;
     }
+    fc->vvcdsp.alf.classify(class_idx, transpose_idx, src, src_stride, width, height,
+        vb_pos, lc->alf_gradient_tmp);
+    fc->vvcdsp.alf.recon_coeff_and_clip(coeff, clip, class_idx, transpose_idx, size,
+        coeff_set, clip_idx_set, class_to_filt);
+}
 
-    for (int y = 0; y < no_vb_height; y += ALF_SUBBLOCK_SIZE) {
-        for (int x = 0; x < width; x += ALF_SUBBLOCK_SIZE) {
-            const uint8_t *src = _src + y * src_stride + (x << ps);
-            uint8_t *dst = _dst + y * dst_stride + (x << ps);
-            const int w = FFMIN(width  - x, ALF_SUBBLOCK_SIZE);
-            const int h = FFMIN(no_vb_height - y, ALF_SUBBLOCK_SIZE);
+static void alf_filter_luma(VVCLocalContext *lc, uint8_t *dst, const uint8_t *src,
+    const ptrdiff_t dst_stride, const ptrdiff_t src_stride, const int x0, const int y0,
+    const int width, const int height, const int _vb_pos, ALFParams *alf)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    int vb_pos                  = _vb_pos - y0;
+    const int no_vb_height      = height > vb_pos ? vb_pos - ALF_VB_POS_ABOVE_LUMA : height;
+    const int h                 = height - no_vb_height;
+    int8_t *coeff               = (int8_t*)lc->tmp;
+    int16_t *clip               = (int16_t *)lc->tmp1;
 
-            fc->vvcdsp.alf.get_coeff_and_clip(coeff, clip, src, src_stride, x0 + x, y0 + y, w, h,
-                vb_pos, coeff_set, clip_idx_set, class_to_filt);
+    av_assert0(ALF_MAX_FILTER_SIZE <= sizeof(lc->tmp));
+    av_assert0(ALF_MAX_FILTER_SIZE * sizeof(int16_t) <= sizeof(lc->tmp1));
 
-            fc->vvcdsp.alf.filter[LUMA](dst, dst_stride, src, src_stride, w, h, coeff, clip);
-        }
-    }
+    alf_get_coeff_and_clip(lc, coeff, clip, src, src_stride, width, no_vb_height, vb_pos, alf);
+    fc->vvcdsp.alf.filter[LUMA](dst, dst_stride, src, src_stride, width, no_vb_height, coeff, clip);
 
-    if (height > no_vb_height) {
-        const int y = no_vb_height;
-        for (int x = 0; x < width; x += ALF_SUBBLOCK_SIZE) {
-            const uint8_t *src = _src + y * src_stride + (x << ps);
-            uint8_t *dst = _dst + y * dst_stride + (x << ps);
-            const int w = FFMIN(width  - x, ALF_SUBBLOCK_SIZE);
-            const int h = height - y;
-
-            fc->vvcdsp.alf.get_coeff_and_clip(coeff, clip, src, src_stride,
-                x0 + x, y0 + y, w, h, vb_pos, coeff_set, clip_idx_set, class_to_filt);
-
-            fc->vvcdsp.alf.filter_vb[LUMA](dst, dst_stride, src, src_stride, w, h, coeff, clip, vb_pos - y0 - y);
-        }
+    if (h > 0) {
+        vb_pos -= no_vb_height;
+        dst += dst_stride * no_vb_height;
+        src += src_stride * no_vb_height;
+        alf_get_coeff_and_clip(lc, coeff, clip, src, src_stride, width, h, vb_pos, alf);
+        fc->vvcdsp.alf.filter_vb[LUMA](dst, dst_stride, src, src_stride, width, h, coeff, clip, vb_pos);
     }
 }
 
