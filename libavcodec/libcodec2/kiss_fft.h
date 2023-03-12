@@ -81,7 +81,7 @@ typedef struct kiss_fft_state* kiss_fft_cfg;
 kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem);
 
 /*
- * kiss_fft(cfg,in_out_buf)
+ * kiss_fft2(cfg,in_out_buf)
  *
  * Perform an FFT on a complex input buffer.
  * for a forward FFT,
@@ -90,7 +90,7 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
  * Note that each element is complex and can be accessed like
     f[k].r and f[k].i
  * */
-void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
+void kiss_fft2(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
 
 /*
  A more generic version of the above function. It reads its input from every Nth sample.
