@@ -402,13 +402,13 @@ const AVOutputFormat ff_hevc_muxer = {
 #endif
 
 #if CONFIG_EVC_MUXER
-AVOutputFormat ff_evc_muxer = {
+const AVOutputFormat ff_evc_muxer = {
     .name              = "evc",
     .long_name         = NULL_IF_CONFIG_SMALL("raw EVC video"),
     .extensions        = "evc",
     .audio_codec       = AV_CODEC_ID_NONE,
     .video_codec       = AV_CODEC_ID_EVC,
-    .write_header      = force_one_stream,
+    .init              = force_one_stream,
     .write_packet      = ff_raw_write_packet,
     .flags             = AVFMT_NOTIMESTAMPS,
 };
@@ -426,13 +426,13 @@ static int vvc_check_bitstream(struct AVFormatContext *s, struct AVStream *st, c
     return 1;
 }
 
-AVOutputFormat ff_vvc_muxer = {
+const AVOutputFormat ff_vvc_muxer = {
     .name              = "vvc",
     .long_name         = NULL_IF_CONFIG_SMALL("raw VVC video"),
     .extensions        = "vvc,h266,266",
     .audio_codec       = AV_CODEC_ID_NONE,
     .video_codec       = AV_CODEC_ID_VVC,
-    .write_header      = force_one_stream,
+    .init              = force_one_stream,
     .write_packet      = ff_raw_write_packet,
     .check_bitstream   = vvc_check_bitstream,
     .flags             = AVFMT_NOTIMESTAMPS,
