@@ -29,6 +29,7 @@
  *This class is actually the parsing events handler.
  */
 
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-utils.h"
 #include "cr-input.h"

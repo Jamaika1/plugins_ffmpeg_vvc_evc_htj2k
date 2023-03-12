@@ -21,10 +21,13 @@
    Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Authors: Raph Levien <raph@artofcode.com>, 
-            Dom Lachowicz <cinamod@hotmail.com>, 
+   Authors: Raph Levien <raph@artofcode.com>,
+            Dom Lachowicz <cinamod@hotmail.com>,
             Caleb Moore <c.moore@student.unsw.edu.au>
 */
+
+#include "config.h"
+
 #include <string.h>
 #include <math.h>
 #include <errno.h>

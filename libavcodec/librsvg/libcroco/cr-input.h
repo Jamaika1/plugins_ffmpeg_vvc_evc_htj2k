@@ -24,7 +24,7 @@
 #ifndef __CR_INPUT_SRC_H__
 #define __CR_INPUT_SRC_H__
 
-
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-utils.h"
 #include "cr-parsing-location.h"

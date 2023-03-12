@@ -22,6 +22,7 @@
  */
 
 #include <stdio.h>
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-utils.h"
 #include "cr-rgb.h"

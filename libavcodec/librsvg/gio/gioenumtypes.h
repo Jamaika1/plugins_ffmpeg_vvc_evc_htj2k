@@ -145,6 +145,8 @@ GLIB_AVAILABLE_IN_ALL GType g_tls_database_lookup_flags_get_type (void) G_GNUC_C
 #define G_TYPE_TLS_DATABASE_LOOKUP_FLAGS (g_tls_database_lookup_flags_get_type ())
 GLIB_AVAILABLE_IN_ALL GType g_tls_certificate_request_flags_get_type (void) G_GNUC_CONST;
 #define G_TYPE_TLS_CERTIFICATE_REQUEST_FLAGS (g_tls_certificate_request_flags_get_type ())
+GLIB_AVAILABLE_IN_ALL GType g_tls_protocol_version_get_type (void) G_GNUC_CONST;
+#define G_TYPE_TLS_PROTOCOL_VERSION (g_tls_protocol_version_get_type ())
 GLIB_AVAILABLE_IN_ALL GType g_io_module_scope_flags_get_type (void) G_GNUC_CONST;
 #define G_TYPE_IO_MODULE_SCOPE_FLAGS (g_io_module_scope_flags_get_type ())
 GLIB_AVAILABLE_IN_ALL GType g_socket_client_event_get_type (void) G_GNUC_CONST;

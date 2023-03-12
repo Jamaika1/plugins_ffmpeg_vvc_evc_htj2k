@@ -26,6 +26,7 @@
 #define __CR_SEL_H__
 
 #include <stdio.h>
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-additional-sel.h"
 #include "cr-parsing-location.h"

@@ -31,6 +31,7 @@
 
 #include "hb.h"
 
+#include "../glib/config.h"
 #include "../glib/glib.h"
 
 HB_BEGIN_DECLS

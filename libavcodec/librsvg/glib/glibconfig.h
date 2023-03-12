@@ -18,9 +18,6 @@
  */
 #undef GLIB_USING_SYSTEM_PRINTF
 
-#define GLIB_STATIC_COMPILATION 1
-#define GOBJECT_STATIC_COMPILATION 1
-
 #ifndef G_LIB_STATIC
 #define G_LIB_EXPORT __declspec(dllexport)
 #else
@@ -165,8 +162,8 @@ typedef unsigned __int64 guintptr;
 #endif
 
 #define GLIB_MAJOR_VERSION 2
-#define GLIB_MINOR_VERSION 64
-#define GLIB_MICRO_VERSION 3
+#define GLIB_MINOR_VERSION 76
+#define GLIB_MICRO_VERSION 0
 
 #define G_OS_WIN32
 #define G_PLATFORM_WIN32

@@ -19,11 +19,9 @@
 #ifndef __G_MODULE_CONF_H__
 #define __G_MODULE_CONF_H__
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
 
 #define	G_MODULE_IMPL_NONE	0
 #define	G_MODULE_IMPL_DL	1

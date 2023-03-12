@@ -24,6 +24,7 @@
 #define __CR_RGB_H__
 
 #include <stdio.h>
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-utils.h"
 #include "cr-parsing-location.h"

@@ -20,6 +20,7 @@
  *
  */
 
+#include "config.h"
 #include "../glib/glib.h"
 
 #include "gdk-pixbuf.h"

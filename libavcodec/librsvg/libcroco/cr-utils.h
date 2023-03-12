@@ -25,6 +25,7 @@
 #define __CR_DEFS_H__
 
 #include <stdio.h>
+#include "../config.h"
 #include "../glib/glib.h"
 
 G_BEGIN_DECLS
