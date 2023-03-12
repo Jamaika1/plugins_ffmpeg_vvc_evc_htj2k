@@ -64,7 +64,7 @@ void interpolate(
   MODEL *interp,    /* interpolated model params                     */
   MODEL *prev,      /* previous frames model params                  */
   MODEL *next,      /* next frames model params                      */
-  float Wo_min 
+  float Wo_min
 )
 {
     int   l;
@@ -206,7 +206,7 @@ void interpolate_lsp(
 
     /* convert back to amplitudes */
 
-    lsp_to_lpc(lsps_interp, ak_interp, LPC_ORD);
+    lsp_to_lpc2(lsps_interp, ak_interp, LPC_ORD);
     aks_to_M2(fft_fwd_cfg, ak_interp, LPC_ORD, interp, e, &snr, 0, 0, 1, 1, LPCPF_BETA, LPCPF_GAMMA);
     //printf("  interp: ak[1]: %f A[1] %f\n", ak_interp[1], interp->A[1]);
 }

@@ -92,7 +92,7 @@ int bitexact_log2tan(int isin,int icos)
 
 #ifdef FIXED_POINT
 /* Compute the amplitude (sqrt energy) in each of the bands */
-void compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener *bandE, int end, int C, int LM, int arch)
+void compute_band2_energies(const CELTMode *m, const celt_sig *X, celt_ener *bandE, int end, int C, int LM, int arch)
 {
    int i, c, N;
    const opus_int16 *eBands = m->eBands;
@@ -134,7 +134,7 @@ void compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener *band
 }
 
 /* Normalise each band such that the energy is one. */
-void normalise_bands(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, celt_norm * OPUS_RESTRICT X, const celt_ener *bandE, int end, int C, int M)
+void normalise_bands2(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, celt_norm * OPUS_RESTRICT X, const celt_ener *bandE, int end, int C, int M)
 {
    int i, c, N;
    const opus_int16 *eBands = m->eBands;
@@ -156,7 +156,7 @@ void normalise_bands(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, cel
 
 #else /* FIXED_POINT */
 /* Compute the amplitude (sqrt energy) in each of the bands */
-void compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener *bandE, int end, int C, int LM, int arch)
+void compute_band2_energies(const CELTMode *m, const celt_sig *X, celt_ener *bandE, int end, int C, int LM, int arch)
 {
    int i, c, N;
    const opus_int16 *eBands = m->eBands;
@@ -174,7 +174,7 @@ void compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener *band
 }
 
 /* Normalise each band such that the energy is one. */
-void normalise_bands(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, celt_norm * OPUS_RESTRICT X, const celt_ener *bandE, int end, int C, int M)
+void normalise_bands2(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, celt_norm * OPUS_RESTRICT X, const celt_ener *bandE, int end, int C, int M)
 {
    int i, c, N;
    const opus_int16 *eBands = m->eBands;
@@ -193,7 +193,7 @@ void normalise_bands(const CELTMode *m, const celt_sig * OPUS_RESTRICT freq, cel
 #endif /* FIXED_POINT */
 
 /* De-normalise the energy to produce the synthesis from the unit-energy bands */
-void denormalise_bands(const CELTMode *m, const celt_norm * OPUS_RESTRICT X,
+void denormalise_bands2(const CELTMode *m, const celt_norm * OPUS_RESTRICT X,
       celt_sig * OPUS_RESTRICT freq, const opus_val16 *bandLogE, int start,
       int end, int M, int downsample, int silence)
 {
@@ -265,7 +265,7 @@ void denormalise_bands(const CELTMode *m, const celt_norm * OPUS_RESTRICT X,
 }
 
 /* This prevents energy collapse for transients with multiple short MDCTs */
-void anti_collapse(const CELTMode *m, celt_norm *X_, unsigned char *collapse_masks, int LM, int C, int size,
+void anti_collapse2(const CELTMode *m, celt_norm *X_, unsigned char *collapse_masks, int LM, int C, int size,
       int start, int end, const opus_val16 *logE, const opus_val16 *prev1logE,
       const opus_val16 *prev2logE, const int *pulses, opus_uint32 seed, int arch)
 {
@@ -476,7 +476,7 @@ static void stereo_merge(celt_norm * OPUS_RESTRICT X, celt_norm * OPUS_RESTRICT 
 }
 
 /* Decide whether we should spread the pulses in the current frame */
-int spreading_decision(const CELTMode *m, const celt_norm *X, int *average,
+int spreading_decision2(const CELTMode *m, const celt_norm *X, int *average,
       int last_decision, int *hf_average, int *tapset_decision, int update_hf,
       int end, int C, int M, const int *spread_weight)
 {
@@ -629,7 +629,7 @@ static void interleave_hadamard(celt_norm *X, int N0, int stride, int hadamard)
    RESTORE_STACK;
 }
 
-void haar1(celt_norm *X, int N0, int stride)
+void haar2(celt_norm *X, int N0, int stride)
 {
    int i, j;
    N0 >>= 1;
@@ -739,7 +739,7 @@ static void compute_theta(struct band_ctx *ctx, struct split_ctx *sctx,
          2) they are orthogonal. */
       itheta = stereo_itheta(X, Y, stereo, N, ctx->arch);
    }
-   tell = ec_tell_frac(ec);
+   tell = ec2_tell_frac(ec);
    if (qn!=1)
    {
       if (encode)
@@ -871,7 +871,7 @@ static void compute_theta(struct band_ctx *ctx, struct split_ctx *sctx,
          inv = 0;
       itheta = 0;
    }
-   qalloc = ec_tell_frac(ec) - tell;
+   qalloc = ec2_tell_frac(ec) - tell;
    *b -= qalloc;
 
    if (itheta == 0)
@@ -1152,9 +1152,9 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
             0,1,1,1,2,3,3,3,2,3,3,3,2,3,3,3
       };
       if (encode)
-         haar1(X, N>>k, 1<<k);
+         haar2(X, N>>k, 1<<k);
       if (lowband)
-         haar1(lowband, N>>k, 1<<k);
+         haar2(lowband, N>>k, 1<<k);
       fill = bit_interleave_table[fill&0xF]|bit_interleave_table[fill>>4]<<2;
    }
    B>>=recombine;
@@ -1164,9 +1164,9 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
    while ((N_B&1) == 0 && tf_change<0)
    {
       if (encode)
-         haar1(X, N_B, B);
+         haar2(X, N_B, B);
       if (lowband)
-         haar1(lowband, N_B, B);
+         haar2(lowband, N_B, B);
       fill |= fill<<B;
       B <<= 1;
       N_B >>= 1;
@@ -1202,7 +1202,7 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
          B >>= 1;
          N_B <<= 1;
          cm |= cm>>B;
-         haar1(X, N_B, B);
+         haar2(X, N_B, B);
       }
 
       for (k=0;k<recombine;k++)
@@ -1212,7 +1212,7 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
                0xC0,0xC3,0xCC,0xCF,0xF0,0xF3,0xFC,0xFF
          };
          cm = bit_deinterleave_table[cm];
-         haar1(X, N0>>k, 1<<k);
+         haar2(X, N0>>k, 1<<k);
       }
       B<<=recombine;
 
@@ -1395,7 +1395,7 @@ static void special_hybrid_folding(const CELTMode *m, celt_norm *norm, celt_norm
 }
 #endif
 
-void quant_all_bands(int encode, const CELTMode *m, int start, int end,
+void quant_all_bands2(int encode, const CELTMode *m, int start, int end,
       celt_norm *X_, celt_norm *Y_, unsigned char *collapse_masks,
       const celt_ener *bandE, int *pulses, int shortBlocks, int spread,
       int dual_stereo, int intensity, int *tf_res, opus_int32 total_bits,
@@ -1494,7 +1494,7 @@ void quant_all_bands(int encode, const CELTMode *m, int start, int end,
          Y = NULL;
       N = M*eBands[i+1]-M*eBands[i];
       celt_assert(N > 0);
-      tell = ec_tell_frac(ec);
+      tell = ec2_tell_frac(ec);
 
       /* Compute how many bits we want to allocate to this band */
       if (i != start)

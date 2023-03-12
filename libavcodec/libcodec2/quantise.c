@@ -750,7 +750,7 @@ float speech_to_uq_lsps(float lsp[],
     for(i=0; i<=order; i++)
 	ak[i] *= powf(0.994,(float)i);
 
-    roots = lpc_to_lsp(ak, order, lsp, 5, LSP_DELTA1);
+    roots = lpc_to_lsp2(ak, order, lsp, 5, LSP_DELTA1);
     if (roots != order) {
 	/* if root finding fails use some benign LSP values instead */
 	for(i=0; i<order; i++)

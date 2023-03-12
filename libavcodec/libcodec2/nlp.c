@@ -178,7 +178,7 @@ void *nlp_create(C2CONST *c2const)
     }
 
     assert(m <= PMAX_M);
-    
+
     for(i=0; i<m/DEC; i++) {
 	nlp->w[i] = 0.5 - 0.5*cosf(2*PI*i/(m/DEC-1));
     }
@@ -314,7 +314,7 @@ float nlp(
 	nlp->mem_x = nlp->sq[i];
 	nlp->mem_y = notch;
 	nlp->sq[i] = notch + 1.0;  /* With 0 input vectors to codec,
-				      kiss_fft() would take a long
+				      kiss_fft2() would take a long
 				      time to execute when running in
 				      real time.  Problem was traced
 				      to kiss_fft function call in
