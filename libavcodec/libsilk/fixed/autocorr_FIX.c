@@ -44,5 +44,5 @@ void silk_autocorr(
 {
     opus_int   corrCount;
     corrCount = silk_min_int( inputDataSize, correlationCount );
-    *scale = _celt_autocorr(inputData, results, NULL, 0, corrCount-1, inputDataSize, arch);
+    *scale = _celt2_autocorr(inputData, results, NULL, 0, corrCount-1, inputDataSize, arch);
 }
