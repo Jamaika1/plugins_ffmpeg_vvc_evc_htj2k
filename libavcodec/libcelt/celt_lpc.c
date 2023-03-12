@@ -34,7 +34,7 @@
 #include "mathops.h"
 #include "pitch.h"
 
-void _celt_lpc(
+void _celt2_lpc(
       opus_val16       *_lpc, /* out: [0...p-1] LPC coefficients      */
 const opus_val32 *ac,  /* in:  [0...p] autocorrelation values  */
 int          p
@@ -255,7 +255,7 @@ void celt_iir(const opus_val32 *_x,
 #endif
 }
 
-int _celt_autocorr(
+int _celt2_autocorr(
                    const opus_val16 *x,   /*  in: [0...n-1] samples x   */
                    opus_val32       *ac,  /* out: [0...lag-1] ac values */
                    const opus_val16       *window,

@@ -181,7 +181,7 @@ void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x
       x_lp[0] += .25f*x[1][1] + .5f*x[1][0];
    }
 #endif
-   _celt_autocorr(x_lp, ac, NULL, 0,
+   _celt2_autocorr(x_lp, ac, NULL, 0,
                   4, len>>1, arch);
 
    /* Noise floor -40 dB */
@@ -201,7 +201,7 @@ void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x
 #endif
    }
 
-   _celt_lpc(lpc, ac, 4);
+   _celt2_lpc(lpc, ac, 4);
    for (i=0;i<4;i++)
    {
       tmp = MULT16_16_Q15(QCONST16(.9f,15), tmp);
