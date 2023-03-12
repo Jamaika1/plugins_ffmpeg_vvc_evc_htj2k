@@ -2,6 +2,46 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 /* Actually, this version of config.h is manually edited from the above */
 
+#define _GLIB_EXTERN extern
+#define _GIO_EXTERN extern
+#define _GMODULE_EXTERN extern
+#define GLIB_DEPRECATED G_DEPRECATED _GLIB_EXTERN
+#define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
+#define GLIB_VAR _GLIB_EXTERN
+#define GOBJECT_VAR _GLIB_EXTERN
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_76
+#define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
+#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_76
+#define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
+#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_76
+#define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
+#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_76
+#define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
+#define GLIB_COMPILATION
+#define GIO_COMPILATION
+#define GOBJECT_COMPILATION
+
+#define ALIGNOF_GUINT32 4
+#define ALIGNOF_GUINT64 8
+#define ALIGNOF_UNSIGNED_LONG 8
+#define HAVE__ALIGNED_MALLOC 1
+
+#define XDG_PREFIX _gio_xdg
+#define GLIB_RUNSTATEDIR ""
+#define GIO_LAUNCH_DESKTOP ""
+#define GDK_PIXBUF_BINARY_VERSION "2.10"
+#define HAVE_ROUND 1
+#define HAVE_LRINT 1
+//#define GDK_PIXBUF_RELOCATABLE 1
+#define GDK_PIXBUF_ENABLE_BACKEND 1
+#define USE_GMODULE 1
+
+#ifndef G_LIB_STATIC
+#define G_LIB_EXPORT __declspec(dllexport)
+#else
+#define G_LIB_EXPORT extern
+#endif
+
 /* Have usable Cairo library and font backend */
 #define HAVE_CAIRO 1
 
