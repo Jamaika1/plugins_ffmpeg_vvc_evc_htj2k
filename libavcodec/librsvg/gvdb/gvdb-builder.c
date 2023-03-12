@@ -17,6 +17,8 @@
  * Author: Ryan Lortie <desrt@desrt.ca>
  */
 
+#include "../glib/config.h"
+
 #include "gvdb-builder.h"
 #include "gvdb-format.h"
 
