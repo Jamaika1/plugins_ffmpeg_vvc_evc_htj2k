@@ -108,7 +108,7 @@ void modem_stats_get_rx_spectrum(struct MODEM_STATS *f, float mag_spec_dB[], COM
 	fft_in[i].imag = 0.0;
     }
 
-    kiss_fft((kiss_fft_cfg)f->fft_cfg, (kiss_fft_cpx *)fft_in, (kiss_fft_cpx *)fft_out);
+    kiss_fft2((kiss_fft_cfg)f->fft_cfg, (kiss_fft_cpx *)fft_in, (kiss_fft_cpx *)fft_out);
 
     /* FFT scales up a signal of level 1 FDMDV_NSPEC */
 

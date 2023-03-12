@@ -141,11 +141,11 @@ void codec2_fft_inplace(codec2_fft_cfg cfg, codec2_fft_cpx* inout)
     {
         kiss_fft_cpx in[512];
         memcpy(in,inout,cfg->nfft*sizeof(kiss_fft_cpx));
-        kiss_fft(cfg, in, (kiss_fft_cpx*)inout);
+        kiss_fft2(cfg, in, (kiss_fft_cpx*)inout);
     }
     else
     {
-        kiss_fft(cfg, (kiss_fft_cpx*)inout, (kiss_fft_cpx*)inout);
+        kiss_fft2(cfg, (kiss_fft_cpx*)inout, (kiss_fft_cpx*)inout);
     }
 #else
     arm_cfft_f32(cfg->instance,(float*)inout,cfg->inverse,1);
