@@ -108,7 +108,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_READLINE_READLINE_H */
 
 /* Define to 1 if you have the `realpath' function. */
-#define HAVE_REALPATH 1
+/* #undef HAVE_REALPATH */
 
 /* Define to 1 if you have the `secure_getenv' function. */
 /* #undef HAVE_SECURE_GETENV */
