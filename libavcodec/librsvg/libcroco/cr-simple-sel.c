@@ -22,6 +22,7 @@
  */
 
 #include <string.h>
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-simple-sel.h"
 

@@ -1,6 +1,7 @@
 #ifndef __CR_LIBXML_NODE_IFACE_H__
 #define __CR_LIBXML_NODE_IFACE_H__
 
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-node-iface.h"
 

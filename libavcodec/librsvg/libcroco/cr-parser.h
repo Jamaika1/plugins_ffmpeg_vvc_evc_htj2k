@@ -22,8 +22,9 @@
  */
 
 #ifndef __CR_PARSER_H__
-#define  __CR_PARSER_H__
+#define __CR_PARSER_H__
 
+#include "../config.h"
 #include "../glib/glib.h"
 #include "cr-input.h"
 #include "cr-tknzr.h"
