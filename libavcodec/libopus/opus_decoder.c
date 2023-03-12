@@ -109,7 +109,7 @@ int opus_decoder_get_size(int channels)
    if(ret)
       return 0;
    silkDecSizeBytes = align(silkDecSizeBytes);
-   celtDecSizeBytes = celt_decoder_get_size(channels);
+   celtDecSizeBytes = celt2_decoder_get_size(channels);
    return align(sizeof(OpusDecoder))+silkDecSizeBytes+celtDecSizeBytes;
 }
 
@@ -145,7 +145,7 @@ int opus_decoder_init(OpusDecoder *st, opus_int32 Fs, int channels)
    if(ret)return OPUS_INTERNAL_ERROR;
 
    /* Initialize CELT decoder */
-   ret = celt_decoder_init(celt_dec, Fs, channels);
+   ret = celt2_decoder_init(celt_dec, Fs, channels);
    if(ret!=OPUS_OK)return OPUS_INTERNAL_ERROR;
 
    celt_decoder_ctl(celt_dec, CELT_SET_SIGNALLING(0));
@@ -506,7 +506,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
          the final range is still needed (for testing), so the redundancy is
          always decoded but the decoded audio may not be used */
       MUST_SUCCEED(celt_decoder_ctl(celt_dec, CELT_SET_START_BAND(0)));
-      celt_decode_with_ec(celt_dec, data+len, redundancy_bytes,
+      celt2_decode_with_ec(celt_dec, data+len, redundancy_bytes,
                           redundant_audio, F5, NULL, 0);
       MUST_SUCCEED(celt_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE(&redundant_rng)));
    }
@@ -521,7 +521,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       if (mode != st->prev_mode && st->prev_mode > 0 && !st->prev_redundancy)
          MUST_SUCCEED(celt_decoder_ctl(celt_dec, OPUS_RESET_STATE));
       /* Decode CELT */
-      celt_ret = celt_decode_with_ec(celt_dec, decode_fec ? NULL : data,
+      celt_ret = celt2_decode_with_ec(celt_dec, decode_fec ? NULL : data,
                                      len, pcm, celt_frame_size, &dec, celt_accum);
    } else {
       unsigned char silence[2] = {0xFF, 0xFF};
@@ -535,7 +535,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       if (st->prev_mode == MODE_HYBRID && !(redundancy && celt_to_silk && st->prev_redundancy) )
       {
          MUST_SUCCEED(celt_decoder_ctl(celt_dec, CELT_SET_START_BAND(0)));
-         celt_decode_with_ec(celt_dec, silence, 2, pcm, F2_5, NULL, celt_accum);
+         celt2_decode_with_ec(celt_dec, silence, 2, pcm, F2_5, NULL, celt_accum);
       }
    }
 
@@ -562,7 +562,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       MUST_SUCCEED(celt_decoder_ctl(celt_dec, OPUS_RESET_STATE));
       MUST_SUCCEED(celt_decoder_ctl(celt_dec, CELT_SET_START_BAND(0)));
 
-      celt_decode_with_ec(celt_dec, data+len, redundancy_bytes, redundant_audio, F5, NULL, 0);
+      celt2_decode_with_ec(celt_dec, data+len, redundancy_bytes, redundant_audio, F5, NULL, 0);
       MUST_SUCCEED(celt_decoder_ctl(celt_dec, OPUS_GET_FINAL_RANGE(&redundant_rng)));
       smooth_fade(pcm+st->channels*(frame_size-F2_5), redundant_audio+st->channels*F2_5,
                   pcm+st->channels*(frame_size-F2_5), F2_5, st->channels, window, st->Fs);

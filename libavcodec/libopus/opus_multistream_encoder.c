@@ -295,12 +295,12 @@ void surround_analysis(const CELTMode *celt_mode, const void *pcm, opus_val16 *b
                freq[i] = 0;
          }
 
-         compute_band_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
+         compute_band2_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
          /* If we have multiple frames, take the max energy. */
          for (i=0;i<21;i++)
             bandE[i] = MAX32(bandE[i], tmpE[i]);
       }
-      amp2Log2(celt_mode, 21, 21, bandE, bandLogE+21*c, 1);
+      celt2_amp2Log2(celt_mode, 21, 21, bandE, bandLogE+21*c, 1);
       /* Apply spreading function with -6 dB/band going up and -12 dB/band going down. */
       for (i=1;i<21;i++)
          bandLogE[21*c+i] = MAX16(bandLogE[21*c+i], bandLogE[21*c+i-1]-QCONST16(1.f, DB_SHIFT));
