@@ -29,6 +29,7 @@
  */
 
 #include "config.h"
+#include "../glib/config.h"
 
 #include "../glib/glib.h"
 #include "gmodule.h"
