@@ -26,6 +26,8 @@
 #ifndef __G_OBJECT_NOTIFY_QUEUE_H__
 #define __G_OBJECT_NOTIFY_QUEUE_H__
 
+#include "config.h"
+
 #include <string.h> /* memset */
 
 #include "../glib/glib-object.h"
