@@ -1,6 +1,6 @@
 
 
-
+#include "config.h"
 #include "rsvg.h"
 
 /* enumerations from "rsvg.h" */

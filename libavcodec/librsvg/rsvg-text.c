@@ -24,6 +24,8 @@
    Author: Raph Levien <raph@artofcode.com>
 */
 
+#include "config.h"
+
 #include <string.h>
 
 #include "rsvg-private.h"

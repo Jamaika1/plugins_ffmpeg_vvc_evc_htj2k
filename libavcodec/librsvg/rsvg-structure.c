@@ -22,10 +22,12 @@
    Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
 
-   Authors: Raph Levien <raph@artofcode.com>, 
-            Dom Lachowicz <cinamod@hotmail.com>, 
+   Authors: Raph Levien <raph@artofcode.com>,
+            Dom Lachowicz <cinamod@hotmail.com>,
             Caleb Moore <c.moore@student.unsw.edu.au>
 */
+
+#include "config.h"
 
 #include "rsvg-structure.h"
 #include "rsvg-image.h"
@@ -298,7 +300,7 @@ rsvg_node_svg_draw (RsvgNode * self, RsvgDrawingCtx * ctx, int dominate)
 
     rsvg_push_discrete_layer (ctx);
 
-    /* Bounding box addition must be AFTER the discrete layer push, 
+    /* Bounding box addition must be AFTER the discrete layer push,
        which must be AFTER the transformation happens. */
     if (!state->overflow && self->parent) {
         state->affine = affine_old;
@@ -332,9 +334,9 @@ rsvg_node_svg_set_atts (RsvgNode * self, RsvgHandle * ctx, RsvgPropertyBag * att
             svg->w = _rsvg_css_parse_length (value);
         if ((value = rsvg_property_bag_lookup (atts, "height")))
             svg->h = _rsvg_css_parse_length (value);
-        /* 
+        /*
          * x & y attributes have no effect on outermost svg
-         * http://www.w3.org/TR/SVG/struct.html#SVGElement 
+         * http://www.w3.org/TR/SVG/struct.html#SVGElement
          */
         if (self->parent && (value = rsvg_property_bag_lookup (atts, "x")))
             svg->x = _rsvg_css_parse_length (value);
