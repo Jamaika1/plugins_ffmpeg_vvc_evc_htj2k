@@ -100,7 +100,7 @@
 #define HAVE_VA_COPY 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
-#define LIBXML_ZLIB_ENABLED 1
+#define LIBXML_ZLIB_ENABLED
 
 /* Whether __va_copy() is available */
 #define HAVE___VA_COPY 1
