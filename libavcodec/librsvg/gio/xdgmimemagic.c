@@ -26,7 +26,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #include <assert.h>
@@ -687,11 +687,11 @@ _xdg_mime_magic_lookup_data (XdgMimeMagic *mime_magic,
 	  mime_type = match->mime_type;
 	  break;
 	}
-      else 
+      else
 	{
 	  for (n = 0; n < n_mime_types; n++)
 	    {
-	      if (mime_types[n] && 
+	      if (mime_types[n] &&
 		  _xdg_mime_mime_type_equal (mime_types[n], match->mime_type))
 		mime_types[n] = NULL;
 	    }
@@ -706,7 +706,7 @@ _xdg_mime_magic_lookup_data (XdgMimeMagic *mime_magic,
 	    mime_type = mime_types[n];
 	}
     }
-  
+
   if (result_prio)
     *result_prio = prio;
 
