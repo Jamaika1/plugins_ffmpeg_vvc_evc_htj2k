@@ -23,6 +23,7 @@
 #include "codec_internal.h"
 #include "decode.h"
 #include "libavutil/opt.h"
+#include "librsvg/config.h"
 #include "librsvg/rsvg.h"
 
 typedef struct LibRSVGContext {

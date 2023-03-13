@@ -1516,6 +1516,31 @@ g_tls_certificate_request_flags_get_type (void)
   return g_define_type_id__volatile;
 }
 GType
+g_tls_protocol_version_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_TLS_PROTOCOL_VERSION_UNKNOWN, "G_TLS_PROTOCOL_VERSION_UNKNOWN", "unknown" },
+        { G_TLS_PROTOCOL_VERSION_DTLS_1_0, "G_TLS_PROTOCOL_VERSION_DTLS_1_0", "dtls-1-0" },
+        { G_TLS_PROTOCOL_VERSION_DTLS_1_2, "G_TLS_PROTOCOL_VERSION_DTLS_1_2", "dtls-1-2" },
+        { G_TLS_PROTOCOL_VERSION_SSL_3_0, "G_TLS_PROTOCOL_VERSION_SSL_3_0", "ssl-3-0" },
+        { G_TLS_PROTOCOL_VERSION_TLS_1_0, "G_TLS_PROTOCOL_VERSION_TLS_1_0", "tls-1-0" },
+        { G_TLS_PROTOCOL_VERSION_TLS_1_1, "G_TLS_PROTOCOL_VERSION_TLS_1_1", "tls-1-1" },
+        { G_TLS_PROTOCOL_VERSION_TLS_1_2, "G_TLS_PROTOCOL_VERSION_TLS_1_2", "tls-1-2" },
+        { G_TLS_PROTOCOL_VERSION_TLS_1_3, "G_TLS_PROTOCOL_VERSION_TLS_1_3", "tls-1-3" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GTlsProtocolVersion"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+GType
 g_io_module_scope_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
