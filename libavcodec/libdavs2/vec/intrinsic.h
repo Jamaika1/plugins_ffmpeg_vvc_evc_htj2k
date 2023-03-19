@@ -45,13 +45,14 @@ extern "C" {
  * global variables
  */
 #define intrinsic_mask FPFX(intrinsic_mask)
-ALIGN32(extern const int8_t  intrinsic_mask[15][16]);
+//ALIGN32(extern const int8_t  intrinsic_mask[15][16]);
+ALIGN32(extern const int32_t  intrinsic_mask[15][16]);
 #define intrinsic_mask_256_8bit FPFX(intrinsic_mask_256_8bit)
 ALIGN32(extern const int8_t  intrinsic_mask_256_8bit[16][32]);
 #define intrinsic_mask32 FPFX(intrinsic_mask32)
 ALIGN32(extern const int8_t  intrinsic_mask32[32][32]);
-#define intrinsic_mask_10bit FPFX(intrinsic_mask_10bit)
-ALIGN32(extern const int16_t intrinsic_mask_10bit[15][16]);
+//#define intrinsic_mask_10bit FPFX(intrinsic_mask_10bit)
+//ALIGN32(extern const int16_t intrinsic_mask_10bit[15][16]);
 #define tab_log2 FPFX(tab_log2)
 ALIGN32(extern const int8_t tab_log2[65]);
 #define tab_coeff_mode_7 FPFX(tab_coeff_mode_7)
@@ -166,6 +167,7 @@ void intpl_chroma_block_ver_sse128(pel_t *dst, int i_dst, pel_t *src, int i_src,
 #define intpl_chroma_block_ext_sse128 FPFX(intpl_chroma_block_ext_sse128)
 void intpl_chroma_block_ext_sse128(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff_h, const int8_t *coeff_v);
 
+#if defined(__AVX2__)
 #define intpl_luma_block_hor_avx2 FPFX(intpl_luma_block_hor_avx2)
 void intpl_luma_block_hor_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff);
 #define intpl_luma_block_ver_avx2 FPFX(intpl_luma_block_ver_avx2)
@@ -178,7 +180,7 @@ void intpl_luma_block_ver1_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, in
 void intpl_luma_block_ver2_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff);
 #define intpl_luma_block_ext_avx2 FPFX(intpl_luma_block_ext_avx2)
 void intpl_luma_block_ext_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff_h, const int8_t *coeff_v);
-
+#endif
 
 /* ---------------------------------------------------------------------------
  */
@@ -202,16 +204,22 @@ void padding_rows_sse128      (pel_t *src, int i_src, int width, int height, int
 #define padding_rows_lr_sse128 FPFX(padding_rows_lr_sse128)
 void padding_rows_lr_sse128   (pel_t *src, int i_src, int width, int height, int start, int rows, int pad);
 
+#if defined(__AVX2__)
 #define intpl_chroma_block_hor_avx2 FPFX(intpl_chroma_block_hor_avx2)
 void intpl_chroma_block_hor_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff);
 #define intpl_chroma_block_ver_avx2 FPFX(intpl_chroma_block_ver_avx2)
 void intpl_chroma_block_ver_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff);
 #define intpl_chroma_block_ext_avx2 FPFX(intpl_chroma_block_ext_avx2)
 void intpl_chroma_block_ext_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff_h, const int8_t *coeff_v);
+#endif
 #define deblock_edge_ver_sse128 FPFX(deblock_edge_ver_sse128)
 void deblock_edge_ver_sse128  (pel_t *SrcPtr, int stride, int Alpha, int Beta, uint8_t *flt_flag);
 #define deblock_edge_hor_sse128 FPFX(deblock_edge_hor_sse128)
 void deblock_edge_hor_sse128  (pel_t *SrcPtr, int stride, int Alpha, int Beta, uint8_t *flt_flag);
+#define deblock_edge_ver_sse128_10bit FPFX(deblock_edge_ver_sse128_10bit)
+void deblock_edge_ver_sse128_10bit(pel_t* SrcPtr, int stride, int Alpha, int Beta, uint8_t* flt_flag);
+#define deblock_edge_hor_sse128_10bit FPFX(deblock_edge_hor_sse128_10bit)
+void deblock_edge_hor_sse128_10bit(pel_t* SrcPtr, int stride, int Alpha, int Beta, uint8_t* flt_flag);
 #if HDR_CHROMA_DELTA_QP
 #define deblock_edge_ver_c_sse128 FPFX(deblock_edge_ver_c_sse128)
 void deblock_edge_ver_c_sse128(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int *Alpha, int *Beta, uint8_t *flt_flag);
@@ -222,8 +230,13 @@ void deblock_edge_hor_c_sse128(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int *
 void deblock_edge_ver_c_sse128(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int Alpha, int Beta, uint8_t *flt_flag);
 #define deblock_edge_hor_c_sse128 FPFX(deblock_edge_hor_c_sse128)
 void deblock_edge_hor_c_sse128(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int Alpha, int Beta, uint8_t *flt_flag);
+#define deblock_edge_ver_c_sse128_10bit FPFX(deblock_edge_ver_c_sse128_10bit)
+void deblock_edge_ver_c_sse128_10bit(pel_t* SrcPtrU, pel_t* SrcPtrV, int stride, int Alpha, int Beta, uint8_t* flt_flag);
+#define deblock_edge_hor_c_sse128_10bit FPFX(deblock_edge_hor_c_sse128_10bit)
+void deblock_edge_hor_c_sse128_10bit(pel_t* SrcPtrU, pel_t* SrcPtrV, int stride, int Alpha, int Beta, uint8_t* flt_flag);
 #endif
 //--------avx2--------
+#if defined(__AVX2__)
 #define deblock_edge_hor_avx2 FPFX(deblock_edge_hor_avx2)
 void deblock_edge_hor_avx2(pel_t *SrcPtr, int stride, int Alpha, int Beta, uint8_t *flt_flag);
 #define deblock_edge_ver_avx2 FPFX(deblock_edge_ver_avx2)
@@ -232,7 +245,7 @@ void deblock_edge_ver_avx2(pel_t *SrcPtr, int stride, int Alpha, int Beta, uint8
 void deblock_edge_hor_c_avx2(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int Alpha, int Beta, uint8_t *flt_flag);
 #define deblock_edge_ver_c_avx2 FPFX(deblock_edge_ver_c_avx2)
 void deblock_edge_ver_c_avx2(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int Alpha, int Beta, uint8_t *flt_flag);
-
+#endif
 
 #define davs2_dequant_sse4 FPFX(dequant_sse4)
 void davs2_dequant_sse4(coeff_t *coef, const int i_coef, const int scale, const int shift);
@@ -269,6 +282,7 @@ void inv_wavelet_64x16_sse128(coeff_t *coeff);
 void inv_wavelet_16x64_sse128(coeff_t *coeff);
 
 //futl add 2016.11.30    avx2
+#if defined(__AVX2__)
 #define idct_8x8_avx2 FPFX(vec_idct_8x8_avx2)
 void idct_8x8_avx2  (const coeff_t *src, coeff_t *dst, int i_dst);
 #define idct_16x16_avx2 FPFX(vec_idct_16x16_avx2)
@@ -287,6 +301,7 @@ void inv_wavelet_64x16_avx2(coeff_t *coeff);
 void inv_wavelet_16x64_avx2(coeff_t *coeff);
 #define inv_wavelet_64x64_avx2 FPFX(inv_wavelet_64x64_avx2)
 void inv_wavelet_64x64_avx2(coeff_t *coeff);
+#endif
 
 /* DCT half and quad */
 #define idct_4x4_half_sse128 FPFX(idct_4x4_half_sse128)
@@ -335,6 +350,7 @@ void idct_16x64_quad_sse128(const coeff_t *src, coeff_t *dst, int i_dst);
 #define idct_64x16_quad_sse128 FPFX(idct_64x16_quad_sse128)
 void idct_64x16_quad_sse128(const coeff_t *src, coeff_t *dst, int i_dst);
 
+#if defined(__AVX2__)
 #define idct_8x8_half_avx2 FPFX(idct_8x8_half_avx2)
 void idct_8x8_half_avx2  (const coeff_t *src, coeff_t *dst, int i_dst);
 #define idct_16x16_half_avx2 FPFX(idct_16x16_half_avx2)
@@ -376,21 +392,35 @@ void idct_8x32_quad_avx2 (const coeff_t *src, coeff_t *dst, int i_dst);
 void idct_16x64_quad_avx2(const coeff_t *src, coeff_t *dst, int i_dst);
 #define idct_64x16_quad_avx2 FPFX(idct_64x16_quad_avx2)
 void idct_64x16_quad_avx2(const coeff_t *src, coeff_t *dst, int i_dst);
-
+#endif
 
 /* ---------------------------------------------------------------------------
  * SAO
  */
 #define SAO_on_block_bo_sse128 FPFX(SAO_on_block_bo_sse128)
 void SAO_on_block_bo_sse128    (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const sao_param_t *sao_param);
+#define SAO_on_block_bo_sse128_10bit FPFX(SAO_on_block_bo_sse128_10bit)
+void SAO_on_block_bo_sse128_10bit(pel_t* dst, int i_dst, const pel_t* src, int i_src, int i_block_w, int i_block_h, int bit_depth, const sao_param_t* saoBlkParam);
 #define SAO_on_block_eo_0_sse128 FPFX(SAO_on_block_eo_0_sse128)
 void SAO_on_block_eo_0_sse128  (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
+#define SAO_on_block_eo_0_sse128_10bit FPFX(SAO_on_block_eo_0_sse128_10bit)
+void SAO_on_block_eo_0_sse128_10bit(pel_t* dst, int i_dst, const pel_t* src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int* lcu_avail, const int* sao_offset);
 #define SAO_on_block_eo_45_sse128 FPFX(SAO_on_block_eo_45_sse128)
 void SAO_on_block_eo_45_sse128 (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
+
+#define SAO_on_block_eo_45_sse128_10bit FPFX(SAO_on_block_eo_45_sse128_10bit)
+void SAO_on_block_eo_45_sse128_10bit(pel_t* dst, int i_dst, const pel_t* src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int* lcu_avail, const int* sao_offset);
+
 #define SAO_on_block_eo_90_sse128 FPFX(SAO_on_block_eo_90_sse128)
 void SAO_on_block_eo_90_sse128 (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
+#define SAO_on_block_eo_90_sse128_10bit FPFX(SAO_on_block_eo_90_sse128_10bit)
+void SAO_on_block_eo_90_sse128_10bit(pel_t* dst, int i_dst, const pel_t* src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int* lcu_avail, const int* sao_offset);
 #define SAO_on_block_eo_135_sse128 FPFX(SAO_on_block_eo_135_sse128)
 void SAO_on_block_eo_135_sse128(pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
+#define SAO_on_block_eo_135_sse128_10bit FPFX(SAO_on_block_eo_135_sse128_10bit)
+void SAO_on_block_eo_135_sse128_10bit(pel_t* dst, int i_dst, const pel_t* src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int* lcu_avail, const int* sao_offset);
+//AVX2
+#if defined(__AVX2__)
 #define SAO_on_block_bo_avx2 FPFX(SAO_on_block_bo_avx2)
 void SAO_on_block_bo_avx2    (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const sao_param_t *sao_param);
 #define SAO_on_block_eo_0_avx2 FPFX(SAO_on_block_eo_0_avx2)
@@ -401,6 +431,7 @@ void SAO_on_block_eo_45_avx2 (pel_t *p_dst, int i_dst, const pel_t *p_src, int i
 void SAO_on_block_eo_90_avx2 (pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
 #define SAO_on_block_eo_135_avx2 FPFX(SAO_on_block_eo_135_avx2)
 void SAO_on_block_eo_135_avx2(pel_t *p_dst, int i_dst, const pel_t *p_src, int i_src, int i_block_w, int i_block_h, int bit_depth, const int *lcu_avail, const int *sao_offset);
+#endif
 
 /* ---------------------------------------------------------------------------
  * ALF
@@ -410,6 +441,16 @@ void alf_filter_block_sse128(pel_t *p_dst, const pel_t *p_src, int stride,
     int lcu_pix_x, int lcu_pix_y, int lcu_width, int lcu_height,
     int *alf_coef, int b_top_avail, int b_down_avail);
 
+#define alf_filter_block_sse128_10bit FPFX(alf_filter_block_sse128_10bit)
+void alf_filter_block_sse128_10bit(pel_t* p_dst, const pel_t* p_src, int stride,
+    int lcu_pix_x, int lcu_pix_y, int lcu_width, int lcu_height,
+    int* alf_coeff, int b_top_avail, int b_down_avail);
+#if defined(__AVX2__)
+#define alf_filter_block_avx2_10bit FPFX(alf_filter_block_avx2_10bit)
+void alf_filter_block_avx2_10bit(pel_t* p_dst, const pel_t* p_src, int stride,
+    int lcu_pix_x, int lcu_pix_y, int lcu_width, int lcu_height,
+    int* alf_coeff, int b_top_avail, int b_down_avail);
+#endif
 
 /* ---------------------------------------------------------------------------
  * Intra Prediction
@@ -425,14 +466,26 @@ void fill_edge_samples_xy_sse128(const pel_t *pTL, int i_TL, const pel_t *pLcuEP
 
 #define intra_pred_dc_sse128 FPFX(intra_pred_dc_sse128)
 void intra_pred_dc_sse128       (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
+
+#define intra_pred_dc_sse128_10bit FPFX(intra_pred_dc_sse128_10bit)
+void intra_pred_dc_sse128_10bit(pel_t* src, pel_t* dst, int i_dst, int dir_mode, int bsx, int bsy);
+
 #define intra_pred_plane_sse128 FPFX(intra_pred_plane_sse128)
 void intra_pred_plane_sse128    (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
+#define intra_pred_plane_sse128_10bit FPFX(intra_pred_plane_sse128_10bit)
+void intra_pred_plane_sse128_10bit(pel_t* pSrc, pel_t* dst, int i_dst, int dir_mode, int iWidth, int iHeight);
 #define intra_pred_bilinear_sse128 FPFX(intra_pred_bilinear_sse128)
 void intra_pred_bilinear_sse128 (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
+#define intra_pred_bilinear_sse128_10bit FPFX(intra_pred_bilinear_sse128_10bit)
+void intra_pred_bilinear_sse128_10bit(pel_t* pSrc, pel_t* dst, int i_dst, int dir_mode, int iWidth, int iHeight);
 #define intra_pred_hor_sse128 FPFX(intra_pred_hor_sse128)
 void intra_pred_hor_sse128      (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
+#define intra_pred_hor_sse128_10bit FPFX(intra_pred_hor_sse128_10bit)
+void intra_pred_hor_sse128_10bit(pel_t* pSrc, pel_t* dst, int i_dst, int dir_mode, int iWidth, int iHeight);
 #define intra_pred_ver_sse128 FPFX(intra_pred_ver_sse128)
 void intra_pred_ver_sse128      (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
+#define intra_pred_ver_sse128_10bit FPFX(intra_pred_ver_sse128_10bit)
+void intra_pred_ver_sse128_10bit(pel_t* pSrc, pel_t* dst, int i_dst, int dir_mode, int iWidth, int iHeight);
 
 #define intra_pred_ang_x_3_sse128 FPFX(intra_pred_ang_x_3_sse128)
 void intra_pred_ang_x_3_sse128  (pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy);
