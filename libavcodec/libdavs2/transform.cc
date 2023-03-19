@@ -1020,7 +1020,7 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
         fh->idct[PART_64x16][DCT_QUAD] = idct_64x16_quad_sse128;
     }
 
-#if ARCH_X86_64
+#if ARCH_X86_64 && defined(__AVX2__)
     if (cpuid & DAVS2_CPU_AVX2) {
         fh->idct[PART_8x8  ][DCT_DEAULT]   = idct_8x8_avx2;
         fh->idct[PART_16x16][DCT_DEAULT] = idct_16x16_avx2;
