@@ -57,7 +57,7 @@
 #if defined(__AVX2__)
 #define HAVE_MMX                1     /* X86     */
 #else
-#define HAVE_MMX                0     /* X86     */
+//#define HAVE_MMX                0     /* X86     */
 #endif
 #define HAVE_ALTIVEC            0     /* ALTIVEC */
 #define HAVE_ALTIVEC_H          0

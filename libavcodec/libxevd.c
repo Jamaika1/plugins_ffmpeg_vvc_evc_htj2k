@@ -384,11 +384,11 @@ static const AVClass libxevd_class = {
 
 const FFCodec ff_libxevd_decoder = {
     .p.name             = "evc",
-    .p.long_name        = NULL_IF_CONFIG_SMALL("EVC / MPEG-5 Essential Video Coding (EVC)"),
+    CODEC_LONG_NAME("EVC / MPEG-5 Essential Video Coding (EVC)"),
     .p.type             = AVMEDIA_TYPE_VIDEO,
     .p.id               = AV_CODEC_ID_EVC,
     .init               = libxevd_init,
-    FF_CODEC_RECEIVE_FRAME_CB(libxevd_receive_frame),
+    FF_CODEC_DECODE_CB(libxevd_receive_frame),
     .close              = libxevd_close,
     .priv_data_size     = sizeof(XevdContext),
     .p.priv_class       = &libxevd_class,

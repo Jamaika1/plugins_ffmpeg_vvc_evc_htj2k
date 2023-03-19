@@ -601,7 +601,7 @@ static const FFCodecDefault libxeve_defaults[] = {
 
 const FFCodec ff_libxeve_encoder = {
     .p.name             = "libxeve",
-    .p.long_name        = NULL_IF_CONFIG_SMALL("libxeve MPEG-5 EVC"),
+    CODEC_LONG_NAME("libxeve MPEG-5 EVC"),
     .p.type             = AVMEDIA_TYPE_VIDEO,
     .p.id               = AV_CODEC_ID_EVC,
     .init               = libxeve_init,
