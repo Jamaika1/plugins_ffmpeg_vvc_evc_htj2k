@@ -148,6 +148,8 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_H264, MKTAG('d', 'v', 'a', 'v') }, /* AVC-based Dolby Vision derived from avc3 */
 
     { AV_CODEC_ID_EVC,  MKTAG('e', 'v', 'c', '1') }, /* EVC/MPEG-5 */
+    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'i', '1') }, /* VVC/H.266 which indicates parameter sets may be in ES */
+    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'c', '1') }, /* VVC/H.266 which indicates parameter shall not be in ES */
 
     { AV_CODEC_ID_VP8,  MKTAG('v', 'p', '0', '8') }, /* VP8 */
     { AV_CODEC_ID_VP9,  MKTAG('v', 'p', '0', '9') }, /* VP9 */

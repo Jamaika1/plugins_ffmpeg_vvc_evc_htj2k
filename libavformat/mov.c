@@ -2507,6 +2507,7 @@ static int mov_finalize_stsd_codec(MOVContext *c, AVIOContext *pb,
     case AV_CODEC_ID_VP9:
         sti->need_parsing = AVSTREAM_PARSE_FULL;
         break;
+    case AV_CODEC_ID_VVC:
     case AV_CODEC_ID_EVC:
     case AV_CODEC_ID_AV1:
         /* field_order detection of H264 requires parsing */
@@ -9150,7 +9151,7 @@ const AVInputFormat ff_mov_demuxer = {
     .long_name      = NULL_IF_CONFIG_SMALL("QuickTime / MOV"),
     .priv_class     = &mov_class,
     .priv_data_size = sizeof(MOVContext),
-    .extensions     = "mov,mp4,m4a,3gp,3g2,mj2,psp,m4b,ism,ismv,isma,f4v,avif,evc",
+    .extensions     = "mov,mp4,m4a,3gp,3g2,mj2,psp,m4b,ism,ismv,isma,f4v,avif,evc,vvc,h266,266",
     .flags_internal = FF_FMT_INIT_CLEANUP,
     .read_probe     = mov_probe,
     .read_header    = mov_read_header,
