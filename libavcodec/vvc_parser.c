@@ -110,7 +110,7 @@ static int find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
         nut = (pc->state64 >> (8 + 3)) & 0x1F;
         // 7.4.2.4.3 and 7.4.2.4.4
         if ((nut >= VVC_OPI_NUT && nut <= VVC_PREFIX_APS_NUT && nut != VVC_PH_NUT) ||
-            nut == VVC_AUD_NUT || nut == VVC_PREFIX_SEI_NUT || nut == VVC_RSV_NVCL_26 ||
+            nut == VVC_AUD_NUT || (nut == VVC_PREFIX_SEI_NUT && !pc->frame_start_found) || nut == VVC_RSV_NVCL_26 ||
             nut == VVC_UNSPEC_28 || nut == VVC_UNSPEC_29) {
             if (pc->frame_start_found) {
                 pc->frame_start_found = 0;
@@ -198,13 +198,18 @@ static int set_parser_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx,
     const H266RawSPS *sps = pu->sps;
     const H266RawPPS *pps = pu->pps;
     const H266RawPH  *ph  = pu->ph;
+    const H266RawNALUnitHeader *nal = &pu->slice->header.nal_unit_header;
 
     /* set some sane default values */
     ctx->pict_type         = AV_PICTURE_TYPE_I;
     ctx->key_frame         = 0;
     ctx->picture_structure = AV_PICTURE_STRUCTURE_FRAME;
 
-    ctx->key_frame    = ph->ph_gdr_or_irap_pic_flag;
+    ctx->key_frame    = nal->nal_unit_type == VVC_IDR_W_RADL ||
+                        nal->nal_unit_type == VVC_IDR_N_LP   ||
+                        nal->nal_unit_type == VVC_CRA_NUT    ||
+                        nal->nal_unit_type == VVC_GDR_NUT;
+
     ctx->coded_width  = pps->pps_pic_width_in_luma_samples;
     ctx->coded_height = pps->pps_pic_height_in_luma_samples;
     ctx->width        = pps->pps_pic_width_in_luma_samples  -
@@ -218,6 +223,11 @@ static int set_parser_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx,
 
     avctx->profile  = sps->profile_tier_level.general_profile_idc;
     avctx->level    = sps->profile_tier_level.general_level_idc;
+
+    //avctx->colorspace = (enum AVColorSpace) sps->vui.vui_matrix_coeffs;
+    //avctx->color_primaries = (enum AVColorPrimaries) sps->vui.vui_colour_primaries;
+    //avctx->color_trc = (enum AVColorTransferCharacteristic) sps->vui.vui_transfer_characteristics;
+    //avctx->color_range = sps->vui.vui_full_range_flag ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
 
     if (ctx->width != avctx->width || ctx->height != avctx->height) {
         ret = ff_set_dimensions(avctx, ctx->width, ctx->height);
@@ -338,7 +348,7 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
                 info->ph = &info->slice->header.sh_picture_header;
             if (!info->ph) {
                 av_log(logctx, AV_LOG_ERROR,
-                       "can't find picture header in picutre unit.\n");
+                       "can't find picture header in picture unit.\n");
                 ret = AVERROR_INVALIDDATA;
                 goto error;
             }
@@ -347,7 +357,7 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
     }
     if (!info->slice) {
         av_log(logctx, AV_LOG_ERROR,
-            "can't find slice in picutre unit.\n");
+            "can't find slice in picture unit.\n");
         ret = AVERROR_INVALIDDATA;
         goto error;
     }
