@@ -418,11 +418,8 @@ const AVOutputFormat ff_evc_muxer = {
 static int vvc_check_bitstream(struct AVFormatContext *s, struct AVStream *st, const AVPacket *pkt)
 {
     if (pkt->size >= 5 && AV_RB32(pkt->data) != 0x0000001 &&
-                          AV_RB24(pkt->data) != 0x000001) {
-        //TODO: fixed this after vvc codec defined in http://mp4ra.org/#/codecs
-        av_log(s, AV_LOG_ERROR, "vvc: mp4 to annexb is not supported\n");
-        return AVERROR_PATCHWELCOME;
-    }
+                          AV_RB24(pkt->data) != 0x000001)
+        return ff_stream_add_bitstream_filter(st, "vvc_mp4toannexb", NULL);
     return 1;
 }
 
