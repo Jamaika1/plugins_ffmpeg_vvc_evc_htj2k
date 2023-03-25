@@ -30,6 +30,13 @@
  */
 #if defined(TRIO_HAVE_CONFIG_H)
 # include "config.h"
+#elif defined(_WIN32) || defined(WIN32)
+/*
+ * [i_a] Windows NT/XP/Vista/2003 compatibility definitions and functions
+ * This is needed to compile libxml2 for Windows using MSVC2003/2005.
+ * Tested with MSVC2005 on WinXP.
+ */
+#include "win32config.h"
 #endif
 
 #include "triodef.h"
