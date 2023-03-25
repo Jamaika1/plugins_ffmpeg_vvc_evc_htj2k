@@ -7,6 +7,7 @@
  */
 
 
+#define IN_LIBXML
 #include "libxml.h"
 #include <stdlib.h>
 #include <string.h>
@@ -1913,7 +1914,7 @@ xmlSAX2TextNode(xmlParserCtxtPtr ctxt, const xmlChar *str, int len) {
 skip:
     ret->type = XML_TEXT_NODE;
 
-    ret->name = xmlStringText;
+    ret->name = xmlStringText();
     if (intern == NULL) {
 	ret->content = xmlStrndup(str, len);
 	if (ret->content == NULL) {
@@ -2283,6 +2284,7 @@ xmlSAX2StartElementNs(void *ctx,
 	        ret->name = lname;
 	    if (ret->name == NULL) {
 	        xmlSAX2ErrMemory(ctxt, "xmlSAX2StartElementNs");
+                xmlFree(ret);
 		return;
 	    }
 	}
@@ -2594,7 +2596,7 @@ xmlSAX2Text(xmlParserCtxtPtr ctxt, const xmlChar *ch, int len,
 	int coalesceText = (lastChild != NULL) &&
 	    (lastChild->type == type) &&
 	    ((type != XML_TEXT_NODE) ||
-             (lastChild->name == xmlStringText));
+             (lastChild->name == xmlStringText()));
 	if ((coalesceText) && (ctxt->nodemem != 0)) {
 	    /*
 	     * The whole point of maintaining nodelen and nodemem,

@@ -11,6 +11,7 @@
  * daniel@veillard.com
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #ifdef LIBXML_HTTP_ENABLED
@@ -49,8 +50,11 @@
 #else
 #include <poll.h>
 #endif
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) && !defined(LIBXML_ZLIB_NG_ENABLED)
 #include <zlib.h>
+#endif
+#ifdef LIBXML_ZLIB_NG_ENABLED
+#include <zlib-ng.h>
 #endif
 
 
@@ -73,6 +77,8 @@
 
 #include "private/error.h"
 #include "private/io.h"
+
+#include "monolithic_examples.h"
 
 /**
  * A couple portability macros
@@ -129,8 +135,12 @@ typedef struct xmlNanoHTTPCtxt {
     char *authHeader;	/* contents of {WWW,Proxy}-Authenticate header */
     char *encoding;	/* encoding extracted from the contentType */
     char *mimeType;	/* Mime-Type extracted from the contentType */
-#ifdef LIBXML_ZLIB_ENABLED
-    z_stream *strm;	/* Zlib stream object */
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
+#if !defined(LIBXML_ZLIB_NG_ENABLED)
+	z_stream *strm;	/* Zlib stream object */
+#else
+	zng_stream *strm;	/* Zlib stream object */
+#endif
     int usesGzip;	/* "Content-Encoding: gzip" was detected */
 #endif
 } xmlNanoHTTPCtxt, *xmlNanoHTTPCtxtPtr;
@@ -404,9 +414,13 @@ xmlNanoHTTPFreeCtxt(xmlNanoHTTPCtxtPtr ctxt) {
     if (ctxt->mimeType != NULL) xmlFree(ctxt->mimeType);
     if (ctxt->location != NULL) xmlFree(ctxt->location);
     if (ctxt->authHeader != NULL) xmlFree(ctxt->authHeader);
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     if (ctxt->strm != NULL) {
-	inflateEnd(ctxt->strm);
+#if !defined(LIBXML_ZLIB_NG_ENABLED)
+		inflateEnd(ctxt->strm);
+#else
+		zng_inflateEnd(ctxt->strm);
+#endif
 	xmlFree(ctxt->strm);
     }
 #endif
@@ -787,14 +801,14 @@ xmlNanoHTTPScanAnswer(xmlNanoHTTPCtxtPtr ctxt, const char *line) {
 	if (ctxt->authHeader != NULL)
 	    xmlFree(ctxt->authHeader);
 	ctxt->authHeader = xmlMemStrdup(cur);
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     } else if ( !xmlStrncasecmp( BAD_CAST line, BAD_CAST"Content-Encoding:", 17) ) {
 	cur += 17;
 	while ((*cur == ' ') || (*cur == '\t')) cur++;
 	if ( !xmlStrncasecmp( BAD_CAST cur, BAD_CAST"gzip", 4) ) {
 	    ctxt->usesGzip = 1;
 
-	    ctxt->strm = xmlMalloc(sizeof(z_stream));
+	    ctxt->strm = xmlMalloc(sizeof(*ctxt->strm));
 
 	    if (ctxt->strm != NULL) {
 		ctxt->strm->zalloc = Z_NULL;
@@ -802,8 +816,11 @@ xmlNanoHTTPScanAnswer(xmlNanoHTTPCtxtPtr ctxt, const char *line) {
 		ctxt->strm->opaque = Z_NULL;
 		ctxt->strm->avail_in = 0;
 		ctxt->strm->next_in = Z_NULL;
-
+#if !defined(LIBXML_ZLIB_NG_ENABLED)
 		inflateInit2( ctxt->strm, 31 );
+#else
+		zng_inflateInit2( ctxt->strm, 31 );
+#endif
 	    }
 	}
 #endif
@@ -1200,7 +1217,7 @@ xmlNanoHTTPOpenRedir(const char *URL, char **contentType, char **redir) {
 int
 xmlNanoHTTPRead(void *ctx, void *dest, int len) {
     xmlNanoHTTPCtxtPtr ctxt = (xmlNanoHTTPCtxtPtr) ctx;
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     int bytes_read = 0;
     int orig_avail_in;
     int z_ret;
@@ -1210,7 +1227,7 @@ xmlNanoHTTPRead(void *ctx, void *dest, int len) {
     if (dest == NULL) return(-1);
     if (len <= 0) return(0);
 
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     if (ctxt->usesGzip == 1) {
         if (ctxt->strm == NULL) return(0);
 
@@ -1223,8 +1240,11 @@ xmlNanoHTTPRead(void *ctx, void *dest, int len) {
             orig_avail_in = ctxt->strm->avail_in =
 			    ctxt->inptr - ctxt->inrptr - bytes_read;
             ctxt->strm->next_in = BAD_CAST (ctxt->inrptr + bytes_read);
-
+#if !defined(LIBXML_ZLIB_NG_ENABLED)
             z_ret = inflate(ctxt->strm, Z_NO_FLUSH);
+#else
+            z_ret = zng_inflate(ctxt->strm, Z_NO_FLUSH);
+#endif
             bytes_read += orig_avail_in - ctxt->strm->avail_in;
 
             if (z_ret != Z_OK) break;
@@ -1454,7 +1474,7 @@ retry:
 	/* 1 for '?' */
 	blen += strlen(ctxt->query) + 1;
     blen += strlen(method) + strlen(ctxt->path) + 24;
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     /* reserve for possible 'Accept-Encoding: gzip' string */
     blen += 23;
 #endif
@@ -1498,7 +1518,7 @@ retry:
 		    ctxt->hostname, ctxt->port);
     }
 
-#ifdef LIBXML_ZLIB_ENABLED
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
     p += snprintf(p, blen - (p - bp), "Accept-Encoding: gzip\r\n");
 #endif
 
@@ -1894,8 +1914,13 @@ xmlNanoHTTPFetchContent( void * ctx, char ** ptr, int * len ) {
     return ( rc );
 }
 
-#ifdef STANDALONE
-int main(int argc, char **argv) {
+#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      xml_nanohttp_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv) {
     char *contentType = NULL;
 
     if (argv[1] != NULL) {
@@ -1916,9 +1941,14 @@ int main(int argc, char **argv) {
 }
 #endif /* STANDALONE */
 #else /* !LIBXML_HTTP_ENABLED */
-#ifdef STANDALONE
+#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
 #include <stdio.h>
-int main(int argc, char **argv) {
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      xml_nanohttp_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv) {
     xmlGenericError(xmlGenericErrorContext,
 	    "%s : HTTP support not compiled in\n", argv[0]);
     return(0);

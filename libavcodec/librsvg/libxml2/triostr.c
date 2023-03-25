@@ -77,6 +77,8 @@
 # define USE_STRCASECMP
 # if defined(_WIN32_WCE)
 #  define strcasecmp(x,y) _stricmp(x,y)
+# elif (defined(_MSC_VER) && (_MSC_VER >= 1500))
+#  define strcasecmp(x,y) _strcmpi(x,y)
 # else
 #  define strcasecmp(x,y) strcmpi(x,y)
 # endif

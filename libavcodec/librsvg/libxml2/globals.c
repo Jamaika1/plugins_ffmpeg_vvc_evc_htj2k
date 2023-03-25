@@ -11,6 +11,7 @@
  * daniel@veillard.com
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <stdlib.h>
@@ -81,13 +82,19 @@ xmlMallocFunc xmlMallocAtomic = (xmlMallocFunc) xmlMemMalloc;
 xmlReallocFunc xmlRealloc = (xmlReallocFunc) xmlMemRealloc;
 xmlStrdupFunc xmlMemStrdup = (xmlStrdupFunc) xmlMemoryStrdup;
 #else
+/* [i_a] make sure MS and other platforms always do the linkage right, irrespective of whether you're using dynamic loadable of statically linked runtime libs */
+static void XMLCALL lcl_xmlFreeFunc(void *mem) { free(mem); }
+static void * LIBXML_ATTR_ALLOC_SIZE(1) XMLCALL lcl_xmlMallocFunc(size_t size) { return malloc(size); }
+static void * XMLCALL lcl_xmlReallocFunc(void *mem, size_t size) { return realloc(mem, size); }
+static char * XMLCALL lcl_xmlStrdupFunc(const char *str) { return strdup(str); }
+
 /**
  * xmlFree:
  * @mem: an already allocated block of memory
  *
  * The variable holding the libxml free() implementation
  */
-xmlFreeFunc xmlFree = free;
+xmlFreeFunc xmlFree = lcl_xmlFreeFunc;
 /**
  * xmlMalloc:
  * @size:  the size requested in bytes
@@ -96,7 +103,7 @@ xmlFreeFunc xmlFree = free;
  *
  * Returns a pointer to the newly allocated block or NULL in case of error
  */
-xmlMallocFunc xmlMalloc = malloc;
+xmlMallocFunc xmlMalloc = lcl_xmlMallocFunc;
 /**
  * xmlMallocAtomic:
  * @size:  the size requested in bytes
@@ -107,7 +114,7 @@ xmlMallocFunc xmlMalloc = malloc;
  *
  * Returns a pointer to the newly allocated block or NULL in case of error
  */
-xmlMallocFunc xmlMallocAtomic = malloc;
+xmlMallocFunc xmlMallocAtomic = lcl_xmlMallocFunc;
 /**
  * xmlRealloc:
  * @mem: an already allocated block of memory
@@ -117,19 +124,7 @@ xmlMallocFunc xmlMallocAtomic = malloc;
  *
  * Returns a pointer to the newly reallocated block or NULL in case of error
  */
-xmlReallocFunc xmlRealloc = realloc;
-/**
- * xmlPosixStrdup
- * @cur:  the input char *
- *
- * a strdup implementation with a type signature matching POSIX
- *
- * Returns a new xmlChar * or NULL
- */
-static char *
-xmlPosixStrdup(const char *cur) {
-    return((char*) xmlCharStrdup(cur));
-}
+xmlReallocFunc xmlRealloc = lcl_xmlReallocFunc;
 /**
  * xmlMemStrdup:
  * @str: a zero terminated string
@@ -138,7 +133,7 @@ xmlPosixStrdup(const char *cur) {
  *
  * Returns the copy of the string or NULL in case of error
  */
-xmlStrdupFunc xmlMemStrdup = xmlPosixStrdup;
+xmlStrdupFunc xmlMemStrdup = lcl_xmlStrdupFunc;
 #endif /* DEBUG_MEMORY_LOCATION || DEBUG_MEMORY */
 
 #include "threads.h"

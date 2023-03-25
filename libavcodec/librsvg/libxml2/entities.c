@@ -11,6 +11,7 @@
 #pragma convert("ISO8859-1")
 #endif
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <string.h>

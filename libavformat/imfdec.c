@@ -322,7 +322,7 @@ static int parse_assetmap(AVFormatContext *s, const char *url)
         goto clean_up;
     }
 
-    LIBXML_TEST_VERSION
+    LIBXML_TEST_VERSION();
 
     tmp_str = av_strdup(url);
     if (!tmp_str) {

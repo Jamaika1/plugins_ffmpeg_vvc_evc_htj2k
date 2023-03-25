@@ -182,7 +182,7 @@ typedef enum {
 
 /** DOC_DISABLE */
 /* For backward compatibility */
-#define XML_DOCB_DOCUMENT_NODE 21
+#define XML_DOCB_DOCUMENT_NODE      error!: "b0rked DocBook support has been dropped from libxml"
 /** DOC_ENABLE */
 
 /**
@@ -740,7 +740,7 @@ XMLPUBFUN void
 XMLPUBFUN const xmlChar*
 		xmlBufferContent	(const xmlBuffer *buf);
 XMLPUBFUN xmlChar*
-		xmlBufferDetach         (xmlBufferPtr buf);
+		xmlBufferDetach         (const xmlBufferPtr buf);
 XMLPUBFUN void
 		xmlBufferSetAllocationScheme(xmlBufferPtr buf,
 					 xmlBufferAllocationScheme scheme);

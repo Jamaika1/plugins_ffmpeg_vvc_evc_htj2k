@@ -13,6 +13,7 @@
  * - report better mem allocations pbms at runtime and abort immediately.
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #ifdef LIBXML_SCHEMAS_ENABLED
@@ -7986,12 +7987,7 @@ xmlRelaxNGValidateCompiledCallback(xmlRegExecCtxtPtr exec ATTRIBUTE_UNUSED,
             ctxt->errNo = XML_RELAXNG_ERR_INTERNAL;
         return;
     }
-    if ((ctxt == NULL) || (define == NULL)) {
-        fprintf(stderr, "callback on %s missing info\n", token);
-        if ((ctxt != NULL) && (ctxt->errNo == XML_RELAXNG_OK))
-            ctxt->errNo = XML_RELAXNG_ERR_INTERNAL;
-        return;
-    } else if (define->type != XML_RELAXNG_ELEMENT) {
+    if (define->type != XML_RELAXNG_ELEMENT) {
         fprintf(stderr, "callback on %s define is not element\n", token);
         if (ctxt->errNo == XML_RELAXNG_OK)
             ctxt->errNo = XML_RELAXNG_ERR_INTERNAL;

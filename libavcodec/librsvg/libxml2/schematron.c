@@ -20,6 +20,7 @@
  * + try and compare with the XSLT version
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #ifdef LIBXML_SCHEMATRON_ENABLED
@@ -34,6 +35,8 @@
 #include "schematron.h"
 
 #include "private/error.h"
+
+#include "monolithic_examples.h"
 
 #define SCHEMATRON_PARSE_OPTIONS XML_PARSE_NOENT
 
@@ -1585,8 +1588,8 @@ xmlSchematronReportSuccess(xmlSchematronValidCtxtPtr ctxt,
         long line;
         const xmlChar *report = NULL;
 
-        if (((test->type == XML_SCHEMATRON_REPORT) & (!success)) ||
-            ((test->type == XML_SCHEMATRON_ASSERT) & (success)))
+        if (((test->type == XML_SCHEMATRON_REPORT) && (!success)) ||
+            ((test->type == XML_SCHEMATRON_ASSERT) && (success)))
             return;
         line = xmlGetLineNo(cur);
         path = xmlGetNodePath(cur);
@@ -2014,10 +2017,13 @@ xmlSchematronValidateDoc(xmlSchematronValidCtxtPtr ctxt, xmlDocPtr instance)
     return(ctxt->nberrors);
 }
 
-#ifdef STANDALONE
-int
-main(void)
-{
+#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
+
+#if defined(BUILD_MONOLITHIC)
+#define main(cnt, arr)      xml_schematron_main(cnt, arr)
+#endif
+
+int main(int argc, const char** argv) {
     int ret;
     xmlDocPtr instance;
     xmlSchematronParserCtxtPtr pctxt;
@@ -2040,7 +2046,7 @@ main(void)
         fprintf(stderr, "failed to parse instance\n");
     }
     if ((schema != NULL) && (instance != NULL)) {
-        vctxt = xmlSchematronNewValidCtxt(schema);
+        vctxt = xmlSchematronNewValidCtxt(schema, 0 /* options */ );
         if (vctxt == NULL) {
             fprintf(stderr, "failed to build schematron validator\n");
         } else {

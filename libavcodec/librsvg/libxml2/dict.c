@@ -16,6 +16,7 @@
  * Author: daniel@veillard.com
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <limits.h>

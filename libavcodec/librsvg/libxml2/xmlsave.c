@@ -6,6 +6,7 @@
  * daniel@veillard.com
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <string.h>
@@ -926,7 +927,7 @@ xmlNodeDumpOutputInternal(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
         case XML_TEXT_NODE:
 	    if (cur->content == NULL)
                 break;
-	    if (cur->name != xmlStringTextNoenc) {
+	    if (cur->name != xmlStringTextNoenc()) {
                 xmlOutputBufferWriteEscape(buf, cur->content, ctxt->escape);
 	    } else {
 		/*
@@ -1578,8 +1579,8 @@ xhtmlNodeDumpOutput(xmlSaveCtxtPtr ctxt, xmlNodePtr cur) {
         case XML_TEXT_NODE:
 	    if (cur->content == NULL)
                 break;
-	    if ((cur->name == xmlStringText) ||
-		(cur->name != xmlStringTextNoenc)) {
+	    if ((cur->name == xmlStringText()) ||
+		(cur->name != xmlStringTextNoenc())) {
                 xmlOutputBufferWriteEscape(buf, cur->content, ctxt->escape);
 	    } else {
 		/*
@@ -2362,6 +2363,7 @@ xmlDocDumpFormatMemoryEnc(xmlDocPtr out_doc, xmlChar **doc_txt_ptr,
 
     if ((out_buff = xmlAllocOutputBuffer(conv_hdlr)) == NULL ) {
         xmlSaveErrMemory("creating buffer");
+        xmlCharEncCloseFunc(conv_hdlr);
         return;
     }
 
@@ -2617,8 +2619,8 @@ xmlSaveFormatFileEnc( const char * filename, xmlDocPtr cur,
 		return(-1);
     }
 
-#ifdef LIBXML_ZLIB_ENABLED
-    if (cur->compression < 0) cur->compression = xmlGetCompressMode();
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
+	if (cur->compression < 0) cur->compression = xmlGetCompressMode();
 #endif
     /*
      * save the content to a temp buffer.

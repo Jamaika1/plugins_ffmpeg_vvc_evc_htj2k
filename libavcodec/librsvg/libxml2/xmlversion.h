@@ -1,6 +1,6 @@
 /*
- * Summary: compile-time version informations
- * Description: compile-time version informations for the XML library
+ * Summary: compile-time version information
+ * Description: compile-time version information for the XML library
  *
  * Copy: See Copyright for the status of this software.
  *
@@ -11,6 +11,7 @@
 #define __XML_VERSION_H__
 
 #include "xmlexports.h"
+//#include <libxml/xmlwin32version.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ extern "C" {
  * your library and includes mismatch
  */
 #ifndef LIBXML2_COMPILING_MSCCDEF
-XMLPUBFUN void xmlCheckVersion(int version);
+XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif /* LIBXML2_COMPILING_MSCCDEF */
 
 /**
@@ -29,28 +30,28 @@ XMLPUBFUN void xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.9.10"
+#define LIBXML_DOTTED_VERSION "2.9.9"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 20910
+#define LIBXML_VERSION 20909
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "20910"
+#define LIBXML_VERSION_STRING "20909"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
- * extra version information, used to show a CVS compilation
+ * extra version information, used to show a git commit description
  */
-#define LIBXML_VERSION_EXTRA ""
+#define LIBXML_VERSION_EXTRA "-git"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -58,7 +59,7 @@ XMLPUBFUN void xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(20910);
+#define LIBXML_TEST_VERSION() xmlCheckVersion(20909)
 
 #ifndef VMS
 #if 0
@@ -234,7 +235,7 @@ XMLPUBFUN void xmlCheckVersion(int version);
  *
  * Whether the SGML Docbook support is configured in
  */
-#if 1
+#if 0
 #define LIBXML_DOCB_ENABLED
 #endif
 
@@ -254,6 +255,15 @@ XMLPUBFUN void xmlCheckVersion(int version);
  */
 #if 1
 #define LIBXML_XPTR_ENABLED
+#endif
+
+/**
+ * LIBXML_XPTR_LOCS_ENABLED:
+ *
+ * Whether support for XPointer locations is configured in
+ */
+#if 1
+#define LIBXML_XPTR_LOCS_ENABLED
 #endif
 
 /**
@@ -380,14 +390,14 @@ XMLPUBFUN void xmlCheckVersion(int version);
  *
  * Whether the module interfaces are compiled in
  */
-#if 0
+#if 1
 #define LIBXML_MODULES_ENABLED
 /**
  * LIBXML_MODULE_EXTENSION:
  *
  * the string suffix used by dynamic modules (usually shared libraries)
  */
-#define LIBXML_MODULE_EXTENSION ""
+#define LIBXML_MODULE_EXTENSION ".dll"
 #endif
 
 /**
@@ -397,6 +407,15 @@ XMLPUBFUN void xmlCheckVersion(int version);
  */
 #if 1
 #define LIBXML_ZLIB_ENABLED
+#endif
+
+/**
+ * LIBXML_ZLIB_NG_ENABLED:
+ *
+ * Whether the Zlib-NG support is compiled in
+ */
+#if 0
+#define LIBXML_ZLIB_NG_ENABLED
 #endif
 
 /**
@@ -455,16 +474,17 @@ XMLPUBFUN void xmlCheckVersion(int version);
 #else
 # define LIBXML_ATTR_FORMAT(fmt,args)
 #endif
+
 #ifndef XML_DEPRECATED
-#  if defined (IN_LIBXML) || (__GNUC__ * 100 + __GNUC_MINOR__ < 301)
+#  ifdef IN_LIBXML
 #    define XML_DEPRECATED
-/* Available since at least GCC 3.1 */
 #  else
+/* Available since at least GCC 3.1 */
 #    define XML_DEPRECATED __attribute__((deprecated))
 #  endif
 #endif
 
-#if defined(__clang__) || (__GNUC__ * 100 + __GNUC_MINOR__ >= 406)
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 406))
 #define XML_IGNORE_FPTR_CAST_WARNINGS \
     _Pragma("GCC diagnostic push") \
     _Pragma("GCC diagnostic ignored \"-Wpedantic\"") \
@@ -477,7 +497,6 @@ XMLPUBFUN void xmlCheckVersion(int version);
 #endif
 
 /** DOC_ENABLE */
-
 #else /* ! __GNUC__ */
 /**
  * ATTRIBUTE_UNUSED:
@@ -504,38 +523,25 @@ XMLPUBFUN void xmlCheckVersion(int version);
  * is deprecated.
  */
 #ifndef XML_DEPRECATED
-#  if defined (IN_LIBXML) || !defined (_MSC_VER)
-#    define XML_DEPRECATED
-/* Available since Visual Studio 2005 */
-#  elif defined (_MSC_VER) && (_MSC_VER >= 1400)
-#    define XML_DEPRECATED __declspec(deprecated)
-#  endif
+#define XML_DEPRECATED
 #endif
 /**
  * LIBXML_IGNORE_FPTR_CAST_WARNINGS:
  *
  * Macro used to ignore pointer cast warnings that can't be worked around.
  */
-#if defined (_MSC_VER) && (_MSC_VER >= 1400)
-#  define XML_IGNORE_FPTR_CAST_WARNINGS __pragma(warning(push))
-#else
-#  define XML_IGNORE_FPTR_CAST_WARNINGS
-#endif
+#define XML_IGNORE_FPTR_CAST_WARNINGS
 /**
- * XML_POP_WARNINGS:
+ * LIBXML_POP_WARNINGS:
  *
  * Macro used to restore warnings state.
  */
-#ifndef XML_POP_WARNINGS
-#  if defined (_MSC_VER) && (_MSC_VER >= 1400)
-#    define XML_POP_WARNINGS __pragma(warning(pop))
-#  else
-#    define XML_POP_WARNINGS
-#  endif
-#endif
+#define XML_POP_WARNINGS
 #endif /* __GNUC__ */
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 #endif
+
+
