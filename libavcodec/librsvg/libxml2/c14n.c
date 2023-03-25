@@ -9,7 +9,7 @@
  *
  * Author: Aleksey Sanin <aleksey@aleksey.com>
  */
-
+#define IN_LIBXML
 #include "libxml.h"
 #ifdef LIBXML_C14N_ENABLED
 
@@ -2075,8 +2075,8 @@ xmlC14NDocSave(xmlDocPtr doc, xmlNodeSetPtr nodes,
         xmlC14NErrParam("saving doc");
         return (-1);
     }
-#ifdef LIBXML_ZLIB_ENABLED
-    if (compression < 0)
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
+	if (compression < 0)
         compression = xmlGetCompressMode();
 #endif
 

@@ -23,6 +23,7 @@
  * - DONE (2006-05-16): get rid of the Strdup/Strndup in case of dictionary
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <string.h>
@@ -39,7 +40,7 @@
 /* #define DEBUG_STREAMING */
 
 #ifdef ERROR
-#undef ERROR
+#undef ERROR /* [i_a] Win32 defines this one in winGDI.h :-( */
 #endif
 #define ERROR(a, b, c, d)
 #define ERROR5(a, b, c, d, e)
@@ -2038,22 +2039,12 @@ xmlStreamPushInternal(xmlStreamCtxtPtr stream,
 #endif /* if 0 ------------------------------------------------------- */
 	    if (match) {
 		final = step.flags & XML_STREAM_STEP_FINAL;
-		if (desc) {
-		    if (final) {
-			ret = 1;
-		    } else {
-			/* descending match create a new state */
-			xmlStreamCtxtAddState(stream, stepNr + 1,
-			                      stream->level + 1);
-		    }
-		} else {
-		    if (final) {
-			ret = 1;
-		    } else {
-			xmlStreamCtxtAddState(stream, stepNr + 1,
-			                      stream->level + 1);
-		    }
-		}
+                if (final) {
+                    ret = 1;
+                } else {
+                    xmlStreamCtxtAddState(stream, stepNr + 1,
+                                          stream->level + 1);
+                }
 		if ((ret != 1) && (step.flags & XML_STREAM_STEP_IN_SET)) {
 		    /*
 		    * Check if we have a special case like "foo/bar//.", where

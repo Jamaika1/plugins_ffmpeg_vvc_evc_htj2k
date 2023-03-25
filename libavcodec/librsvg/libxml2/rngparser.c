@@ -18,6 +18,8 @@
 #include "relaxng.h"
 #include "dict.h"
 
+#include "monolithic_examples.h"
+
 #define TODO								\
     xmlGenericError(xmlGenericErrorContext,				\
 	    "Unimplemented block at %s:%d\n",				\
@@ -1490,8 +1492,11 @@ xmlConvertCRNG(const char *schemas, int len, const char *encoding) {
     ctxt.key_ref = xmlDictLookup(ctxt.dict, BAD_CAST "ref", 3);
     ctxt.key_define = xmlDictLookup(ctxt.dict, BAD_CAST "define", 6);
 
-    /* xmlConvertCRNGTokenize(&ctxt); */
-    xmlParseCRNG_topLevel(&ctxt);
+#if 0
+	xmlConvertCRNGTokenize(&ctxt);
+    xmlConvertCRNG_topLevel(&ctxt);
+#endif
+	xmlParseCRNG_topLevel(&ctxt);
 
     xmlDictFree(ctxt.dict);
 
@@ -1511,6 +1516,7 @@ xmlConvertCRNG(const char *schemas, int len, const char *encoding) {
  */
 xmlDocPtr
 xmlConvertCRNGFile(const char *URL, const char *encoding) {
+	return NULL;
 }
 
 #ifdef STANDALONE

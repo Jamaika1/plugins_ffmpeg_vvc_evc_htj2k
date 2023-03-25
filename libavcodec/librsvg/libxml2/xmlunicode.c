@@ -11,6 +11,7 @@
  * Daniel Veillard <veillard@redhat.com>
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #ifdef LIBXML_UNICODE_ENABLED

@@ -20,6 +20,7 @@
  * Original code for IsoLatin1 and UTF-16 by "Martin J. Duerst" <duerst@w3.org>
  */
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #include <string.h>
@@ -1041,7 +1042,7 @@ xmlGetEncodingAlias(const char *alias) {
 	return(NULL);
 
     for (i = 0;i < 99;i++) {
-        upper[i] = toupper(alias[i]);
+        upper[i] = (char) toupper((unsigned char) alias[i]);
 	if (upper[i] == 0) break;
     }
     upper[i] = 0;
@@ -1076,7 +1077,7 @@ xmlAddEncodingAlias(const char *name, const char *alias) {
 	return(-1);
 
     for (i = 0;i < 99;i++) {
-        upper[i] = toupper(alias[i]);
+        upper[i] = (char) toupper((unsigned char) alias[i]);
 	if (upper[i] == 0) break;
     }
     upper[i] = 0;
@@ -1178,7 +1179,7 @@ xmlParseCharEncoding(const char* name)
 	name = alias;
 
     for (i = 0;i < 499;i++) {
-        upper[i] = toupper(name[i]);
+        upper[i] = (char) toupper((unsigned char) name[i]);
 	if (upper[i] == 0) break;
     }
     upper[i] = 0;
@@ -1435,7 +1436,7 @@ xmlNewCharEncodingHandler(const char *name,
 	return(NULL);
     }
     for (i = 0;i < 499;i++) {
-        upper[i] = toupper(name[i]);
+        upper[i] = (char) toupper((unsigned char) name[i]);
 	if (upper[i] == 0) break;
     }
     upper[i] = 0;
@@ -1750,7 +1751,7 @@ xmlFindCharEncodingHandler(const char *name) {
      * Check first for directly registered encoding names
      */
     for (i = 0;i < 99;i++) {
-        upper[i] = toupper(name[i]);
+        upper[i] = (char) toupper((unsigned char) name[i]);
 	if (upper[i] == 0) break;
     }
     upper[i] = 0;
@@ -1792,6 +1793,12 @@ xmlFindCharEncodingHandler(const char *name) {
 	    }
             memset(enc, 0, sizeof(xmlCharEncodingHandler));
 	    enc->name = xmlMemStrdup(name);
+            if (enc->name == NULL) {
+                xmlFree(enc);
+                iconv_close(icv_in);
+                iconv_close(icv_out);
+                return(NULL);
+            }
 	    enc->input = NULL;
 	    enc->output = NULL;
 	    enc->iconv_in = icv_in;
@@ -1824,6 +1831,12 @@ xmlFindCharEncodingHandler(const char *name) {
 	    }
             memset(encu, 0, sizeof(xmlCharEncodingHandler));
 	    encu->name = xmlMemStrdup(name);
+            if (encu->name == NULL) {
+                xmlFree(encu);
+                closeIcuConverter(ucv_in);
+                closeIcuConverter(ucv_out);
+                return(NULL);
+            }
 	    encu->input = NULL;
 	    encu->output = NULL;
 	    encu->uconv_in = ucv_in;
@@ -2821,7 +2834,6 @@ xmlCharEncCloseFunc(xmlCharEncodingHandler *handler) {
     int i = 0;
 
     if (handler == NULL) return(-1);
-    if (handler->name == NULL) return(-1);
 
     for (i = 0; i < (int) NUM_DEFAULT_HANDLERS; i++) {
         if (handler == &defaultHandlers[i])
@@ -3131,6 +3143,9 @@ ISO8859xToUTF8(unsigned char* out, int *outlen,
     return (*outlen);
 }
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4295) // warning C4295: 'xmltranscodetable_ISO8859_6': array is too small to include a terminating null character
+#endif
 
 /************************************************************************
  * Lookup tables for ISO-8859-2..ISO-8859-16 transcoding                *

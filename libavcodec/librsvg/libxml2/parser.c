@@ -35,6 +35,7 @@
 #pragma convert("ISO8859-1")
 #endif
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #if defined(_WIN32)
@@ -1003,8 +1004,8 @@ xmlHasFeature(xmlFeature feature)
         case XML_WITH_DEBUG_RUN:
             return(0);
         case XML_WITH_ZLIB:
-#ifdef LIBXML_ZLIB_ENABLED
-            return(1);
+#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
+			return(1);
 #else
             return(0);
 #endif
@@ -2621,7 +2622,7 @@ xmlStringDecodeEntitiesInt(xmlParserCtxtPtr ctxt, const xmlChar *str, int len,
     xmlChar *rep = NULL;
     const xmlChar *last;
     xmlEntityPtr ent;
-    int c,l;
+    int c,l = 0;
 
     if (str == NULL)
         return(NULL);
@@ -5586,7 +5587,7 @@ xmlParseEntityDecl(xmlParserCtxtPtr ctxt) {
 			ctxt->myDoc = xmlNewDoc(SAX_COMPAT_MODE);
 			if (ctxt->myDoc == NULL) {
 			    xmlErrMemory(ctxt, "New Doc failed");
-			    return;
+			    goto done;
 			}
 			ctxt->myDoc->properties = XML_DOC_INTERNAL;
 		    }
@@ -5657,7 +5658,7 @@ xmlParseEntityDecl(xmlParserCtxtPtr ctxt) {
 			    ctxt->myDoc = xmlNewDoc(SAX_COMPAT_MODE);
 			    if (ctxt->myDoc == NULL) {
 			        xmlErrMemory(ctxt, "New Doc failed");
-				return;
+				goto done;
 			    }
 			    ctxt->myDoc->properties = XML_DOC_INTERNAL;
 			}
@@ -12105,7 +12106,11 @@ done:
 #endif
     return(ret);
 encoding_error:
-    {
+    if (ctxt->input->end - ctxt->input->cur < 4) {
+	__xmlErrEncoding(ctxt, XML_ERR_INVALID_CHAR,
+		     "Input is not proper UTF-8, indicate encoding !\n",
+		     NULL, NULL);
+    } else {
         char buffer[150];
 
 	snprintf(buffer, 149, "Bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n",

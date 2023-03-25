@@ -8,6 +8,7 @@
  */
 
 
+#define IN_LIBXML
 #include "libxml.h"
 
 #ifdef LIBXML_XPTR_ENABLED
