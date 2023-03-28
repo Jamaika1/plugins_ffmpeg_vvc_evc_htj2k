@@ -24,7 +24,6 @@
 #define GIO_COMPILATION
 #define GOBJECT_COMPILATION
 
-#define glib_typeof(t) __typeof__ (t)
 #define ALIGNOF_GUINT32 4
 #define ALIGNOF_GUINT64 8
 #define ALIGNOF_UNSIGNED_LONG 8
