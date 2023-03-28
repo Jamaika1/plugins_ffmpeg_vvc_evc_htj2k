@@ -27,8 +27,8 @@
 #define HAVE__ALIGNED_MALLOC 1
 
 #define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR ""
-#define GIO_LAUNCH_DESKTOP ""
+#define GLIB_RUNSTATEDIR "/run/glib"
+#define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1
@@ -47,7 +47,7 @@
 
 /* Whether Cairo can use FreeType for fonts */
 #ifndef PANGO_VISUALC_NO_FC
-//#define HAVE_CAIRO_FREETYPE 1
+#define HAVE_CAIRO_FREETYPE 1
 #endif
 
 /* Whether Cairo has PDF support */
@@ -63,10 +63,10 @@
 /* #undef HAVE_CAIRO_QUARTZ */
 
 /* Whether Cairo can use the Win32 GDI for fonts */
-#define HAVE_CAIRO_WIN32 1
+//#define HAVE_CAIRO_WIN32 0
 
 /* Whether Cairo has Xlib support */
-#define HAVE_CAIRO_XLIB 1
+//#define HAVE_CAIRO_XLIB 1
 
 /* Whether CoreText is available on the system */
 /* #undef HAVE_CORE_TEXT */

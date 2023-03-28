@@ -26,7 +26,7 @@
 #include "pangoft2.h"
 #include "pangofc-fontmap-private.h"
 #include "pango-renderer.h"
-#include <fontconfig/fontconfig.h>
+#include "../fontconfig/fontconfig.h"
 
 /* Debugging... */
 /*#define DEBUGGING 1*/

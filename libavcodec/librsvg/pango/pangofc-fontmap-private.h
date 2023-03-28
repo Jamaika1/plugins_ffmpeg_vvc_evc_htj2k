@@ -28,7 +28,7 @@
 #include "pango-fontmap.h"
 #include "pango-fontset.h"
 
-#include <fontconfig/fontconfig.h"
+#include "../fontconfig/fontconfig.h"
 
 G_BEGIN_DECLS
 

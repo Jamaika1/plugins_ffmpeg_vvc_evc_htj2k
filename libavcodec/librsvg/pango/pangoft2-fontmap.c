@@ -28,7 +28,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include <fontconfig/fontconfig.h>
+#include "../fontconfig/fontconfig.h"
 
 #include "pango-impl-utils.h"
 #include "pangoft2-private.h"
