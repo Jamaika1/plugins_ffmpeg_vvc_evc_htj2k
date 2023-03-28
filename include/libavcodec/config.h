@@ -6,12 +6,12 @@
 #if defined(__AVX2__)
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v3 -ftree-vectorize -g0 -O3 -fPIC -mavx2 -mpclmul -maes -mbmi2 -mfma -mf16c " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
-                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -l:zlib_x64.a " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
                              "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #else
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
-                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -l:zlib_x64.a " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
                              "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #endif
 #else
@@ -71,9 +71,9 @@
 #define HAVE_POWER8 0
 #define HAVE_PPC4XX 0
 #define HAVE_VSX 0
-#define HAVE_AESNI 1
-#define HAVE_AMD3DNOW 1
-#define HAVE_AMD3DNOWEXT 1
+#define HAVE_AESNI 0
+#define HAVE_AMD3DNOW 0
+#define HAVE_AMD3DNOWEXT 0
 #define HAVE_AVX 1
 #if defined(__AVX2__)
 #define HAVE_AVX2 1
@@ -121,9 +121,9 @@
 #define HAVE_POWER8_EXTERNAL 0
 #define HAVE_PPC4XX_EXTERNAL 0
 #define HAVE_VSX_EXTERNAL 0
-#define HAVE_AESNI_EXTERNAL 1
-#define HAVE_AMD3DNOW_EXTERNAL 1
-#define HAVE_AMD3DNOWEXT_EXTERNAL 1
+#define HAVE_AESNI_EXTERNAL 0
+#define HAVE_AMD3DNOW_EXTERNAL 0
+#define HAVE_AMD3DNOWEXT_EXTERNAL 0
 #define HAVE_AVX_EXTERNAL 1
 #if defined(__AVX2__)
 #define HAVE_AVX2_EXTERNAL 1
@@ -172,9 +172,9 @@
 #define HAVE_POWER8_INLINE 0
 #define HAVE_PPC4XX_INLINE 0
 #define HAVE_VSX_INLINE 0
-#define HAVE_AESNI_INLINE 1
-#define HAVE_AMD3DNOW_INLINE 1
-#define HAVE_AMD3DNOWEXT_INLINE 1
+#define HAVE_AESNI_INLINE 0
+#define HAVE_AMD3DNOW_INLINE 0
+#define HAVE_AMD3DNOWEXT_INLINE 0
 #define HAVE_AVX_INLINE 0
 #define HAVE_AVX2_INLINE 0
 #define HAVE_AVX512_INLINE 0
@@ -476,9 +476,9 @@
 #define CONFIG_LIBDC1394 0
 #define CONFIG_LIBDRM 0
 #define CONFIG_LIBFLITE 0
-#define CONFIG_LIBFONTCONFIG 0
-#define CONFIG_LIBFREETYPE 0
-#define CONFIG_LIBFRIBIDI 0
+#define CONFIG_LIBFONTCONFIG 1
+#define CONFIG_LIBFREETYPE 1
+#define CONFIG_LIBFRIBIDI 1
 #define CONFIG_LIBGME 0
 #define CONFIG_LIBGSM 1
 #define CONFIG_LIBIEC61883 0
@@ -602,7 +602,6 @@
 #define CONFIG_NETWORK 1
 #define CONFIG_RDFT 1
 #define CONFIG_AUTODETECT 0
-#define CONFIG_FONTCONFIG 0
 #define CONFIG_LINUX_PERF 0
 #define CONFIG_MEMORY_POISONING 0
 #define CONFIG_NEON_CLOBBER_TEST 0
@@ -634,7 +633,8 @@
 #define CONFIG_CBS_AV1 1
 #define CONFIG_CBS_H264 1
 #define CONFIG_CBS_H265 1
-#define CONFIG_CBS_JPEG 0
+#define CONFIG_CBS_H266 1
+#define CONFIG_CBS_JPEG 1
 #define CONFIG_CBS_MPEG2 1
 #define CONFIG_CBS_VP9 1
 #define CONFIG_DIRAC_PARSE 1
