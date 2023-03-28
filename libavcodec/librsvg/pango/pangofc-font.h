@@ -34,7 +34,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <fontconfig/fontconfig.h>
+#include "../fontconfig/fontconfig.h"
 
 #ifdef PANGO_COMPILATION
 #pragma GCC diagnostic pop

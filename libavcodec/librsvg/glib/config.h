@@ -30,10 +30,13 @@
 #define HAVE__ALIGNED_MALLOC 1
 
 #define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR ""
-#define GDK_PIXBUF_LIBDIR ""
-#define GDK_PIXBUF_LOCALEDIR ""
-#define GIO_LAUNCH_DESKTOP ""
+#define GLIB_RUNSTATEDIR "/run/glib"
+#define GDK_PIXBUF_LIBDIR "/gdk-pixbuf"
+#define GDK_PIXBUF_LOCALEDIR "/usr/share/locale"
+//#define G_LOG_DOMAIN "GLib-GIO"
+#define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
+#define GIO_MODULE_DIR "/gio/gio-module-dir"
+#define LOCALSTATEDIR "/usr/local/var"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1

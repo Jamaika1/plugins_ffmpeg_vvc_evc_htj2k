@@ -35,13 +35,13 @@
 
 G_BEGIN_DECLS
 
-#if defined(RSVG_DISABLE_DEPRECATION_WARNINGS) || !GLIB_CHECK_VERSION (2, 31, 0)
-#define RSVG_DEPRECATED
-#define RSVG_DEPRECATED_FOR(f)
-#else
-#define RSVG_DEPRECATED G_DEPRECATED
-#define RSVG_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f)
-#endif
+//#if defined(RSVG_DISABLE_DEPRECATION_WARNINGS) || !GLIB_CHECK_VERSION (2, 31, 0)
+//#define RSVG_DEPRECATED
+//#define RSVG_DEPRECATED_FOR(f)
+//#else
+#define RSVG_DEPRECATED extern
+#define RSVG_DEPRECATED_FOR(f) extern
+//#endif
 
 #define RSVG_TYPE_HANDLE                  (rsvg_handle_get_type ())
 #define RSVG_HANDLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), RSVG_TYPE_HANDLE, RsvgHandle))

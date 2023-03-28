@@ -23,7 +23,7 @@
 #define __PANGO_FC_FONT_MAP_H__
 
 #include "pango.h"
-#include <fontconfig/fontconfig.h>
+#include "../fontconfig/fontconfig.h"
 #include "pangofc-decoder.h"
 #include "pangofc-font.h"
 #include "../harfbuzz/hb.h"
