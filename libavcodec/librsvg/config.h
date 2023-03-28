@@ -31,8 +31,8 @@
 #define HAVE__ALIGNED_MALLOC 1
 
 #define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR ""
-#define GIO_LAUNCH_DESKTOP ""
+#define GLIB_RUNSTATEDIR "/run/glib"
+#define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1
