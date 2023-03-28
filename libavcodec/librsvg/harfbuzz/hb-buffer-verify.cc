@@ -53,7 +53,7 @@ buffer_verify_error (hb_buffer_t *buffer,
   else
   {
     fprintf (stderr, "harfbuzz ");
-    vfprintf (stderr, fmt, ap);
+    vfprintf_s (stderr, fmt, ap);
     fprintf (stderr, "\n");
   }
   va_end (ap);
