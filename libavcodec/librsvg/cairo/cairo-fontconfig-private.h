@@ -45,8 +45,8 @@
 #include "cairo.h"
 
 #if CAIRO_HAS_FC_FONT
-#include <fontconfig/fontconfig.h>
-#include <fontconfig/fcfreetype.h>
+#include "../fontconfig/fontconfig.h"
+#include "../fontconfig/fcfreetype.h"
 #endif
 
 /* sub-pixel order */

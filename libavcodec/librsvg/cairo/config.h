@@ -17,3 +17,18 @@
 #endif /* _MSC_VER */
 #define SIZEOF_VOID_P 8
 /* The size of a `__int64', as computed by sizeof. */
+
+#define HAVE_FT_COLR_V1 1
+#define HAVE_FT_GET_VAR_DESIGN_COORDINATES 1
+#define HAVE_FT_SVG_DOCUMENT 1
+#define HAVE_FT_LIBRARY_SETLCDFILTER 1
+#define HAVE_FT_PALETTE_SELECT 1
+#define HAVE_FT_LOAD_SFNT_TABLE 1
+#define FT_LOAD_COLOR 1
+#define FC_HINT_STYLE "hintstyle"
+//#define PIXMAN_HAS_OP_LERP 1
+#define HAS_PIXMAN_GLYPHS 1
+//#define PIXMAN_HAS_COMPOSITOR 1
+//#define PIXMAN_HAS_ATOMIC_OPS 1
+#define PIXMAN_TYPE_BGRA 8
+#define PNG_SETJMP_SUPPORTED
