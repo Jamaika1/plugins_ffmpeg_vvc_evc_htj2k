@@ -222,18 +222,20 @@ struct DeltaSetIndexMap
 
 struct VarStoreInstancer
 {
-  VarStoreInstancer (const VariationStore &varStore,
-		     const DeltaSetIndexMap &varIdxMap,
+  VarStoreInstancer (const VariationStore *varStore,
+		     const DeltaSetIndexMap *varIdxMap,
 		     hb_array_t<int> coords) :
     varStore (varStore), varIdxMap (varIdxMap), coords (coords) {}
 
-  operator bool () const { return bool (coords); }
+  operator bool () const { return varStore && bool (coords); }
 
+  /* according to the spec, if colr table has varStore but does not have
+   * varIdxMap, then an implicit identity mapping is used */
   float operator() (uint32_t varIdx, unsigned short offset = 0) const
-  { return varStore.get_delta (varIdxMap.map (VarIdx::add (varIdx, offset)), coords); }
+  { return varStore->get_delta (varIdxMap ? varIdxMap->map (VarIdx::add (varIdx, offset)) : varIdx + offset, coords); }
 
-  const VariationStore &varStore;
-  const DeltaSetIndexMap &varIdxMap;
+  const VariationStore *varStore;
+  const DeltaSetIndexMap *varIdxMap;
   hb_array_t<int> coords;
 };
 
@@ -358,9 +360,12 @@ struct TupleVariationData
   {
     unsigned total_size = min_size;
     unsigned count = tupleVarCount;
-    const TupleVariationHeader& tuple_var_header = get_tuple_var_header();
+    const TupleVariationHeader *tuple_var_header = &(get_tuple_var_header());
     for (unsigned i = 0; i < count; i++)
-      total_size += tuple_var_header.get_size (axis_count) + tuple_var_header.get_data_size ();
+    {
+      total_size += tuple_var_header->get_size (axis_count) + tuple_var_header->get_data_size ();
+      tuple_var_header = &tuple_var_header->get_next (axis_count);
+    }
 
     return total_size;
   }
