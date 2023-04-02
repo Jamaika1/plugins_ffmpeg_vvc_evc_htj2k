@@ -167,10 +167,10 @@ typedef struct _XEVEM_CTX
 #include "xevem_tq.h"
 #include "xevem_util.h"
 #if defined(__AVX2__)
-#include "xevem_tq_avx.h"
-#include "xevem_itdq_avx.h"
-#include "xevem_itdq_sse.h"
-#include "xevem_mc_sse.h"
+#include "avx2/xevem_tq_avx.h"
+#include "avx2/xevem_itdq_avx.h"
+#include "avx2/xevem_itdq_sse.h"
+#include "avx2/xevem_mc_sse.h"
 #endif
 #if GRAB_STAT
 #include "xevem_stat.h"

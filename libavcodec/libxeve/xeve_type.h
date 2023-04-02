@@ -35,8 +35,8 @@
 #include "xeve_bsw.h"
 #include "xeve_sad.h"
 #if defined(__AVX2__)
-#include "xeve_sad_sse.h"
-#include "xeve_sad_avx.h"
+#include "avx2/xeve_sad_sse.h"
+#include "avx2/xeve_sad_avx.h"
 #elif defined(ARM)
 #include "xeve_sad_neon.h"
 #endif
@@ -1018,9 +1018,9 @@ typedef struct _ALF_SLICE_PARAM ALF_SLICE_PARAM;
 #include "xeve_itdq.h"
 
 #if defined(__AVX2__)
-#include "xeve_itdq_sse.h"
-#include "xeve_itdq_avx.h"
-#include "xeve_tq_avx.h"
+#include "avx2/xeve_itdq_sse.h"
+#include "avx2/xeve_itdq_avx.h"
+#include "avx2/xeve_tq_avx.h"
 #elif defined(ARM)
 #include "xeve_itdq_neon.h"
 #endif

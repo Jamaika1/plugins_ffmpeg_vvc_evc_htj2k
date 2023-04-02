@@ -1515,8 +1515,8 @@ enum TQC_RUN {
 #include "xeve_picman.h"
 #include "xeve_mc.h"
 #if defined(__AVX2__)
-#include "xeve_mc_sse.h"
-#include "xeve_mc_avx.h"
+#include "avx2/xeve_mc_sse.h"
+#include "avx2/xeve_mc_avx.h"
 #elif defined(ARM)
 #include "xeve_mc_neon.h"
 #endif
