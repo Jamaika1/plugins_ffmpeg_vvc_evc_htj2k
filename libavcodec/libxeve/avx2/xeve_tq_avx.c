@@ -29,7 +29,7 @@
    */
 
 #include "../xeve_def.h"
-#include "../xeve_tq_avx.h"
+#include "xeve_tq_avx.h"
 
 #ifndef _mm256_set_m128i
 #define _mm256_set_m128i(/* __m128i */ hi, /* __m128i */ lo) \

@@ -29,7 +29,7 @@
 */
 
 #include "../xeve_def.h"
-#include "../xeve_mc_sse.h"
+#include "xeve_mc_sse.h"
 #include <assert.h>
 
 /****************************************************************************

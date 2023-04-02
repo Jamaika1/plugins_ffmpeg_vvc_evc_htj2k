@@ -29,7 +29,7 @@
    */
 
 #include "../xevem_type.h"
-#include "../xevem_tq_avx.h"
+#include "xevem_tq_avx.h"
 #include "../xevem_tq.h"
 
 #ifndef _mm256_set_m128i

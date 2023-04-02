@@ -31,7 +31,7 @@
 
 #include "../xevem_type.h"
 #include "../xevem_itdq.h"
-#include "../xevem_tq_avx.h"
+#include "xevem_tq_avx.h"
 
 #ifndef _mm256_set_m128i
 #define _mm256_set_m128i(/* __m128i */ hi, /* __m128i */ lo) \
