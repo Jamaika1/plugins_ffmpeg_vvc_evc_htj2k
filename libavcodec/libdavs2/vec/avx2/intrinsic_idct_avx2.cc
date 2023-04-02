@@ -36,8 +36,8 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#include "../common.h"
-#include "intrinsic.h"
+#include "../../common.h"
+#include "../intrinsic.h"
 
 /* disable warnings */
 #pragma warning(disable:4127)  // warning C4127: 条件表达式是常量
@@ -67,7 +67,7 @@ void idct_8x8_avx2(const coeff_t *src, coeff_t *dst, int i_dst)
     // const int CLIP1 = LIMIT_BIT;
     const int SHIFT2 = 20 - g_bit_depth;
     const int CLIP2 = g_bit_depth + 1;
- 
+
     __m256i mAdd;
     __m256i S1S5, S3S7;
     __m256i T0, T1, T2, T3;
@@ -2047,7 +2047,7 @@ void inv_wavelet_64x64_avx2(coeff_t *coeff)
     }
 
     /*--transposition & Store--*/
-    //64x64 
+    //64x64
     TRANSPOSE_16x16_16BIT_m256i(V00[0], V32[0], V01[0], V33[0], V02[0], V34[0], V03[0], V35[0], V04[0], V36[0], V05[0], V37[0], V06[0], V38[0], V07[0], V39[0], T00[0], T01[0], T02[0], T03[0], T04[0], T05[0], T06[0], T07[0], T08[0], T09[0], T10[0], T11[0], T12[0], T13[0], T14[0], T15[0]);
     TRANSPOSE_16x16_16BIT_m256i(V00[1], V32[1], V01[1], V33[1], V02[1], V34[1], V03[1], V35[1], V04[1], V36[1], V05[1], V37[1], V06[1], V38[1], V07[1], V39[1], T16[0], T17[0], T18[0], T19[0], T20[0], T21[0], T22[0], T23[0], T24[0], T25[0], T26[0], T27[0], T28[0], T29[0], T30[0], T31[0]);
     TRANSPOSE_16x16_16BIT_m256i(V00[2], V32[2], V01[2], V33[2], V02[2], V34[2], V03[2], V35[2], V04[2], V36[2], V05[2], V37[2], V06[2], V38[2], V07[2], V39[2], T32[0], T33[0], T34[0], T35[0], T36[0], T37[0], T38[0], T39[0], T40[0], T41[0], T42[0], T43[0], T44[0], T45[0], T46[0], T47[0]);

@@ -36,8 +36,8 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#include "../common.h"
-#include "intrinsic.h"
+#include "../../common.h"
+#include "../intrinsic.h"
 
 #if !HIGH_BIT_DEPTH
 #ifdef _MSC_VER
@@ -622,8 +622,6 @@ void SAO_on_block_bo_avx2(pel_t *p_dst, int i_dst,
     __m256i shift_mask = _mm256_set1_epi8(31);
     int end_x    = i_block_w;
     int end_x_32 = end_x - ((end_x - 0) & 0x1f);
-
-    UNUSED_PARAMETER(bit_depth);
 
     r0   = _mm256_set1_epi8((int8_t)(sao_param->startBand));
     r1   = _mm256_set1_epi8((int8_t)((sao_param->startBand + 1) & 31));

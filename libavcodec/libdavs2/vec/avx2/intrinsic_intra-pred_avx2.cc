@@ -36,8 +36,8 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#include "../common.h"
-#include "intrinsic.h"
+#include "../../common.h"
+#include "../intrinsic.h"
 
 #if !HIGH_BIT_DEPTH
 
@@ -256,7 +256,7 @@ void intra_pred_plane_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int b
 
     __m256i TC, TB, TA, T_Start, T, D, D1;
     __m256i mask ;
-    
+
     TA = _mm256_set1_epi16((int16_t)iTmp);
     TB = _mm256_set1_epi16((int16_t)iB);
     TC = _mm256_set1_epi16((int16_t)iC);
@@ -363,7 +363,7 @@ void intra_pred_bilinear_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
     //for (y = 0; y < bsy; y++) {
     //    pLeft[y] = p[-y];
     //}
-    
+
 
     a = pTop[bsx - 1];
     b = pLeft[bsy - 1];
@@ -502,12 +502,12 @@ void intra_pred_bilinear_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
                 ADD = _mm256_add_epi32(ADD, T3);
                 T2 = _mm256_add_epi32(T2, ADD);
                 T2 = _mm256_srai_epi32(T2, ishift_xy);//8 9 10 11 12 13 14 15
-                
+
                 //T1 T2 is the result
                 T1 = _mm256_packus_epi32(T1, T2); //0 1 2 3 8 9 10 11 4 5 6 7 12 13 14 15
                 T1 = _mm256_packus_epi16(T1, T1); //0 1 2 3 8 9 10 11 0 1 2 3 8 9 10 11     4 5 6 7 12 13 14 15 4 5 6 7 12 13 14 15
                 T1 = _mm256_permutevar8x32_epi32(T1, mask1);
-                
+
                 //store 128 bits
                 _mm256_maskstore_epi64((__int64 *)(dst + x), mask2, T1);
 
@@ -1028,7 +1028,7 @@ void intra_pred_ang_x_4_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int
         //store 128 bit
         __m256i mask2 = _mm256_loadu_si256((__m256i*)intrinsic_mask_256_8bit[15]);
         _mm256_maskstore_epi64((__int64 *)(first_line + i), mask2, sum1);
-        
+
         //_mm_storel_epi64((__m128i*)&first_line[i], sum1);
     }
 
@@ -1796,7 +1796,7 @@ void intra_pred_ang_x_6_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int
 
     UNUSED_PARAMETER(dir_mode);
     src += 2;
-    
+
 #if BUGFIX_PREDICTION_INTRA
     for (i = 0; i < line_size - 16; i += 32, src += 32) {
 #else
@@ -2726,12 +2726,12 @@ void intra_pred_ang_x_10_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
             __m256i tmpL1 = _mm256_permute2x128_si256(L1, H1, 0x0020);
             __m256i tmpL2 = _mm256_permute2x128_si256(L2, H2, 0x0020);
             __m256i tmpL3 = _mm256_permute2x128_si256(L3, H3, 0x0020);
-            
+
             __m256i tmpH0 = _mm256_permute2x128_si256(L0, H0, 0x0031);//16 17...24 25...
             __m256i tmpH1 = _mm256_permute2x128_si256(L1, H1, 0x0031);
             __m256i tmpH2 = _mm256_permute2x128_si256(L2, H2, 0x0031);
             __m256i tmpH3 = _mm256_permute2x128_si256(L3, H3, 0x0031);
-            
+
             p00 = _mm256_mullo_epi16(tmpL0, coeff3);//0 1 2 3 4 5 6 7   8 9 10 11 12 13 14 15
             p10 = _mm256_mullo_epi16(tmpL1, coeff7);
             p20 = _mm256_mullo_epi16(tmpL2, coeff5);
@@ -2989,7 +2989,7 @@ void intra_pred_ang_x_10_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
                 dst3 += i_dstx4;
                 dst4 += i_dstx4;
             }
-            
+
         }
 
         /*
@@ -3198,7 +3198,7 @@ void intra_pred_ang_x_11_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
 
             dst += i_dst;
         }
-    
+
     } else {
 
         __m256i S0, S1, S2, S3;
@@ -3285,16 +3285,16 @@ void intra_pred_ang_y_25_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
         __m256i p00, p10, p20, p30;
         __m256i p01, p11, p21, p31;
         __m256i res1, res2;
-        __m256i L0 = _mm256_setr_epi16(src[0],  src[0],  src[0],  src[0],  src[0],  src[0],  src[0],  src[0], 
+        __m256i L0 = _mm256_setr_epi16(src[0],  src[0],  src[0],  src[0],  src[0],  src[0],  src[0],  src[0],
             src[-4], src[-4], src[-4], src[-4], src[-4], src[-4], src[-4], src[-4]);
 
-        __m256i L1 = _mm256_setr_epi16(src[-1], src[-1], src[-1], src[-1], src[-1], src[-1], src[-1], src[-1], 
+        __m256i L1 = _mm256_setr_epi16(src[-1], src[-1], src[-1], src[-1], src[-1], src[-1], src[-1], src[-1],
             src[-5], src[-5], src[-5], src[-5], src[-5], src[-5], src[-5], src[-5]);
 
-        __m256i L2 = _mm256_setr_epi16(src[-2], src[-2], src[-2], src[-2], src[-2], src[-2], src[-2], src[-2], 
+        __m256i L2 = _mm256_setr_epi16(src[-2], src[-2], src[-2], src[-2], src[-2], src[-2], src[-2], src[-2],
             src[-6], src[-6], src[-6], src[-6], src[-6], src[-6], src[-6], src[-6]);
 
-        __m256i L3 = _mm256_setr_epi16(src[-3], src[-3], src[-3], src[-3], src[-3], src[-3], src[-3], src[-3], 
+        __m256i L3 = _mm256_setr_epi16(src[-3], src[-3], src[-3], src[-3], src[-3], src[-3], src[-3], src[-3],
             src[-7], src[-7], src[-7], src[-7], src[-7], src[-7], src[-7], src[-7]);
 
         src -= 4;
@@ -3363,7 +3363,7 @@ void intra_pred_ang_y_25_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
 
             p00 = _mm256_permute2x128_si256(res1, res2, 0x0031);
             _mm256_storeu_si256((__m256i*)pfirst, p00);
-            
+
             pfirst += 32;
 
             src -= 4;
@@ -3380,7 +3380,7 @@ void intra_pred_ang_y_25_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, in
                 src[-7], src[-7], src[-7], src[-7], src[-7], src[-7], src[-7], src[-7]);//11 15
 
         }
-        
+
         //if (bsx == 16) {// 8¸ö
         //    __m256i mask = _mm256_loadu_si256((__m256i*)intrinsic_mask_256_8bit[7]);
         //    p00 = _mm256_mullo_epi16(L0, coeff0);
@@ -4887,7 +4887,7 @@ void intra_pred_ang_xy_13_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
         __m256i H0, H1, H2, H3;
 
         for (; i < line_size - 16; i += 32, src += 32) {
-            
+
             S0 = _mm256_loadu_si256((__m256i*)(src + 2));
             S1 = _mm256_loadu_si256((__m256i*)(src + 1));
             S2 = _mm256_loadu_si256((__m256i*)(src));
@@ -5079,7 +5079,7 @@ void intra_pred_ang_xy_13_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
         __m256i mask = _mm256_load_si256((__m256i*)intrinsic_mask_256_8bit[bsx - 1]);
 
         if (i < line_size) {
-            
+
             S0 = _mm256_loadu_si256((__m256i*)(src + 2));
             S1 = _mm256_loadu_si256((__m256i*)(src + 1));
             S2 = _mm256_loadu_si256((__m256i*)(src));
@@ -5393,7 +5393,7 @@ void intra_pred_ang_xy_13_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
                 dst += i_dst;
             }
         }
-        
+
         /*for (i = 0; i < bsy; i++) {
             memcpy(dst, pfirst[0] - i, bsx * sizeof(pel_t));
             dst += i_dst;
@@ -5489,11 +5489,11 @@ void intra_pred_ang_xy_14_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
             p10 = _mm256_srli_epi16(p10, 2);//16...23 24...31
 
             p00 = _mm256_packus_epi16(p00, p10);//0...7 16...23 8...15 24...31
-            
+
             p00 = _mm256_permute4x64_epi64(p00, 0x00D8);
             //0 4 8 12 1 5 9 13 2 6 10 14 3 7 11 15     16 20 24 28 17 21...
             p10 = _mm256_shuffle_epi8(p00, shuffle);
-            //0 4 8 12 16 20 24 28    1 5 9 13 17 21 25 29    
+            //0 4 8 12 16 20 24 28    1 5 9 13 17 21 25 29
             p10 = _mm256_permutevar8x32_epi32(p10, index);
 
             _mm256_maskstore_epi64(((__int64 *)(pfirst[0] + i - 24)), mask3, p10);
@@ -5952,7 +5952,7 @@ void intra_pred_ang_xy_14_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
 }
 
 void intra_pred_ang_xy_16_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy)
-{  
+{
     ALIGN32(pel_t first_line[2 * (64 + 48)]);
     int line_size = bsx + bsy / 2 - 1;
     int left_size = line_size - bsx;
@@ -6044,9 +6044,9 @@ void intra_pred_ang_xy_16_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
         p00 = _mm256_permute4x64_epi64(p00, 0x0008);//0...15 0...15
 
         p01 = _mm256_shuffle_epi8(p00, shuffle);//0 2 4 6 7 8 10 12 14    1 3 5 7 9 11 13 15
-        
+
         p10 = _mm256_permute4x64_epi64(p01, 0x01);
-        
+
         _mm256_maskstore_epi64((__int64 *)&pfirst[0][i], mask2, p10);
         _mm256_maskstore_epi64((__int64 *)&pfirst[1][i], mask2, p01);
     }
@@ -6105,7 +6105,7 @@ void intra_pred_ang_xy_16_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
         p00 = _mm256_packus_epi16(p00, p10);
         p00 = _mm256_permute4x64_epi64(p00, 0x00D8);
         _mm256_storeu_si256((__m256i*)&pfirst[1][i], p00);
-        
+
     }
 
     if (i < line_size) {
@@ -6357,7 +6357,7 @@ void intra_pred_ang_xy_16_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
 }
 
 void intra_pred_ang_xy_18_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy)
-{          
+{
     ALIGN32(pel_t first_line[64 + 64]);
     int line_size = bsx + bsy - 1;
     int i;
@@ -6436,7 +6436,7 @@ void intra_pred_ang_xy_18_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
             _mm256_storeu_si256((__m256i*)(dst + 32), M);
             dst += i_dst;
             pfirst--;
-        
+
             M = _mm256_lddqu_si256((__m256i*)pfirst);
             _mm256_storeu_si256((__m256i*)dst, M);
             M = _mm256_lddqu_si256((__m256i*)(pfirst + 32));
@@ -6577,7 +6577,7 @@ void intra_pred_ang_xy_18_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
 }
 
 void intra_pred_ang_xy_20_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, int bsx, int bsy)
-{  
+{
     ALIGN32(pel_t first_line[64 + 128]);
     int left_size = (bsy - 1) * 2 + 1;
     int top_size = bsx - 1;
@@ -6688,7 +6688,7 @@ void intra_pred_ang_xy_20_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
     }
 
     src = pSrc1;
-    
+
     __m256i sum1, sum2, sum3, sum4;
     for (i = left_size; i < line_size - 16; i += 32, src += 32) {
         S2 = _mm256_loadu_si256((__m256i*)(src + 1));
@@ -6850,7 +6850,7 @@ void intra_pred_ang_xy_20_avx(pel_t *src, pel_t *dst, int i_dst, int dir_mode, i
             _mm256_maskstore_epi64((__int64 *)dst, mask, M);
             dst += i_dst;
             pfirst -= 2;
-            
+
         }
     } else if (bsx == 8){
 

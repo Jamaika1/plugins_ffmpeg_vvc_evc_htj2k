@@ -36,8 +36,8 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#include "../common.h"
-#include "intrinsic.h"
+#include "../../common.h"
+#include "../intrinsic.h"
 
 #pragma warning(disable:4127)  // warning C4127: 条件表达式是常量
 
@@ -803,9 +803,9 @@ void intpl_luma_block_ext_w16_avx2(pel_t *dst, int i_dst, pel_t *src, int i_src,
     int row, col;
     __m256i mSwitch1 = _mm256_setr_epi8(0, 1, 2, 3, 4, 5, 6, 7,       1, 2, 3, 4, 5, 6, 7, 8,  // 前 8 个点
                                         0, 1, 2, 3, 4, 5, 6, 7,       1, 2, 3, 4, 5, 6, 7, 8); // 后 8 个点
-    __m256i mSwitch2 = _mm256_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9,       3, 4, 5, 6, 7, 8, 9, 10, 
+    __m256i mSwitch2 = _mm256_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9,       3, 4, 5, 6, 7, 8, 9, 10,
                                         2, 3, 4, 5, 6, 7, 8, 9,       3, 4, 5, 6, 7, 8, 9, 10);
-    __m256i mSwitch3 = _mm256_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11,     5, 6, 7, 8, 9, 10, 11, 12, 
+    __m256i mSwitch3 = _mm256_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11,     5, 6, 7, 8, 9, 10, 11, 12,
                                         4, 5, 6, 7, 8, 9, 10, 11,     5, 6, 7, 8, 9, 10, 11, 12);
     __m256i mSwitch4 = _mm256_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13,   7, 8, 9, 10, 11, 12, 13, 14,
                                         6, 7, 8, 9, 10, 11, 12, 13,   7, 8, 9, 10, 11, 12, 13, 14);
@@ -1215,7 +1215,7 @@ void intpl_chroma_block_ver_w32_avx2(pel_t *dst, int i_dst, const pel_t *src, in
             __m256i S1 = _mm256_loadu_si256((__m256i*)(src + i_src));
             __m256i S2 = _mm256_loadu_si256((__m256i*)(src + i_src2));
             __m256i S3 = _mm256_loadu_si256((__m256i*)(src + i_src3));
-            
+
             T0 = _mm256_maddubs_epi16(_mm256_unpacklo_epi8(S0, S1), coeff0);
             T1 = _mm256_maddubs_epi16(_mm256_unpacklo_epi8(S2, S3), coeff1);
             T2 = _mm256_maddubs_epi16(_mm256_unpackhi_epi8(S0, S1), coeff0);
@@ -1497,7 +1497,7 @@ void intpl_chroma_block_ext_w24_avx2(pel_t *dst, int i_dst, const pel_t *src, in
     __m256i mCoef = _mm256_set1_epi32(*(int32_t*)coef_x);
     __m256i mSwitch = _mm256_setr_epi8(0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6, 4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10);
     __m256i mSwitch1 = _mm256_setr_epi8(0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6, 0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6);
-    __m256i mSwitch2 = _mm256_setr_epi8(4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10, 4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10);    
+    __m256i mSwitch2 = _mm256_setr_epi8(4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10, 4, 5, 6, 7, 5, 6, 7, 8, 6, 7, 8, 9, 7, 8, 9, 10);
     __m256i mask24 = _mm256_setr_epi16(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0);
     //HOR
     src = src - i_src - 1;

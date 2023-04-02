@@ -36,8 +36,8 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-#include "../common.h"
-#include "intrinsic.h"
+#include "../../common.h"
+#include "../intrinsic.h"
 
 #if !HIGH_BIT_DEPTH
 __m128i c_0_128;
@@ -452,7 +452,7 @@ void deblock_edge_ver_c_avx2(pel_t *SrcPtrU, pel_t *SrcPtrV, int stride, int Alp
 
 void deblock_edge_hor_avx2(pel_t *SrcPtr, int stride, int Alpha, int Beta, uint8_t *flt_flag)
 {
-    
+
     int inc = stride;
     int inc2 = inc << 1;
     int inc3 = inc + inc2;
