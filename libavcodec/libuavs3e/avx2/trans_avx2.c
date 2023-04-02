@@ -37,7 +37,7 @@
 
 #include "avx2.h"
 #include "../sse/sse.h"
-#include "com_system.h"
+#include "../com_system.h"
 
 ALIGNED_32(static const s16 tab_dct2_2nd_shuffle_256i[][16]) = {
     // 16bit: 0-7, 3-0 7-4
@@ -58,12 +58,12 @@ ALIGNED_32(static const s16 tab_dct2_1st_shuffle_256i[][16]) = {
     { 0x0100, 0x0706, 0x0302, 0x0504, 0x0908, 0x0F0E, 0x0B0A, 0x0D0C, 0x0100, 0x0706, 0x0302, 0x0504, 0x0908, 0x0F0E, 0x0B0A, 0x0D0C }
 };
 ALIGNED_32(static const s16 tab_dct2_1st_coeffs_256i[][16]) = {
-    // 
+    //
     { 44, 38, 25, 9, 44, 38, 25, 9, 44, 38, 25, 9, 44, 38, 25, 9 },
     { 38, -9, -44, -25, 38, -9, -44, -25, 38, -9, -44, -25, 38, -9, -44, -25 },
     { 25, -44, 9, 38, 25, -44, 9, 38, 25, -44, 9, 38, 25, -44, 9, 38 },
     { 9, -25, 38, -44, 9, -25, 38, -44, 9, -25, 38, -44, 9, -25, 38, -44 },
-    // 
+    //
     { 45, 43, 40, 35, 29, 21, 13, 4, 45, 43, 40, 35, 29, 21, 13, 4 },
     { 43, 29, 4, -21, -40, -45, -35, -13, 43, 29, 4, -21, -40, -45, -35, -13 },
     { 40, 4, -35, -43, -13, 29, 45, 21, 40, 4, -35, -43, -13, 29, 45, 21 },
@@ -72,7 +72,7 @@ ALIGNED_32(static const s16 tab_dct2_1st_coeffs_256i[][16]) = {
     { 21, -45, 29, 13, -43, 35, 4, -40, 21, -45, 29, 13, -43, 35, 4, -40 },
     { 13, -35, 45, -40, 21, 4, -29, 43, 13, -35, 45, -40, 21, 4, -29, 43 },
     { 4, -13, 21, -29, 35, -40, 43, -45, 4, -13, 21, -29, 35, -40, 43, -45 },
-    // 
+    //
     { 45, 45, 44, 43, 41, 39, 36, 34       , 30, 27, 23, 19, 15, 11, 7, 2 },
     { 45, 41, 34, 23, 11, -2, -15, -27     , -36, -43, -45, -44, -39, -30, -19, -7 },
     { 44, 34, 15, -7, -27, -41, -45, -39   , -23, -2, 19, 36, 45, 43, 30, 11 },
@@ -132,7 +132,7 @@ ALIGNED_32(static const s32 tab_dct2_pb16_coeffs_256i[][8]) = {
     // O:
     { 45, 43, 40, 35, 45, 43, 40, 35 },
     { 29, 21, 13, 4, 29, 21, 13, 4 },
-    { 43, 29, 4, -21, 43, 29, 4, -21 }, 
+    { 43, 29, 4, -21, 43, 29, 4, -21 },
     { -40, -45, -35, -13, -40, -45, -35, -13 },
     { 40, 4, -35, -43, 40, 4, -35, -43 },
     { -13, 29, 45, 21, -13, 29, 45, 21 },
@@ -144,7 +144,7 @@ ALIGNED_32(static const s32 tab_dct2_pb16_coeffs_256i[][8]) = {
     { -43, 35, 4, -40, -43, 35, 4, -40 },
     { 13, -35, 45, -40, 13, -35, 45, -40 },
     { 21, 4, -29, 43, 21, 4, -29, 43 },
-    { 4, -13, 21, -29, 4, -13, 21, -29 }, 
+    { 4, -13, 21, -29, 4, -13, 21, -29 },
     { 35, -40, 43, -45, 35, -40, 43, -45 }
 };
 ALIGNED_32(static const s32 tab_dct2_pb32_coeffs_256i[][8]) = {
@@ -351,7 +351,7 @@ static void tx_dct2_pb4_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             e0 = _mm256_hadd_epi16(s0, s1);                             // e[0][0, 1], e[1][0, 1], e[2][0, 1], e[3][0, 1], e[4][0, 1], e[5][0, 1], e[6][0, 1], e[7][0, 1]
             o0 = _mm256_hsub_epi16(s0, s1);
 
-            v0 = _mm256_madd_epi16(e0, coeff_p32_p32);                  // dst[0][0-7]                   
+            v0 = _mm256_madd_epi16(e0, coeff_p32_p32);                  // dst[0][0-7]
             v1 = _mm256_madd_epi16(e0, coeff_p32_n32);                  // dst[2][0-7]
             v2 = _mm256_madd_epi16(o0, coeff_p42_p17);                  // dst[1][0-7]
             v3 = _mm256_madd_epi16(o0, coeff_p17_n42);                  // dst[3][0-7]
@@ -383,13 +383,13 @@ static void tx_dct2_pb4_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         __m256i s0;
         __m256i v0, v1;
         __m256i d0, d1;
         __m256i tab0;
-        const __m256i coeff0 = _mm256_set_epi16(17, 42, 17, 42, 17, 42, 17, 42, 32, 32, 32, 32, 32, 32, 32, 32); 
-        const __m256i coeff1 = _mm256_set_epi16(-42, 17, -42, 17, -42, 17, -42, 17, -32, 32, -32, 32, -32, 32, -32, 32); 
+        const __m256i coeff0 = _mm256_set_epi16(17, 42, 17, 42, 17, 42, 17, 42, 32, 32, 32, 32, 32, 32, 32, 32);
+        const __m256i coeff1 = _mm256_set_epi16(-42, 17, -42, 17, -42, 17, -42, 17, -32, 32, -32, 32, -32, 32, -32, 32);
         __m256i sign = _mm256_set_epi16(-1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1, -1, 1);
 
         tab0 = _mm256_loadu_si256((__m256i*)tab_dct2_1st_shuffle_256i[2]);  // 16bit: 0, 3, 1, 2, 4, 7, 5, 6, 0, 3, 1, 2, 4, 7, 5, 6
@@ -443,10 +443,10 @@ static void tx_dct2_pb4_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, i
 
             src += 4 * 8;
 
-            v0 = _mm256_madd_epi16(s0, coeff0);                     
-            v1 = _mm256_madd_epi16(s0, coeff1);  
-            v2 = _mm256_madd_epi16(s0, coeff2);  
-            v3 = _mm256_madd_epi16(s0, coeff3);  
+            v0 = _mm256_madd_epi16(s0, coeff0);
+            v1 = _mm256_madd_epi16(s0, coeff1);
+            v2 = _mm256_madd_epi16(s0, coeff2);
+            v3 = _mm256_madd_epi16(s0, coeff3);
             v4 = _mm256_madd_epi16(s1, coeff0);
             v5 = _mm256_madd_epi16(s1, coeff1);
             v6 = _mm256_madd_epi16(s1, coeff2);
@@ -481,7 +481,7 @@ static void tx_dct2_pb4_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         __m256i d0;
         __m256i v0, v1, v2, v3;
         __m256i s0;
@@ -557,8 +557,8 @@ static void tx_dct2_pb8_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, i
 
             e0 = _mm256_hadd_epi16(s00, s01);                               // e[0][0-3], e[1][0-3], e[4][0-3], e[5][0-3]
             o0 = _mm256_hsub_epi16(s00, s01);                               // o[0][0-3], o[1][0-3], o[4][0-3], o[5][0-3]
-            e1 = _mm256_hadd_epi16(s02, s03);   
-            o1 = _mm256_hsub_epi16(s02, s03);   
+            e1 = _mm256_hadd_epi16(s02, s03);
+            o1 = _mm256_hsub_epi16(s02, s03);
 
             e0 = _mm256_shuffle_epi8(e0, tab1);                             // ee[0][0, 3, 1, 2], ee[1][0, 3, 1, 2], ee[4][0, 3, 1, 2], ee[5][0, 3, 1, 2]
             e1 = _mm256_shuffle_epi8(e1, tab1);
@@ -566,7 +566,7 @@ static void tx_dct2_pb8_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             ee0 = _mm256_hadd_epi16(e0, e1);                                // eee[0][0, 1], eee[1][0, 1], eee[2][0, 1], eee[3][0, 1], eee[4][0, 1], eee[5][0, 1], eee[6][0, 1], eee[7][0, 1]
             eo0 = _mm256_hsub_epi16(e0, e1);
 
-            v0 = _mm256_madd_epi16(ee0, coeff_p32_p32);                    // dst[0][0-7]                   
+            v0 = _mm256_madd_epi16(ee0, coeff_p32_p32);                    // dst[0][0-7]
             v1 = _mm256_madd_epi16(ee0, coeff_p32_n32);                    // dst[4][0-7]
             v2 = _mm256_madd_epi16(eo0, coeff_p42_p17);                    // dst[2][0-7]
             v3 = _mm256_madd_epi16(eo0, coeff_p17_n42);                    // dst[6][0-7]
@@ -630,7 +630,7 @@ static void tx_dct2_pb8_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         int j;
         __m256i s00, s01;
         __m256i tab0, tab1;
@@ -719,7 +719,7 @@ static void tx_dct2_pb8_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, i
     const __m256i coeff3 = _mm256_set_epi16(17, -42, 42, -17, -17, 42, -42, 17, 17, -42, 42, -17, -17, 42, -42, 17);
     const __m256i coeff4 = _mm256_set_epi16(-44, -38, -25, -9, 9, 25, 38, 44, -44, -38, -25, -9, 9, 25, 38, 44);    // O
     const __m256i coeff5 = _mm256_set_epi16(-38, 9, 44, 25, -25, -44, -9, 38, -38, 9, 44, 25, -25, -44, -9, 38);
-    const __m256i coeff6 = _mm256_set_epi16(-25, 44, -9, -38, 38, 9, -44, 25, -25, 44, -9, -38, 38, 9, -44, 25); 
+    const __m256i coeff6 = _mm256_set_epi16(-25, 44, -9, -38, 38, 9, -44, 25, -25, 44, -9, -38, 38, 9, -44, 25);
     const __m256i coeff7 = _mm256_set_epi16(-9, 25, -38, 44, -44, 38, -25, 9, -9, 25, -38, 44, -44, 38, -25, 9);
     __m256i add = _mm256_set1_epi32(1 << (shift - 1));
 
@@ -805,7 +805,7 @@ static void tx_dct2_pb8_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, i
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         __m256i s0, s1;
 
         s0 = _mm256_loadu2_m128i((const __m128i*)&src[2 * 8], (const __m128i*)&src[0]);    // src[0][0-7], src[2][0-7]
@@ -837,8 +837,8 @@ static void tx_dct2_pb8_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, i
         d2 = _mm256_add_epi32(d2, add);
         d3 = _mm256_add_epi32(d3, add);
 
-        d0 = _mm256_srai_epi32(d0, shift);      
-        d1 = _mm256_srai_epi32(d1, shift);      
+        d0 = _mm256_srai_epi32(d0, shift);
+        d1 = _mm256_srai_epi32(d1, shift);
         d2 = _mm256_srai_epi32(d2, shift);
         d3 = _mm256_srai_epi32(d3, shift);
 
@@ -920,7 +920,7 @@ static void tx_dct2_pb16_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             eee0 = _mm256_hadd_epi16(ee0, ee1);                             // eee[0][0, 1], eee[1][0, 1], eee[2][0, 1], eee[3][0, 1], eee[4][0, 1], eee[5][0, 1], eee[6][0, 1], eee[7][0, 1]
             eeo0 = _mm256_hsub_epi16(ee0, ee1);
 
-            v0 = _mm256_madd_epi16(eee0, coeff_p32_p32);                    // dst[0][0-7]                   
+            v0 = _mm256_madd_epi16(eee0, coeff_p32_p32);                    // dst[0][0-7]
             v1 = _mm256_madd_epi16(eee0, coeff_p32_n32);                    // dst[8][0-7]
             v2 = _mm256_madd_epi16(eeo0, coeff_p42_p17);                    // dst[4][0-7]
             v3 = _mm256_madd_epi16(eeo0, coeff_p17_n42);                    // dst[12][0-7]
@@ -1057,7 +1057,7 @@ static void tx_dct2_pb16_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         __m256i s00, s01, s02, s03;
         __m256i tab0, tab1, tab2;
         __m256i e0, e1;
@@ -1098,10 +1098,10 @@ static void tx_dct2_pb16_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         ee0 = _mm256_shuffle_epi8(ee0, tab2);                           // ee[0][0, 3, 1, 2], ee[1][0, 3, 1, 2], ee[2][0, 3, 1, 2], ee[3][0, 3, 1, 2]
         v0 = _mm256_sign_epi16(ee0, sign);
 
-        v0 = _mm256_hadd_epi16(ee0, v0);        
+        v0 = _mm256_hadd_epi16(ee0, v0);
         v0 = _mm256_permute4x64_epi64(v0, 0xd8);                        // eee[0][0, 1], eee[1][0, 1], eee[2][0, 1], eee[3][0, 1], eeo[0][0, 1], eeo[1][0, 1], eeo[2][0, 1], eeo[3][0, 1]
 
-        v2 = _mm256_madd_epi16(v0, coeff0);                             // dst[0][0-3], dst[4][0-3]              
+        v2 = _mm256_madd_epi16(v0, coeff0);                             // dst[0][0-3], dst[4][0-3]
         v3 = _mm256_madd_epi16(v0, coeff1);                             // dst[8][0-3], dst[12][0-3]
 
         v0 = _mm256_add_epi32(v2, add);
@@ -1131,8 +1131,8 @@ static void tx_dct2_pb16_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         v2 = _mm256_madd_epi16(eo0, coeffs[2]);
         v3 = _mm256_madd_epi16(eo0, coeffs[3]);
 
-        v0 = _mm256_hadd_epi32(v0, v1);         
-        v2 = _mm256_hadd_epi32(v2, v3);         
+        v0 = _mm256_hadd_epi32(v0, v1);
+        v2 = _mm256_hadd_epi32(v2, v3);
 
         v0 = _mm256_permute4x64_epi64(v0, 0xd8);        // dst[2][0-3], dst[6][0-3]
         v2 = _mm256_permute4x64_epi64(v2, 0xd8);        // dst[10][0-3], dst[14][0-3]
@@ -1180,7 +1180,7 @@ static void tx_dct2_pb16_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             d0 = _mm256_hadd_epi32(v0, v2); \
             d1 = _mm256_hadd_epi32(v4, v6); \
             d0 = _mm256_permute4x64_epi64(d0, 0xd8); \
-            d1 = _mm256_permute4x64_epi64(d1, 0xd8); 
+            d1 = _mm256_permute4x64_epi64(d1, 0xd8);
 
         CALCU_O(coeffs[0], coeffs[1], coeffs[2], coeffs[3], d0, d1);
         CALCU_O(coeffs[4], coeffs[5], coeffs[6], coeffs[7], d2, d3);
@@ -1375,7 +1375,7 @@ static void tx_dct2_pb16_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         __m256i s00, s01, s02, s03;
         __m256i v0, v1, v2, v3, v4, v5, v6, v7;
         __m256i d0, d1, d2, d3;
@@ -1841,7 +1841,7 @@ static void tx_dct2_pb32_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         int i;
         __m256i s[16];
         __m256i t[8];
@@ -1951,7 +1951,7 @@ static void tx_dct2_pb32_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         v[1] = _mm256_madd_epi16(eeo, coeffs[1]);
         v[2] = _mm256_madd_epi16(eeo, coeffs[2]);
         v[3] = _mm256_madd_epi16(eeo, coeffs[3]);
-        
+
         v[0] = _mm256_hadd_epi32(v[0], v[1]);                       // dst[4][0-1], dst[12][0-1], dst[4][2-3], dst[12][2-3]
         v[2] = _mm256_hadd_epi32(v[2], v[3]);                       // dst[20][0-1], dst[28][0-1], dst[20][2-3], dst[28][2-3]
 
@@ -2191,11 +2191,11 @@ static void tx_dct2_pb32_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             s[ 4] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[4]));
             s[ 7] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[6], 1));
             s[ 6] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[6]));
-            s[ 9] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[8], 1)); 
-            s[ 8] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[8]));     
-            s[11] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[10], 1));  
-            s[10] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[10]));    
-            s[13] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[12], 1));  
+            s[ 9] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[8], 1));
+            s[ 8] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[8]));
+            s[11] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[10], 1));
+            s[10] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[10]));
+            s[13] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[12], 1));
             s[12] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[12]));
             s[15] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(s[14], 1));
             s[14] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(s[14]));
@@ -2208,11 +2208,11 @@ static void tx_dct2_pb32_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             s[21] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[2]));
             s[22] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[3], 1));
             s[23] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[3]));
-            s[24] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[4], 1)); 
-            s[25] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[4]));    
-            s[26] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[5], 1));   
-            s[27] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[5]));  
-            s[28] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[6], 1));    
+            s[24] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[4], 1));
+            s[25] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[4]));
+            s[26] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[5], 1));
+            s[27] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[5]));
+            s[28] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[6], 1));
             s[29] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[6]));
             s[30] = _mm256_cvtepi16_epi32(_mm256_extracti128_si256(t[7], 1));
             s[31] = _mm256_cvtepi16_epi32(_mm256_castsi256_si128(t[7]));
@@ -2612,7 +2612,7 @@ static void tx_dct2_pb32_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, 
             dst += 8;
         }
     }
-    else {//line=4	
+    else {//line=4
         int i;
         __m256i s[16];
         __m256i t[8];
@@ -3087,9 +3087,9 @@ static void tx_dct2_pb64_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         ee[3] = _mm256_add_epi16(e[6], e[7]);
         eo[3] = _mm256_sub_epi16(e[6], e[7]);
 
-        t[0] = _mm256_permute2x128_si256(ee[0], ee[2], 0x20);       // ee[0][0-7], ee[2][0-7] 
+        t[0] = _mm256_permute2x128_si256(ee[0], ee[2], 0x20);       // ee[0][0-7], ee[2][0-7]
         t[1] = _mm256_permute2x128_si256(ee[0], ee[2], 0x31);       // ee[0][8-15], ee[2][8-15]
-        t[2] = _mm256_permute2x128_si256(ee[1], ee[3], 0x20);       // ee[1][0-7], ee[3][0-7] 
+        t[2] = _mm256_permute2x128_si256(ee[1], ee[3], 0x20);       // ee[1][0-7], ee[3][0-7]
         t[3] = _mm256_permute2x128_si256(ee[1], ee[3], 0x31);       // ee[1][8-15], ee[3][8-15]
 
         t[1] = _mm256_shuffle_epi8(t[1], tab0);                     // ee[0][15-8], ee[2][15-8]
@@ -3202,24 +3202,24 @@ static void tx_dct2_pb64_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         v[4] = _mm256_hadd_epi32(v[4], v[6]); \
         v[2] = _mm256_permute2x128_si256(v[0], v[4], 0x20); \
         v[3] = _mm256_permute2x128_si256(v[0], v[4], 0x31); \
-        dst = _mm256_add_epi32(v[2], v[3]);                     
+        dst = _mm256_add_epi32(v[2], v[3]);
 
-        v[0] = _mm256_madd_epi16(eo[0], coeffs[0]); 
-        v[1] = _mm256_madd_epi16(eo[1], coeffs[0]); 
-        v[2] = _mm256_madd_epi16(eo[2], coeffs[0]); 
-        v[3] = _mm256_madd_epi16(eo[3], coeffs[0]); 
-        v[4] = _mm256_madd_epi16(eo[0], coeffs[1]); 
-        v[5] = _mm256_madd_epi16(eo[1], coeffs[1]); 
-        v[6] = _mm256_madd_epi16(eo[2], coeffs[1]); 
-        v[7] = _mm256_madd_epi16(eo[3], coeffs[1]); 
-        v[0] = _mm256_hadd_epi32(v[0], v[1]); 
-        v[2] = _mm256_hadd_epi32(v[2], v[3]); 
-        v[4] = _mm256_hadd_epi32(v[4], v[5]); 
-        v[6] = _mm256_hadd_epi32(v[6], v[7]); 
-        v[0] = _mm256_hadd_epi32(v[0], v[2]); 
-        v[4] = _mm256_hadd_epi32(v[4], v[6]); 
-        v[2] = _mm256_permute2x128_si256(v[0], v[4], 0x20); 
-        v[3] = _mm256_permute2x128_si256(v[0], v[4], 0x31); 
+        v[0] = _mm256_madd_epi16(eo[0], coeffs[0]);
+        v[1] = _mm256_madd_epi16(eo[1], coeffs[0]);
+        v[2] = _mm256_madd_epi16(eo[2], coeffs[0]);
+        v[3] = _mm256_madd_epi16(eo[3], coeffs[0]);
+        v[4] = _mm256_madd_epi16(eo[0], coeffs[1]);
+        v[5] = _mm256_madd_epi16(eo[1], coeffs[1]);
+        v[6] = _mm256_madd_epi16(eo[2], coeffs[1]);
+        v[7] = _mm256_madd_epi16(eo[3], coeffs[1]);
+        v[0] = _mm256_hadd_epi32(v[0], v[1]);
+        v[2] = _mm256_hadd_epi32(v[2], v[3]);
+        v[4] = _mm256_hadd_epi32(v[4], v[5]);
+        v[6] = _mm256_hadd_epi32(v[6], v[7]);
+        v[0] = _mm256_hadd_epi32(v[0], v[2]);
+        v[4] = _mm256_hadd_epi32(v[4], v[6]);
+        v[2] = _mm256_permute2x128_si256(v[0], v[4], 0x20);
+        v[3] = _mm256_permute2x128_si256(v[0], v[4], 0x31);
         d0 = _mm256_add_epi32(v[2], v[3]);
 
         //CALCU_EO(coeffs[0], coeffs[1], d0);                       // dst[2][0-3], dst[6][0-3]
@@ -3296,7 +3296,7 @@ static void tx_dct2_pb64_1st_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         v[2 ] = _mm256_hadd_epi32(v[2], v[3]);     \
         v[1] = _mm256_permute2x128_si256(v[0], v[2], 0x20); \
         v[3] = _mm256_permute2x128_si256(v[0], v[2], 0x31); \
-        d = _mm256_add_epi32(v[1], v[3]); 
+        d = _mm256_add_epi32(v[1], v[3]);
 
         CALCU_O(coeffs[0], coeffs[1], coeffs[2], coeffs[3], d0);
         CALCU_O(coeffs[4], coeffs[5], coeffs[6], coeffs[7], d1);
@@ -3473,14 +3473,14 @@ static void tx_dct2_pb64_2nd_avx2(s16 *src, s16 *dst, int line, int limit_line, 
         }
 
         for (i = 0; i < 8; i++) {
-            // t[0]: e[0][0-3], e[2][0-3] 
+            // t[0]: e[0][0-3], e[2][0-3]
             // t[1]: e[0][4-7], e[2][4-7]
             // t[2]: e[0][8-11], e[2][8-11]
             // t[3]: e[0][12-15], e[2][12-15]
-            // t[4]: e[0][16-19], e[2][16-19] 
+            // t[4]: e[0][16-19], e[2][16-19]
             // t[5]: ---
             // t[6]: ---
-            // t[7]: e[0][28-31], e[2][28-31] 
+            // t[7]: e[0][28-31], e[2][28-31]
             t[i * 2] = _mm256_permute2x128_si256(e[i], e[i + 8], 0x20);
             t[i * 2 + 1] = _mm256_permute2x128_si256(e[i], e[i + 8], 0x31);
         }
@@ -4223,7 +4223,7 @@ void trans_dct8_pb8_avx2(s16 *src, s16 *dst, int shift, int line)
 
         v[0] = _mm256_srai_epi32(v[0], shift);      // dst[0][0-1], dst[1][0-1], dst[0][2-3], dst[1][2-3]
         v[2] = _mm256_srai_epi32(v[2], shift);
-        v[4] = _mm256_srai_epi32(v[4], shift); 
+        v[4] = _mm256_srai_epi32(v[4], shift);
         v[6] = _mm256_srai_epi32(v[6], shift);
 
         v[0] = _mm256_packs_epi32(v[0], v[2]);      // dst[0][0-1], dst[1][0-1], dst[2][0-1], dst[3][0-1], dst[0][2-3], dst[1][2-3], dst[2][2-3], dst[3][2-3]
