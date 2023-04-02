@@ -35,7 +35,7 @@
 
 #include "../xeve_def.h"
 #include "../xevem_mc.h"
-#include "../xevem_mc_sse.h"
+#include "xevem_mc_sse.h"
 #include <assert.h>
 
 /****************************************************************************

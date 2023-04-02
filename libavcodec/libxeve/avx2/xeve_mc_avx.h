@@ -30,8 +30,8 @@
 
 #ifndef _XEVE_MC_AVX_H_
 #define _XEVE_MC_AVX_H_
-#include "xeve_type.h"
 
+#include "../xeve_type.h"
 #if X86_SSE
 #include <immintrin.h>
 

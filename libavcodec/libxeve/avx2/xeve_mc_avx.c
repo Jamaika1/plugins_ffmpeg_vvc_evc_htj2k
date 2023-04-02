@@ -28,7 +28,7 @@
    POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "../xeve_mc_avx.h"
+#include "xeve_mc_avx.h"
 
 static void mc_filter_l_8pel_horz_clip_avx(s16 *ref, int src_stride, s16 *pred, int dst_stride, const s16 *coeff
                                        , int width, int height, int min_val, int max_val, int offset, int shift)

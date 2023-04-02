@@ -28,7 +28,7 @@
    POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "../xeve_sad_avx.h"
+#include "xeve_sad_avx.h"
 
 #if X86_SSE
 static int sad_16b_avx_16nx2n(int w, int h, void * src1, void * src2, int s_src1, int s_src2, int bit_depth)
