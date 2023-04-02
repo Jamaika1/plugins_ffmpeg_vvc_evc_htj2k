@@ -319,21 +319,6 @@ cd ..
 cd libxvid/x86_asm
 for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DWINDOWS=1 -DARCH_IS_X86_64=1 -DNO_PREFIX=1 -Xgnu %%f -o %%~nf.o
 cd ../..
-cd libx264
-for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
-cd ..
-cd libx264/x86
-for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -Dprivate_prefix=x264_8 -Xgnu %%f -o %%~nf.o
-for %%f in ("cpu-a.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -Dprivate_prefix=x264 -Xgnu %%f -o %%~nf.o
-cd ../..
-cd libx264_10bit
-for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
-cd ..
-cd libx264_10bit/x86
-for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -Dprivate_prefix=x264_10 -Xgnu %%f -o %%~nf.o
-cd ../..
 cd libopenh264/processing
 for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DX86_ASM -DNHAVE_AVX2 -c %%f -o %%~nf.o
 cd ../..
@@ -355,46 +340,6 @@ cd ../..
 cd libopenh264/encoder/x86
 for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DWIN64=1 -DNHAVE_AVX2 -Xgnu %%f -o %%~nf.o
 cd ../../..
-cd libx265/vec
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ../..
-cd libx265_10bit/vec
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ../..
-cd libx265_12bit/vec
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ../..
-cd libx265
-cd x86
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DNX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DX265_NS=x265 -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
-cd ..
-cd input
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ..
-cd output
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ..
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ..
-cd libx265_10bit
-cd x86
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DX265_NS=x265_10bit -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
-cd ..
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ..
-cd libx265_12bit
-cd x86
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=12 -DHIGH_BIT_DEPTH=1 -DX265_NS=x265_12bit -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
-cd ..
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ..
-cd libx265/dynamicHDR10
-for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -D_DEBUG=1 -c %%f -o %%~nf.o
-cd ../..
-
 cd libxevd
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWIN32 -DWIN64 -DWINDOWS_MUTEX_SYNC=0 -c %%f -o %%~nf.o
 cd ..
@@ -552,6 +497,61 @@ cd libjxl/enc
 for %%f in ("%~dp1*.cc") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -DWIN32_LEAN_AND_MEAN=/"/" -DNJPEGXL_ENABLE_SKCMS -DJXL_DEBUG_WARNING=1 -DJXL_CRASH_ON_ERROR=1 -DJXL_DEBUG_ON_ALL_ERROR=1 -DHWY_COMPILE_ONLY_STATIC -c %%f -o %%~nf.o
 cd ../..
 
+cd libx264
+for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
+cd ..
+cd libx264/x86
+for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -Dprivate_prefix=x264_8 -Xgnu %%f -o %%~nf.o
+for %%f in ("cpu-a.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -Dprivate_prefix=x264 -Xgnu %%f -o %%~nf.o
+cd ../..
+cd libx264_10bit
+for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
+cd ..
+cd libx264_10bit/x86
+for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_MMX=1 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DSYS_WINDOWS=1 -DHAVE_THREAD=1 -DHAVE_WIN32THREAD=1 -DHAVE_INTERLACED=1 -DHAVE_STDINT_H=1 -DHAVE_LOG2F=1 -DHAVE_X86_INLINE_ASM=1 -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -Dprivate_prefix=x264_10 -Xgnu %%f -o %%~nf.o
+cd ../..
+cd libx265/vec
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ../..
+cd libx265_10bit/vec
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ../..
+cd libx265_12bit/vec
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ../..
+cd libx265
+cd x86
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DNX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=8 -DHIGH_BIT_DEPTH=0 -DX265_NS=x265 -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
+cd ..
+cd input
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ..
+cd output
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ..
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ..
+cd libx265_10bit
+cd x86
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=10 -DHIGH_BIT_DEPTH=1 -DX265_NS=x265_10bit -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
+cd ..
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_10bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=10 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ..
+cd libx265_12bit
+cd x86
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -fwin64 -O3 -DARCH_X86_64=1 -DBIT_DEPTH=12 -DHIGH_BIT_DEPTH=1 -DX265_NS=x265_12bit -DPIC=1 -DSUFFIX=o -Xgnu -w-macro-params-legacy %%f -o %%~nf.o
+cd ..
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=0 -DX265_NS=x265_12bit -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=1 -DX265_DEPTH=12 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -DHAVE_STRTOK_R -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ..
+cd libx265/dynamicHDR10
+for %%f in ("%~dp1*.cpp") do g++.exe -std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DWINVER=0x0602 -D_WIN32_WINNT=0x0602 -D_WIN32_WINNT_WIN7=0x0601 -DEXPORT_C_API=1 -DX265_NS=x265 -DLINKED_10BIT=1 -DLINKED_12BIT=1 -DX86_64=1 -DX265_VERSION=3.5+86-6da609e -DHIGH_BIT_DEPTH=0 -DX265_DEPTH=8 -DX265_ARCH_X86=1 -DENABLE_HDR10_PLUS=1 -DENABLE_ASSEMBLY=1 -D_DEBUG=1 -c %%f -o %%~nf.o
+cd ../..
+
 cd librsvg/zlib
 ar.exe rcs "../../../lib/zlib_x64.a" adler32.o compress.o crc32.o deflate.o gzclose.o gzlib.o gzread.o gzwrite.o infback.o inffast.o inflate.o inftrees.o trees.o uncompr.o zutil.o
 cd ../..
@@ -689,7 +689,7 @@ cd ..
 cd ..
 
 cd libavutil/x86
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_EXTERNAL=1 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -c %%f -o %%~nf.o
 cd ../..
 cd libavutil
@@ -697,7 +697,7 @@ for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize 
 ar.exe rcs "../lib/libavutil_x64.a" xtea.o xga_font_data.o video_enc_params.o version.o uuid.o utils.o tx_int32.o tx_float.o tx_double.o tx.o twofish.o tree.o timecode.o time.o threadmessage.o tea.o stereo3d.o spherical.o slicethread.o sha512.o sha.o samplefmt.o ripemd.o reverse.o rc4.o rational.o random_seed.o pixelutils.o pixdesc.o pca.o parseutils.o opt.o murmur3.o mem.o md5.o mathematics.o mastering_display_metadata.o lzo.o log2_tab.o log.o lls.o lfg.o intmath.o integer.o imgutils.o hwcontext_dxva2.o hwcontext_d3d11va.o hwcontext.o hmac.o hdr_dynamic_vivid_metadata.o hdr_dynamic_metadata.o hash.o half2float.o frame.o float_dsp.o float2half.o fixed_dsp.o film_grain_params.o file_open.o file.o fifo.o eval.o error.o encryption_info.o downmix_info.o dovi_meta.o display.o dict.o detection_bbox.o des.o csp.o crc.o cpu.o color_utils.o channel_layout.o cast5.o camellia.o buffer.o bprint.o blowfish.o base64.o avstring.o avsscanf.o audio_fifo.o ambient_viewing_environment.o aes_ctr.o aes.o adler32.o x86/cpu.o x86/cpuid.o x86/emms.o x86/fixed_dsp.o x86/fixed_dsp_init.o x86/float_dsp_init.o x86/imgutils.o x86/imgutils_init.o x86/lls_init.o x86/pixelutils.o x86/pixelutils_init.o x86/tx_float.o x86/tx_float_init.o x86/float_dsp.o x86/lls.o
 cd ..
 cd libswresample/x86
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_EXTERNAL=1 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -c %%f -o %%~nf.o
 cd ../..
 cd libswresample/libsoxr
@@ -708,7 +708,7 @@ for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize 
 ar.exe rcs "../lib/libswresample_x64.a" audioconvert.o dither.o options.o rematrix.o resample.o resample_dsp.o soxr_resample.o swresample.o swresample_frame.o version.o libsoxr/soxr.o x86/audio_convert.o x86/rematrix.o x86/resample.o x86/audio_convert_init.o x86/rematrix_init.o x86/resample_init.o
 cd ..
 cd libswscale/x86
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_EXTERNAL=1 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -Xgnu %%f -o %%~nf.o
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -c %%f -o %%~nf.o
 cd ../..
 cd libswscale
@@ -723,7 +723,7 @@ for %%f in ("dxva2*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize 
 cd ../..
 cd libavcodec/x86
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -DUSE_APPROXIMATION=0 -Xgnu %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -DUSE_APPROXIMATION=0 -Xgnu %%f -o %%~nf.o
 cd ../..
 cd libavcodec
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -DRSVG_STATIC=1 -DKVZ_STATIC_LIB=1 -DUVG_STATIC_LIB=1 -DOPJ_STATIC=1 -DUAVS3D_STATIC=1 -DUAVS3E_STATIC=1 -DLIBTWOLAME_STATIC=1 -c %%f -o %%~nf.o
@@ -742,7 +742,7 @@ for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize 
 cd ../..
 cd libavfilter/x86
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -c %%f -o %%~nf.o
-for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -DUSE_APPROXIMATION=0 -Xgnu %%f -o %%~nf.o
+for %%f in ("%~dp1*.asm") do nasm.exe -f win64 -O3 -DARCH_X86_32=0 -DARCH_X86_64=1 -DPIC=1 -DHAVE_ALIGNED_STACK=1 -DHAVE_CPUNOP=0 -DHAVE_MMX_INLINE=0 -DHAVE_MMXEXT_EXTERNAL=1 -DHAVE_SSE2_EXTERNAL=1 -DHAVE_SSSE3_EXTERNAL=1 -DHAVE_AVX_EXTERNAL=1 -DHAVE_FMA3_EXTERNAL=1 -DHAVE_XOP_EXTERNAL=0 -DHAVE_AVX2_EXTERNAL=0 -DHAVE_FMA4_EXTERNAL=0 -DHAVE_AVX512_EXTERNAL=0 -DHAVE_AVX512ICL_EXTERNAL=0 -DUSE_APPROXIMATION=0 -Xgnu %%f -o %%~nf.o
 cd ../..
 cd libavfilter
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_AV_CONFIG_H=1 -DBUILDING_avutil=1 -DFRIBIDI_LIB_STATIC=1 -c %%f -o %%~nf.o
