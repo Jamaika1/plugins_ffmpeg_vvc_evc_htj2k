@@ -54,7 +54,7 @@ extern XEVD_MC_C (*xevdm_func_bl_mc_l)[2];
 #if ARM_NEON
 #include "xevdm_mc_neon.h"
 #elif X86_SSE
-#include "x86/xevdm_mc_sse.h"
+#include "avx2/xevdm_mc_sse.h"
 #endif
 
 #define xevdm_dmvr_mc_l(ref, gmv_x, gmv_y, s_ref, s_pred, pred, w, h, bit_depth) \

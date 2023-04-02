@@ -49,8 +49,8 @@ extern XEVD_ITX(*xevdm_fn_itx)[MAX_TR_LOG2];
 #if ARM_NEON
 #include "xevdm_itdq_neon.h"
 #elif X86_SSE
-#include "x86/xevdm_itdq_avx.h"
-#include "x86/xevdm_itdq_sse.h"
+#include "avx2/xevdm_itdq_avx.h"
+#include "avx2/xevdm_itdq_sse.h"
 #endif
 
 void xevdm_itx_pb2(s16* src, s16* dst, int shift, int line);
