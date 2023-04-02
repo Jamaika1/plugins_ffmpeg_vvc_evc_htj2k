@@ -76,12 +76,16 @@
 #define HAVE_AMD3DNOWEXT 0
 #define HAVE_AVX 1
 #if defined(__AVX2__)
-#define HAVE_AVX2 1
+#define HAVE_AVX2 0
 #else
 #define HAVE_AVX2 0
 #endif
 #define HAVE_AVX512 0
+#if defined(__FMA__)
 #define HAVE_FMA3 1
+#else
+#define HAVE_FMA3 0
+#endif
 #define HAVE_FMA4 0
 #define HAVE_MMX 1
 #define HAVE_MMXEXT 1
@@ -126,13 +130,17 @@
 #define HAVE_AMD3DNOWEXT_EXTERNAL 0
 #define HAVE_AVX_EXTERNAL 1
 #if defined(__AVX2__)
-#define HAVE_AVX2_EXTERNAL 1
+#define HAVE_AVX2_EXTERNAL 0
 #else
 #define HAVE_AVX2_EXTERNAL 0
 #endif
 #define HAVE_AVX512_EXTERNAL 0
 #define HAVE_AVX512ICL_EXTERNAL 0
+#if defined(__FMA__)
 #define HAVE_FMA3_EXTERNAL 1
+#else
+#define HAVE_FMA3_EXTERNAL 0
+#endif
 #define HAVE_FMA4_EXTERNAL 0
 #define HAVE_MMX_EXTERNAL 1
 #define HAVE_MMXEXT_EXTERNAL 1
