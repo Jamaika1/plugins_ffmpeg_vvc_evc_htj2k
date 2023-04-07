@@ -19,7 +19,7 @@
  */
 
 #include <inttypes.h>
-#include "libswscale/config.h"
+#include "libavutil/config.h"
 #include "libswscale/swscale.h"
 #include "libswscale/swscale_internal.h"
 #include "libavutil/attributes.h"
