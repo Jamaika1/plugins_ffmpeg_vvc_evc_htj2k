@@ -2,12 +2,30 @@
 #ifndef FFMPEG_CONFIG_H
 #define FFMPEG_CONFIG_H
 
-#define FFMPEG_CONFIGURATION "--prefix=/home/ffmpegBuild/build/ffmepg-4.3 --arch=x86_64 --enable-shared --enable-gpl --enable-libfdk-aac --enable-nonfree --enable-libx264 --enable-libmp3lame --enable-filter=subtitles --enable-libass --extra-cflags=-I/home/ffmpegBuild/build/libfdk-aac/include --extra-ldflags=-L/home/ffmpegBuild/build/libfdk-aac/lib --extra-cflags=-I/home/ffmpegBuild/build/libvpx/include --extra-ldflags=-L/home/ffmpegBuild/build/libvpx/lib --extra-cflags=-I/home/ffmpegBuild/build/libx264/include --extra-ldflags=-L/home/ffmpegBuild/build/libx264/lib --extra-cflags=-I/home/ffmpegBuild/build/libmp3lame/include --extra-ldflags=-L/home/ffmpegBuild/build/libmp3lame/lib --extra-cflags=-I/home/ffmpegBuild/build/libass/include --extra-ldflags=-L/home/ffmpegBuild/build/libass/lib"
+#ifdef BUILDING_avutil
+#if defined(__AVX2__)
+#define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v3 -ftree-vectorize -g0 -O3 -fPIC -mavx2 -mpclmul -maes -mbmi2 -mfma -mf16c " \
+                             "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
+                             "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+#else
+#define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes " \
+                             "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
+                             "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+#endif
+#else
+#if defined(__AVX2__)
+#define FFMPEG_CONFIGURATION "-std=gnu11 -march=x86-64-v3 -ftree-vectorize -g0 -O3 -fPIC -mavx2 -mpclmul -maes -mbmi2 -mfma -mf16c -o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o -Llib -llibavcodec_x64 -llibavutil_x64 -llibavformat_x64 -llibswresample_x64 -llibswscale_x64 -llibavfilter_x64 -llibpostproc_x64 -llibavdevice_x64"
+#else
+#define FFMPEG_CONFIGURATION "-std=gnu11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o -Llib -llibavcodec_x64 -llibavutil_x64 -llibavformat_x64 -llibswresample_x64 -llibswscale_x64 -llibavfilter_x64 -llibpostproc_x64 -llibavdevice_x64"
+#endif
+#endif
 #define FFMPEG_LICENSE "nonfree and unredistributable"
-#define CONFIG_THIS_YEAR 2022
-#define FFMPEG_DATADIR "/home/ffmpegBuild/build/ffmepg-4.3/share/ffmpeg"
-#define AVCONV_DATADIR "/home/ffmpegBuild/build/ffmepg-4.3/share/ffmpeg"
-#define CC_IDENT "gcc 12.1.0 (Rev2, Built by MSYS2 project)"
+#define CONFIG_THIS_YEAR 2023
+#define FFMPEG_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
+#define AVCONV_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
+#define CC_IDENT "GCC: (GNU) 11.3.1 20221227"
 #define av_restrict restrict
 #define EXTERN_PREFIX ""
 #define EXTERN_ASM
@@ -44,8 +62,11 @@
 #define HAVE_ARMV6T2 0
 #define HAVE_ARMV8 0
 #define HAVE_NEON 0
+#define HAVE_LSX 0
+#define HAVE_LASX 0
 #define HAVE_VFP 0
 #define HAVE_VFPV3 0
+#define HAVE_RVV 0
 #define HAVE_SETEND 0
 #define HAVE_ALTIVEC 0
 #define HAVE_DCBZL 0
@@ -53,17 +74,21 @@
 #define HAVE_POWER8 0
 #define HAVE_PPC4XX 0
 #define HAVE_VSX 0
-#define HAVE_AESNI 1
-#define HAVE_AMD3DNOW 1
-#define HAVE_AMD3DNOWEXT 1
+#define HAVE_AESNI 0
+#define HAVE_AMD3DNOW 0
+#define HAVE_AMD3DNOWEXT 0
 #define HAVE_AVX 1
 #if defined(__AVX2__)
-#define HAVE_AVX2 1
+#define HAVE_AVX2 0
 #else
 #define HAVE_AVX2 0
 #endif
 #define HAVE_AVX512 0
+#if defined(__FMA__)
 #define HAVE_FMA3 1
+#else
+#define HAVE_FMA3 0
+#endif
 #define HAVE_FMA4 0
 #define HAVE_MMX 1
 #define HAVE_MMXEXT 1
@@ -103,18 +128,22 @@
 #define HAVE_POWER8_EXTERNAL 0
 #define HAVE_PPC4XX_EXTERNAL 0
 #define HAVE_VSX_EXTERNAL 0
-#define HAVE_AESNI_EXTERNAL 1
-#define HAVE_AMD3DNOW_EXTERNAL 1
-#define HAVE_AMD3DNOWEXT_EXTERNAL 1
+#define HAVE_AESNI_EXTERNAL 0
+#define HAVE_AMD3DNOW_EXTERNAL 0
+#define HAVE_AMD3DNOWEXT_EXTERNAL 0
 #define HAVE_AVX_EXTERNAL 1
 #if defined(__AVX2__)
-#define HAVE_AVX2_EXTERNAL 1
+#define HAVE_AVX2_EXTERNAL 0
 #else
 #define HAVE_AVX2_EXTERNAL 0
 #endif
 #define HAVE_AVX512_EXTERNAL 0
 #define HAVE_AVX512ICL_EXTERNAL 0
+#if defined(__FMA__)
 #define HAVE_FMA3_EXTERNAL 1
+#else
+#define HAVE_FMA3_EXTERNAL 0
+#endif
 #define HAVE_FMA4_EXTERNAL 0
 #define HAVE_MMX_EXTERNAL 1
 #define HAVE_MMXEXT_EXTERNAL 1
@@ -154,9 +183,9 @@
 #define HAVE_POWER8_INLINE 0
 #define HAVE_PPC4XX_INLINE 0
 #define HAVE_VSX_INLINE 0
-#define HAVE_AESNI_INLINE 1
-#define HAVE_AMD3DNOW_INLINE 1
-#define HAVE_AMD3DNOWEXT_INLINE 1
+#define HAVE_AESNI_INLINE 0
+#define HAVE_AMD3DNOW_INLINE 0
+#define HAVE_AMD3DNOWEXT_INLINE 0
 #define HAVE_AVX_INLINE 0
 #define HAVE_AVX2_INLINE 0
 #define HAVE_AVX512_INLINE 0
@@ -284,7 +313,7 @@
 #define HAVE_UWP 0
 #define HAVE_WINRT 0
 #define HAVE_ACCESS 1
-#define HAVE_ALIGNED_MALLOC 1
+#define HAVE_ALIGNED_MALLOC 0
 #define HAVE_ARC4RANDOM 0
 #define HAVE_CLOCK_GETTIME 1
 #define HAVE_CLOSESOCKET 1
@@ -432,7 +461,7 @@
 #define CONFIG_OPENSSL 0
 #define CONFIG_LIBTLS 0
 #define CONFIG_GMP 0
-#define CONFIG_LIBARIBB24 0
+#define CONFIG_LIBARIBB24 1
 #define CONFIG_LIBLENSFUN 0
 #define CONFIG_LIBOPENCORE_AMRNB 0
 #define CONFIG_LIBOPENCORE_AMRWB 0
@@ -458,9 +487,9 @@
 #define CONFIG_LIBDC1394 0
 #define CONFIG_LIBDRM 0
 #define CONFIG_LIBFLITE 0
-#define CONFIG_LIBFONTCONFIG 0
-#define CONFIG_LIBFREETYPE 0
-#define CONFIG_LIBFRIBIDI 0
+#define CONFIG_LIBFONTCONFIG 1
+#define CONFIG_LIBFREETYPE 1
+#define CONFIG_LIBFRIBIDI 1
 #define CONFIG_LIBGME 0
 #define CONFIG_LIBGSM 1
 #define CONFIG_LIBIEC61883 0
@@ -478,7 +507,7 @@
 #define CONFIG_LIBOPENMPT 0
 #define CONFIG_LIBOPUS 1
 #define CONFIG_LIBPULSE 0
-#define CONFIG_LIBRSVG 1
+#define CONFIG_LIBRSVG 0
 #define CONFIG_LIBRTMP 0
 #define CONFIG_LIBSHINE 1
 #define CONFIG_LIBSMBCLIENT 0
@@ -584,7 +613,6 @@
 #define CONFIG_NETWORK 1
 #define CONFIG_RDFT 1
 #define CONFIG_AUTODETECT 0
-#define CONFIG_FONTCONFIG 0
 #define CONFIG_LINUX_PERF 0
 #define CONFIG_MEMORY_POISONING 0
 #define CONFIG_NEON_CLOBBER_TEST 0
@@ -616,7 +644,8 @@
 #define CONFIG_CBS_AV1 1
 #define CONFIG_CBS_H264 1
 #define CONFIG_CBS_H265 1
-#define CONFIG_CBS_JPEG 0
+#define CONFIG_CBS_H266 1
+#define CONFIG_CBS_JPEG 1
 #define CONFIG_CBS_MPEG2 1
 #define CONFIG_CBS_VP9 1
 #define CONFIG_DIRAC_PARSE 1
@@ -736,6 +765,7 @@
 #define CONFIG_VP9_SUPERFRAME_BSF 1
 #define CONFIG_VP9_SUPERFRAME_SPLIT_BSF 1
 #define CONFIG_VVC_METADATA_BSF 1
+#define CONFIG_VVC_MP4TOANNEXB_BSF 1
 #define CONFIG_AASC_DECODER 1
 #define CONFIG_AIC_DECODER 1
 #define CONFIG_ALIAS_PIX_DECODER 1
@@ -1010,10 +1040,9 @@
 #define CONFIG_ZEROCODEC_DECODER 1
 #define CONFIG_ZLIB_DECODER 1
 #define CONFIG_ZMBV_DECODER 1
-#define CONFIG_AAC_DECODER 1
+#define CONFIG_AAC_DECODER 0
 #define CONFIG_AAC_FIXED_DECODER 1
-#define CONFIG_AAC_LATM_DECODER 1
-#define CONFIG_AC3_DECODER 1
+#define CONFIG_AC3_DECODER 0
 #define CONFIG_AC3_FIXED_DECODER 1
 #define CONFIG_ALAC_DECODER 1
 #define CONFIG_ALS_DECODER 1
@@ -1059,14 +1088,14 @@
 #define CONFIG_METASOUND_DECODER 1
 #define CONFIG_MLP_DECODER 1
 #define CONFIG_MP1_DECODER 1
-#define CONFIG_MP1FLOAT_DECODER 1
+#define CONFIG_MP1FLOAT_DECODER 0
 #define CONFIG_MP2_DECODER 1
-#define CONFIG_MP2FLOAT_DECODER 1
-#define CONFIG_MP3FLOAT_DECODER 1
+#define CONFIG_MP2FLOAT_DECODER 0
+#define CONFIG_MP3FLOAT_DECODER 0
 #define CONFIG_MP3_DECODER 1
-#define CONFIG_MP3ADUFLOAT_DECODER 1
+#define CONFIG_MP3ADUFLOAT_DECODER 0
 #define CONFIG_MP3ADU_DECODER 1
-#define CONFIG_MP3ON4FLOAT_DECODER 1
+#define CONFIG_MP3ON4FLOAT_DECODER 0
 #define CONFIG_MP3ON4_DECODER 1
 #define CONFIG_MPC7_DECODER 1
 #define CONFIG_MPC8_DECODER 1
@@ -1231,7 +1260,7 @@
 #define CONFIG_QDM2_AT_DECODER 0
 #define CONFIG_LIBAOM_AV1_DECODER 1
 #define CONFIG_LIBJXL_DECODER 1
-#define CONFIG_LIBARIBB24_DECODER 0
+#define CONFIG_LIBARIBB24_DECODER 1
 #define CONFIG_LIBCELT_DECODER 1
 #define CONFIG_LIBCODEC2_DECODER 1
 #define CONFIG_LIBDAV1D_DECODER 1
@@ -1244,7 +1273,7 @@
 #define CONFIG_LIBOPENCORE_AMRWB_DECODER 0
 #define CONFIG_LIBOPENJPEG_DECODER 1
 #define CONFIG_LIBOPUS_DECODER 1
-#define CONFIG_LIBRSVG_DECODER 1
+#define CONFIG_LIBRSVG_DECODER 0
 #define CONFIG_LIBSPEEX_DECODER 1
 #define CONFIG_LIBVORBIS_DECODER 1
 #define CONFIG_LIBVPX_VP8_DECODER 0
@@ -1352,7 +1381,7 @@
 #define CONFIG_ZLIB_ENCODER 1
 #define CONFIG_ZMBV_ENCODER 1
 #define CONFIG_AAC_ENCODER 1
-#define CONFIG_AC3_ENCODER 1
+#define CONFIG_AC3_ENCODER 0
 #define CONFIG_AC3_FIXED_ENCODER 1
 #define CONFIG_ALAC_ENCODER 1
 #define CONFIG_APTX_ENCODER 1
@@ -1454,6 +1483,7 @@
 #define CONFIG_LIBTHEORA_ENCODER 1
 #define CONFIG_LIBTWOLAME_ENCODER 1
 #define CONFIG_LIBUAVS3D_DECODER 1
+#define CONFIG_LIBUAVS3E_ENCODER 1
 #define CONFIG_LIBVO_AMRWBENC_ENCODER 0
 #define CONFIG_LIBVORBIS_ENCODER 1
 #define CONFIG_LIBVPX_VP8_ENCODER 0
@@ -2099,6 +2129,7 @@
 #define CONFIG_AVR_DEMUXER 1
 #define CONFIG_AVS_DEMUXER 1
 #define CONFIG_AVS2_DEMUXER 1
+#define CONFIG_AVS3_DEMUXER 1
 #define CONFIG_BETHSOFTVID_DEMUXER 1
 #define CONFIG_BFI_DEMUXER 1
 #define CONFIG_BINTEXT_DEMUXER 1
