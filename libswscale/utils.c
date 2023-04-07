@@ -653,14 +653,14 @@ static av_cold int initFilter(int16_t **outFilter, int32_t **filterPos,
             filterAlign = 1;
     }
 
-    /*if (have_lasx(cpu_flags)) {
+    if (have_lasx(cpu_flags)) {
         int reNum = minFilterSize & (0x07);
 
         if (minFilterSize < 5)
             filterAlign = 4;
         if (reNum < 3)
             filterAlign = 1;
-    }*/
+    }
 
     av_assert0(minFilterSize > 0);
     filterSize = (minFilterSize + (filterAlign - 1)) & (~(filterAlign - 1));
@@ -1701,6 +1701,37 @@ static av_cold int sws_init_single_context(SwsContext *c, SwsFilter *srcFilter,
         }
     }
 
+    /* alpha blend special case, note this has been split via cascaded contexts if its scaled */
+    if (unscaled && !usesHFilter && !usesVFilter &&
+        c->alphablend != SWS_ALPHA_BLEND_NONE &&
+        isALPHA(srcFormat) &&
+        (c->srcRange == c->dstRange || isAnyRGB(dstFormat)) &&
+        alphaless_fmt(srcFormat) == dstFormat
+    ) {
+        c->convert_unscaled = ff_sws_alphablendaway;
+
+        if (flags & SWS_PRINT_INFO)
+            av_log(c, AV_LOG_INFO,
+                    "using alpha blendaway %s -> %s special converter\n",
+                    av_get_pix_fmt_name(srcFormat), av_get_pix_fmt_name(dstFormat));
+        return 0;
+    }
+
+    /* unscaled special cases */
+    if (unscaled && !usesHFilter && !usesVFilter &&
+        (c->srcRange == c->dstRange || isAnyRGB(dstFormat) ||
+         isFloat(srcFormat) || isFloat(dstFormat))){
+        ff_get_unscaled_swscale(c);
+
+        if (c->convert_unscaled) {
+            if (flags & SWS_PRINT_INFO)
+                av_log(c, AV_LOG_INFO,
+                       "using unscaled %s -> %s special converter\n",
+                       av_get_pix_fmt_name(srcFormat), av_get_pix_fmt_name(dstFormat));
+            return 0;
+        }
+    }
+
 #if HAVE_MMAP && HAVE_MPROTECT && defined(MAP_ANONYMOUS)
 #define USE_MMAP 1
 #else
@@ -1774,8 +1805,8 @@ static av_cold int sws_init_single_context(SwsContext *c, SwsFilter *srcFilter,
         {
             const int filterAlign = X86_MMX(cpu_flags)     ? 4 :
                                     PPC_ALTIVEC(cpu_flags) ? 8 :
-                                    have_neon(cpu_flags)   ? 4 : 1;
-                                    //have_lasx(cpu_flags)   ? 8 : 1;
+                                    have_neon(cpu_flags)   ? 4 :
+                                    have_lasx(cpu_flags)   ? 8 : 1;
 
             if ((ret = initFilter(&c->hLumFilter, &c->hLumFilterPos,
                            &c->hLumFilterSize, c->lumXInc,
@@ -1903,37 +1934,6 @@ static av_cold int sws_init_single_context(SwsContext *c, SwsFilter *srcFilter,
                "chr srcW=%d srcH=%d dstW=%d dstH=%d xInc=%d yInc=%d\n",
                c->chrSrcW, c->chrSrcH, c->chrDstW, c->chrDstH,
                c->chrXInc, c->chrYInc);
-    }
-
-    /* alpha blend special case, note this has been split via cascaded contexts if its scaled */
-    if (unscaled && !usesHFilter && !usesVFilter &&
-        c->alphablend != SWS_ALPHA_BLEND_NONE &&
-        isALPHA(srcFormat) &&
-        (c->srcRange == c->dstRange || isAnyRGB(dstFormat)) &&
-        alphaless_fmt(srcFormat) == dstFormat
-    ) {
-        c->convert_unscaled = ff_sws_alphablendaway;
-
-        if (flags & SWS_PRINT_INFO)
-            av_log(c, AV_LOG_INFO,
-                    "using alpha blendaway %s -> %s special converter\n",
-                    av_get_pix_fmt_name(srcFormat), av_get_pix_fmt_name(dstFormat));
-        return 0;
-    }
-
-    /* unscaled special cases */
-    if (unscaled && !usesHFilter && !usesVFilter &&
-        (c->srcRange == c->dstRange || isAnyRGB(dstFormat) ||
-         isFloat(srcFormat) || isFloat(dstFormat))){
-        ff_get_unscaled_swscale(c);
-
-        if (c->convert_unscaled) {
-            if (flags & SWS_PRINT_INFO)
-                av_log(c, AV_LOG_INFO,
-                       "using unscaled %s -> %s special converter\n",
-                       av_get_pix_fmt_name(srcFormat), av_get_pix_fmt_name(dstFormat));
-            return 0;
-        }
     }
 
     ff_sws_init_scale(c);
