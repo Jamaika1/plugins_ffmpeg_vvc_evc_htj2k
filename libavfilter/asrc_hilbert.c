@@ -20,11 +20,11 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "filters.h"
-#include "window_func.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/window_func.h"
 
 typedef struct HilbertContext {
     const AVClass *class;

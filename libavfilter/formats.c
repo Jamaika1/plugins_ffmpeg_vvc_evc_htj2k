@@ -24,9 +24,9 @@
 #include "libavutil/common.h"
 #include "libavutil/eval.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/formats.h"
 
 /**
  * Add all refs from a to ret and destroy a.

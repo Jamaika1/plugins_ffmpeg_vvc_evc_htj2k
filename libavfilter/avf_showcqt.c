@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/tx.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
@@ -26,10 +26,10 @@
 #include "libavutil/eval.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/time.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "lavfutils.h"
-#include "lswsutils.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/lavfutils.h"
+#include "libavfilter/lswsutils.h"
 
 #if CONFIG_LIBFREETYPE
 #include <ft2build.h>
@@ -37,10 +37,10 @@
 #endif
 
 #if CONFIG_LIBFONTCONFIG
-#include <fontconfig/fontconfig.h>
+#include "../libavcodec/librsvg/fontconfig/fontconfig.h"
 #endif
 
-#include "avf_showcqt.h"
+#include "libavfilter/avf_showcqt.h"
 
 #define BASEFREQ        20.01523126408007475
 #define ENDFREQ         20495.59681441799654

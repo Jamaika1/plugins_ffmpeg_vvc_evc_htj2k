@@ -26,9 +26,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/timestamp.h"
-#include "avfilter.h"
-#include "bbox.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/bbox.h"
+#include "libavfilter/internal.h"
 
 typedef struct BBoxContext {
     const AVClass *class;

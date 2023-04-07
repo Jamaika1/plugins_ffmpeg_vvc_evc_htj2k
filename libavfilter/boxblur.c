@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "boxblur.h"
+#include "libavfilter/boxblur.h"
 
 static const char *const var_names[] = {
     "w",

@@ -23,19 +23,19 @@
  * audio to video multimedia filter
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "audio.h"
-#include "video.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
+#include "libavfilter/internal.h"
 
 enum ShowWavesMode {
     MODE_POINT,

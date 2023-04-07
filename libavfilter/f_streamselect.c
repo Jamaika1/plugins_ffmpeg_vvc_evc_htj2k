@@ -19,13 +19,13 @@
 #include "libavutil/avstring.h"
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "formats.h"
-#include "framesync.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct StreamSelectContext {
     const AVClass *class;

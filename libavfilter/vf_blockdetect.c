@@ -31,7 +31,7 @@
 
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
 typedef struct BLKContext {
     const AVClass *class;

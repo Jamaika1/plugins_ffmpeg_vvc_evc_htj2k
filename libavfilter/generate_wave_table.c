@@ -18,8 +18,8 @@
 
 #include <stdint.h>
 #include "libavutil/avassert.h"
-#include "avfilter.h"
-#include "generate_wave_table.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/generate_wave_table.h"
 
 void ff_generate_wave_table(enum WaveType wave_type,
                             enum AVSampleFormat sample_fmt,

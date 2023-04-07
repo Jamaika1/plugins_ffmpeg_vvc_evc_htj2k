@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <stdint.h>
 
@@ -29,10 +29,10 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/samplefmt.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct SegmentContext {
     const AVClass *class;

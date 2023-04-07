@@ -26,11 +26,11 @@
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
-#include "video.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/audio.h"
 
 #define TYPE_ALL 2
 

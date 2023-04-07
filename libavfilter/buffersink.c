@@ -31,13 +31,13 @@
 #include "libavutil/opt.h"
 
 #define FF_INTERNAL_FIELDS 1
-#include "framequeue.h"
+#include "libavfilter/framequeue.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "buffersink.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/buffersink.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct BufferSinkContext {
     const AVClass *class;
@@ -153,28 +153,6 @@ int attribute_align_arg av_buffersink_get_samples(AVFilterContext *ctx,
 {
     return get_frame_internal(ctx, frame, 0, nb_samples);
 }
-
-#if FF_API_BUFFERSINK_ALLOC
-AVBufferSinkParams *av_buffersink_params_alloc(void)
-{
-    static const int pixel_fmts[] = { AV_PIX_FMT_NONE };
-    AVBufferSinkParams *params = av_malloc(sizeof(AVBufferSinkParams));
-    if (!params)
-        return NULL;
-
-    params->pixel_fmts = pixel_fmts;
-    return params;
-}
-
-AVABufferSinkParams *av_abuffersink_params_alloc(void)
-{
-    AVABufferSinkParams *params = av_mallocz(sizeof(AVABufferSinkParams));
-
-    if (!params)
-        return NULL;
-    return params;
-}
-#endif
 
 static av_cold int common_init(AVFilterContext *ctx)
 {

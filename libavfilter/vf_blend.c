@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixfmt.h"
-#include "avfilter.h"
-#include "framesync.h"
-#include "internal.h"
-#include "vf_blend_init.h"
-#include "video.h"
-#include "blend.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/vf_blend_init.h"
+#include "libavfilter/video.h"
+#include "libavfilter/blend.h"
 
 #define TOP    0
 #define BOTTOM 1

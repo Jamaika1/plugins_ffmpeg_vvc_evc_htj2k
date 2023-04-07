@@ -28,13 +28,13 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixfmt.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "filters.h"
-#include "framesync.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 enum { Y, U, V, A };
 

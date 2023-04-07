@@ -22,7 +22,7 @@
 #include "libavutil/mem.h"
 #include "libavutil/video_enc_params.h"
 
-#include "qp_table.h"
+#include "libavfilter/qp_table.h"
 
 int ff_qp_table_extract(AVFrame *frame, int8_t **table, int *table_w, int *table_h,
                         enum AVVideoEncParamsType *qscale_type)

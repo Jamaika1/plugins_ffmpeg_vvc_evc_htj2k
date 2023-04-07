@@ -27,7 +27,7 @@
 #include "libavutil/common.h"
 #include "libavutil/avassert.h"
 
-#include "transform.h"
+#include "libavfilter/transform.h"
 
 #define INTERPOLATE_METHOD(name) \
     static uint8_t name(float x, float y, const uint8_t *src, \

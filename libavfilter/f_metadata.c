@@ -23,7 +23,7 @@
  * filter for manipulating frame metadata
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <float.h>
 
@@ -34,11 +34,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/timestamp.h"
 #include "libavformat/avio.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 enum MetadataMode {
     METADATA_SELECT,

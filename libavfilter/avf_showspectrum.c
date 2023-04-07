@@ -26,7 +26,7 @@
  * (by Michael Niedermayer) and lavfi/avf_showwaves (by Stefano Sabatini).
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <float.h>
 #include <math.h>
@@ -39,12 +39,12 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/xga_font_data.h"
-#include "audio.h"
-#include "video.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
-#include "window_func.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/window_func.h"
 
 enum DisplayMode  { COMBINED, SEPARATE, NB_MODES };
 enum DataMode     { D_MAGNITUDE, D_PHASE, D_UPHASE, NB_DMODES };
@@ -1441,7 +1441,10 @@ static int plot_spectrum_column(AVFilterLink *inlink, AVFrame *insamples)
         }
     }
 
-    av_frame_make_writable(s->outpicref);
+    ret = ff_inlink_make_frame_writable(outlink, &s->outpicref);
+    if (ret < 0)
+        return ret;
+    outpicref = s->outpicref;
     /* copy to output */
     if (s->orientation == VERTICAL) {
         if (s->sliding == SCROLL) {

@@ -21,7 +21,7 @@
 #include "libavutil/mastering_display_metadata.h"
 #include "libavutil/pixdesc.h"
 
-#include "colorspace.h"
+#include "libavfilter/colorspace.h"
 
 
 void ff_matrix_invert_3x3(const double in[3][3], double out[3][3])

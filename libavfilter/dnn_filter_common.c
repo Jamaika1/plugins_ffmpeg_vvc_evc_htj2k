@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dnn_filter_common.h"
+#include "libavfilter/dnn_filter_common.h"
 #include "libavutil/avstring.h"
 
 #define MAX_SUPPORTED_OUTPUTS_NB 4

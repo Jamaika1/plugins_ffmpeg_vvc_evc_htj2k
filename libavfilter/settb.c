@@ -23,7 +23,7 @@
  * Set timebase for the output link.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -34,11 +34,11 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 #include "libavutil/rational.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 static const char *const var_names[] = {
     "AVTB",   /* default timebase 1/AV_TIME_BASE */

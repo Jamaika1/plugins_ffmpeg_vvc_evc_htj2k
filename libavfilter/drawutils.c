@@ -26,9 +26,9 @@
 #include "libavutil/csp.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/pixdesc.h"
-#include "colorspace.h"
-#include "drawutils.h"
-#include "formats.h"
+#include "libavfilter/colorspace.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
 
 enum { RED = 0, GREEN, BLUE, ALPHA };
 

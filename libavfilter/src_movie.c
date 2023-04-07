@@ -27,7 +27,7 @@
  * @todo support a PTS correction mechanism
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <float.h>
 #include <stdint.h>
@@ -44,11 +44,11 @@
 
 #include "libavformat/avformat.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct MovieStream {
     AVStream *st;

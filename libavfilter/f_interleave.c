@@ -23,18 +23,18 @@
  * audio and video interleaver
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "filters.h"
-#include "internal.h"
-#include "audio.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
 
 typedef struct InterleaveContext {
     const AVClass *class;

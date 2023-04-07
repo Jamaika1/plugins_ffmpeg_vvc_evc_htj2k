@@ -28,8 +28,8 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/timestamp.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct BlackDetectContext {
     const AVClass *class;

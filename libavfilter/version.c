@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/avassert.h"
-#include "avfilter.h"
-#include "version.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/version.h"
 
 #include "libavutil/ffversion.h"
 const char av_filter_ffversion[] = "FFmpeg version " FFMPEG_VERSION;

@@ -24,10 +24,10 @@
 #include "libavutil/common.h"
 #include "libavutil/cpu.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "framepool.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/framepool.h"
+#include "libavfilter/internal.h"
 
 AVFrame *ff_null_get_audio_buffer(AVFilterLink *link, int nb_samples)
 {

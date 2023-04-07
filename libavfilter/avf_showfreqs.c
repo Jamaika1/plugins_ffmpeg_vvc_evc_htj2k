@@ -28,12 +28,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "audio.h"
-#include "filters.h"
-#include "video.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "window_func.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/window_func.h"
 
 enum DataMode       { MAGNITUDE, PHASE, DELAY, NB_DATA };
 enum DisplayMode    { LINE, BAR, DOT, NB_MODES };

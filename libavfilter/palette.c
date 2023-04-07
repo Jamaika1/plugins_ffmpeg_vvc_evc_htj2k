@@ -20,7 +20,7 @@
  */
 
 #include "libavutil/common.h"
-#include "palette.h"
+#include "libavfilter/palette.h"
 
 #define K ((1 << 16) - 1)
 #define K2 ((int64_t)K*K)

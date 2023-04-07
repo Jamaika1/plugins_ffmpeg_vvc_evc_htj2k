@@ -25,12 +25,12 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/xga_font_data.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "audio.h"
-#include "video.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
+#include "libavfilter/internal.h"
 
 static const char *const var_names[] = {   "VOLUME",   "CHANNEL",   "PEAK",        NULL };
 enum                                   { VAR_VOLUME, VAR_CHANNEL, VAR_PEAK, VAR_VARS_NB };
@@ -324,7 +324,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *insamples)
     AVFilterLink *outlink = ctx->outputs[0];
     ShowVolumeContext *s = ctx->priv;
     const int step = s->step;
-    int c, j, k, max_draw;
+    int c, j, k, max_draw, ret;
     char channel_name[64];
     AVFrame *out;
 
@@ -339,6 +339,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *insamples)
         clear_picture(s, outlink);
     }
     s->out->pts = av_rescale_q(insamples->pts, inlink->time_base, outlink->time_base);
+    s->out->duration = 1;
 
     if ((s->f < 1.) && (s->f > 0.)) {
         for (j = 0; j < outlink->h; j++) {
@@ -433,7 +434,11 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *insamples)
     out = av_frame_clone(s->out);
     if (!out)
         return AVERROR(ENOMEM);
-    av_frame_make_writable(out);
+    ret = ff_inlink_make_frame_writable(outlink, &out);
+    if (ret < 0) {
+        av_frame_free(&out);
+        return ret;
+    }
 
     /* draw volume level */
     for (c = 0; c < inlink->ch_layout.nb_channels && s->h >= 8 && s->draw_volume; c++) {

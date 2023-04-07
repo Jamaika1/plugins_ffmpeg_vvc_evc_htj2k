@@ -29,7 +29,7 @@
 
 #include "libavcodec/avcodec.h"
 
-#include "lavfutils.h"
+#include "libavfilter/lavfutils.h"
 
 int ff_load_image(uint8_t *data[4], int linesize[4],
                   int *w, int *h, enum AVPixelFormat *pix_fmt,

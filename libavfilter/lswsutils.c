@@ -17,7 +17,7 @@
  */
 
 #include "libavutil/imgutils.h"
-#include "lswsutils.h"
+#include "libavfilter/lswsutils.h"
 
 int ff_scale_image(uint8_t *dst_data[4], int dst_linesize[4],
                    int dst_w, int dst_h, enum AVPixelFormat dst_pix_fmt,

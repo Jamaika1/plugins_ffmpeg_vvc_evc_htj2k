@@ -21,7 +21,7 @@
  * Scene SAD functions
  */
 
-#include "scene_sad.h"
+#include "libavfilter/scene_sad.h"
 
 void ff_scene_sad16_c(SCENE_SAD_PARAMS)
 {

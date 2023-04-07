@@ -33,8 +33,8 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/qsort.h"
-#include "internal.h"
-#include "edge_common.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/edge_common.h"
 
 static int comp(const float *a,const float *b)
 {

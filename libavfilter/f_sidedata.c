@@ -21,15 +21,15 @@
  * filter for manipulating frame side data
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/internal.h"
 #include "libavutil/frame.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 enum SideDataMode {
     SIDEDATA_SELECT,

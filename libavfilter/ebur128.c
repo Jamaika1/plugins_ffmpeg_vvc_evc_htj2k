@@ -41,7 +41,7 @@
  * THE SOFTWARE.
 */
 
-#include "ebur128.h"
+#include "libavfilter/ebur128.h"
 
 #include <float.h>
 #include <limits.h>

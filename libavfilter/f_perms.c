@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/lfg.h"
 #include "libavutil/opt.h"
 #include "libavutil/random_seed.h"
-#include "audio.h"
-#include "video.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/video.h"
 
 enum mode {
     MODE_NONE,
@@ -96,8 +97,9 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
            in_perm == out_perm ? " (no-op)" : "");
 
     if (in_perm == RO && out_perm == RW) {
-        if ((ret = av_frame_make_writable(frame)) < 0)
+        if ((ret = ff_inlink_make_frame_writable(inlink, &frame)) < 0)
             return ret;
+        out = frame;
     } else if (in_perm == RW && out_perm == RO) {
         out = av_frame_clone(frame);
         if (!out)

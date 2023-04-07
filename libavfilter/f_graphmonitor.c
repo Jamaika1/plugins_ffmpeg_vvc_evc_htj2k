@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "float.h"
+#include <float.h>
 
 #include "libavutil/pixdesc.h"
 #include "libavutil/eval.h"
@@ -28,11 +28,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/timestamp.h"
 #include "libavutil/xga_font_data.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct CacheItem {
     int64_t previous_pts_us;

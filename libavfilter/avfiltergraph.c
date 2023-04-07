@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include <string.h>
 
@@ -32,13 +32,13 @@
 #include "libavutil/pixdesc.h"
 
 #define FF_INTERNAL_FIELDS 1
-#include "framequeue.h"
+#include "libavfilter/framequeue.h"
 
-#include "avfilter.h"
-#include "buffersink.h"
-#include "formats.h"
-#include "internal.h"
-#include "thread.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/buffersink.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/thread.h"
 
 #define OFFSET(x) offsetof(AVFilterGraph, x)
 #define F AV_OPT_FLAG_FILTERING_PARAM

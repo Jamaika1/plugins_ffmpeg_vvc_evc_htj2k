@@ -19,8 +19,8 @@
 #include "libavutil/avassert.h"
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 enum {
     X, Y, W, H,

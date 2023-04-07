@@ -19,8 +19,8 @@
  */
 
 #include "libavutil/internal.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 static int null_filter_frame(AVFilterLink *link, AVFrame *frame)
 {

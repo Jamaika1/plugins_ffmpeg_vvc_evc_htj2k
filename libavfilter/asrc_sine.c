@@ -24,10 +24,10 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct SineContext {
     const AVClass *class;

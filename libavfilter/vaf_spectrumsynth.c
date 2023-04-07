@@ -31,13 +31,13 @@
 #include "libavutil/ffmath.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "audio.h"
-#include "video.h"
-#include "filters.h"
-#include "internal.h"
-#include "window_func.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/window_func.h"
 
 enum MagnitudeScale { LINEAR, LOG, NB_SCALES };
 enum SlideMode      { REPLACE, SCROLL, FULLFRAME, RSCROLL, NB_SLIDES };

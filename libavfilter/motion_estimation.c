@@ -19,7 +19,7 @@
  */
 
 #include "libavutil/common.h"
-#include "motion_estimation.h"
+#include "libavfilter/motion_estimation.h"
 
 static const int8_t sqr1[8][2]  = {{ 0,-1}, { 0, 1}, {-1, 0}, { 1, 0}, {-1,-1}, {-1, 1}, { 1,-1}, { 1, 1}};
 static const int8_t dia1[4][2]  = {{-1, 0}, { 0,-1}, { 1, 0}, { 0, 1}};

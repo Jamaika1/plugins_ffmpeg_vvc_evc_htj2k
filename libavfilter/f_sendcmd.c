@@ -23,7 +23,7 @@
  * send commands filter
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
@@ -31,10 +31,10 @@
 #include "libavutil/file.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/video.h"
 
 #define COMMAND_FLAG_ENTER 1
 #define COMMAND_FLAG_LEAVE 2
@@ -43,7 +43,9 @@
 static const char *const var_names[] = {
     "N",     /* frame number */
     "T",     /* frame time in seconds */
+#if FF_API_FRAME_PKT
     "POS",   /* original position in the file of the frame */
+#endif
     "PTS",   /* frame pts */
     "TS",    /* interval start time in seconds */
     "TE",    /* interval end time in seconds */
@@ -56,7 +58,9 @@ static const char *const var_names[] = {
 enum var_name {
     VAR_N,
     VAR_T,
+#if FF_API_FRAME_PKT
     VAR_POS,
+#endif
     VAR_PTS,
     VAR_TS,
     VAR_TE,
@@ -531,7 +535,11 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *ref)
                         double current = TS2T(ref->pts, inlink->time_base);
 
                         var_values[VAR_N]   = inlink->frame_count_in;
+#if FF_API_FRAME_PKT
+FF_DISABLE_DEPRECATION_WARNINGS
                         var_values[VAR_POS] = ref->pkt_pos == -1 ? NAN : ref->pkt_pos;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
                         var_values[VAR_PTS] = TS2D(ref->pts);
                         var_values[VAR_T]   = current;
                         var_values[VAR_TS]  = start;

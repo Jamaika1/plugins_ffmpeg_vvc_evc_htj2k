@@ -19,7 +19,7 @@
  */
 
 #include "libavutil/common.h"
-#include "colorspacedsp.h"
+#include "libavfilter/colorspacedsp.h"
 
 /*
  * SS_W/H stands for "subsampling_w/h"

@@ -28,11 +28,11 @@
 #include "libavutil/avstring.h"
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "boxblur.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/boxblur.h"
 
 
 typedef struct BoxBlurContext {

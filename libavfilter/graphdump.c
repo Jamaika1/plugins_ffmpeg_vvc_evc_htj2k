@@ -24,8 +24,8 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/bprint.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 static int print_link_prop(AVBPrint *buf, AVFilterLink *link)
 {

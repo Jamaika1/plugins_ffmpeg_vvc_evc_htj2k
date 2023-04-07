@@ -20,10 +20,10 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "framesync.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
 
 #define OFFSET(member) offsetof(FFFrameSync, member)
 #define FLAGS AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_FILTERING_PARAM
@@ -288,7 +288,7 @@ int ff_framesync_get_frame(FFFrameSync *fs, unsigned in, AVFrame **rframe,
         if (need_copy) {
             if (!(frame = av_frame_clone(frame)))
                 return AVERROR(ENOMEM);
-            if ((ret = av_frame_make_writable(frame)) < 0) {
+            if ((ret = ff_inlink_make_frame_writable(fs->parent->inputs[in], &frame) < 0)) {
                 av_frame_free(&frame);
                 return ret;
             }

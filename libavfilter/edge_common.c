@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "edge_common.h"
+#include "libavfilter/edge_common.h"
 
 // Internal helper for ff_sobel()
 static int get_rounded_direction(int gx, int gy)

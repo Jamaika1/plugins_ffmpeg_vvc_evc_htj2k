@@ -18,8 +18,8 @@
 
 #include <stdint.h>
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/common.h"
@@ -28,9 +28,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct TrimContext {
     const AVClass *class;

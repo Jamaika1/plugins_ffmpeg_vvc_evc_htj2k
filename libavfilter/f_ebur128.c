@@ -37,11 +37,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/timestamp.h"
 #include "libswresample/swresample.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 #define ABS_THRES    -70            ///< silence gate: we discard anything below this absolute (LUFS) threshold
 #define ABS_UP_THRES  10            ///< upper loud limit to consider (ABS_THRES being the minimum)
@@ -618,13 +618,13 @@ static int gate_update(struct integrator *integ, double power,
 
 static int filter_frame(AVFilterLink *inlink, AVFrame *insamples)
 {
-    int i, ch, idx_insample;
+    int i, ch, idx_insample, ret;
     AVFilterContext *ctx = inlink->dst;
     EBUR128Context *ebur128 = ctx->priv;
     const int nb_channels = ebur128->nb_channels;
     const int nb_samples  = insamples->nb_samples;
     const double *samples = (double *)insamples->data[0];
-    AVFrame *pic = ebur128->outpicref;
+    AVFrame *pic;
 
 #if CONFIG_SWRESAMPLE
     if (ebur128->peak_mode & PEAK_MODE_TRUE_PEAKS && ebur128->idx_insample == 0) {
@@ -821,7 +821,13 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *insamples)
                 y_loudness_lu_graph = lu_to_y(ebur128, loudness_3000 - ebur128->target);
                 y_loudness_lu_gauge = lu_to_y(ebur128, gauge_value);
 
-                av_frame_make_writable(pic);
+                ret = ff_inlink_make_frame_writable(outlink, &ebur128->outpicref);
+                if (ret < 0) {
+                    av_frame_free(&insamples);
+                    ebur128->insamples = NULL;
+                    return ret;
+                }
+                pic = ebur128->outpicref;
                 /* draw the graph using the short-term loudness */
                 p = pic->data[0] + ebur128->graph.y*pic->linesize[0] + ebur128->graph.x*3;
                 for (y = 0; y < ebur128->graph.h; y++) {

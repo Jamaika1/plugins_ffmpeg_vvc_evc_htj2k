@@ -28,9 +28,9 @@
 #include "libavutil/mem.h"
 #include "libavutil/slicethread.h"
 
-#include "avfilter.h"
-#include "internal.h"
-#include "thread.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/thread.h"
 
 typedef struct ThreadContext {
     AVFilterGraph *graph;
