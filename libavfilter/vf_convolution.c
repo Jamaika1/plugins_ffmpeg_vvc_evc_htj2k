@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/imgutils.h"
@@ -27,11 +27,11 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "convolution.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/convolution.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define OFFSET(x) offsetof(ConvolutionContext, x)
 #define FLAGS AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_RUNTIME_PARAM

@@ -39,9 +39,9 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "internal.h"
-#include "qp_table.h"
-#include "vf_fspp.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/qp_table.h"
+#include "libavfilter/vf_fspp.h"
 
 #define OFFSET(x) offsetof(FSPPContext, x)
 #define FLAGS AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_VIDEO_PARAM

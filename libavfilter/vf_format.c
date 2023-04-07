@@ -23,7 +23,7 @@
  * format and noformat video filters
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <string.h>
 
@@ -32,10 +32,10 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct FormatContext {
     const AVClass *class;

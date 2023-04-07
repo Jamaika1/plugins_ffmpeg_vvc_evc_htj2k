@@ -32,7 +32,7 @@
 #include "libavutil/eval.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
 static const char *const var_names[] = { "c", NULL };
 enum { VAR_C, VAR_VARS_NB };

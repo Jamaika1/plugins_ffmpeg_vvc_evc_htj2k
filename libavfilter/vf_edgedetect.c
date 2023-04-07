@@ -28,11 +28,11 @@
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "edge_common.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/edge_common.h"
 
 #define PLANE_R 0x4
 #define PLANE_G 0x1

@@ -27,10 +27,10 @@
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "framesync.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/video.h"
 
 #define MAX_SIZE 64
 

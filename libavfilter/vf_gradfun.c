@@ -37,11 +37,11 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "gradfun.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/gradfun.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 DECLARE_ALIGNED(16, static const uint16_t, dither)[8][8] = {
     {0x00,0x60,0x18,0x78,0x06,0x66,0x1E,0x7E},

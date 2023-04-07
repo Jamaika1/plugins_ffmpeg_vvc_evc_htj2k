@@ -23,9 +23,9 @@
 
 #include "libavutil/file_open.h"
 #include "libavutil/opt.h"
-#include "filters.h"
-#include "dnn_filter_common.h"
-#include "internal.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/dnn_filter_common.h"
+#include "libavfilter/internal.h"
 #include "libavutil/time.h"
 #include "libavutil/avstring.h"
 #include "libavutil/detection_bbox.h"

@@ -23,9 +23,9 @@
 
 #include "libavutil/imgutils.h"
 #include "libavutil/internal.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 static int query_formats(AVFilterContext *ctx)
 {

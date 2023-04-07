@@ -22,11 +22,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct DedotContext {
     const AVClass *class;
@@ -289,7 +289,7 @@ static int activate(AVFilterContext *ctx)
             s->frames[4]) {
             out = av_frame_clone(s->frames[2]);
             if (out && !ctx->is_disabled) {
-                ret = av_frame_make_writable(out);
+                ret = ff_inlink_make_frame_writable(inlink, &out);
                 if (ret >= 0) {
                     if (s->m & 1)
                         ff_filter_execute(ctx, s->dedotcrawl, out, NULL,

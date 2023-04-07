@@ -30,12 +30,12 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/pixfmt.h"
 
-#include "avfilter.h"
-#include "colorspacedsp.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "colorspace.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/colorspacedsp.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/colorspace.h"
 
 enum DitherMode {
     DITHER_NONE,

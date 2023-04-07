@@ -25,10 +25,10 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/internal.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct FeedbackContext {
     const AVClass *class;

@@ -32,11 +32,11 @@
 #include "libavutil/rational.h"
 #include "libavutil/stereo3d.h"
 
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define LEFT  0
 #define RIGHT 1

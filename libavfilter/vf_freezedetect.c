@@ -26,9 +26,9 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/timestamp.h"
 
-#include "avfilter.h"
-#include "filters.h"
-#include "scene_sad.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/scene_sad.h"
 
 typedef struct FreezeDetectContext {
     const AVClass *class;

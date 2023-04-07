@@ -24,9 +24,9 @@
 
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
-#include "lavfutils.h"
+#include "libavfilter/lavfutils.h"
 
 #define MAX_MIPMAPS 5
 

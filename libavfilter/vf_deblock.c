@@ -26,10 +26,10 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 enum FilterType { WEAK, STRONG, NB_FILTER };
 

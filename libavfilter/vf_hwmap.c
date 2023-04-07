@@ -22,10 +22,10 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct HWMapContext {
     const AVClass *class;
@@ -427,4 +427,5 @@ const AVFilter ff_vf_hwmap = {
     FILTER_OUTPUTS(hwmap_outputs),
     FILTER_QUERY_FUNC(hwmap_query_formats),
     .flags_internal = FF_FILTER_FLAG_HWFRAME_AWARE,
+    .flags          = AVFILTER_FLAG_HWDEVICE,
 };

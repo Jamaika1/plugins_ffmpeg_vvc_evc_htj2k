@@ -28,18 +28,18 @@
 
 #include <float.h>
 
-#include "config.h"
+#include "libavcodec/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "vf_hqdn3d.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/vf_hqdn3d.h"
 
 #define LUT_BITS (depth==16 ? 8 : 4)
 #define LOAD(x) (((depth == 8 ? src[x] : AV_RN16A(src + (x) * 2)) << (16 - depth))\

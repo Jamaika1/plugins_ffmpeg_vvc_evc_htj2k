@@ -33,9 +33,9 @@
 #include "libavutil/motion_vector.h"
 #include "libavutil/opt.h"
 #include "libavutil/video_enc_params.h"
-#include "avfilter.h"
-#include "qp_table.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/qp_table.h"
+#include "libavfilter/internal.h"
 
 #define MV_P_FOR  (1<<0)
 #define MV_B_FOR  (1<<1)

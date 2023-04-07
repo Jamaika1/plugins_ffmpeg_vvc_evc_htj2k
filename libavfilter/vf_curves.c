@@ -26,10 +26,10 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define R 0
 #define G 1

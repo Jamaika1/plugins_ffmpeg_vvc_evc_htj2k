@@ -22,14 +22,14 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/qsort.h"
-#include "avfilter.h"
+#include "libavfilter/avfilter.h"
 
 #define FF_BUFQUEUE_SIZE 129
-#include "bufferqueue.h"
+#include "libavfilter/bufferqueue.h"
 
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define SIZE FF_BUFQUEUE_SIZE
 

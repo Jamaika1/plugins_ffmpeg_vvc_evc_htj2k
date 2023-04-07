@@ -25,7 +25,7 @@
  * that needs to write in the input frame.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/colorspace.h"
 #include "libavutil/common.h"
@@ -34,11 +34,11 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/detection_bbox.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 static const char *const var_names[] = {
     "dar",

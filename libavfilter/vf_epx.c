@@ -18,7 +18,7 @@
 
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
 typedef struct EPXContext {
     const AVClass *class;

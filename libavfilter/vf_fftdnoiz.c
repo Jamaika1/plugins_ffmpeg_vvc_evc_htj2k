@@ -23,8 +23,8 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/tx.h"
-#include "internal.h"
-#include "window_func.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/window_func.h"
 
 #define MAX_BLOCK 256
 #define MAX_THREADS 32

@@ -26,10 +26,10 @@
 
 #include "libavformat/avio.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "dnn_filter_common.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/dnn_filter_common.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 typedef struct DRContext {
     const AVClass *class;

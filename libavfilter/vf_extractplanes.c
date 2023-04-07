@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "drawutils.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 #define PLANE_R 0x01
 #define PLANE_G 0x02

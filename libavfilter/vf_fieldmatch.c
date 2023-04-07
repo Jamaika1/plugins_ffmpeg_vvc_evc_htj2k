@@ -36,9 +36,9 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/timestamp.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 #define INPUT_MAIN     0
 #define INPUT_CLEANSRC 1

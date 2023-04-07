@@ -23,10 +23,10 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct HWUploadContext {
     const AVClass *class;
@@ -258,4 +258,5 @@ const AVFilter ff_vf_hwupload = {
     FILTER_OUTPUTS(hwupload_outputs),
     FILTER_QUERY_FUNC(hwupload_query_formats),
     .flags_internal = FF_FILTER_FLAG_HWFRAME_AWARE,
+    .flags          = AVFILTER_FLAG_HWDEVICE,
 };

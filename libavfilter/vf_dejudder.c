@@ -51,9 +51,9 @@
 
 #include "libavutil/opt.h"
 #include "libavutil/mathematics.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct DejudderContext {
     const AVClass *class;

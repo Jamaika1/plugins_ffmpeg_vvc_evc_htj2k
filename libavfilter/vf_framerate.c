@@ -34,12 +34,12 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
-#include "filters.h"
-#include "framerate.h"
-#include "scene_sad.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/framerate.h"
+#include "libavfilter/scene_sad.h"
 
 #define OFFSET(x) offsetof(FrameRateContext, x)
 #define V AV_OPT_FLAG_VIDEO_PARAM

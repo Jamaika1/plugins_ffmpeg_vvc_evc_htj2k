@@ -23,11 +23,11 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/xga_font_data.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct DatascopeContext {
     const AVClass *class;
@@ -322,7 +322,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
         av_frame_free(&in);
         return AVERROR(ENOMEM);
     }
-    out->pts = in->pts;
+    av_frame_copy_props(out, in);
 
     ff_fill_rectangle(&s->draw, &s->black, out->data, out->linesize,
                       0, 0, outlink->w, outlink->h);
