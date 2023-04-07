@@ -23,9 +23,9 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 enum PixelizeModes {
     PIXELIZE_AVG,

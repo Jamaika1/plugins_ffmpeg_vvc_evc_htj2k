@@ -71,13 +71,13 @@
 
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "bbox.h"
-#include "lavfutils.h"
-#include "lswsutils.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/bbox.h"
+#include "libavfilter/lavfutils.h"
+#include "libavfilter/lswsutils.h"
 
 typedef struct RemovelogoContext {
     const AVClass *class;

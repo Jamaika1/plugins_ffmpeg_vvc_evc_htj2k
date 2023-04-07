@@ -37,8 +37,8 @@
 #include "libavutil/opt.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct OWDenoiseContext {
     const AVClass *class;

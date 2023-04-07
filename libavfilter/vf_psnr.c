@@ -29,11 +29,11 @@
 #include "libavutil/file_open.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "framesync.h"
-#include "internal.h"
-#include "psnr.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/psnr.h"
 
 typedef struct PSNRContext {
     const AVClass *class;

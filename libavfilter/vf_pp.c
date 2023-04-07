@@ -27,8 +27,8 @@
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
 
-#include "internal.h"
-#include "qp_table.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/qp_table.h"
 
 #include "libpostproc/postprocess.h"
 

@@ -29,9 +29,9 @@
 #include "libavutil/pixdesc.h"
 #include "libswscale/swscale.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 #define RADIUS_MIN 0.1
 #define RADIUS_MAX 5.0

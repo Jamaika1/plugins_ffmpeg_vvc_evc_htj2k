@@ -28,9 +28,9 @@
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/intreadwrite.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "palette.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/palette.h"
 
 /* Reference a color and how much it's used */
 struct color_ref {

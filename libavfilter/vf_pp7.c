@@ -31,9 +31,9 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "internal.h"
-#include "qp_table.h"
-#include "vf_pp7.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/qp_table.h"
+#include "libavfilter/vf_pp7.h"
 
 enum mode {
     MODE_HARD,

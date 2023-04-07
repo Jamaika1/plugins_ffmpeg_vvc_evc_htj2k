@@ -31,10 +31,10 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
-#include "drawutils.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #include <float.h>
 

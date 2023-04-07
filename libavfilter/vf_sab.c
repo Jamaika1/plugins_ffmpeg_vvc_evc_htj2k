@@ -27,9 +27,9 @@
 #include "libavutil/pixdesc.h"
 #include "libswscale/swscale.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 typedef struct FilterParam {
     float radius;

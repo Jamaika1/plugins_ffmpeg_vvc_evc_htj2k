@@ -32,12 +32,12 @@
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "vf_nlmeans.h"
-#include "vf_nlmeans_init.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/vf_nlmeans.h"
+#include "libavfilter/vf_nlmeans_init.h"
+#include "libavfilter/video.h"
 
 typedef struct NLMeansContext {
     const AVClass *class;

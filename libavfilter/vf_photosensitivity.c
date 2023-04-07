@@ -23,11 +23,12 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
+#include "libavfilter/avfilter.h"
 
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define MAX_FRAMES 240
 #define GRID_SIZE 8
@@ -243,7 +244,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
             /* just duplicate the frame */
             s->history[s->history_pos] = 0; /* frame was duplicated, thus, delta is zero */
         } else {
-            res = av_frame_make_writable(s->last_frame_av);
+            res = ff_inlink_make_frame_writable(inlink, &s->last_frame_av);
             if (res) {
                 av_frame_free(&in);
                 return res;

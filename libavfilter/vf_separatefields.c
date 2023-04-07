@@ -19,9 +19,9 @@
  */
 
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct SeparateFieldsContext {
     int nb_planes;

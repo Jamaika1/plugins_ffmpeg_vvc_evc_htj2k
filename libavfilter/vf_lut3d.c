@@ -24,19 +24,19 @@
  * 3D Lookup table filter
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "float.h"
+#include <float.h>
 
 #include "libavutil/opt.h"
 #include "libavutil/file_open.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
-#include "drawutils.h"
-#include "internal.h"
-#include "video.h"
-#include "lut3d.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/lut3d.h"
 
 #define R 0
 #define G 1

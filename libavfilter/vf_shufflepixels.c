@@ -28,9 +28,9 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/random_seed.h"
 
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct ShufflePixelsContext {
     const AVClass *class;

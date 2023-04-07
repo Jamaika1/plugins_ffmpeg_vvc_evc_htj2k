@@ -25,12 +25,12 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "stereo3d.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/stereo3d.h"
 
 enum StereoCode {
     ANAGLYPH_RC_GRAY,   // anaglyph red/cyan gray

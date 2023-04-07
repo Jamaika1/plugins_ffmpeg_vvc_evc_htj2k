@@ -29,11 +29,11 @@
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/qsort.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "framesync.h"
-#include "internal.h"
-#include "palette.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/palette.h"
 
 enum dithering_mode {
     DITHERING_NONE,
@@ -783,7 +783,7 @@ static int apply_palette(AVFilterLink *inlink, AVFrame *in, AVFrame **outf)
     av_frame_unref(s->last_out);
     if ((ret = av_frame_ref(s->last_in, in))       < 0 ||
         (ret = av_frame_ref(s->last_out, out))     < 0 ||
-        (ret = av_frame_make_writable(s->last_in)) < 0) {
+        (ret = ff_inlink_make_frame_writable(inlink, &s->last_in)) < 0) {
         av_frame_free(&out);
         *outf = NULL;
         return ret;

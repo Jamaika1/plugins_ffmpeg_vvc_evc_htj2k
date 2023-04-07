@@ -28,9 +28,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 
-#include "avfilter.h"
+#include "libavfilter/avfilter.h"
 #include "../libavcodec/fflcms2.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
 typedef struct IccDetectContext {
     const AVClass *class;

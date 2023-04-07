@@ -28,9 +28,9 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 static const size_t NNEDI_WEIGHTS_SIZE = 13574928;
 static const uint8_t NNEDI_XDIM[] = { 8, 16, 32, 48, 8, 16, 32 };

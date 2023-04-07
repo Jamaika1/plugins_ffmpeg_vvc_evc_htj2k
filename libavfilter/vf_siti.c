@@ -30,10 +30,10 @@
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 static const int X_FILTER[9] = {
     1, 0, -1,

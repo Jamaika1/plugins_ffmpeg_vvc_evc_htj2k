@@ -22,10 +22,10 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 enum PhaseMode {
     PROGRESSIVE,
@@ -40,27 +40,27 @@ enum PhaseMode {
 };
 
 #define DEPTH 8
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 #undef DEPTH
 #define DEPTH 9
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 #undef DEPTH
 #define DEPTH 10
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 #undef DEPTH
 #define DEPTH 12
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 #undef DEPTH
 #define DEPTH 14
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 #undef DEPTH
 #define DEPTH 16
-#include "extra\phase_template.c"
+#include "extra/phase_template.c"
 
 typedef struct PhaseContext {
     const AVClass *class;

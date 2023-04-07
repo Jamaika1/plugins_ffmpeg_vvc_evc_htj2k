@@ -29,10 +29,10 @@
 #include "libavutil/opt.h"
 #include "libavutil/avstring.h"
 #include "libavutil/file_open.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "signature.h"
-#include "signature_lookup.c"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/signature.h"
+#include "extra/signature_lookup.c"
 
 #define OFFSET(x) offsetof(SignatureContext, x)
 #define FLAGS AV_OPT_FLAG_FILTERING_PARAM | AV_OPT_FLAG_VIDEO_PARAM

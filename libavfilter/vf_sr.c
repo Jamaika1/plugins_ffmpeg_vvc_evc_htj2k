@@ -25,14 +25,14 @@
  * https://arxiv.org/abs/1609.05158
  */
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavformat/avio.h"
 #include "libswscale/swscale.h"
-#include "dnn_filter_common.h"
+#include "libavfilter/dnn_filter_common.h"
 
 typedef struct SRContext {
     const AVClass *class;

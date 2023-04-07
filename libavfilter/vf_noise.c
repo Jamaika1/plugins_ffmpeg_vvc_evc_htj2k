@@ -29,11 +29,11 @@
 #include "libavutil/lfg.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "vf_noise.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/vf_noise.h"
+#include "libavfilter/video.h"
 
 typedef struct ThreadData {
     AVFrame *in, *out;

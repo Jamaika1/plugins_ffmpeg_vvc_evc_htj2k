@@ -30,11 +30,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavcodec/mathops.h" // for mid_pred(), which is a macro so no link dependency
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define R 0
 #define G 1

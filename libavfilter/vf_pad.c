@@ -26,10 +26,10 @@
 
 #include <float.h>  /* DBL_MAX */
 
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libavutil/avstring.h"
 #include "libavutil/common.h"
 #include "libavutil/eval.h"
@@ -40,7 +40,7 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 
-#include "drawutils.h"
+#include "libavfilter/drawutils.h"
 
 static const char *const var_names[] = {
     "in_w",   "iw",

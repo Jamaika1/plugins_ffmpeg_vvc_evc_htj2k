@@ -28,10 +28,10 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/pixelutils.h"
 #include "libavutil/timestamp.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "formats.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/video.h"
 
 typedef struct DecimateContext {
     const AVClass *class;

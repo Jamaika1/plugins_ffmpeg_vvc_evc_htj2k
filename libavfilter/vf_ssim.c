@@ -38,11 +38,11 @@
 #include "libavutil/file_open.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "framesync.h"
-#include "internal.h"
-#include "ssim.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/framesync.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/ssim.h"
 
 typedef struct SSIMContext {
     const AVClass *class;
