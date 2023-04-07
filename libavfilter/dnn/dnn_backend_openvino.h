@@ -27,7 +27,7 @@
 #ifndef AVFILTER_DNN_DNN_BACKEND_OPENVINO_H
 #define AVFILTER_DNN_DNN_BACKEND_OPENVINO_H
 
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 
 DNNModel *ff_dnn_load_model_ov(const char *model_filename, DNNFunctionType func_type, const char *options, AVFilterContext *filter_ctx);
 

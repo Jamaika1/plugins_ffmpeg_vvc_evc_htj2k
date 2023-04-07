@@ -31,7 +31,7 @@
 #include "libavutil/opt.h"
 #include "libavutil/avstring.h"
 #include "libavutil/detection_bbox.h"
-#include "../internal.h"
+#include "libavfilter/internal.h"
 #include "safe_queue.h"
 #include <c_api/ie_c_api.h>
 #include "dnn_backend_common.h"

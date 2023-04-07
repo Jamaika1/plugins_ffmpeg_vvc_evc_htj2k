@@ -27,7 +27,7 @@
 #ifndef AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYER_DEPTH2SPACE_H
 #define AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYER_DEPTH2SPACE_H
 
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 #include "libavformat/avio.h"
 
 typedef struct DepthToSpaceParams{

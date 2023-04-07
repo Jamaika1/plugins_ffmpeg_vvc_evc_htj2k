@@ -27,7 +27,7 @@
 #ifndef AVFILTER_DNN_DNN_BACKEND_TF_H
 #define AVFILTER_DNN_DNN_BACKEND_TF_H
 
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 
 DNNModel *ff_dnn_load_model_tf(const char *model_filename, DNNFunctionType func_type, const char *options, AVFilterContext *filter_ctx);
 

@@ -27,7 +27,7 @@
 #ifndef AVFILTER_DNN_DNN_BACKEND_NATIVE_H
 #define AVFILTER_DNN_DNN_BACKEND_NATIVE_H
 
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 #include "libavformat/avio.h"
 #include "libavutil/opt.h"
 #include "queue.h"

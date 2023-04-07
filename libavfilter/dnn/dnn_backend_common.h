@@ -25,7 +25,7 @@
 #define AVFILTER_DNN_DNN_BACKEND_COMMON_H
 
 #include "queue.h"
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 #include "libavutil/thread.h"
 
 #define DNN_BACKEND_COMMON_OPTIONS \

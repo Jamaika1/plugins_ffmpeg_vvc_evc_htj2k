@@ -23,7 +23,7 @@
  * Implements DNN module initialization with specified backend.
  */
 
-#include "../dnn_interface.h"
+#include "libavfilter/dnn_interface.h"
 #include "dnn_backend_native.h"
 #include "dnn_backend_tf.h"
 #include "dnn_backend_openvino.h"
