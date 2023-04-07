@@ -22,11 +22,11 @@
 #include "libavutil/common.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/imgutils.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
-#include "yadif.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
+#include "libavfilter/yadif.h"
 
 typedef struct ThreadData {
     AVFrame *frame;
@@ -252,8 +252,6 @@ static void filter(AVFilterContext *ctx, AVFrame *dstpic,
         ff_filter_execute(ctx, filter_slice, &td, NULL,
                           FFMIN(h, ff_filter_get_nb_threads(ctx)));
     }
-
-    emms_c();
 }
 
 static av_cold void uninit(AVFilterContext *ctx)

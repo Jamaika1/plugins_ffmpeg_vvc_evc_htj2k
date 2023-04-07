@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x0A00
 #undef _WIN32_WINNT
@@ -42,12 +42,12 @@
 #include "libavutil/hwcontext.h"
 #include "libavutil/hwcontext_d3d11va.h"
 #include "compat/w32dlfcn.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "formats.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/video.h"
 
-#include "vsrc_ddagrab_shaders.h"
+#include "libavfilter/vsrc_ddagrab_shaders.h"
 
 // avutil/time.h takes and returns time in microseconds
 #define TIMER_RES 1000000
@@ -1056,4 +1056,5 @@ const AVFilter ff_vsrc_ddagrab = {
     FILTER_OUTPUTS(ddagrab_outputs),
     FILTER_SINGLE_PIXFMT(AV_PIX_FMT_D3D11),
     .flags_internal = FF_FILTER_FLAG_HWFRAME_AWARE,
+    .flags          = AVFILTER_FLAG_HWDEVICE,
 };

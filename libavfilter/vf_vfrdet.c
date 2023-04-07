@@ -20,7 +20,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
-#include "internal.h"
+#include "libavfilter/internal.h"
 
 typedef struct VFRDETContext {
     const AVClass *class;

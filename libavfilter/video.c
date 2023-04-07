@@ -28,10 +28,10 @@
 #include "libavutil/hwcontext.h"
 #include "libavutil/imgutils.h"
 
-#include "avfilter.h"
-#include "framepool.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/framepool.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 AVFrame *ff_null_get_video_buffer(AVFilterLink *link, int w, int h)
 {

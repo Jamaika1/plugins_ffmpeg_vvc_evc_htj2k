@@ -26,11 +26,11 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "drawutils.h"
-#include "formats.h"
-#include "video.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/drawutils.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/video.h"
+#include "libavfilter/internal.h"
 
 typedef struct TileContext {
     const AVClass *class;

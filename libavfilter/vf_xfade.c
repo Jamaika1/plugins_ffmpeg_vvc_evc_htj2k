@@ -22,11 +22,11 @@
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixfmt.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "filters.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/video.h"
 
 enum XFadeTransitions {
     CUSTOM = -1,

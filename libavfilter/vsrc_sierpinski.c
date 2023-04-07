@@ -23,10 +23,10 @@
  * Sierpinski carpet fractal renderer
  */
 
-#include "avfilter.h"
-#include "formats.h"
-#include "video.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/video.h"
+#include "libavfilter/internal.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
@@ -196,6 +196,7 @@ static int sierpinski_request_frame(AVFilterLink *link)
 
     frame->sample_aspect_ratio = (AVRational) {1, 1};
     frame->pts = s->pts++;
+    frame->duration = 1;
 
     draw_sierpinski(link->src, frame);
 

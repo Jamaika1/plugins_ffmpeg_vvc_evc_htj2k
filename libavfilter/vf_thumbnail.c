@@ -29,8 +29,8 @@
 
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 #define HIST_SIZE (3*256)
 

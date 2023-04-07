@@ -27,10 +27,10 @@
 #include "libavutil/file_open.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "vmaf_motion.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/vmaf_motion.h"
 
 #define BIT_SHIFT 15
 

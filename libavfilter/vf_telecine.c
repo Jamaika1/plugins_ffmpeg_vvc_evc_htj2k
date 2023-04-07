@@ -28,10 +28,11 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "internal.h"
-#include "video.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct TelecineContext {
     const AVClass *class;
@@ -182,7 +183,11 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *inpicref)
     }
 
     if (s->occupied) {
-        av_frame_make_writable(s->frame[nout]);
+        ret = ff_inlink_make_frame_writable(inlink, &s->frame[nout]);
+        if (ret < 0) {
+            av_frame_free(&inpicref);
+            return ret;
+        }
         for (i = 0; i < s->nb_planes; i++) {
             // fill in the EARLIER field from the buffered pic
             av_image_copy_plane(s->frame[nout]->data[i] + s->frame[nout]->linesize[i] * s->first_field,
@@ -208,7 +213,11 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *inpicref)
 
     while (len >= 2) {
         // output THIS image as-is
-        av_frame_make_writable(s->frame[nout]);
+        ret = ff_inlink_make_frame_writable(inlink, &s->frame[nout]);
+        if (ret < 0) {
+            av_frame_free(&inpicref);
+            return ret;
+        }
         for (i = 0; i < s->nb_planes; i++)
             av_image_copy_plane(s->frame[nout]->data[i], s->frame[nout]->linesize[i],
                                 inpicref->data[i], inpicref->linesize[i],
