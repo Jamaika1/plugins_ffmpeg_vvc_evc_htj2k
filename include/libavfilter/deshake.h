@@ -22,7 +22,7 @@
 #ifndef AVFILTER_DESHAKE_H
 #define AVFILTER_DESHAKE_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "avfilter.h"
 #include "transform.h"
 #include "libavutil/pixelutils.h"

@@ -22,7 +22,7 @@
 #ifndef AVFILTER_UNSHARP_H
 #define AVFILTER_UNSHARP_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "avfilter.h"
 
 #define MIN_MATRIX_SIZE 3

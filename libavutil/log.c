@@ -43,6 +43,7 @@
 #include "libavutil/log.h"
 #include "libavutil/thread.h"
 
+
 static AVMutex mutex = AV_MUTEX_INITIALIZER;
 
 #define LINE_SZ 1024

@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#include "libswscale/config.h"
+#include "libavutil/config.h"
 #include "libswscale/rgb2rgb.h"
 #include "libswscale/swscale.h"
 #include "libswscale/swscale_internal.h"
