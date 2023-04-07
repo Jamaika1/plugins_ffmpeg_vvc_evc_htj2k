@@ -23,7 +23,7 @@
 
 #include <stdatomic.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
