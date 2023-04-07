@@ -21,7 +21,7 @@
 #ifndef AVFILTER_BLEND_INIT_H
 #define AVFILTER_BLEND_INIT_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/imgutils.h"
 #include "blend.h"

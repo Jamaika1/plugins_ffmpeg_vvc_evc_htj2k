@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/intreadwrite.h"
 #include "hflip.h"

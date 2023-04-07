@@ -21,7 +21,7 @@
 #ifndef AVFILTER_LUT3D_H
 #define AVFILTER_LUT3D_H
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/pixdesc.h"
 #include "framesync.h"

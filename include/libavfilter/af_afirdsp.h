@@ -23,7 +23,7 @@
 
 #include <stddef.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 
 typedef struct AudioFIRDSPContext {

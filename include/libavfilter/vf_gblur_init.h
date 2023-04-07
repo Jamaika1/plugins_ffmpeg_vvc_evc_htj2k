@@ -28,7 +28,7 @@
 #ifndef AVFILTER_GBLUR_INIT_H
 #define AVFILTER_GBLUR_INIT_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 #include "gblur.h"
