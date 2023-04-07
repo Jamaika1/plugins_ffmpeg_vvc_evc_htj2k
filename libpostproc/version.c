@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/avassert.h"
-#include "postprocess.h"
-#include "version.h"
+#include "libpostproc/postprocess.h"
+#include "libpostproc/version.h"
 
 #include "libavutil/ffversion.h"
 const char postproc_ffversion[] = "FFmpeg version " FFMPEG_VERSION;
