@@ -24,10 +24,10 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
 #include "libavutil/tx.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
-#include "filters.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/filters.h"
 
 #define C       (M_LN10 * 0.1)
 #define SOLVE_SIZE (5)
@@ -1196,7 +1196,7 @@ static int output_frame(AVFilterLink *inlink, AVFrame *in)
             return AVERROR(ENOMEM);
         }
 
-        out->pts = in->pts;
+        av_frame_copy_props(out, in);
     }
 
     for (int ch = 0; ch < inlink->ch_layout.nb_channels; ch++) {

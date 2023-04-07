@@ -22,12 +22,12 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
 #include "libavutil/tx.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "internal.h"
-#include "formats.h"
-#include "window_func.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/window_func.h"
 
 enum SurroundChannel {
     SC_FL, SC_FR, SC_FC, SC_LF, SC_BL, SC_BR, SC_BC, SC_SL, SC_SR,
@@ -1291,7 +1291,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
                       FFMIN(outlink->ch_layout.nb_channels,
                             ff_filter_get_nb_threads(ctx)));
 
-    out->pts = in->pts;
+    av_frame_copy_props(out, in);
     out->nb_samples = in->nb_samples;
 
     av_frame_free(&in);

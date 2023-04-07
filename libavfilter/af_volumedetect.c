@@ -20,9 +20,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/avassert.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct VolDetectContext {
     /**

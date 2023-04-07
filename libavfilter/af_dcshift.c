@@ -21,9 +21,9 @@
 
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/internal.h"
 
 typedef struct DCShiftContext {
     const AVClass *class;

@@ -20,9 +20,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
 
 typedef struct StereoToolsContext {
     const AVClass *class;

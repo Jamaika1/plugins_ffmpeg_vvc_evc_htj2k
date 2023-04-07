@@ -23,11 +23,11 @@
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "formats.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct AudioXCorrelateContext {
     const AVClass *class;

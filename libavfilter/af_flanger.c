@@ -21,10 +21,10 @@
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "internal.h"
-#include "generate_wave_table.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/generate_wave_table.h"
 
 #define INTERPOLATION_LINEAR    0
 #define INTERPOLATION_QUADRATIC 1

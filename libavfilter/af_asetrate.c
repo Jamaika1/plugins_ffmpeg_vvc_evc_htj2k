@@ -19,8 +19,8 @@
  */
 
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct ASetRateContext {
     const AVClass *class;

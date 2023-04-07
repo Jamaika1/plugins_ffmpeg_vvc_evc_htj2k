@@ -22,10 +22,10 @@
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 typedef struct ChanDelay {
     int64_t delay;

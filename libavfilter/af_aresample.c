@@ -30,9 +30,9 @@
 #include "libavutil/samplefmt.h"
 #include "libavutil/avassert.h"
 #include "libswresample/swresample.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/internal.h"
 
 typedef struct AResampleContext {
     const AVClass *class;

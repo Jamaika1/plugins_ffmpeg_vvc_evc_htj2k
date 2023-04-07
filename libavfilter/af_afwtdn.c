@@ -23,10 +23,10 @@
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 
 enum WaveletTypes {
     SYM2,

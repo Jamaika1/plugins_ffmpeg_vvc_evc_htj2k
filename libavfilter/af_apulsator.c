@@ -21,9 +21,9 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
 
 enum PulsatorModes { SINE, TRIANGLE, SQUARE, SAWUP, SAWDOWN, NB_MODES };
 enum PulsatorTimings { UNIT_BPM, UNIT_MS, UNIT_HZ, NB_TIMINGS };

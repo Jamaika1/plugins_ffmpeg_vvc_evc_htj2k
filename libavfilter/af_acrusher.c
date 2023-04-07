@@ -19,9 +19,9 @@
  */
 
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
 
 typedef struct LFOContext {
     double freq;

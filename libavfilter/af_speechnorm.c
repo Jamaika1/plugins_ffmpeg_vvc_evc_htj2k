@@ -32,12 +32,12 @@
 #include "libavutil/opt.h"
 
 #define FF_BUFQUEUE_SIZE (1024)
-#include "bufferqueue.h"
+#include "libavfilter/bufferqueue.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 #define MAX_ITEMS  882000
 #define MIN_PEAK (1. / 32768.)

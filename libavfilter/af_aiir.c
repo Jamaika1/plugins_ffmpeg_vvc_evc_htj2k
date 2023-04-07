@@ -24,9 +24,9 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 #include "libavutil/xga_font_data.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct ThreadData {
     AVFrame *in, *out;

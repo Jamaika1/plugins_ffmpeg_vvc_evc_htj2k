@@ -46,9 +46,9 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
 #include "libavutil/avassert.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
 
 #define PEAK_EXT_LEVEL 0x5981 /* + sizeof(peaktab)-1 = 0x8000  */
 static const uint32_t peaktab[0x2680] = {

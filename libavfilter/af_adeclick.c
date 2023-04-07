@@ -20,11 +20,11 @@
 
 #include "libavutil/audio_fifo.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 typedef struct DeclickChannel {
     double *auxiliary;

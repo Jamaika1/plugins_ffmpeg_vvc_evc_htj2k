@@ -40,11 +40,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
 
 #define INPUT_ON       1    /**< input is active */
 #define INPUT_EOF      2    /**< input has reached EOF (may still be active) */

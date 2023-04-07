@@ -37,10 +37,10 @@
 #define FF_BUFQUEUE_SIZE (MAX_FILTER_SIZE + 1)
 #include "libavfilter/bufferqueue.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 static const char * const var_names[] = {
     "ch",           ///< the value of the current channel

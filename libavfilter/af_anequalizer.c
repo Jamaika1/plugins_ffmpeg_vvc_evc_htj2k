@@ -24,9 +24,9 @@
 #include "libavutil/ffmath.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
 
 #define FILTER_ORDER 4
 

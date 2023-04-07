@@ -23,17 +23,17 @@
  * eval audio source
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/eval.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
 
 static const char * const var_names[] = {
     "ch",           ///< the value of the current channel

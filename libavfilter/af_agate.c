@@ -23,16 +23,16 @@
  * Audio (Sidechain) Gate filter
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/audio_fifo.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "formats.h"
-#include "hermite.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/hermite.h"
 
 typedef struct AudioGateContext {
     const AVClass *class;

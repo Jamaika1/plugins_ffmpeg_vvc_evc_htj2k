@@ -18,9 +18,9 @@
 
 #include "libavutil/ffmath.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
 
 typedef struct AudioDynamicSmoothContext {
     const AVClass *class;

@@ -23,12 +23,12 @@
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
-#include "filters.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/filters.h"
 
-#include "af_anlmdndsp.h"
+#include "libavfilter/af_anlmdndsp.h"
 
 #define WEIGHT_LUT_NBITS 20
 #define WEIGHT_LUT_SIZE  (1<<WEIGHT_LUT_NBITS)

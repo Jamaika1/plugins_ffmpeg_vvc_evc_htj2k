@@ -38,13 +38,13 @@
 #include "libavutil/rational.h"
 #include "libavutil/xga_font_data.h"
 
-#include "audio.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "formats.h"
-#include "internal.h"
-#include "af_afir.h"
-#include "af_afirdsp.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/af_afir.h"
+#include "libavfilter/af_afirdsp.h"
 
 static void drawtext(AVFrame *pic, int x, int y, const char *txt, uint32_t color)
 {
@@ -143,6 +143,7 @@ static int fir_frame(AudioFIRContext *s, AVFrame *in, AVFilterLink *outlink)
         av_frame_free(&in);
         return AVERROR(ENOMEM);
     }
+    av_frame_copy_props(out, in);
     out->pts = s->pts = in->pts;
 
     s->in = in;

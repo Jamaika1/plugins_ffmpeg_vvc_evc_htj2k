@@ -22,9 +22,9 @@
  * null audio filter
  */
 
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 #include "libavutil/internal.h"
 
 static const AVFilterPad avfilter_af_anull_inputs[] = {

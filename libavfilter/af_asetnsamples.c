@@ -26,11 +26,11 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "filters.h"
-#include "internal.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/formats.h"
 
 typedef struct ASNSContext {
     const AVClass *class;

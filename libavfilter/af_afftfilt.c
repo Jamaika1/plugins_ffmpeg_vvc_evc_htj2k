@@ -25,9 +25,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/eval.h"
 #include "libavutil/tx.h"
-#include "audio.h"
-#include "filters.h"
-#include "window_func.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/window_func.h"
 
 typedef struct AFFTFiltContext {
     const AVClass *class;
@@ -345,7 +345,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
         goto fail;
     }
 
-    out->pts = in->pts;
+    av_frame_copy_props(out, in);
     out->nb_samples = in->nb_samples;
 
     for (ch = 0; ch < inlink->ch_layout.nb_channels; ch++) {

@@ -46,9 +46,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
 #include "libavutil/tx.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "internal.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/internal.h"
 
 /**
  * A fragment of audio waveform

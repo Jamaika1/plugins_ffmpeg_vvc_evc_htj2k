@@ -21,11 +21,11 @@
 /* http://k.ylo.ph/2016/04/04/loudnorm.html */
 
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "filters.h"
-#include "internal.h"
-#include "audio.h"
-#include "ebur128.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/ebur128.h"
 
 enum FrameType {
     FIRST_FRAME,

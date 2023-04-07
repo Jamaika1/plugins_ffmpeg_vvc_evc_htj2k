@@ -17,9 +17,9 @@
  */
 
 #include "libavutil/opt.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
 
 typedef struct ADerivativeContext {
     const AVClass *class;

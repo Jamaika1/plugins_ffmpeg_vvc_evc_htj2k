@@ -24,9 +24,9 @@
 #include "libavutil/lfg.h"
 #include "libavutil/random_seed.h"
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "audio.h"
-#include "formats.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
 
 #define MAX_STAGES 16
 #define FILTER_FC  1100.0

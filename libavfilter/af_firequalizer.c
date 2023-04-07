@@ -24,9 +24,9 @@
 #include "libavutil/eval.h"
 #include "libavutil/avassert.h"
 #include "libavutil/tx.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
 
 #define RDFT_BITS_MIN 4
 #define RDFT_BITS_MAX 16

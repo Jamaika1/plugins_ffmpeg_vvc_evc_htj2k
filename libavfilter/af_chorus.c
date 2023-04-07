@@ -31,10 +31,10 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "audio.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "generate_wave_table.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/generate_wave_table.h"
 
 typedef struct ChorusContext {
     const AVClass *class;

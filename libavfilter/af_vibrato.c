@@ -19,10 +19,10 @@
  */
 
 #include "libavutil/opt.h"
-#include "avfilter.h"
-#include "internal.h"
-#include "audio.h"
-#include "generate_wave_table.h"
+#include "libavfilter/avfilter.h"
+#include "libavfilter/internal.h"
+#include "libavfilter/audio.h"
+#include "libavfilter/generate_wave_table.h"
 
 typedef struct VibratoContext {
     const AVClass *class;
