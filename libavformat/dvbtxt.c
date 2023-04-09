@@ -21,8 +21,8 @@
 
 #include "libavcodec/dvbtxt.h"
 
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int dvbtxt_probe(const AVProbeData *p)
 {

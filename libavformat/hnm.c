@@ -23,8 +23,8 @@
 #include <inttypes.h>
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define HNM4_TAG MKTAG('H', 'N', 'M', '4')
 

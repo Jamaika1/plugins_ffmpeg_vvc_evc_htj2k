@@ -30,11 +30,11 @@
 #include <time.h>
 
 #include "libavutil/time_internal.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavcodec/dv_profile.h"
 #include "libavcodec/dv.h"
-#include "dv.h"
-#include "mux.h"
+#include "libavformat/dv.h"
+#include "libavformat/mux.h"
 #include "libavutil/avassert.h"
 #include "libavutil/fifo.h"
 #include "libavutil/mathematics.h"
@@ -442,13 +442,13 @@ static void dv_deinit(AVFormatContext *s)
         av_fifo_freep2(&c->audio_data[i]);
 }
 
-const AVOutputFormat ff_dv_muxer = {
-    .name              = "dv",
-    .long_name         = NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
-    .extensions        = "dv",
+const FFOutputFormat ff_dv_muxer = {
+    .p.name            = "dv",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("DV (Digital Video)"),
+    .p.extensions      = "dv",
     .priv_data_size    = sizeof(DVMuxContext),
-    .audio_codec       = AV_CODEC_ID_PCM_S16LE,
-    .video_codec       = AV_CODEC_ID_DVVIDEO,
+    .p.audio_codec     = AV_CODEC_ID_PCM_S16LE,
+    .p.video_codec     = AV_CODEC_ID_DVVIDEO,
     .write_header      = dv_write_header,
     .write_packet      = dv_write_packet,
     .deinit            = dv_deinit,

@@ -22,10 +22,10 @@
 #include "libavcodec/golomb.h"
 #include "libavcodec/hevc.h"
 #include "libavutil/intreadwrite.h"
-#include "avc.h"
-#include "avio.h"
-#include "avio_internal.h"
-#include "hevc.h"
+#include "libavformat/avc.h"
+#include "libavformat/avio.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/hevc.h"
 
 #define MAX_SPATIAL_SEGMENTATION 4096 // max. value of u(12) field
 

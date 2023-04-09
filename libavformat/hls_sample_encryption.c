@@ -29,7 +29,7 @@
 #include "libavutil/aes.h"
 #include "libavutil/channel_layout.h"
 
-#include "hls_sample_encryption.h"
+#include "libavformat/hls_sample_encryption.h"
 
 #include "libavcodec/adts_header.h"
 #include "libavcodec/adts_parser.h"

@@ -21,9 +21,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "id3v2.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/id3v2.h"
 
 typedef struct {
     uint64_t data_end;

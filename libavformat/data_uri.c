@@ -22,7 +22,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/avutil.h"
 #include "libavutil/base64.h"
-#include "url.h"
+#include "libavformat/url.h"
 
 typedef struct {
     const uint8_t *data;

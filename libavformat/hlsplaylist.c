@@ -20,13 +20,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include <stdint.h>
 
 #include "libavutil/time_internal.h"
 
-#include "avformat.h"
-#include "hlsplaylist.h"
+#include "libavformat/avformat.h"
+#include "libavformat/hlsplaylist.h"
 
 void ff_hls_write_playlist_version(AVIOContext *out, int version)
 {

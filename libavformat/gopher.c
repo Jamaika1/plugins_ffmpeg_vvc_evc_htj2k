@@ -23,14 +23,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
-#include "avformat.h"
-#include "internal.h"
-#include "network.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/url.h"
 
 typedef struct GopherContext {
     URLContext *hd;

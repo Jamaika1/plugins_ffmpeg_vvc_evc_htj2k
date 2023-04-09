@@ -24,10 +24,10 @@
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
 #include "libavutil/parseutils.h"
-#include "internal.h"
-#include "avio_internal.h"
-#include "dash.h"
-#include "demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/dash.h"
+#include "libavformat/demux.h"
 
 #define INITIAL_BUFFER_SIZE 32768
 

@@ -25,13 +25,14 @@
 #include "libavutil/pixdesc.h"
 #include "libavcodec/flac.h"
 #include "libavcodec/packet_internal.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "flacenc.h"
-#include "id3v2.h"
-#include "internal.h"
-#include "version.h"
-#include "vorbiscomment.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/flacenc.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/version.h"
+#include "libavformat/vorbiscomment.h"
 
 
 typedef struct FlacMuxerContext {
@@ -413,19 +414,19 @@ static const AVClass flac_muxer_class = {
     .version    = LIBAVUTIL_VERSION_INT,
 };
 
-const AVOutputFormat ff_flac_muxer = {
-    .name              = "flac",
-    .long_name         = NULL_IF_CONFIG_SMALL("raw FLAC"),
+const FFOutputFormat ff_flac_muxer = {
+    .p.name            = "flac",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("raw FLAC"),
     .priv_data_size    = sizeof(FlacMuxerContext),
-    .mime_type         = "audio/x-flac",
-    .extensions        = "flac",
-    .audio_codec       = AV_CODEC_ID_FLAC,
-    .video_codec       = AV_CODEC_ID_PNG,
+    .p.mime_type       = "audio/x-flac",
+    .p.extensions      = "flac",
+    .p.audio_codec     = AV_CODEC_ID_FLAC,
+    .p.video_codec     = AV_CODEC_ID_PNG,
     .init              = flac_init,
     .write_header      = flac_write_header,
     .write_packet      = flac_write_packet,
     .write_trailer     = flac_write_trailer,
     .deinit            = flac_deinit,
-    .flags             = AVFMT_NOTIMESTAMPS,
-    .priv_class        = &flac_muxer_class,
+    .p.flags           = AVFMT_NOTIMESTAMPS,
+    .p.priv_class      = &flac_muxer_class,
 };

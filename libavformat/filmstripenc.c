@@ -25,9 +25,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "rawenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/rawenc.h"
 
 #define RAND_TAG MKBETAG('R','a','n','d')
 
@@ -59,12 +60,12 @@ static int write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_filmstrip_muxer = {
-    .name              = "filmstrip",
-    .long_name         = NULL_IF_CONFIG_SMALL("Adobe Filmstrip"),
-    .extensions        = "flm",
-    .audio_codec       = AV_CODEC_ID_NONE,
-    .video_codec       = AV_CODEC_ID_RAWVIDEO,
+const FFOutputFormat ff_filmstrip_muxer = {
+    .p.name            = "filmstrip",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("Adobe Filmstrip"),
+    .p.extensions      = "flm",
+    .p.audio_codec     = AV_CODEC_ID_NONE,
+    .p.video_codec     = AV_CODEC_ID_RAWVIDEO,
     .write_header      = write_header,
     .write_packet      = ff_raw_write_packet,
     .write_trailer     = write_trailer,

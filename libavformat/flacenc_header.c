@@ -23,8 +23,8 @@
 
 #include "libavcodec/flac.h"
 
-#include "avformat.h"
-#include "flacenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/flacenc.h"
 
 int ff_flac_write_header(AVIOContext *pb, const uint8_t *extradata,
                          int extradata_size, int last_block)

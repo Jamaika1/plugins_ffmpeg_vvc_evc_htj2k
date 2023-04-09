@@ -26,8 +26,8 @@
 #include "libavcodec/dca_syncwords.h"
 #include "libavcodec/get_bits.h"
 
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int dts_probe(const AVProbeData *p)
 {

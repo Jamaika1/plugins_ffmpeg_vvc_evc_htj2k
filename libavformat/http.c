@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 
 #if CONFIG_ZLIB
 #include <zlib.h>
@@ -34,14 +34,14 @@
 #include "libavutil/time.h"
 #include "libavutil/parseutils.h"
 
-#include "avformat.h"
-#include "http.h"
-#include "httpauth.h"
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
-#include "url.h"
-#include "version.h"
+#include "libavformat/avformat.h"
+#include "libavformat/http.h"
+#include "libavformat/httpauth.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
+#include "libavformat/version.h"
 
 /* XXX: POST protocol is not completely implemented because ffmpeg uses
  * only a subset of it. */
@@ -1293,9 +1293,9 @@ static int get_cookies(HTTPContext *s, char **cookies, const char *path,
                 goto skip_cookie;
         }
 
-        // ensure this cookie matches the path
+        // if a cookie path is provided, ensure the request path is within that path
         e = av_dict_get(cookie_params, "path", NULL, 0);
-        if (!e || av_strncasecmp(path, e->value, strlen(e->value)))
+        if (e && av_strncasecmp(path, e->value, strlen(e->value)))
             goto skip_cookie;
 
         // cookie parameters match, so copy the value

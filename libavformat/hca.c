@@ -22,8 +22,8 @@
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
 
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 static int hca_probe(const AVProbeData *p)
 {

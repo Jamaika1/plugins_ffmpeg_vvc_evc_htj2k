@@ -25,8 +25,8 @@
 
 #include "libavcodec/put_bits.h"
 
-#include "avformat.h"
-#include "dovi_isom.h"
+#include "libavformat/avformat.h"
+#include "libavformat/dovi_isom.h"
 
 int ff_isom_parse_dvcc_dvvc(AVFormatContext *s, AVStream *st, const uint8_t *buf_ptr, uint64_t size)
 {

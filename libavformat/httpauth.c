@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "httpauth.h"
+#include "libavformat/httpauth.h"
 #include "libavutil/base64.h"
 #include "libavutil/avstring.h"
-#include "internal.h"
+#include "libavformat/internal.h"
 #include "libavutil/random_seed.h"
 #include "libavutil/md5.h"
-#include "urldecode.h"
-#include "avformat.h"
+#include "libavformat/urldecode.h"
+#include "libavformat/avformat.h"
 
 static void handle_basic_params(HTTPAuthState *state, const char *key,
                                 int key_len, char **dest, int *dest_len)

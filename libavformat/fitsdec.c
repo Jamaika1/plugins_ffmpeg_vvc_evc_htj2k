@@ -26,7 +26,7 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "internal.h"
+#include "libavformat/internal.h"
 #include "libavutil/opt.h"
 #include "libavcodec/fits.h"
 #include "libavutil/bprint.h"

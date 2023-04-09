@@ -34,10 +34,10 @@
 #include "libavutil/intfloat.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "flv.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/flv.h"
 
 #define VALIDATE_INDEX_TS_THRESH 2500
 

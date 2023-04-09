@@ -29,19 +29,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <time.h>
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 #include "libavcodec/dv_profile.h"
 #include "libavcodec/dv.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/timecode.h"
-#include "dv.h"
+#include "libavformat/dv.h"
 #include "libavutil/avassert.h"
 
 #if CONFIG_DV_DEMUXER

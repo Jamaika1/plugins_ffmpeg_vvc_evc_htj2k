@@ -19,8 +19,8 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "internal.h"
-#include "version.h"
+#include "libavformat/internal.h"
+#include "libavformat/version.h"
 
 int ff_framehash_write_header(AVFormatContext *s)
 {
