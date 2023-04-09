@@ -22,9 +22,9 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include "avformat.h"
-#include "internal.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
 
 /*
  * Demuxer for xWMA, a Microsoft audio container used by XAudio 2.

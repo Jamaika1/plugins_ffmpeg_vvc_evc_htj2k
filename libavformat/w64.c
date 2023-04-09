@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "w64.h"
+#include "libavformat/w64.h"
 
 const uint8_t ff_w64_guid_riff[16] = {
     'r', 'i', 'f', 'f',

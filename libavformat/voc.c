@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "config_components.h"
-#include "voc.h"
-#include "internal.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
+#include "libavformat/voc.h"
+#include "libavformat/internal.h"
 
 
 const AVCodecTag ff_voc_codec_tags[] = {

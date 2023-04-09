@@ -28,8 +28,8 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/parseutils.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 typedef struct VivoContext {
     int version;

@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avio.h"
-#include "avformat.h"
-#include "metadata.h"
-#include "vorbiscomment.h"
+#include "libavformat/avio.h"
+#include "libavformat/avformat.h"
+#include "libavformat/metadata.h"
+#include "libavformat/vorbiscomment.h"
 #include "libavutil/dict.h"
 
 /**

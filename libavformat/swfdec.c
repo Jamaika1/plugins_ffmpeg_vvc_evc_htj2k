@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if CONFIG_ZLIB
 #include <zlib.h>
@@ -32,9 +32,9 @@
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/get_bits.h"
-#include "demux.h"
-#include "swf.h"
-#include "flv.h"
+#include "libavformat/demux.h"
+#include "libavformat/swf.h"
+#include "libavformat/flv.h"
 
 typedef struct SWFDecContext {
     int samples_per_frame;

@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define TXD_FILE            0x16
 #define TXD_INFO            0x01

@@ -22,9 +22,9 @@
 #include "libavutil/avstring.h"
 #include "libavutil/imgutils.h"
 
-#include "avformat.h"
-#include "internal.h"
-#include "yuv4mpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/yuv4mpeg.h"
 
 /* Header size increased to allow room for optional flags */
 #define MAX_YUV4_HEADER 128

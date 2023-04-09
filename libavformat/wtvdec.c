@@ -31,11 +31,11 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/time_internal.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "wtv.h"
-#include "mpegts.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/wtv.h"
+#include "libavformat/mpegts.h"
 
 /* Macros for formatting GUIDs */
 #define PRI_PRETTY_GUID \

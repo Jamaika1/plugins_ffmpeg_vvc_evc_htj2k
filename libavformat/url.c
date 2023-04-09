@@ -20,12 +20,12 @@
  */
 
 
-#include "avformat.h"
-#include "internal.h"
-#include "config.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavutil/config.h"
+#include "libavformat/url.h"
 #if CONFIG_NETWORK
-#include "network.h"
+#include "libavformat/network.h"
 #endif
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"

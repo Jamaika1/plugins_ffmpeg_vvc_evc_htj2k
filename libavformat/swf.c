@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "internal.h"
+#include "libavformat/internal.h"
 
 const AVCodecTag ff_swf_codec_tags[] = {
     { AV_CODEC_ID_FLV1,     0x02 },

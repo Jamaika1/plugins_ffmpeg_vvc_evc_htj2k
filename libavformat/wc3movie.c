@@ -31,8 +31,8 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define FORM_TAG MKTAG('F', 'O', 'R', 'M')
 #define MOVE_TAG MKTAG('M', 'O', 'V', 'E')

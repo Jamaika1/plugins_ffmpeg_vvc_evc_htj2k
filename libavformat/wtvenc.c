@@ -26,12 +26,12 @@
  */
 
 #include "libavutil/avassert.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "mpegts.h"
-#include "mux.h"
-#include "wtv.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/mpegts.h"
+#include "libavformat/mux.h"
+#include "libavformat/wtv.h"
 
 #define WTV_BIGSECTOR_SIZE (1 << WTV_BIGSECTOR_BITS)
 #define INDEX_BASE 0x2
@@ -829,15 +829,15 @@ static int write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_wtv_muxer = {
-    .name           = "wtv",
-    .long_name      = NULL_IF_CONFIG_SMALL("Windows Television (WTV)"),
-    .extensions     = "wtv",
+const FFOutputFormat ff_wtv_muxer = {
+    .p.name         = "wtv",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Windows Television (WTV)"),
+    .p.extensions   = "wtv",
     .priv_data_size = sizeof(WtvContext),
-    .audio_codec    = AV_CODEC_ID_AC3,
-    .video_codec    = AV_CODEC_ID_MPEG2VIDEO,
+    .p.audio_codec  = AV_CODEC_ID_AC3,
+    .p.video_codec  = AV_CODEC_ID_MPEG2VIDEO,
     .write_header   = write_header,
     .write_packet   = write_packet,
     .write_trailer  = write_trailer,
-    .codec_tag      = ff_riff_codec_tags_list,
+    .p.codec_tag    = ff_riff_codec_tags_list,
 };

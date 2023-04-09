@@ -27,24 +27,24 @@
 
 #include <stdint.h>
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 #include "libavutil/avassert.h"
 #include "libavutil/dict.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "avio.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "id3v2.h"
-#include "internal.h"
-#include "metadata.h"
-#include "pcm.h"
-#include "riff.h"
-#include "w64.h"
-#include "spdif.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
+#include "libavformat/metadata.h"
+#include "libavformat/pcm.h"
+#include "libavformat/riff.h"
+#include "libavformat/w64.h"
+#include "libavformat/spdif.h"
 
 typedef struct WAVDemuxContext {
     const AVClass *class;

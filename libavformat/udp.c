@@ -27,8 +27,8 @@
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE     /* Needed for using struct ip_mreq with recent glibc */
 
-#include "avformat.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
 #include "libavutil/avassert.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/fifo.h"
@@ -37,11 +37,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/log.h"
 #include "libavutil/time.h"
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
-#include "url.h"
-#include "ip.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
+#include "libavformat/ip.h"
 
 #ifdef __APPLE__
 #include "TargetConditionals.h"
@@ -740,6 +740,10 @@ static int udp_open(URLContext *h, const char *uri, int flags)
         if (av_find_info_tag(buf, sizeof(buf), "localaddr", p)) {
             av_freep(&s->localaddr);
             s->localaddr = av_strdup(buf);
+            if (!s->localaddr) {
+                ret = AVERROR(ENOMEM);
+                goto fail;
+            }
         }
         if (av_find_info_tag(buf, sizeof(buf), "sources", p)) {
             if ((ret = ff_ip_parse_sources(h, buf, &s->filters)) < 0)

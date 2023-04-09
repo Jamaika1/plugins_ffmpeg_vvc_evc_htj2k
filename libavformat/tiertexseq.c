@@ -25,8 +25,8 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define SEQ_FRAME_SIZE         6144
 #define SEQ_FRAME_W            256
