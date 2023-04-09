@@ -224,10 +224,10 @@ static int set_parser_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx,
     avctx->profile  = sps->profile_tier_level.general_profile_idc;
     avctx->level    = sps->profile_tier_level.general_level_idc;
 
-    //avctx->colorspace = (enum AVColorSpace) sps->vui.vui_matrix_coeffs;
-    //avctx->color_primaries = (enum AVColorPrimaries) sps->vui.vui_colour_primaries;
-    //avctx->color_trc = (enum AVColorTransferCharacteristic) sps->vui.vui_transfer_characteristics;
-    //avctx->color_range = sps->vui.vui_full_range_flag ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
+    avctx->colorspace = (enum AVColorSpace) sps->vui.vui_matrix_coeffs;
+    avctx->color_primaries = (enum AVColorPrimaries) sps->vui.vui_colour_primaries;
+    avctx->color_trc = (enum AVColorTransferCharacteristic) sps->vui.vui_transfer_characteristics;
+    avctx->color_range = sps->vui.vui_full_range_flag ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
 
     if (ctx->width != avctx->width || ctx->height != avctx->height) {
         ret = ff_set_dimensions(avctx, ctx->width, ctx->height);
