@@ -40,7 +40,7 @@
 #include "mpegutils.h"
 
 #if ARCH_X86
-#include "libavcodec/x86/h264_cabac.c"
+#include "x86/extra/h264_cabac.c"
 #elif ARCH_LOONGARCH64
 #include "loongarch/h264_cabac.c"
 #endif
