@@ -26,7 +26,7 @@
  * Direct Stream Digital (DSD) decoder
  */
 
-#include "internal.h"
+#include "libavcodec/internal.h"
 #include "avcodec.h"
 #include "codec_internal.h"
 #include "decode.h"
