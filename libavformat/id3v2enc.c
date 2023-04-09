@@ -24,11 +24,11 @@
 #include "libavutil/avstring.h"
 #include "libavutil/dict.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio.h"
-#include "avio_internal.h"
-#include "id3v2.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/mux.h"
 
 static void id3v2_put_size(AVIOContext *pb, int size)
 {

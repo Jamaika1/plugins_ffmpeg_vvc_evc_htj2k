@@ -23,10 +23,10 @@
 #include "libavcodec/get_bits.h"
 #include "libavcodec/golomb.h"
 #include "libavcodec/evc.h"
-#include "avformat.h"
-#include "avio.h"
-#include "evc.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/evc.h"
+#include "libavformat/avio_internal.h"
 
 // The length field that indicates the length in bytes of the following NAL unit is configured to be of 4 bytes
 #define EVC_NALU_LENGTH_PREFIX_SIZE        (4)  /* byte */

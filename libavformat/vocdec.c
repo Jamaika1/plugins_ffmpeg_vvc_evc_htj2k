@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "voc.h"
-#include "internal.h"
+#include "libavformat/voc.h"
+#include "libavformat/internal.h"
 
 static int voc_probe(const AVProbeData *p)
 {

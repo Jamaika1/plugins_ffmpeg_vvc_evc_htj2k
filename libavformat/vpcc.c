@@ -23,7 +23,7 @@
 #include "libavutil/pixfmt.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/get_bits.h"
-#include "vpcc.h"
+#include "libavformat/vpcc.h"
 
 #define VP9_SYNCCODE 0x498342
 

@@ -24,9 +24,9 @@
  * @see http://dev.w3.org/html5/webvtt/
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/subtitles.h"
 #include "libavutil/bprint.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"

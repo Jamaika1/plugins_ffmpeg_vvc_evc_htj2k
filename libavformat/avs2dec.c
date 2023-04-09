@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 #include "libavcodec/startcode.h"
 #include "libavutil/intreadwrite.h"
 

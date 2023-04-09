@@ -21,8 +21,8 @@
 
 #include "libavcodec/get_bits.h"
 #include "libavcodec/golomb.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 #define MAX_SPS_COUNT          32
 #define MAX_PPS_COUNT         256

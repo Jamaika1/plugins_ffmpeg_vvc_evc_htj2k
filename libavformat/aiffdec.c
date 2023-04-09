@@ -21,14 +21,14 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "pcm.h"
-#include "aiff.h"
-#include "id3v2.h"
-#include "mov_chan.h"
-#include "replaygain.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
+#include "libavformat/aiff.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/mov_chan.h"
+#include "libavformat/replaygain.h"
 
 #define AIFF                    0
 #define AIFF_C_VERSION1         0xA2805140
@@ -164,6 +164,7 @@ static int get_aiff_header(AVFormatContext *s, int64_t size,
         case AV_CODEC_ID_ADPCM_IMA_WS:
         case AV_CODEC_ID_ADPCM_G722:
         case AV_CODEC_ID_MACE6:
+        case AV_CODEC_ID_CBD2_DPCM:
         case AV_CODEC_ID_SDX2_DPCM:
             par->block_align = 1 * channels;
             break;

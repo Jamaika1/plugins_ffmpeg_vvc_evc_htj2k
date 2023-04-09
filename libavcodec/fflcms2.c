@@ -17,10 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/color_utils.h"
 #include "libavutil/csp.h"
 
-#include "fflcms2.h"
+#include "libavcodec/fflcms2.h"
 
 static void log_cb(cmsContext ctx, cmsUInt32Number error, const char *str)
 {

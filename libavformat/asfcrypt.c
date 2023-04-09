@@ -26,7 +26,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 #include "libavutil/rc4.h"
-#include "asfcrypt.h"
+#include "libavformat/asfcrypt.h"
 
 /**
  * @brief find multiplicative inverse modulo 2 ^ 32

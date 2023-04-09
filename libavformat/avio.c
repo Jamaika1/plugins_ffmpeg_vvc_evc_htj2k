@@ -24,13 +24,13 @@
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
 #include "libavutil/avassert.h"
-#include "os_support.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/os_support.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #if CONFIG_NETWORK
-#include "network.h"
+#include "libavformat/network.h"
 #endif
-#include "url.h"
+#include "libavformat/url.h"
 
 /** @name Logging context. */
 /*@{*/

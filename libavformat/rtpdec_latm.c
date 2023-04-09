@@ -19,9 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avio_internal.h"
-#include "rtpdec_formats.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpdec_formats.h"
+#include "libavformat/internal.h"
 #include "libavutil/avstring.h"
 #include "libavcodec/get_bits.h"
 

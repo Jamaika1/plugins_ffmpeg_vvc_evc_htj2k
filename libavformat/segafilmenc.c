@@ -32,9 +32,9 @@
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/mux.h"
 
 typedef struct FILMOutputContext {
     AVIOContext *header;
@@ -280,13 +280,13 @@ static void film_deinit(AVFormatContext *format_context)
     ffio_free_dyn_buf(&film->header);
 }
 
-const AVOutputFormat ff_segafilm_muxer = {
-    .name           = "film_cpk",
-    .long_name      = NULL_IF_CONFIG_SMALL("Sega FILM / CPK"),
-    .extensions     = "cpk",
+const FFOutputFormat ff_segafilm_muxer = {
+    .p.name         = "film_cpk",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Sega FILM / CPK"),
+    .p.extensions   = "cpk",
     .priv_data_size = sizeof(FILMOutputContext),
-    .audio_codec    = AV_CODEC_ID_PCM_S16BE_PLANAR,
-    .video_codec    = AV_CODEC_ID_CINEPAK,
+    .p.audio_codec  = AV_CODEC_ID_PCM_S16BE_PLANAR,
+    .p.video_codec  = AV_CODEC_ID_CINEPAK,
     .init           = film_init,
     .write_trailer  = film_write_header,
     .write_packet   = film_write_packet,

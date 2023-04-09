@@ -29,8 +29,8 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/riff.h"
 
 typedef struct QCPContext {
     uint32_t data_size;                     ///< size of data chunk

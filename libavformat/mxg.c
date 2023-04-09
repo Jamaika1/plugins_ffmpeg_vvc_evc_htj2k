@@ -23,9 +23,9 @@
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/mjpeg.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avio.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio.h"
 
 #define DEFAULT_PACKET_SIZE 1024
 #define OVERREAD_SIZE 3

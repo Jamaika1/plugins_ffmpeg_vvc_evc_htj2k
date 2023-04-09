@@ -27,8 +27,8 @@
  * @author Romain Degez
  */
 
-#include "rtpdec_formats.h"
-#include "internal.h"
+#include "libavformat/rtpdec_formats.h"
+#include "libavformat/internal.h"
 #include "libavutil/attributes.h"
 #include "libavutil/avstring.h"
 #include "libavcodec/get_bits.h"

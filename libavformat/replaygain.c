@@ -31,9 +31,9 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/replaygain.h"
 
-#include "avformat.h"
-#include "internal.h"
-#include "replaygain.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/replaygain.h"
 
 static int32_t parse_value(const char *value, int32_t min)
 {

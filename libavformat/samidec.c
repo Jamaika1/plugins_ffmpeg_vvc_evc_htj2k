@@ -24,9 +24,9 @@
  * @see http://msdn.microsoft.com/en-us/library/ms971327.aspx
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/subtitles.h"
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 

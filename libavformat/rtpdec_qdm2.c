@@ -28,10 +28,10 @@
 #include <string.h>
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "internal.h"
-#include "rtp.h"
-#include "rtpdec.h"
-#include "rtpdec_formats.h"
+#include "libavformat/internal.h"
+#include "libavformat/rtp.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpdec_formats.h"
 
 struct PayloadContext {
     /** values read from the config header, used as packet headers */

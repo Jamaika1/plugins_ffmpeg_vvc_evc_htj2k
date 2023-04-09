@@ -20,9 +20,9 @@
  */
 
 #include "libavutil/avassert.h"
-#include "avformat.h"
-#include "internal.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/rawdec.h"
 
 static int g722_read_header(AVFormatContext *s)
 {

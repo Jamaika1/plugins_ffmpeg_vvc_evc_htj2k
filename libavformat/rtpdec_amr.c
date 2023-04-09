@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rtpdec_formats.h"
 #include "libavutil/avstring.h"
 
 static const uint8_t frame_sizes_nb[16] = {

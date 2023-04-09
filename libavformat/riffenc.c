@@ -24,9 +24,9 @@
 #include "libavutil/log.h"
 #include "libavutil/mathematics.h"
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/riff.h"
 
 int64_t ff_start_tag(AVIOContext *pb, const char *tag)
 {

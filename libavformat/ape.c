@@ -23,9 +23,9 @@
 #include <stdio.h>
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "apetag.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/apetag.h"
 
 /* The earliest and latest file formats supported by this library */
 #define APE_MIN_VERSION 3800

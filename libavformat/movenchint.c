@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "movenc.h"
+#include "libavformat/movenc.h"
 #include "libavutil/intreadwrite.h"
-#include "mux.h"
-#include "rtpenc_chain.h"
-#include "avio_internal.h"
-#include "rtp.h"
+#include "libavformat/mux.h"
+#include "libavformat/rtpenc_chain.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtp.h"
 
 int ff_mov_init_hinting(AVFormatContext *s, int index, int src_index)
 {

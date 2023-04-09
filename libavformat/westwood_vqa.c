@@ -30,10 +30,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 #define FORM_TAG MKBETAG('F', 'O', 'R', 'M')
 #define WVQA_TAG MKBETAG('W', 'V', 'Q', 'A')

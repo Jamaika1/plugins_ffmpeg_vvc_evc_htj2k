@@ -20,8 +20,8 @@
  */
 
 #include "libavcodec/startcode.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 #define CAVS_SEQ_START_CODE       0x000001b0
 #define CAVS_PIC_I_START_CODE     0x000001b3

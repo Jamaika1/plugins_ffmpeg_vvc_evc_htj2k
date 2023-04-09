@@ -21,9 +21,9 @@
  */
 
 #include "libavutil/parseutils.h"
-#include "avio_internal.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 typedef struct DHAVContext {
     unsigned type;

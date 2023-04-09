@@ -18,11 +18,11 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "movenccenc.h"
+#include "libavformat/movenccenc.h"
 #include "libavutil/intreadwrite.h"
-#include "avio_internal.h"
-#include "movenc.h"
-#include "avc.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/movenc.h"
+#include "libavformat/avc.h"
 
 static int auxiliary_info_alloc_size(MOVMuxCencContext* ctx, int size)
 {

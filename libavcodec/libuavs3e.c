@@ -147,7 +147,7 @@ static void __imgb_cpy_plane(void *src, void *dst, int bw, int h, int s_src, int
     }
 }
 
-static void uavs3e_image_copy_pic(void *dst[4], int i_dst[4], unsigned char *const src[4], const int i_src[4],  enum AVPixelFormat pix_fmts, int width, int height)
+static void uavs3e_image_copy_pic(void *dst[4], int i_dst[4], unsigned char *const src[4], const int i_src[4], enum AVPixelFormat pix_fmts, int width, int height)
 {
     if(sizeof(pel)>1 && pix_fmts==AV_PIX_FMT_YUV420P){    //sizeof(pel)==2 when BIT_DEPTH == 10
         //Expand YUV420P to 2-byte
@@ -285,10 +285,13 @@ const FFCodec ff_libuavs3e_encoder = {
     .init           = uavs3e_init,
     FF_CODEC_ENCODE_CB(uavs3e_encode_frame),
     .close          = uavs3e_close,
-    .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_AUTO_THREADS,
+    .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY |
+                      AV_CODEC_CAP_OTHER_THREADS,
+    .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE |
+                      FF_CODEC_CAP_AUTO_THREADS,
     .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,
-                                                       //AV_PIX_FMT_YUV420P10LE,
-                                                       AV_PIX_FMT_NONE },
+                                                     //AV_PIX_FMT_YUV420P10LE,
+                                                     AV_PIX_FMT_NONE },
     .p.priv_class   = &uavs3e_class,
     .defaults       = uavs3e_defaults,
     .p.wrapper_name = "libuavs3",

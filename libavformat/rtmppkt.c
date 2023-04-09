@@ -22,11 +22,11 @@
 #include "libavcodec/bytestream.h"
 #include "libavutil/avstring.h"
 #include "libavutil/intfloat.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
-#include "rtmppkt.h"
-#include "flv.h"
-#include "url.h"
+#include "libavformat/rtmppkt.h"
+#include "libavformat/flv.h"
+#include "libavformat/url.h"
 
 void ff_amf_write_bool(uint8_t **dst, int val)
 {

@@ -20,12 +20,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
 #include "libavutil/internal.h"
-#include "argo_asf.h"
+#include "libavformat/argo_asf.h"
 
 #define BRP_TAG                 MKTAG('B', 'R', 'P', 'P')
 #define BRP_FILE_HEADER_SIZE    12

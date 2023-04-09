@@ -25,9 +25,9 @@
 #include "libavcodec/av1_parse.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/put_bits.h"
-#include "av1.h"
-#include "avio.h"
-#include "avio_internal.h"
+#include "libavformat/av1.h"
+#include "libavformat/avio.h"
+#include "libavformat/avio_internal.h"
 
 static int av1_filter_obus(AVIOContext *pb, const uint8_t *buf,
                            int size, int *offset)

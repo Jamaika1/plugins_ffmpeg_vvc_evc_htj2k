@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -31,14 +31,14 @@
 #include "libavutil/rational.h"
 #include "libavutil/time_internal.h"
 
-#include "avc.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "isom.h"
-#include "os_support.h"
-#include "url.h"
-#include "dash.h"
+#include "libavformat/avc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
+#include "libavformat/dash.h"
 
 static DASHTmplId dash_read_tmpl_id(const char *identifier, char *format_tag,
                                     size_t format_tag_size, const char **ptr) {

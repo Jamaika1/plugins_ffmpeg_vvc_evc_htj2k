@@ -23,12 +23,12 @@
 #include <inttypes.h>
 
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "apetag.h"
-#include "demux.h"
-#include "internal.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/apetag.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
 
 #define APE_TAG_FLAG_CONTAINS_HEADER  (1U << 31)
 #define APE_TAG_FLAG_LACKS_FOOTER     (1 << 30)

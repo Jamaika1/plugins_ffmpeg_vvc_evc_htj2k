@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "rtpenc.h"
+#include "libavformat/rtpenc.h"
 
 #define RTP_VP9_DESC_REQUIRED_SIZE 1
 

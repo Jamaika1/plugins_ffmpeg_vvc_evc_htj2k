@@ -25,9 +25,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 typedef struct Page {
     int base_record;
@@ -172,7 +172,7 @@ static int read_packet(AVFormatContext *s,
     int tmp, record_size;
 
     if (avio_feof(s->pb))
-        return AVERROR(EIO);
+        return AVERROR_EOF;
 
     if (anm->page < 0)
         return anm->page;

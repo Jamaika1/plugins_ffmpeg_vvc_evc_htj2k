@@ -24,9 +24,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "mpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mpeg.h"
 
 #define SERIES1_PES_LENGTH  11    /* length of audio PES hdr on S1 */
 #define SERIES2_PES_LENGTH  16    /* length of audio PES hdr on S2 */

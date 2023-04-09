@@ -29,7 +29,7 @@
 #include "libavutil/error.h"
 #include "libavutil/hmac.h"
 
-#include "rtmp.h"
+#include "libavformat/rtmp.h"
 
 int ff_rtmp_calc_digest(const uint8_t *src, int len, int gap,
                         const uint8_t *key, int keylen, uint8_t *dst)

@@ -22,10 +22,10 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "pcm.h"
-#include "rso.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
+#include "libavformat/rso.h"
 
 static int rso_read_header(AVFormatContext *s)
 {

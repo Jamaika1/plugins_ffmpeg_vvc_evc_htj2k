@@ -28,8 +28,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define XA00_TAG MKTAG('X', 'A', 0, 0)
 #define XAI0_TAG MKTAG('X', 'A', 'I', 0)

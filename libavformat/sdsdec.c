@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 typedef struct SDSContext {
     uint8_t data[120];

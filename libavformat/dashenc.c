@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -40,21 +40,21 @@
 
 #include "libavcodec/avcodec.h"
 
-#include "av1.h"
-#include "avc.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "hlsplaylist.h"
+#include "libavformat/av1.h"
+#include "libavformat/avc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/hlsplaylist.h"
 #if CONFIG_HTTP_PROTOCOL
-#include "http.h"
+#include "libavformat/http.h"
 #endif
-#include "internal.h"
-#include "isom.h"
-#include "mux.h"
-#include "os_support.h"
-#include "url.h"
-#include "vpcc.h"
-#include "dash.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/mux.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
+#include "libavformat/vpcc.h"
+#include "libavformat/dash.h"
 
 typedef enum {
     SEGMENT_TYPE_AUTO = 0,
@@ -1551,7 +1551,11 @@ static int dash_init(AVFormatContext *s)
             return AVERROR_MUXER_NOT_FOUND;
         ctx->interrupt_callback    = s->interrupt_callback;
         ctx->opaque                = s->opaque;
+#if FF_API_AVFORMAT_IO_CLOSE
+FF_DISABLE_DEPRECATION_WARNINGS
         ctx->io_close              = s->io_close;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
         ctx->io_close2             = s->io_close2;
         ctx->io_open               = s->io_open;
         ctx->strict_std_compliance = s->strict_std_compliance;
@@ -2346,10 +2350,10 @@ static int dash_check_bitstream(AVFormatContext *s, AVStream *st,
     DASHContext *c = s->priv_data;
     OutputStream *os = &c->streams[st->index];
     AVFormatContext *oc = os->ctx;
-    if (oc->oformat->check_bitstream) {
+    if (ffofmt(oc->oformat)->check_bitstream) {
         AVStream *const ost = oc->streams[0];
         int ret;
-        ret = oc->oformat->check_bitstream(oc, ost, avpkt);
+        ret = ffofmt(oc->oformat)->check_bitstream(oc, ost, avpkt);
         if (ret == 1) {
             FFStream *const  sti = ffstream(st);
             FFStream *const osti = ffstream(ost);
@@ -2419,19 +2423,19 @@ static const AVClass dash_class = {
     .version    = LIBAVUTIL_VERSION_INT,
 };
 
-const AVOutputFormat ff_dash_muxer = {
-    .name           = "dash",
-    .long_name      = NULL_IF_CONFIG_SMALL("DASH Muxer"),
-    .extensions     = "mpd",
+const FFOutputFormat ff_dash_muxer = {
+    .p.name          = "dash",
+    .p.long_name     = NULL_IF_CONFIG_SMALL("DASH Muxer"),
+    .p.extensions    = "mpd",
+    .p.audio_codec   = AV_CODEC_ID_AAC,
+    .p.video_codec   = AV_CODEC_ID_H264,
+    .p.flags         = AVFMT_GLOBALHEADER | AVFMT_NOFILE | AVFMT_TS_NEGATIVE,
+    .p.priv_class    = &dash_class,
     .priv_data_size = sizeof(DASHContext),
-    .audio_codec    = AV_CODEC_ID_AAC,
-    .video_codec    = AV_CODEC_ID_H264,
-    .flags          = AVFMT_GLOBALHEADER | AVFMT_NOFILE | AVFMT_TS_NEGATIVE,
     .init           = dash_init,
     .write_header   = dash_write_header,
     .write_packet   = dash_write_packet,
     .write_trailer  = dash_write_trailer,
     .deinit         = dash_free,
     .check_bitstream = dash_check_bitstream,
-    .priv_class     = &dash_class,
 };

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "wtv.h"
+#include "libavformat/wtv.h"
 
 /* WTV GUIDs*/
 const ff_asf_guid ff_dir_entry_guid =

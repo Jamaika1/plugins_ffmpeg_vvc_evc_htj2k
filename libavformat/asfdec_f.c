@@ -30,14 +30,14 @@
 #include "libavutil/internal.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "avlanguage.h"
-#include "demux.h"
-#include "internal.h"
-#include "riff.h"
-#include "asf.h"
-#include "asfcrypt.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avlanguage.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
+#include "libavformat/asf.h"
+#include "libavformat/asfcrypt.h"
 
 typedef struct ASFPayload {
     uint8_t type;

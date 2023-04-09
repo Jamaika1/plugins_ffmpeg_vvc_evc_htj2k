@@ -21,10 +21,10 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/internal.h"
-#include "avformat.h"
-#include "internal.h"
-#include "pcm.h"
-#include "ircam.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
+#include "libavformat/ircam.h"
 
 static int ircam_probe(const AVProbeData *p)
 {

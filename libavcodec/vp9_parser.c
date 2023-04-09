@@ -22,7 +22,7 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "get_bits.h"
+#include "libavcodec/get_bits.h"
 #include "parser.h"
 
 static int parse(AVCodecParserContext *ctx,

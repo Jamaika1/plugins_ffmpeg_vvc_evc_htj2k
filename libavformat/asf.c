@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "asf.h"
-#include "demux.h"
-#include "id3v2.h"
-#include "internal.h"
+#include "libavformat/asf.h"
+#include "libavformat/demux.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
 
 /* List of official tags at http://msdn.microsoft.com/en-us/library/dd743066(VS.85).aspx */
 const AVMetadataConv ff_asf_metadata_conv[] = {

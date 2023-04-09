@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "img2.h"
+#include "libavformat/img2.h"
 #include "libavcodec/bytestream.h"
 
 static int alias_pix_read_probe(const AVProbeData *p)

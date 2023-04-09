@@ -22,11 +22,11 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "internal.h"
-#include "apetag.h"
-#include "id3v1.h"
-#include "wv.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/apetag.h"
+#include "libavformat/id3v1.h"
+#include "libavformat/wv.h"
 
 enum WV_FLAGS {
     WV_MONO   = 0x0004,

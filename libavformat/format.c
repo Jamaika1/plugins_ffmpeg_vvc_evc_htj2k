@@ -19,17 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
 
-#include "avio_internal.h"
-#include "avformat.h"
-#include "id3v2.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
 
 
 /**
@@ -111,8 +111,6 @@ enum AVCodecID av_guess_codec(const AVOutputFormat *fmt, const char *short_name,
         return fmt->audio_codec;
     else if (type == AVMEDIA_TYPE_SUBTITLE)
         return fmt->subtitle_codec;
-    else if (type == AVMEDIA_TYPE_DATA)
-        return fmt->data_codec;
     else
         return AV_CODEC_ID_NONE;
 }

@@ -20,13 +20,13 @@
  */
 
 #include <stddef.h>
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 #include "libavutil/macros.h"
-#include "avformat.h"
-#include "internal.h"
-#include "metadata.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/metadata.h"
+#include "libavformat/riff.h"
 
 /* Note: When encoding, the first matching tag is used, so order is
  * important if multiple tags are possible for a given codec.

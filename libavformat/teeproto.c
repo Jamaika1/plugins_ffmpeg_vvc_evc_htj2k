@@ -21,9 +21,9 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "tee_common.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/tee_common.h"
 
 typedef struct ChildContext {
     URLContext *url_context;
@@ -129,6 +129,18 @@ loop_fail:
     h->is_streamed = 0;
     for (i=0; i<c->child_count; i++) {
         h->is_streamed |= c->child[i].url_context->is_streamed;
+    }
+
+    h->max_packet_size = 0;
+    for (i = 0; i < c->child_count; i++) {
+        int max = c->child[i].url_context->max_packet_size;
+        if (!max)
+            continue;
+
+        if (!h->max_packet_size)
+            h->max_packet_size = max;
+        else if (h->max_packet_size > max)
+            h->max_packet_size = max;
     }
 
     return 0;

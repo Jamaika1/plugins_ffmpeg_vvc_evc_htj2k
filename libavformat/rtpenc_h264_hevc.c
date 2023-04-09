@@ -29,9 +29,9 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avformat.h"
-#include "avc.h"
-#include "rtpenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avc.h"
+#include "libavformat/rtpenc.h"
 
 static void flush_buffered(AVFormatContext *s1, int last)
 {

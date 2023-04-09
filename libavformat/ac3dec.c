@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/crc.h"
 #include "libavcodec/ac3_parser.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int ac3_eac3_probe(const AVProbeData *p, enum AVCodecID expected_codec_id)
 {

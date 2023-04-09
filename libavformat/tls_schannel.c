@@ -20,12 +20,12 @@
 
 /** Based on the CURL SChannel module */
 
-#include "avformat.h"
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
-#include "url.h"
-#include "tls.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
+#include "libavformat/tls.h"
 
 #define SECURITY_WIN32
 #include <windows.h>

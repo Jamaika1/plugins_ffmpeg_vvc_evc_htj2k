@@ -27,10 +27,10 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/rational.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
 
 #define MLV_VERSION "v2.0"
 

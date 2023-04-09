@@ -23,7 +23,7 @@
 #include "libavcodec/mjpeg.h"
 #include "libavcodec/jpegtables.h"
 #include "libavutil/intreadwrite.h"
-#include "rtpenc.h"
+#include "libavformat/rtpenc.h"
 
 void ff_rtp_send_jpeg(AVFormatContext *s1, const uint8_t *buf, int size)
 {

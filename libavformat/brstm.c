@@ -21,9 +21,9 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 typedef struct BRSTMCoeffOffset {
     uint8_t  channel;

@@ -21,8 +21,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define NC_VIDEO_FLAG 0x1A5
 

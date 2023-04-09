@@ -85,9 +85,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/random_seed.h"
-#include "avformat.h"
-#include "config.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavutil/config.h"
+#include "libavformat/url.h"
 
 #define PROMPEG_RTP_PT 0x60
 #define PROMPEG_FEC_COL 0x0

@@ -23,10 +23,10 @@
 #include "libavcodec/vvc.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/eval.h"
-#include "avc.h"
-#include "avio.h"
-#include "avio_internal.h"
-#include "vvc.h"
+#include "libavformat/avc.h"
+#include "libavformat/avio.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/vvc.h"
 
 #define CTB_SIZE_Y 128
 

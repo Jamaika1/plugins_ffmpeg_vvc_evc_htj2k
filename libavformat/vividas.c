@@ -30,9 +30,9 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "avio_internal.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define MAX_AUDIO_SUBPACKETS 100
 

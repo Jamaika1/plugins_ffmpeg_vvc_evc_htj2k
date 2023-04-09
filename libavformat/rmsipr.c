@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#include "rmsipr.h"
+#include "libavformat/rmsipr.h"
 
 const unsigned char ff_sipr_subpk_size[4] = { 29, 19, 37, 20 };
 

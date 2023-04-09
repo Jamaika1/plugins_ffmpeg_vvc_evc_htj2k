@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "rtpenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rtpenc.h"
 #include "libavcodec/put_bits.h"
 #include "libavcodec/get_bits.h"
 

@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
@@ -31,11 +31,11 @@
 
 #include "libavcodec/internal.h"
 
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
 #if CONFIG_NETWORK
-#include "network.h"
+#include "libavformat/network.h"
 #endif
 
 static AVMutex avformat_mutex = AV_MUTEX_INITIALIZER;

@@ -24,10 +24,10 @@
  * This is a muxer for Loki SDL Motion JPEG files
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "mux.h"
-#include "smjpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/smjpeg.h"
 
 typedef struct SMJPEGMuxContext {
     uint32_t duration;
@@ -133,15 +133,15 @@ static int smjpeg_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_smjpeg_muxer = {
-    .name           = "smjpeg",
-    .long_name      = NULL_IF_CONFIG_SMALL("Loki SDL MJPEG"),
+const FFOutputFormat ff_smjpeg_muxer = {
+    .p.name         = "smjpeg",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Loki SDL MJPEG"),
     .priv_data_size = sizeof(SMJPEGMuxContext),
-    .audio_codec    = AV_CODEC_ID_PCM_S16LE,
-    .video_codec    = AV_CODEC_ID_MJPEG,
+    .p.audio_codec  = AV_CODEC_ID_PCM_S16LE,
+    .p.video_codec  = AV_CODEC_ID_MJPEG,
     .write_header   = smjpeg_write_header,
     .write_packet   = smjpeg_write_packet,
     .write_trailer  = smjpeg_write_trailer,
-    .flags          = AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT,
-    .codec_tag      = (const AVCodecTag *const []){ ff_codec_smjpeg_video_tags, ff_codec_smjpeg_audio_tags, 0 },
+    .p.flags        = AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT,
+    .p.codec_tag    = (const AVCodecTag *const []){ ff_codec_smjpeg_video_tags, ff_codec_smjpeg_audio_tags, 0 },
 };

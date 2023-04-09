@@ -21,8 +21,8 @@
  */
 
 #include "libavutil/avstring.h"
-#include "internal.h"
-#include "img2.h"
+#include "libavformat/internal.h"
+#include "libavformat/img2.h"
 
 const IdStrMap ff_img_tags[] = {
     { AV_CODEC_ID_MJPEG,      "jpeg"     },

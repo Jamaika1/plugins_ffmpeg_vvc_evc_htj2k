@@ -60,7 +60,7 @@
  * replace low energy non zero bands */
 #define NOISE_LAMBDA_REPLACE 1.948f
 
-#include "aaccoder_trellis.h"
+#include "libavcodec/aaccoder_trellis.h"
 
 typedef float (*quantize_and_encode_band_func)(struct AACEncContext *s, PutBitContext *pb,
                                                const float *in, float *quant, const float *scaled,

@@ -25,9 +25,9 @@
  * @todo Support P[ALETTE] directive.
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/subtitles.h"
 #include "libavcodec/jacosub.h"
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"

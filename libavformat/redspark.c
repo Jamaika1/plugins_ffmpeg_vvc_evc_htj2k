@@ -21,9 +21,9 @@
 
 #include "libavcodec/bytestream.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/internal.h"
 
 #define HEADER_SIZE 4096
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))

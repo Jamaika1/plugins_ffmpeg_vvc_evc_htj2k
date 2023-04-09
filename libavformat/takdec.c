@@ -24,11 +24,11 @@
 #define BITSTREAM_READER_LE
 #include "libavcodec/tak.h"
 
-#include "apetag.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "rawdec.h"
+#include "libavformat/apetag.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/rawdec.h"
 
 typedef struct TAKDemuxContext {
     FFRawDemuxerContext rawctx;

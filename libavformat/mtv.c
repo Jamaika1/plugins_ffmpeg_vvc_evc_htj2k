@@ -26,8 +26,8 @@
 
 #include "libavutil/bswap.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define MTV_ASUBCHUNK_DATA_SIZE 500
 #define MTV_HEADER_SIZE 512

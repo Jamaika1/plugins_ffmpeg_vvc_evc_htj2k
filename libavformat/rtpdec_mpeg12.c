@@ -21,7 +21,7 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/intreadwrite.h"
-#include "rtpdec_formats.h"
+#include "libavformat/rtpdec_formats.h"
 
 static int mpeg_parse_packet(AVFormatContext *ctx, PayloadContext *data,
                              AVStream *st, AVPacket *pkt, uint32_t *timestamp,

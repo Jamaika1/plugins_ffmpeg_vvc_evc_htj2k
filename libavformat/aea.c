@@ -22,8 +22,8 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "pcm.h"
+#include "libavformat/avformat.h"
+#include "libavformat/pcm.h"
 
 #define AT1_SU_SIZE     212
 
@@ -90,13 +90,7 @@ static int aea_read_header(AVFormatContext *s)
 
 static int aea_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
-    int ret = av_get_packet(s->pb, pkt, s->streams[0]->codecpar->block_align);
-
-    pkt->stream_index = 0;
-    if (ret <= 0)
-        return AVERROR(EIO);
-
-    return ret;
+    return av_get_packet(s->pb, pkt, s->streams[0]->codecpar->block_align);
 }
 
 const AVInputFormat ff_aea_demuxer = {

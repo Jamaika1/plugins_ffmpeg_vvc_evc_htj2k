@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "rtpdec_formats.h"
+#include "libavformat/rtpdec_formats.h"
 
 static const uint8_t frame_sizes[] = {
     1, 4, 8, 17, 35

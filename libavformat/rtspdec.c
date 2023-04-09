@@ -19,24 +19,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/random_seed.h"
 #include "libavutil/time.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
-#include "rtpproto.h"
-#include "rtsp.h"
-#include "rdt.h"
-#include "tls.h"
-#include "url.h"
-#include "version.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/rtpproto.h"
+#include "libavformat/rtsp.h"
+#include "libavformat/rdt.h"
+#include "libavformat/tls.h"
+#include "libavformat/url.h"
+#include "libavformat/version.h"
 
 static const struct RTSPStatusMessage {
     enum RTSPStatusCode code;

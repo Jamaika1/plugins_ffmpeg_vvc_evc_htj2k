@@ -19,7 +19,7 @@
  */
 
 #include <string.h>
-#include "ip.h"
+#include "libavformat/ip.h"
 #include "libavutil/avstring.h"
 #include "libavutil/mem.h"
 

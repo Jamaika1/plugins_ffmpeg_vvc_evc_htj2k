@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "caf.h"
-#include "isom.h"
-#include "avio_internal.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/caf.h"
+#include "libavformat/isom.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/mux.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/dict.h"
 
@@ -276,16 +276,16 @@ static int caf_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_caf_muxer = {
-    .name           = "caf",
-    .long_name      = NULL_IF_CONFIG_SMALL("Apple CAF (Core Audio Format)"),
-    .mime_type      = "audio/x-caf",
-    .extensions     = "caf",
+const FFOutputFormat ff_caf_muxer = {
+    .p.name         = "caf",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Apple CAF (Core Audio Format)"),
+    .p.mime_type    = "audio/x-caf",
+    .p.extensions   = "caf",
     .priv_data_size = sizeof(CAFContext),
-    .audio_codec    = AV_CODEC_ID_PCM_S16BE,
-    .video_codec    = AV_CODEC_ID_NONE,
+    .p.audio_codec  = AV_CODEC_ID_PCM_S16BE,
+    .p.video_codec  = AV_CODEC_ID_NONE,
     .write_header   = caf_write_header,
     .write_packet   = caf_write_packet,
     .write_trailer  = caf_write_trailer,
-    .codec_tag      = ff_caf_codec_tags_list,
+    .p.codec_tag    = ff_caf_codec_tags_list,
 };

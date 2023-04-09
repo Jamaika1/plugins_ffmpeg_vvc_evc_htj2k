@@ -26,8 +26,8 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/imgutils.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define RAND_TAG MKBETAG('R','a','n','d')
 
@@ -86,7 +86,7 @@ static int read_packet(AVFormatContext *s,
     AVStream *st = s->streams[0];
 
     if (avio_feof(s->pb))
-        return AVERROR(EIO);
+        return AVERROR_EOF;
     pkt->dts = avio_tell(s->pb) / (st->codecpar->width * (int64_t)(st->codecpar->height + film->leading) * 4);
     pkt->size = av_get_packet(s->pb, pkt, st->codecpar->width * st->codecpar->height * 4);
     avio_skip(s->pb, st->codecpar->width * (int64_t) film->leading * 4);

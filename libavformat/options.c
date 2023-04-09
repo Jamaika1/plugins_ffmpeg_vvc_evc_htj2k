@@ -17,10 +17,10 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 #include "libavcodec/avcodec.h"
 #include "libavcodec/codec_par.h"
@@ -36,7 +36,7 @@
  */
 
 FF_DISABLE_DEPRECATION_WARNINGS
-#include "options_table.h"
+#include "libavformat/options_table.h"
 FF_ENABLE_DEPRECATION_WARNINGS
 
 static const char* format_to_name(void* ptr)
@@ -151,10 +151,12 @@ static int io_open_default(AVFormatContext *s, AVIOContext **pb,
     return ffio_open_whitelist(pb, url, flags, &s->interrupt_callback, options, s->protocol_whitelist, s->protocol_blacklist);
 }
 
+#if FF_API_AVFORMAT_IO_CLOSE
 void ff_format_io_close_default(AVFormatContext *s, AVIOContext *pb)
 {
     avio_close(pb);
 }
+#endif
 
 static int io_close2_default(AVFormatContext *s, AVIOContext *pb)
 {
@@ -172,7 +174,11 @@ AVFormatContext *avformat_alloc_context(void)
     s = &si->pub;
     s->av_class = &av_format_context_class;
     s->io_open  = io_open_default;
+#if FF_API_AVFORMAT_IO_CLOSE
+FF_DISABLE_DEPRECATION_WARNINGS
     s->io_close = ff_format_io_close_default;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     s->io_close2= io_close2_default;
 
     av_opt_set_defaults(s);
@@ -257,10 +263,7 @@ AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)
         return NULL;
     st = &sti->pub;
 
-#if FF_API_AVSTREAM_CLASS
     st->av_class = &stream_class;
-#endif
-
     st->codecpar = avcodec_parameters_alloc();
     if (!st->codecpar)
         goto fail;

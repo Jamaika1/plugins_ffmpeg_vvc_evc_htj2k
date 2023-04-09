@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/file_open.h"
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
-#include "avio.h"
+#include "libavformat/avio.h"
 #if HAVE_DIRENT_H
 #include <dirent.h>
 #endif
@@ -38,8 +38,8 @@
 #endif
 #include <sys/stat.h>
 #include <stdlib.h>
-#include "os_support.h"
-#include "url.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
 
 /* Some systems may not have S_ISFIFO */
 #ifndef S_ISFIFO

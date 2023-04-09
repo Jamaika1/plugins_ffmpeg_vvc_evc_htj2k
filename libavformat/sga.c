@@ -24,9 +24,9 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/internal.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 
 #define SEGA_CD_PCM_NUM 12500000
 #define SEGA_CD_PCM_DEN 786432

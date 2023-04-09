@@ -19,17 +19,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavcodec/codec2utils.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "avio_internal.h"
-#include "avformat.h"
-#include "internal.h"
-#include "rawenc.h"
-#include "pcm.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/rawenc.h"
+#include "libavformat/pcm.h"
 
 #define CODEC2_HEADER_SIZE 7
 #define CODEC2_MAGIC       0xC0DEC2
@@ -309,16 +310,16 @@ const AVInputFormat ff_codec2_demuxer = {
 #endif
 
 #if CONFIG_CODEC2_MUXER
-const AVOutputFormat ff_codec2_muxer = {
-    .name           = "codec2",
-    .long_name      = NULL_IF_CONFIG_SMALL("codec2 .c2 muxer"),
+const FFOutputFormat ff_codec2_muxer = {
+    .p.name         = "codec2",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("codec2 .c2 muxer"),
+    .p.extensions   = "c2",
+    .p.audio_codec  = AV_CODEC_ID_CODEC2,
+    .p.video_codec  = AV_CODEC_ID_NONE,
+    .p.flags        = AVFMT_NOTIMESTAMPS,
     .priv_data_size = sizeof(Codec2Context),
-    .extensions     = "c2",
-    .audio_codec    = AV_CODEC_ID_CODEC2,
-    .video_codec    = AV_CODEC_ID_NONE,
     .write_header   = codec2_write_header,
     .write_packet   = ff_raw_write_packet,
-    .flags          = AVFMT_NOTIMESTAMPS,
 };
 #endif
 

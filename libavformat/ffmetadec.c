@@ -21,9 +21,9 @@
 
 #include "libavutil/bprint.h"
 #include "libavutil/mathematics.h"
-#include "avformat.h"
-#include "demux.h"
-#include "ffmeta.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/ffmeta.h"
 #include "libavutil/dict.h"
 
 static int probe(const AVProbeData *p)

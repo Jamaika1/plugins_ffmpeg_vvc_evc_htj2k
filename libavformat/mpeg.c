@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
-#include "mpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/mpeg.h"
 
 /*********************************************/
 /* demux code */
@@ -549,6 +549,9 @@ redo:
     } else if (es_type == STREAM_TYPE_AUDIO_AC3) {
         codec_id = AV_CODEC_ID_AC3;
         type     = AVMEDIA_TYPE_AUDIO;
+    } else if (es_type == 0x90) {
+        codec_id = AV_CODEC_ID_PCM_ALAW;
+        type     = AVMEDIA_TYPE_AUDIO;
     } else if (m->imkh_cctv && es_type == 0x91) {
         codec_id = AV_CODEC_ID_PCM_MULAW;
         type     = AVMEDIA_TYPE_AUDIO;
@@ -699,7 +702,7 @@ const AVInputFormat ff_mpegps_demuxer = {
 
 #if CONFIG_VOBSUB_DEMUXER
 
-#include "subtitles.h"
+#include "libavformat/subtitles.h"
 #include "libavutil/avassert.h"
 #include "libavutil/bprint.h"
 #include "libavutil/opt.h"

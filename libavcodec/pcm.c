@@ -553,10 +553,11 @@ const FFCodec ff_ ## name_ ## _encoder = {                                  \
     CODEC_LONG_NAME(long_name_),                                            \
     .p.type       = AVMEDIA_TYPE_AUDIO,                                     \
     .p.id         = AV_CODEC_ID_ ## id_,                                    \
-    .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_VARIABLE_FRAME_SIZE,  \
+    .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_VARIABLE_FRAME_SIZE | \
+                      AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,                \
     .init         = pcm_encode_init,                                        \
     FF_CODEC_ENCODE_CB(pcm_encode_frame),                                   \
-    .p.sample_fmts = (const enum AVSampleFormat[]){ sample_fmt_,            \
+    .p.sample_fmts = (const enum AVSampleFormat[]){ sample_fmt_,             \
                                                    AV_SAMPLE_FMT_NONE },    \
 }
 
@@ -576,7 +577,7 @@ const FFCodec ff_ ## name_ ## _decoder = {                                  \
     .p.id           = AV_CODEC_ID_ ## id_,                                  \
     .priv_data_size = sizeof(PCMDecode),                                    \
     .init           = pcm_decode_init,                                      \
-    FF_CODEC_DECODE_CB(pcm_decode_frame),                                   \
+    FF_CODEC_DECODE_CB(pcm_decode_frame),                                    \
     .p.capabilities = AV_CODEC_CAP_DR1,                                     \
     .p.sample_fmts  = (const enum AVSampleFormat[]){ sample_fmt_,           \
                                                      AV_SAMPLE_FMT_NONE },  \
@@ -589,8 +590,8 @@ const FFCodec ff_ ## name_ ## _decoder = {                                  \
 #define PCM_DECODER(id, sample_fmt, name, long_name)                        \
     PCM_DECODER_3(CONFIG_ ## id ## _DECODER, id, sample_fmt, name, long_name)
 
-#define PCM_CODEC(id, sample_fmt_, name, long_name_)                        \
-    PCM_ENCODER(id, sample_fmt_, name, long_name_);                         \
+#define PCM_CODEC(id, sample_fmt_, name, long_name_)                    \
+    PCM_ENCODER(id, sample_fmt_, name, long_name_);                     \
     PCM_DECODER(id, sample_fmt_, name, long_name_)
 
 /* Note: Do not forget to add new entries to the Makefile as well. */
@@ -626,4 +627,4 @@ PCM_CODEC  (PCM_U32LE,        AV_SAMPLE_FMT_S32, pcm_u32le,        "PCM unsigned
 PCM_CODEC  (PCM_S64BE,        AV_SAMPLE_FMT_S64, pcm_s64be,        "PCM signed 64-bit big-endian");
 PCM_CODEC  (PCM_S64LE,        AV_SAMPLE_FMT_S64, pcm_s64le,        "PCM signed 64-bit little-endian");
 PCM_CODEC  (PCM_VIDC,         AV_SAMPLE_FMT_S16, pcm_vidc,         "PCM Archimedes VIDC");
-//PCM_DECODER(PCM_SGA,          AV_SAMPLE_FMT_U8,  pcm_sga,          "PCM SGA");
+PCM_DECODER(PCM_SGA,          AV_SAMPLE_FMT_U8,  pcm_sga,          "PCM SGA");

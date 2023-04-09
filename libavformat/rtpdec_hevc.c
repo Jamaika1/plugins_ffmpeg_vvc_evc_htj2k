@@ -22,10 +22,10 @@
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 
-#include "avformat.h"
-#include "internal.h"
-#include "rtpdec.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpdec_formats.h"
 
 #define RTP_HEVC_PAYLOAD_HEADER_SIZE       2
 #define RTP_HEVC_FU_HEADER_SIZE            1

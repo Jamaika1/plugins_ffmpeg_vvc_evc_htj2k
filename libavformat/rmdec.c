@@ -26,12 +26,12 @@
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
-#include "rmsipr.h"
-#include "rm.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/rmsipr.h"
+#include "libavformat/rm.h"
 
 #define DEINT_ID_GENR MKTAG('g', 'e', 'n', 'r') ///< interleaving for Cooker/ATRAC
 #define DEINT_ID_INT0 MKTAG('I', 'n', 't', '0') ///< no interleaving needed

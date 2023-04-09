@@ -55,12 +55,12 @@
 #ifndef AVFORMAT_IMF_H
 #define AVFORMAT_IMF_H
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavformat/avio.h"
 #include "libavutil/rational.h"
 #include "libavutil/uuid.h"
 #include "libavutil/timecode.h"
-#include <libxml/tree.h>
+#include "../libavcodec/librsvg/libxml2/tree.h"
 
 /**
  * IMF Composition Playlist Base Resource

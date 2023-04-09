@@ -29,8 +29,8 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define SCHl_TAG MKTAG('S', 'C', 'H', 'l')
 #define SEAD_TAG MKTAG('S', 'E', 'A', 'D')  /* Sxxx header */

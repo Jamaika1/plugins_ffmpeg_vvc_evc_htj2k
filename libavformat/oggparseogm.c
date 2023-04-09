@@ -28,10 +28,10 @@
 
 #include "libavcodec/bytestream.h"
 
-#include "avformat.h"
-#include "internal.h"
-#include "oggdec.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/oggdec.h"
+#include "libavformat/riff.h"
 
 static int
 ogm_header(AVFormatContext *s, int idx)

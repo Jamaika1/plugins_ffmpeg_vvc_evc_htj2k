@@ -27,7 +27,7 @@
 #include "libavutil/macros.h"
 #include "libavutil/avassert.h"
 #include "libavformat/internal.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
 #define SCD_MAGIC              ((uint64_t)MKBETAG('S', 'E', 'D', 'B') << 32 | \
                                           MKBETAG('S', 'S', 'C', 'F'))

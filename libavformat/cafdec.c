@@ -27,16 +27,16 @@
 
 #include <inttypes.h>
 
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "isom.h"
-#include "mov_chan.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/mov_chan.h"
 #include "libavcodec/flac.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/dict.h"
-#include "caf.h"
+#include "libavformat/caf.h"
 
 typedef struct CafContext {
     int bytes_per_packet;           ///< bytes in a packet, or 0 if variable

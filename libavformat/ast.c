@@ -21,7 +21,7 @@
 
 #include <stddef.h>
 #include "libavcodec/codec_id.h"
-#include "internal.h"
+#include "libavformat/internal.h"
 
 const AVCodecTag ff_codec_ast_tags[] = {
     { AV_CODEC_ID_ADPCM_AFC,          0 },

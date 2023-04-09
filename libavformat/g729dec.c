@@ -22,8 +22,8 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 typedef struct G729DemuxerContext {
     AVClass *class;

@@ -21,11 +21,11 @@
 
 #include "libavcodec/get_bits.h"
 #include "libavcodec/unary.h"
-#include "apetag.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/apetag.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 
 /// Two-byte MPC tag
 #define MKMPCTAG(a, b) ((a) | ((b) << 8))

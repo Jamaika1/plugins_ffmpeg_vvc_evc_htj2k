@@ -25,12 +25,12 @@
  * @author Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
-#include "rtp.h"
-#include "rtpdec.h"
-#include "isom.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtp.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/isom.h"
 #include "libavcodec/get_bits.h"
 
 struct PayloadContext {

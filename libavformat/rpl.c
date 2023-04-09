@@ -24,8 +24,8 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define RPL_SIGNATURE "ARMovie\x0A"
 #define RPL_SIGNATURE_SIZE 8

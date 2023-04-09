@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 const AVCodecTag ff_codec_ircam_le_tags[] = {
     { AV_CODEC_ID_PCM_ALAW,  0x10001 },

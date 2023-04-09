@@ -20,10 +20,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "riff.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/riff.h"
+#include "libavformat/internal.h"
 
 #define CHUNK_SIZE 512
 #define RIFF_TAG MKTAG('R','I','F','F')

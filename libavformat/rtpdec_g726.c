@@ -19,8 +19,8 @@
  */
 
 #include "libavutil/attributes.h"
-#include "avformat.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rtpdec_formats.h"
 
 #define RTP_G726_HANDLER(bitrate) \
 static av_cold int g726_ ## bitrate ##_init(AVFormatContext *s, int st_index, \

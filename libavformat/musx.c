@@ -21,8 +21,8 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 static int musx_probe(const AVProbeData *p)
 {

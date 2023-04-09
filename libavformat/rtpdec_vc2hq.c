@@ -22,8 +22,8 @@
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/dirac.h"
 
-#include "avio_internal.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpdec_formats.h"
 
 #define RTP_VC2HQ_PL_HEADER_SIZE             4
 

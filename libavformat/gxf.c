@@ -23,10 +23,10 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/common.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "gxf.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/gxf.h"
 
 struct gxf_stream_info {
     int64_t first_field;

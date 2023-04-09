@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <inttypes.h>
 
@@ -30,13 +30,13 @@
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
-#include "avformat.h"
-#include "avi.h"
-#include "demux.h"
-#include "dv.h"
-#include "internal.h"
-#include "isom.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avi.h"
+#include "libavformat/demux.h"
+#include "libavformat/dv.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/riff.h"
 #include "libavcodec/bytestream.h"
 #include "libavcodec/exif.h"
 #include "libavcodec/startcode.h"

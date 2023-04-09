@@ -25,8 +25,8 @@
 #include "libavcodec/internal.h"
 #include "libavcodec/evc.h"
 
-#include "rawdec.h"
-#include "avformat.h"
+#include "libavformat/rawdec.h"
+#include "libavformat/avformat.h"
 
 typedef struct EVCParserContext {
     int got_sps;

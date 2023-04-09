@@ -20,8 +20,8 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "mms.h"
-#include "asf.h"
+#include "libavformat/mms.h"
+#include "libavformat/asf.h"
 #include "libavutil/intreadwrite.h"
 
 #define MMS_MAX_STREAMS 256    /**< arbitrary sanity check value */

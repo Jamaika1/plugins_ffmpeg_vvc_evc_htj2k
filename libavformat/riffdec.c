@@ -24,10 +24,10 @@
 #include "libavutil/error.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/riff.h"
 
 int ff_get_guid(AVIOContext *s, ff_asf_guid *g)
 {

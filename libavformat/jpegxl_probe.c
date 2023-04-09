@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "jpegxl_probe.h"
+#include "libavformat/jpegxl_probe.h"
 
 #define BITSTREAM_READER_LE
 #include "libavcodec/get_bits.h"

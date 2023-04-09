@@ -25,7 +25,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/macros.h"
 
-#include "wv.h"
+#include "libavformat/wv.h"
 
 int ff_wv_parse_header(WvHeader *wv, const uint8_t *data)
 {

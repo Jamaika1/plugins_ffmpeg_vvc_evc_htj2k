@@ -24,11 +24,11 @@
  * GIF demuxer.
  */
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavutil/bprint.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "internal.h"
+#include "libavformat/internal.h"
 #include "libavcodec/gif.h"
 
 typedef struct GIFDemuxContext {

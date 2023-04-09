@@ -21,8 +21,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 #include "libavcodec/dnxhddata.h"
 
 static int dnxhd_probe(const AVProbeData *p)

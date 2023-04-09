@@ -30,7 +30,7 @@
 
 #include "libavutil/mem.h"
 #include "libavutil/avstring.h"
-#include "urldecode.h"
+#include "libavformat/urldecode.h"
 
 char *ff_urldecode(const char *url, int decode_plus_sign)
 {

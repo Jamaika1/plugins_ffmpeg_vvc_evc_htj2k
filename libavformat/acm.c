@@ -20,10 +20,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "demux.h"
-#include "rawdec.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/rawdec.h"
+#include "libavformat/internal.h"
 
 static int acm_probe(const AVProbeData *p)
 {

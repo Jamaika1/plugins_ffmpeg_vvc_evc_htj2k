@@ -32,10 +32,10 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/dict.h"
-#include "avformat.h"
-#include "internal.h"
-#include "pcm.h"
-#include "sox.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
+#include "libavformat/sox.h"
 
 static int sox_probe(const AVProbeData *p)
 {

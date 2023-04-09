@@ -21,8 +21,8 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/packet.h"
-#include "avformat.h"
-#include "rawutils.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawutils.h"
 
 int ff_reshuffle_raw_rgb(AVFormatContext *s, AVPacket **ppkt, AVCodecParameters *par, int expected_stride)
 {

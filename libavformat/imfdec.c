@@ -62,16 +62,16 @@
  * @ingroup lavu_imf
  */
 
-#include "avio_internal.h"
-#include "demux.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
 #include "imf.h"
-#include "internal.h"
+#include "libavformat/internal.h"
 #include "libavcodec/packet.h"
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "mxf.h"
+#include "libavformat/mxf.h"
 #include <inttypes.h>
 #include "../libavcodec/librsvg/libxml2/parser.h"
 
@@ -379,7 +379,11 @@ static int open_track_resource_context(AVFormatContext *s,
         return AVERROR(ENOMEM);
 
     track_resource->ctx->io_open = s->io_open;
+#if FF_API_AVFORMAT_IO_CLOSE
+FF_DISABLE_DEPRECATION_WARNINGS
     track_resource->ctx->io_close = s->io_close;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     track_resource->ctx->io_close2 = s->io_close2;
     track_resource->ctx->flags |= s->flags & ~AVFMT_FLAG_CUSTOM_IO;
 
@@ -1018,7 +1022,7 @@ static const AVClass imf_class = {
 const AVInputFormat ff_imf_demuxer = {
     .name           = "imf",
     .long_name      = NULL_IF_CONFIG_SMALL("IMF (Interoperable Master Format)"),
-    .flags          = AVFMT_EXPERIMENTAL | AVFMT_NO_BYTE_SEEK,
+    .flags          = AVFMT_NO_BYTE_SEEK,
     .flags_internal = FF_FMT_INIT_CLEANUP,
     .priv_class     = &imf_class,
     .priv_data_size = sizeof(IMFContext),

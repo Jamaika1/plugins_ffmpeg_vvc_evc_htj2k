@@ -27,10 +27,10 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/time.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/url.h"
 
 /*
  * An apple http stream consists of a playlist with media segment files,

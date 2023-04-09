@@ -20,10 +20,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 static const AVCodecTag rsd_tags[] = {
     { AV_CODEC_ID_ADPCM_PSX,       MKTAG('V','A','G',' ') },

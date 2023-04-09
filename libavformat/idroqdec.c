@@ -29,9 +29,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 
 #define RoQ_MAGIC_NUMBER 0x1084
 #define RoQ_CHUNK_PREAMBLE_SIZE 8
@@ -107,7 +107,7 @@ static int roq_read_packet(AVFormatContext *s,
     while (!packet_read) {
 
         if (avio_feof(s->pb))
-            return AVERROR(EIO);
+            return AVERROR_EOF;
 
         /* get the next chunk preamble */
         if ((ret = avio_read(pb, preamble, RoQ_CHUNK_PREAMBLE_SIZE)) !=

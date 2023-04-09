@@ -25,8 +25,8 @@
  * @see http://wiki.multimedia.cx/index.php?title=AVS
  */
 
-#include "avformat.h"
-#include "voc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/voc.h"
 
 
 typedef struct avs_format {

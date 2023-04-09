@@ -24,7 +24,7 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 
-#include "tee_common.h"
+#include "libavformat/tee_common.h"
 
 static const char *const slave_opt_open  = "[";
 static const char *const slave_opt_close = "]";

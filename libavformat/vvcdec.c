@@ -21,8 +21,8 @@
 
 #include "libavcodec/vvc.h"
 
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int vvc_probe(const AVProbeData *p)
 {

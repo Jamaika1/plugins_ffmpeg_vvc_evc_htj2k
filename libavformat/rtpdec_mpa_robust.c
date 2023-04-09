@@ -22,8 +22,8 @@
 #include "libavutil/attributes.h"
 #include "libavutil/intreadwrite.h"
 
-#include "avio_internal.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpdec_formats.h"
 
 struct PayloadContext {
     unsigned adu_size;

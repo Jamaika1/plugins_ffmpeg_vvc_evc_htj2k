@@ -19,9 +19,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "spdif.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/spdif.h"
 
 #define MARKER_16LE         0x72F81F4E
 #define MARKER_20LE         0x20876FF0E154

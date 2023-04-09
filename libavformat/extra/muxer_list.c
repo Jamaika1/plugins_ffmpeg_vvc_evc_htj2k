@@ -1,4 +1,4 @@
-static const AVOutputFormat * const muxer_list[] = {
+static const FFOutputFormat * const muxer_list[] = {
 &ff_a64_muxer,
 &ff_ac3_muxer,
 &ff_adts_muxer,

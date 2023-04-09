@@ -27,11 +27,11 @@
 #include "libavutil/timestamp.h"
 #include "libavcodec/codec_desc.h"
 #include "libavcodec/bsf.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/url.h"
 
 typedef enum ConcatMatchMode {
     MATCH_ONE_TO_ONE,

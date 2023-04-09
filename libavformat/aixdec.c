@@ -20,9 +20,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 static int aix_probe(const AVProbeData *p)
 {

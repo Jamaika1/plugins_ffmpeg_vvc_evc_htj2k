@@ -25,15 +25,15 @@
  * @author Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  */
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavutil/avstring.h"
-#include "rtpdec.h"
-#include "rdt.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rdt.h"
 #include "libavutil/base64.h"
 #include "libavutil/md5.h"
-#include "rm.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/rm.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 #include "libavcodec/get_bits.h"
 
 struct RDTDemuxContext {

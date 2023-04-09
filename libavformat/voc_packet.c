@@ -19,9 +19,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "voc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/voc.h"
 
 int
 ff_voc_get_packet(AVFormatContext *s, AVPacket *pkt, AVStream *st, int max_size)

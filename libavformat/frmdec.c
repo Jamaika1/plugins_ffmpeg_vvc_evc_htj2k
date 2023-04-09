@@ -26,7 +26,7 @@
 
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
 static const enum AVPixelFormat frm_pix_fmt_tags[] = {
     AV_PIX_FMT_RGB555,

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <string.h>
 #include "libavutil/avstring.h"
@@ -28,14 +28,14 @@
 #include "libavutil/opt.h"
 #include "libavcodec/xiph.h"
 #include "libavcodec/mpeg4audio.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avc.h"
-#include "hevc.h"
-#include "rtp.h"
-#include "version.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avc.h"
+#include "libavformat/hevc.h"
+#include "libavformat/rtp.h"
+#include "libavformat/version.h"
 #if CONFIG_NETWORK
-#include "network.h"
+#include "libavformat/network.h"
 #endif
 
 #if CONFIG_RTP_MUXER

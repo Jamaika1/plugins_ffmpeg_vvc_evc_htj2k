@@ -21,9 +21,9 @@
 
 #include "libavutil/mathematics.h"
 #include "libavutil/tree.h"
-#include "nut.h"
-#include "riff.h"
-#include "internal.h"
+#include "libavformat/nut.h"
+#include "libavformat/riff.h"
+#include "libavformat/internal.h"
 
 const AVCodecTag ff_nut_subtitle_tags[] = {
     { AV_CODEC_ID_TEXT,             MKTAG('U', 'T', 'F', '8') },

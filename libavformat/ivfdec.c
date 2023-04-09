@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
 #include "libavutil/intreadwrite.h"
 
 static int probe(const AVProbeData *p)

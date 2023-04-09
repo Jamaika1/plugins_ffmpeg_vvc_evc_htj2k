@@ -24,8 +24,8 @@
 #include "libavutil/bprint.h"
 #include "libavutil/opt.h"
 
-#include "avformat.h"
-#include "network.h"
+#include "libavformat/avformat.h"
+#include "libavformat/network.h"
 
 
 typedef struct IcecastContext {

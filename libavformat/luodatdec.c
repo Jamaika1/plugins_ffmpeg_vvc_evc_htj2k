@@ -21,9 +21,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avio_internal.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 static int dat_probe(const AVProbeData *p)
 {

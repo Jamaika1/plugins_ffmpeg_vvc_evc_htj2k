@@ -23,9 +23,9 @@
  * VPlayer subtitles format demuxer
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/subtitles.h"
 
 typedef struct {
     FFDemuxSubtitlesQueue q;

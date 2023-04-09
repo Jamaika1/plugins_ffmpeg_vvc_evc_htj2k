@@ -23,8 +23,8 @@
 
 #include "libavcodec/avs3.h"
 #include "libavcodec/startcode.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int avs3video_probe(const AVProbeData *p)
 {

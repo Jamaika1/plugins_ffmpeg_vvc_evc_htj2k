@@ -30,8 +30,8 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #include "libavcodec/bethsoftvideo.h"
 
 #define BVID_PALETTE_SIZE 3 * 256

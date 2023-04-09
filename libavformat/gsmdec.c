@@ -22,8 +22,8 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define GSM_BLOCK_SIZE    33
 #define GSM_BLOCK_SAMPLES 160

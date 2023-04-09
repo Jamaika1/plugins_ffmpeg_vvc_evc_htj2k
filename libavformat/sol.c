@@ -25,9 +25,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "pcm.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
 
 /* if we don't know the size in advance */
 #define AU_UNKNOWN_SIZE ((uint32_t)(~0))
@@ -127,7 +127,8 @@ static int sol_read_packet(AVFormatContext *s,
     int ret;
 
     if (avio_feof(s->pb))
-        return AVERROR(EIO);
+        return AVERROR_EOF;
+
     ret= av_get_packet(s->pb, pkt, MAX_SIZE);
     if (ret < 0)
         return ret;

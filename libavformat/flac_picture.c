@@ -22,11 +22,11 @@
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
 #include "libavcodec/png.h"
-#include "avformat.h"
-#include "demux.h"
-#include "flac_picture.h"
-#include "id3v2.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/flac_picture.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
 
 #define MAX_TRUNC_PICTURE_SIZE (500 * 1024 * 1024)
 

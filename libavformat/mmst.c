@@ -28,14 +28,14 @@
  *  [2]http://web.archive.org/web/20131203084402/http://msdn.microsoft.com/en-us/library/bb643323.aspx
  */
 
-#include "avformat.h"
-#include "mms.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/mms.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
-#include "network.h"
-#include "url.h"
+#include "libavformat/network.h"
+#include "libavformat/url.h"
 
 #define LOCAL_ADDRESS 0xc0a80081    // FIXME get and use correct local ip address.
 #define LOCAL_PORT    1037          // as above.
