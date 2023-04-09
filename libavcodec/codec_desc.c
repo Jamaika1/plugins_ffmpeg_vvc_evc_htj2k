@@ -25,9 +25,9 @@
 #include "libavutil/internal.h"
 #include "libavutil/macros.h"
 
-#include "codec_id.h"
-#include "codec_desc.h"
-#include "profiles.h"
+#include "libavcodec/codec_id.h"
+#include "libavcodec/codec_desc.h"
+#include "libavcodec/profiles.h"
 
 #define MT(...) (const char *const[]){ __VA_ARGS__, NULL }
 
@@ -1427,6 +1427,14 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
+        .id        = AV_CODEC_ID_EVC,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "evc",
+        .long_name = NULL_IF_CONFIG_SMALL("MPEG-5 EVC (Essential Video Coding)"),
+        .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
+        .profiles  = NULL_IF_CONFIG_SMALL(ff_evc_profiles),
+    },
+    {
         .id        = AV_CODEC_ID_VVC,
         .type      = AVMEDIA_TYPE_VIDEO,
         .name      = "vvc",
@@ -1922,14 +1930,6 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "vqc",
         .long_name = NULL_IF_CONFIG_SMALL("ViewQuest VQC"),
         .props     = AV_CODEC_PROP_LOSSY,
-    },
-    {
-        .id        = AV_CODEC_ID_EVC,
-        .type      = AVMEDIA_TYPE_VIDEO,
-        .name      = "evc",
-        .long_name = NULL_IF_CONFIG_SMALL("MPEG-5 EVC (Essential Video Coding)"),
-        .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_REORDER,
-        .profiles  = NULL_IF_CONFIG_SMALL(ff_evc_profiles),
     },
 
     /* various PCM "codecs" */
@@ -2544,6 +2544,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("ADPCM IMA Acorn Replay"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_ADPCM_XMD,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "adpcm_xmd",
+        .long_name = NULL_IF_CONFIG_SMALL("ADPCM Konami XMD"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
 
     /* AMR */
     {
@@ -2625,6 +2632,20 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "derf_dpcm",
         .long_name = NULL_IF_CONFIG_SMALL("DPCM Xilam DERF"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_WADY_DPCM,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "wady_dpcm",
+        .long_name = NULL_IF_CONFIG_SMALL("DPCM Marble WADY"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_CBD2_DPCM,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "cbd2_dpcm",
+        .long_name = NULL_IF_CONFIG_SMALL("DPCM Cuberoot-Delta-Exact"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
 
@@ -2918,6 +2939,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "eac3",
         .long_name = NULL_IF_CONFIG_SMALL("ATSC A/52B (AC-3, E-AC-3)"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+        .profiles  = NULL_IF_CONFIG_SMALL(ff_eac3_profiles),
     },
     {
         .id        = AV_CODEC_ID_SIPR,
@@ -2946,6 +2968,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "truehd",
         .long_name = NULL_IF_CONFIG_SMALL("TrueHD"),
         .props     = AV_CODEC_PROP_LOSSLESS,
+        .profiles  = NULL_IF_CONFIG_SMALL(ff_truehd_profiles),
     },
     {
         .id        = AV_CODEC_ID_MP4ALS,
@@ -3340,6 +3363,20 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("FTR Voice"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_WAVARC,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "wavarc",
+        .long_name = NULL_IF_CONFIG_SMALL("Waveform Archiver"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_RKA,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "rka",
+        .long_name = NULL_IF_CONFIG_SMALL("RKA (RK Audio)"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS,
+    },
 
     /* subtitle codecs */
     {
@@ -3521,7 +3558,6 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_SUBTITLE,
         .name      = "arib_caption",
         .long_name = NULL_IF_CONFIG_SMALL("ARIB STD-B24 caption"),
-        .props     = AV_CODEC_PROP_TEXT_SUB,
         .profiles  = NULL_IF_CONFIG_SMALL(ff_arib_caption_profiles),
     },
 
@@ -3599,6 +3635,12 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .mime_types= MT("application/octet-stream"),
     },
     {
+        .id        = AV_CODEC_ID_SMPTE_2038,
+        .type      = AVMEDIA_TYPE_DATA,
+        .name      = "smpte_2038",
+        .long_name = NULL_IF_CONFIG_SMALL("SMPTE ST 2038 VANC in MPEG-2 TS"),
+    },
+    {
         .id        = AV_CODEC_ID_MPEG2TS,
         .type      = AVMEDIA_TYPE_DATA,
         .name      = "mpegts",
@@ -3611,6 +3653,18 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "wrapped_avframe",
         .long_name = NULL_IF_CONFIG_SMALL("AVFrame to AVPacket passthrough"),
         .props     = AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_VNULL,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "vnull",
+        .long_name = NULL_IF_CONFIG_SMALL("Null video codec"),
+    },
+    {
+        .id        = AV_CODEC_ID_ANULL,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "anull",
+        .long_name = NULL_IF_CONFIG_SMALL("Null audio codec"),
     },
 };
 
