@@ -26,13 +26,13 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/time_internal.h"
 
-#include "avformat.h"
-#include "avlanguage.h"
-#include "demux.h"
-#include "internal.h"
-#include "riff.h"
-#include "asf.h"
-#include "asfcrypt.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avlanguage.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
+#include "libavformat/asf.h"
+#include "libavformat/asfcrypt.h"
 
 #define ASF_BOOL                              0x2
 #define ASF_WORD                              0x5

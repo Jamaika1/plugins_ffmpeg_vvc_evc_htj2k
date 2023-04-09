@@ -32,7 +32,7 @@
 #include "libavutil/file_open.h"
 #include "libavutil/opt.h"
 #include "libavutil/tree.h"
-#include "avio.h"
+#include "libavformat/avio.h"
 #include <fcntl.h>
 #if HAVE_IO_H
 #include <io.h>
@@ -42,8 +42,8 @@
 #endif
 #include <sys/stat.h>
 #include <stdlib.h>
-#include "os_support.h"
-#include "url.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
 
 typedef struct CacheEntry {
     int64_t logical_pos;

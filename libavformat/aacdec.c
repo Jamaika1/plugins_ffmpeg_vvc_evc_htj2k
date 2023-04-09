@@ -22,12 +22,12 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "id3v1.h"
-#include "id3v2.h"
-#include "apetag.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/id3v1.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/apetag.h"
 
 #define ADTS_HEADER_SIZE 7
 

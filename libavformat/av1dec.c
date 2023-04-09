@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/av1_parse.h"
 #include "libavcodec/bsf.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
 
 typedef struct AV1DemuxContext {
     const AVClass *class;

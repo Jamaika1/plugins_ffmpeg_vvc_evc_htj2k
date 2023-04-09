@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avlanguage.h"
+#include "libavformat/avlanguage.h"
 #include "libavutil/macros.h"
 #include <stdlib.h>
 #include <stdint.h>

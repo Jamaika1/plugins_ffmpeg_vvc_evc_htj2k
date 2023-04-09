@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 enum BMVFlags {
     BMV_NOP = 0,

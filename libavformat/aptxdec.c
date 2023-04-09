@@ -20,10 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/opt.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
 #define APTX_BLOCK_SIZE   4
 #define APTX_PACKET_SIZE  (256*APTX_BLOCK_SIZE)

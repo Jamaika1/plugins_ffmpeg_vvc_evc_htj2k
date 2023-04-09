@@ -22,10 +22,10 @@
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/h264.h"
 #include "libavcodec/get_bits.h"
-#include "avformat.h"
-#include "avio.h"
-#include "avc.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/avc.h"
+#include "libavformat/avio_internal.h"
 
 static const uint8_t *avc_find_startcode_internal(const uint8_t *p, const uint8_t *end)
 {

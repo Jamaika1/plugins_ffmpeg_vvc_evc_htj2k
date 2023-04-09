@@ -19,10 +19,11 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "avformat.h"
-#include "riff.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/mux.h"
+#include "libavformat/riff.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
 
@@ -401,14 +402,14 @@ static int amv_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_amv_muxer = {
-    .name           = "amv",
-    .long_name      = NULL_IF_CONFIG_SMALL("AMV"),
-    .mime_type      = "video/amv",
-    .extensions     = "amv",
+const FFOutputFormat ff_amv_muxer = {
+    .p.name         = "amv",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("AMV"),
+    .p.mime_type    = "video/amv",
+    .p.extensions   = "amv",
     .priv_data_size = sizeof(AMVContext),
-    .audio_codec    = AV_CODEC_ID_ADPCM_IMA_AMV,
-    .video_codec    = AV_CODEC_ID_AMV,
+    .p.audio_codec  = AV_CODEC_ID_ADPCM_IMA_AMV,
+    .p.video_codec  = AV_CODEC_ID_AMV,
     .init           = amv_init,
     .deinit         = amv_deinit,
     .write_header   = amv_write_header,

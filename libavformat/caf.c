@@ -24,9 +24,9 @@
  * CAF common code
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "caf.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/caf.h"
 
 /**
  * Known codec tags for CAF

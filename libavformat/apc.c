@@ -22,8 +22,8 @@
 #include <string.h>
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "demux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
 
 static int apc_probe(const AVProbeData *p)
 {

@@ -30,14 +30,14 @@
  * iCEDraw File demuxer
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
-#include "avformat.h"
-#include "internal.h"
-#include "sauce.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/sauce.h"
 #include "libavcodec/bintext.h"
 
 typedef struct {

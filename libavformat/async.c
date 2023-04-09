@@ -34,7 +34,7 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
-#include "url.h"
+#include "libavformat/url.h"
 #include <stdint.h>
 
 #if HAVE_UNISTD_H

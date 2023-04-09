@@ -20,12 +20,12 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avio_internal.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "id3v2.h"
-#include "rawdec.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/rawdec.h"
 
 static int bonk_probe(const AVProbeData *p)
 {
@@ -59,7 +59,7 @@ static int bonk_read_header(AVFormatContext *s)
     AVStream *st;
     int ret;
 
-    for (int i = 0; !avio_feof(s->pb); i++) {
+    while (!avio_feof(s->pb)) {
         const int b = avio_r8(s->pb);
         if (!b) {
             uint32_t t;

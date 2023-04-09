@@ -19,12 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavutil/aes.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "internal.h"
-#include "url.h"
+#include "libavformat/internal.h"
+#include "libavformat/url.h"
 
 // encourage reads of 4096 bytes - 1 block is always retained.
 #define MAX_BUFFER_BLOCKS 257

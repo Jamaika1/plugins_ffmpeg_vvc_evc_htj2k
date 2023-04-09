@@ -21,8 +21,8 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/internal.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 static int probe(const AVProbeData *p)
 {

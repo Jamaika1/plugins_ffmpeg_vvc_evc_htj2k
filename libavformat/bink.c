@@ -32,9 +32,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 enum BinkAudFlags {
     BINK_AUD_16BITS = 0x4000, ///< prefer 16-bit output

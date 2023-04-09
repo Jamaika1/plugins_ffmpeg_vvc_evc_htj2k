@@ -20,16 +20,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
-#include "argo_asf.h"
+#include "libavformat/argo_asf.h"
 
 /* Maximum number of blocks to read at once. */
 #define ASF_NB_BLOCKS 32
@@ -470,20 +471,20 @@ static const AVClass argo_asf_muxer_class = {
     .version    = LIBAVUTIL_VERSION_INT
 };
 
-const AVOutputFormat ff_argo_asf_muxer = {
-    .name           = "argo_asf",
-    .long_name      = NULL_IF_CONFIG_SMALL("Argonaut Games ASF"),
+const FFOutputFormat ff_argo_asf_muxer = {
+    .p.name         = "argo_asf",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Argonaut Games ASF"),
     /*
      * NB: Can't do this as it conflicts with the actual ASF format.
-     * .extensions  = "asf",
+     * .p.extensions  = "asf",
      */
-    .audio_codec    = AV_CODEC_ID_ADPCM_ARGO,
-    .video_codec    = AV_CODEC_ID_NONE,
+    .p.audio_codec  = AV_CODEC_ID_ADPCM_ARGO,
+    .p.video_codec  = AV_CODEC_ID_NONE,
+    .p.priv_class   = &argo_asf_muxer_class,
     .init           = argo_asf_write_init,
     .write_header   = argo_asf_write_header,
     .write_packet   = argo_asf_write_packet,
     .write_trailer  = argo_asf_write_trailer,
-    .priv_class     = &argo_asf_muxer_class,
     .priv_data_size = sizeof(ArgoASFMuxContext)
 };
 #endif
