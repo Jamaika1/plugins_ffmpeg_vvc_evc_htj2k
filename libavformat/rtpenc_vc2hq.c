@@ -24,8 +24,8 @@
 #include "libavcodec/get_bits.h"
 #include "libavcodec/golomb.h"
 
-#include "avformat.h"
-#include "rtpenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rtpenc.h"
 
 #define RTP_VC2HQ_PL_HEADER_SIZE             4
 

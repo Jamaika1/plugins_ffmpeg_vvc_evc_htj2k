@@ -24,9 +24,9 @@
  * @see https://documentation.apple.com/en/dvdstudiopro/usermanual/index.html#chapter=19%26section=13%26tasks=true
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/subtitles.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avstring.h"
 

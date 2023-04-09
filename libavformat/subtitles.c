@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "subtitles.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/subtitles.h"
+#include "libavformat/avio_internal.h"
 #include "libavutil/avstring.h"
 
 void ff_text_init_avio(void *s, FFTextReader *r, AVIOContext *pb)

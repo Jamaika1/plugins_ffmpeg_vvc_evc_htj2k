@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 #include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
-#include "network.h"
-#include "os_support.h"
-#include "internal.h"
-#include "avio_internal.h"
-#include "url.h"
-#include "rtpdec.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/url.h"
+#include "libavformat/rtpdec.h"
 #if HAVE_POLL_H
 #include <poll.h>
 #endif

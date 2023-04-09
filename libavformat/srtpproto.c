@@ -20,13 +20,13 @@
  */
 
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/url.h"
 
-#include "internal.h"
-#include "rtpdec.h"
-#include "srtp.h"
+#include "libavformat/internal.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/srtp.h"
 
 typedef struct SRTPProtoContext {
     const AVClass *class;

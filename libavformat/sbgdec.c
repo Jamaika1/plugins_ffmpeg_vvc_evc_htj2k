@@ -27,8 +27,8 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/time_internal.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define SBG_SCALE (1 << 16)
 #define DAY (24 * 60 * 60)

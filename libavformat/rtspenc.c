@@ -19,21 +19,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
-#include "mux.h"
-#include "network.h"
-#include "os_support.h"
-#include "rtsp.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/rtsp.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avstring.h"
 #include "libavutil/time.h"
-#include "url.h"
+#include "libavformat/url.h"
 
 
 static const AVClass rtsp_muxer_class = {
@@ -244,15 +244,15 @@ static int rtsp_write_close(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_rtsp_muxer = {
-    .name              = "rtsp",
-    .long_name         = NULL_IF_CONFIG_SMALL("RTSP output"),
+const FFOutputFormat ff_rtsp_muxer = {
+    .p.name            = "rtsp",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("RTSP output"),
     .priv_data_size    = sizeof(RTSPState),
-    .audio_codec       = AV_CODEC_ID_AAC,
-    .video_codec       = AV_CODEC_ID_MPEG4,
+    .p.audio_codec     = AV_CODEC_ID_AAC,
+    .p.video_codec     = AV_CODEC_ID_MPEG4,
     .write_header      = rtsp_write_header,
     .write_packet      = rtsp_write_packet,
     .write_trailer     = rtsp_write_close,
-    .flags             = AVFMT_NOFILE | AVFMT_GLOBALHEADER,
-    .priv_class        = &rtsp_muxer_class,
+    .p.flags           = AVFMT_NOFILE | AVFMT_GLOBALHEADER,
+    .p.priv_class      = &rtsp_muxer_class,
 };

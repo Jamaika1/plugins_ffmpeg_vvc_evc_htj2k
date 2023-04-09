@@ -24,9 +24,9 @@
  * SMJPEG common code
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "smjpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/smjpeg.h"
 
 const AVCodecTag ff_codec_smjpeg_video_tags[] = {
     { AV_CODEC_ID_MJPEG,             MKTAG('J', 'F', 'I', 'F') },

@@ -26,13 +26,13 @@
 
 #include "libavcodec/bytestream.h"
 
-#include "avformat.h"
-#include "network.h"
-#include "srtp.h"
-#include "url.h"
-#include "rtpdec.h"
-#include "rtpdec_formats.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/network.h"
+#include "libavformat/srtp.h"
+#include "libavformat/url.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpdec_formats.h"
+#include "libavformat/internal.h"
 
 #define MIN_FEEDBACK_INTERVAL 200000 /* 200 ms in us */
 

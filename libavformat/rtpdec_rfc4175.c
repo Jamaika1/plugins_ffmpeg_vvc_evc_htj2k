@@ -21,8 +21,8 @@
 
 /* Development sponsored by CBC/Radio-Canada */
 
-#include "avio_internal.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpdec_formats.h"
 #include "libavutil/avstring.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/parseutils.h"

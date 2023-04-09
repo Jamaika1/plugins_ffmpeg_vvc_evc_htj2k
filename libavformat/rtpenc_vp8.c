@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "rtpenc.h"
+#include "libavformat/rtpenc.h"
 
 /* Based on a draft spec for VP8 RTP.
  * ( http://tools.ietf.org/html/draft-ietf-payload-vp8-05 ) */

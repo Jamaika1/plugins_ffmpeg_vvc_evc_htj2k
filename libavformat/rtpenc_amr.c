@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "rtpenc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rtpenc.h"
 
 /**
  * Packetize AMR frames into RTP packets according to RFC 3267,

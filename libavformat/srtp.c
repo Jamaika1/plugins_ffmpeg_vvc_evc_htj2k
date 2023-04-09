@@ -24,9 +24,9 @@
 #include "libavutil/hmac.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
-#include "rtp.h"
-#include "rtpdec.h"
-#include "srtp.h"
+#include "libavformat/rtp.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/srtp.h"
 
 void ff_srtp_free(struct SRTPContext *s)
 {

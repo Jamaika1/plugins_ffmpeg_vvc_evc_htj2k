@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/base64.h"
@@ -33,27 +33,27 @@
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
 #include "libavcodec/codec_desc.h"
-#include "avformat.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
 
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
-#include "http.h"
-#include "rtsp.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
+#include "libavformat/http.h"
+#include "libavformat/rtsp.h"
 
-#include "rtpdec.h"
-#include "rtpproto.h"
-#include "rdt.h"
-#include "rtpdec_formats.h"
-#include "rtpenc_chain.h"
-#include "url.h"
-#include "rtpenc.h"
-#include "mpegts.h"
-#include "version.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpproto.h"
+#include "libavformat/rdt.h"
+#include "libavformat/rtpdec_formats.h"
+#include "libavformat/rtpenc_chain.h"
+#include "libavformat/url.h"
+#include "libavformat/rtpenc.h"
+#include "libavformat/mpegts.h"
+#include "libavformat/version.h"
 
 /* Default timeout values for read packet in seconds  */
 #define READ_PACKET_TIMEOUT_S 10

@@ -21,9 +21,9 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avformat.h"
-#include "avio.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/internal.h"
 
 typedef struct SMUSHContext {
     int version;

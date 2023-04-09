@@ -29,8 +29,8 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avio_internal.h"
-#include "rtpdec.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpdec.h"
 
 struct PayloadContext {
     AVIOContext *data;

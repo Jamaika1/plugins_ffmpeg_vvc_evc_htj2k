@@ -27,17 +27,17 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "rtp.h"
-#include "rtpproto.h"
-#include "url.h"
-#include "ip.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtp.h"
+#include "libavformat/rtpproto.h"
+#include "libavformat/url.h"
+#include "libavformat/ip.h"
 
 #include <stdarg.h>
-#include "internal.h"
-#include "network.h"
-#include "os_support.h"
+#include "libavformat/internal.h"
+#include "libavformat/network.h"
+#include "libavformat/os_support.h"
 #include <fcntl.h>
 #if HAVE_POLL_H
 #include <poll.h>

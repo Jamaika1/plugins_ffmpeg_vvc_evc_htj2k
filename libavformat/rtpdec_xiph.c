@@ -33,10 +33,10 @@
 #include "libavutil/base64.h"
 #include "libavcodec/bytestream.h"
 
-#include "avio_internal.h"
-#include "internal.h"
-#include "rtpdec.h"
-#include "rtpdec_formats.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpdec_formats.h"
 
 /**
  * RTP/Xiph specific private data.

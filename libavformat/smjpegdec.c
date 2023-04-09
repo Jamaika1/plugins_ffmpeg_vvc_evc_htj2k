@@ -26,10 +26,10 @@
 
 #include <inttypes.h>
 
-#include "avformat.h"
-#include "internal.h"
-#include "riff.h"
-#include "smjpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
+#include "libavformat/smjpeg.h"
 
 typedef struct SMJPEGContext {
     int audio_stream_index;

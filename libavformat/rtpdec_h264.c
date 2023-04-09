@@ -37,10 +37,10 @@
 #include "libavutil/base64.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avstring.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
-#include "rtpdec.h"
-#include "rtpdec_formats.h"
+#include "libavformat/rtpdec.h"
+#include "libavformat/rtpdec_formats.h"
 
 struct PayloadContext {
     // sdp setup parameters

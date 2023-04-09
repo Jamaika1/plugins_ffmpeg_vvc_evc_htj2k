@@ -28,12 +28,12 @@
 #include "libavutil/base64.h"
 #include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
-#include "rtpdec_formats.h"
-#include "rtsp.h"
-#include "asf.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/rtpdec_formats.h"
+#include "libavformat/rtsp.h"
+#include "libavformat/asf.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 /**
  * From MSDN 2.2.1.4, we learn that ASF data packets over RTP should not

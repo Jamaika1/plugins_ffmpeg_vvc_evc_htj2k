@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/attributes.h"
-#include "mpegts.h"
-#include "rtpdec_formats.h"
+#include "libavformat/mpegts.h"
+#include "libavformat/rtpdec_formats.h"
 
 struct PayloadContext {
     struct MpegTSContext *ts;

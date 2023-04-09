@@ -28,9 +28,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 
 #define FILM_TAG MKBETAG('F', 'I', 'L', 'M')
 #define FDSC_TAG MKBETAG('F', 'D', 'S', 'C')

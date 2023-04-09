@@ -23,8 +23,8 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
-#include "internal.h"
-#include "avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avformat.h"
 
 #define SER_MAGIC "LUCAM-RECORDER"
 

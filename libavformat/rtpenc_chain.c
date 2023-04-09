@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "avio_internal.h"
-#include "rtpenc_chain.h"
-#include "rtp.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rtpenc_chain.h"
+#include "libavformat/rtp.h"
 #include "libavutil/opt.h"
 
 int ff_rtp_chain_mux_open(AVFormatContext **out, AVFormatContext *s,

@@ -21,9 +21,9 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
-#include "rtp.h"
+#include "libavformat/rtp.h"
 
 /* from http://www.iana.org/assignments/rtp-parameters last updated 05 January 2005 */
 /* payload types >= 96 are dynamic;
