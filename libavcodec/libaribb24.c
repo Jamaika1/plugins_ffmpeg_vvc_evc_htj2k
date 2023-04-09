@@ -20,7 +20,7 @@
  */
 
 #include "avcodec.h"
-#include "ass.h"
+#include "libavcodec/ass.h"
 #include "codec_internal.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
@@ -291,6 +291,7 @@ next_region:
         av_log(avctx, AV_LOG_DEBUG, "Styled ASS line: %s\n",
                buf.str);
 
+        sub->format = 1; /* text */
         ret = ff_ass_add_rect(sub, buf.str, b24->read_order++,
                               0, NULL, NULL);
     }
