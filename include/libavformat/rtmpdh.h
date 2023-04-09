@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if CONFIG_GMP
 #include <gmp.h>
