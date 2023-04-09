@@ -30,8 +30,8 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/rational.h"
 
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 typedef struct MvContext {
     int nb_video_tracks;

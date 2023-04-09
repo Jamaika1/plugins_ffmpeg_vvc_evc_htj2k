@@ -19,8 +19,8 @@
  */
 
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define HEADER_SIZE         24
 

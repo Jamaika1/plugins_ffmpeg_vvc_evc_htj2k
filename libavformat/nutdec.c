@@ -28,11 +28,11 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/tree.h"
 #include "libavcodec/bytestream.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "isom.h"
-#include "nut.h"
-#include "riff.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/isom.h"
+#include "libavformat/nut.h"
+#include "libavformat/riff.h"
 
 #define NUT_MAX_STREAMS 256    /* arbitrary sanity check value */
 

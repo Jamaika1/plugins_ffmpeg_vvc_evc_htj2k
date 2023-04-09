@@ -23,11 +23,11 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/intfloat.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "internal.h"
-#include "riff.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/riff.h"
 
 static const AVCodecTag nuv_audio_tags[] = {
     { AV_CODEC_ID_PCM_S16LE, MKTAG('R', 'A', 'W', 'A') },

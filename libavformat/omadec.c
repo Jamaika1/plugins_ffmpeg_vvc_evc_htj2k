@@ -43,14 +43,14 @@
 #include <inttypes.h>
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/des.h"
 #include "libavutil/mathematics.h"
-#include "oma.h"
-#include "pcm.h"
-#include "id3v2.h"
+#include "libavformat/oma.h"
+#include "libavformat/pcm.h"
+#include "libavformat/id3v2.h"
 
 
 static const uint64_t leaf_table[] = {

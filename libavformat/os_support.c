@@ -24,9 +24,9 @@
 #define _DEFAULT_SOURCE
 #define _SVID_SOURCE
 
-#include "config.h"
-#include "avformat.h"
-#include "os_support.h"
+#include "libavutil/config.h"
+#include "libavformat/avformat.h"
+#include "libavformat/os_support.h"
 
 #if CONFIG_NETWORK
 #include <fcntl.h>
@@ -41,7 +41,7 @@
 #endif /* HAVE_WINSOCK2_H */
 #endif /* !HAVE_POLL_H */
 
-#include "network.h"
+#include "libavformat/network.h"
 
 #if !HAVE_GETADDRINFO
 #if !HAVE_INET_ATON

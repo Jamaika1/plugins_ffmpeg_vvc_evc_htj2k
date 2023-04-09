@@ -20,11 +20,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "rawenc.h"
-#include "riff.h"
-#include "rso.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/rawenc.h"
+#include "libavformat/riff.h"
+#include "libavformat/rso.h"
 
 static int rso_write_header(AVFormatContext *s)
 {
@@ -91,15 +92,15 @@ static int rso_write_trailer(AVFormatContext *s)
     return 0;
 }
 
-const AVOutputFormat ff_rso_muxer = {
-    .name           =   "rso",
-    .long_name      =   NULL_IF_CONFIG_SMALL("Lego Mindstorms RSO"),
-    .extensions     =   "rso",
-    .audio_codec    =   AV_CODEC_ID_PCM_U8,
-    .video_codec    =   AV_CODEC_ID_NONE,
+const FFOutputFormat ff_rso_muxer = {
+    .p.name         =   "rso",
+    .p.long_name    =   NULL_IF_CONFIG_SMALL("Lego Mindstorms RSO"),
+    .p.extensions   =   "rso",
+    .p.audio_codec  =   AV_CODEC_ID_PCM_U8,
+    .p.video_codec  =   AV_CODEC_ID_NONE,
     .write_header   =   rso_write_header,
     .write_packet   =   ff_raw_write_packet,
     .write_trailer  =   rso_write_trailer,
-    .codec_tag      =   ff_rso_codec_tags_list,
-    .flags          =   AVFMT_NOTIMESTAMPS,
+    .p.codec_tag    =   ff_rso_codec_tags_list,
+    .p.flags        =   AVFMT_NOTIMESTAMPS,
 };

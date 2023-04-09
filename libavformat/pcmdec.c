@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "internal.h"
-#include "pcm.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/pcm.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/avassert.h"

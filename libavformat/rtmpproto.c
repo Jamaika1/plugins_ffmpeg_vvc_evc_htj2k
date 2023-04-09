@@ -24,7 +24,7 @@
  * RTMP protocol
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavcodec/bytestream.h"
 #include "libavutil/avstring.h"
@@ -34,17 +34,17 @@
 #include "libavutil/md5.h"
 #include "libavutil/opt.h"
 #include "libavutil/random_seed.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
-#include "network.h"
+#include "libavformat/network.h"
 
-#include "flv.h"
-#include "rtmp.h"
-#include "rtmpcrypt.h"
-#include "rtmppkt.h"
-#include "url.h"
-#include "version.h"
+#include "libavformat/flv.h"
+#include "libavformat/rtmp.h"
+#include "libavformat/rtmpcrypt.h"
+#include "libavformat/rtmppkt.h"
+#include "libavformat/url.h"
+#include "libavformat/version.h"
 
 #if CONFIG_ZLIB
 #include <zlib.h>

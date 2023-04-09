@@ -23,8 +23,8 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/mathematics.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #include "libavutil/dict.h"
 #include "libavutil/intreadwrite.h"
 

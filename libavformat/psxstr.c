@@ -32,8 +32,8 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define RIFF_TAG MKTAG('R', 'I', 'F', 'F')
 #define CDXA_TAG MKTAG('C', 'D', 'X', 'A')

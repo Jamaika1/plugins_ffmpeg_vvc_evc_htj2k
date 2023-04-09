@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "mpeg.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/mpeg.h"
 
 #define PVA_MAX_PAYLOAD_LENGTH  0x17f8
 #define PVA_VIDEO_PAYLOAD       0x01

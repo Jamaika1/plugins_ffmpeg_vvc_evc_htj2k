@@ -20,7 +20,7 @@
 #include "libavutil/log.h"
 #include "libavutil/mem.h"
 
-#include "url.h"
+#include "libavformat/url.h"
 
 extern const URLProtocol ff_async_protocol;
 extern const URLProtocol ff_bluray_protocol;

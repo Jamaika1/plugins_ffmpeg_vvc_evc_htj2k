@@ -21,9 +21,9 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avformat.h"
-#include "internal.h"
-#include "oggdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/oggdec.h"
 
 #define VP8_HEADER_SIZE 26
 

@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/imgutils.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
-#include "internal.h"
-#include "avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avformat.h"
 
 typedef struct RawVideoDemuxerContext {
     const AVClass *class;     /**< Class for private options. */

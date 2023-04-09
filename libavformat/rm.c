@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "rm.h"
+#include "libavformat/rm.h"
 
 const char * const ff_rm_metadata[4] = {
     "title",

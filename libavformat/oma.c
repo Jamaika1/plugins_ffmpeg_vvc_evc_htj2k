@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 #include "libavcodec/codec_id.h"
-#include "internal.h"
-#include "oma.h"
+#include "libavformat/internal.h"
+#include "libavformat/oma.h"
 
 const uint16_t ff_oma_srate_tab[8] = { 320, 441, 480, 882, 960, 0 };
 

@@ -31,11 +31,11 @@
 #include <stdio.h>
 #include "libavutil/avassert.h"
 #include "libavutil/intreadwrite.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "oggdec.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/oggdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define MAX_PAGE_SIZE 65307
 #define DECODER_BUFFER_SIZE MAX_PAGE_SIZE

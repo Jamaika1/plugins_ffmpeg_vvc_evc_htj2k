@@ -25,8 +25,8 @@
 #include <stdint.h>
 
 #include "libavcodec/codec_id.h"
-#include "avio.h"
-#include "qtpalette.h"
+#include "libavformat/avio.h"
+#include "libavformat/qtpalette.h"
 
 static const uint8_t qt_default_palette_2[2 * 3] = {
   0xFF, 0xFF, 0xFF,

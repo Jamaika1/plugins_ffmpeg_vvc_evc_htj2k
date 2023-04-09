@@ -19,9 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "rso.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/rso.h"
 
 const AVCodecTag ff_codec_rso_tags[] = {
     { AV_CODEC_ID_PCM_U8,          0x0100 },

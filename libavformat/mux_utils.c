@@ -25,10 +25,10 @@
 #include "libavutil/log.h"
 #include "libavutil/mem.h"
 #include "libavutil/parseutils.h"
-#include "avformat.h"
-#include "avio.h"
-#include "internal.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
 
 #if FF_API_GET_END_PTS
 int64_t av_stream_get_end_pts(const AVStream *st)
@@ -45,14 +45,13 @@ int avformat_query_codec(const AVOutputFormat *ofmt, enum AVCodecID codec_id,
 {
     if (ofmt) {
         unsigned int codec_tag;
-        if (ofmt->query_codec)
-            return ofmt->query_codec(codec_id, std_compliance);
+        if (ffofmt(ofmt)->query_codec)
+            return ffofmt(ofmt)->query_codec(codec_id, std_compliance);
         else if (ofmt->codec_tag)
             return !!av_codec_get_tag2(ofmt->codec_tag, codec_id, &codec_tag);
         else if (codec_id == ofmt->video_codec ||
                  codec_id == ofmt->audio_codec ||
-                 codec_id == ofmt->subtitle_codec ||
-                 codec_id == ofmt->data_codec)
+                 codec_id == ofmt->subtitle_codec)
             return 1;
     }
     return AVERROR_PATCHWELCOME;

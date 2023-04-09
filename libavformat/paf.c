@@ -21,8 +21,8 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavcodec/paf.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 
 #define MAGIC "Packed Animation File V1.0\n(c) 1992-96 Amazing Studio\x0a\x1a"
 

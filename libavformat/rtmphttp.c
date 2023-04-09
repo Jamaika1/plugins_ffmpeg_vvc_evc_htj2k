@@ -28,9 +28,9 @@
 #include "libavutil/intfloat.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
-#include "internal.h"
-#include "http.h"
-#include "rtmp.h"
+#include "libavformat/internal.h"
+#include "libavformat/http.h"
+#include "libavformat/rtmp.h"
 
 #define RTMPT_DEFAULT_PORT 80
 #define RTMPTS_DEFAULT_PORT RTMPS_DEFAULT_PORT

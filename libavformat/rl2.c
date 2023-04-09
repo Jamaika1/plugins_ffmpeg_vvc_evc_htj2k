@@ -36,9 +36,9 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 #define EXTRADATA1_SIZE (6 + 256 * 3) ///< video base, clr, palette
 
