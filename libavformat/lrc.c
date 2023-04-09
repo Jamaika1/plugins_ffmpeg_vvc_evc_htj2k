@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "metadata.h"
-#include "lrc.h"
+#include "libavformat/metadata.h"
+#include "libavformat/lrc.h"
 
 const AVMetadataConv ff_lrc_metadata_conv[] = {
     {"ti", "title"},

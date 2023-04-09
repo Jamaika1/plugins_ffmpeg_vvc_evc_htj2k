@@ -22,9 +22,9 @@
  */
 
 #include "libavcodec/codec_id.h"
-#include "avformat.h"
-#include "internal.h"
-#include "isom.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
 
 const AVCodecTag ff_codec_movvideo_tags[] = {
 /*  { AV_CODEC_ID_, MKTAG('I', 'V', '5', '0') }, *//* Indeo 5.0 */
@@ -325,8 +325,6 @@ const AVCodecTag ff_codec_movaudio_tags[] = {
     { AV_CODEC_ID_PCM_S16LE,       MKTAG('s', 'o', 'w', 't') },
     { AV_CODEC_ID_PCM_S16BE,       MKTAG('l', 'p', 'c', 'm') },
     { AV_CODEC_ID_PCM_S16LE,       MKTAG('l', 'p', 'c', 'm') },
-    { AV_CODEC_ID_PCM_S16BE,       MKTAG('i', 'p', 'c', 'm') },
-    { AV_CODEC_ID_PCM_S16LE,       MKTAG('i', 'p', 'c', 'm') },
     { AV_CODEC_ID_PCM_S24BE,       MKTAG('i', 'n', '2', '4') },
     { AV_CODEC_ID_PCM_S24LE,       MKTAG('i', 'n', '2', '4') },
     { AV_CODEC_ID_PCM_S32BE,       MKTAG('i', 'n', '3', '2') },

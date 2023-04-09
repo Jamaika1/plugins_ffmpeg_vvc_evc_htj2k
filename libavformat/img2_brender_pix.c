@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "img2.h"
+#include "libavformat/img2.h"
 #include "libavutil/intreadwrite.h"
 
 static int brender_read_probe(const AVProbeData *p)

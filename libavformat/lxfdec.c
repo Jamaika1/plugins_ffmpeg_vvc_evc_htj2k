@@ -23,9 +23,9 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 #define LXF_MAX_PACKET_HEADER_SIZE 256
 #define LXF_HEADER_DATA_SIZE    120

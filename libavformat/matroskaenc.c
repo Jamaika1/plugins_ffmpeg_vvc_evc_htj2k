@@ -21,26 +21,26 @@
 
 #include <stdint.h>
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "av1.h"
-#include "avc.h"
-#include "hevc.h"
-#include "evc.h"
-#include "vvc.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "avlanguage.h"
-#include "dovi_isom.h"
-#include "flacenc.h"
-#include "internal.h"
-#include "isom.h"
-#include "matroska.h"
-#include "mux.h"
-#include "riff.h"
-#include "version.h"
-#include "vorbiscomment.h"
-#include "wv.h"
+#include "libavformat/av1.h"
+#include "libavformat/avc.h"
+#include "libavformat/hevc.h"
+#include "libavformat/evc.h"
+#include "libavformat/vvc.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/avlanguage.h"
+#include "libavformat/dovi_isom.h"
+#include "libavformat/flacenc.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/matroska.h"
+#include "libavformat/mux.h"
+#include "libavformat/riff.h"
+#include "libavformat/version.h"
+#include "libavformat/vorbiscomment.h"
+#include "libavformat/wv.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/channel_layout.h"
@@ -60,6 +60,7 @@
 #include "libavutil/stereo3d.h"
 
 #include "libavcodec/av1.h"
+#include "libavcodec/avcodec.h"
 #include "libavcodec/codec_desc.h"
 #include "libavcodec/xiph.h"
 #include "libavcodec/mpeg4audio.h"
@@ -1150,6 +1151,27 @@ static int mkv_assemble_native_codecprivate(AVFormatContext *s, AVIOContext *dyn
         else
             *size_to_reserve = MAX_PCE_SIZE;
         break;
+    case AV_CODEC_ID_ARIB_CAPTION: {
+        unsigned stream_identifier, data_component_id;
+        switch (par->profile) {
+        case FF_PROFILE_ARIB_PROFILE_A:
+            stream_identifier = 0x30;
+            data_component_id = 0x0008;
+            break;
+        case FF_PROFILE_ARIB_PROFILE_C:
+            stream_identifier = 0x87;
+            data_component_id = 0x0012;
+            break;
+        default:
+            av_log(s, AV_LOG_ERROR,
+                   "Unset/unknown ARIB caption profile %d utilized!\n",
+                   par->profile);
+            return AVERROR_INVALIDDATA;
+        }
+        avio_w8(dyn_cp, stream_identifier);
+        avio_wb16(dyn_cp, data_component_id);
+        break;
+    }
 #endif
     default:
         if (CONFIG_MATROSKA_MUXER && par->codec_id == AV_CODEC_ID_PRORES &&
@@ -3185,12 +3207,8 @@ static int mkv_init(struct AVFormatContext *s)
             break;
         case AV_CODEC_ID_H264:
         case AV_CODEC_ID_HEVC:
-        //case AV_CODEC_ID_VVC:
-        //case AV_CODEC_ID_EVC:
             if ((par->codec_id == AV_CODEC_ID_H264 && par->extradata_size > 0 ||
                  par->codec_id == AV_CODEC_ID_HEVC && par->extradata_size > 6) &&
-                 //par->codec_id == AV_CODEC_ID_VVC && par->extradata_size > 6 ||
-                 //par->codec_id == AV_CODEC_ID_EVC && par->extradata_size > 6) &&
                 (AV_RB24(par->extradata) == 1 || AV_RB32(par->extradata) == 1))
                 track->reformat = mkv_reformat_h2645;
             break;
@@ -3286,6 +3304,7 @@ static const AVCodecTag additional_subtitle_tags[] = {
     { AV_CODEC_ID_DVB_SUBTITLE,      0xFFFFFFFF },
     { AV_CODEC_ID_DVD_SUBTITLE,      0xFFFFFFFF },
     { AV_CODEC_ID_HDMV_PGS_SUBTITLE, 0xFFFFFFFF },
+    { AV_CODEC_ID_ARIB_CAPTION,      0xFFFFFFFF },
     { AV_CODEC_ID_NONE,              0xFFFFFFFF }
 };
 
@@ -3333,31 +3352,31 @@ static int mkv_query_codec(enum AVCodecID codec_id, int std_compliance)
     return 0;
 }
 
-const AVOutputFormat ff_matroska_muxer = {
-    .name              = "matroska",
-    .long_name         = NULL_IF_CONFIG_SMALL("Matroska"),
-    .mime_type         = "video/x-matroska",
-    .extensions        = "mkv",
+const FFOutputFormat ff_matroska_muxer = {
+    .p.name            = "matroska",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("Matroska"),
+    .p.mime_type       = "video/x-matroska",
+    .p.extensions      = "mkv",
     .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CONFIG_LIBVORBIS_ENCODER ?
+    .p.audio_codec     = CONFIG_LIBVORBIS_ENCODER ?
                          AV_CODEC_ID_VORBIS : AV_CODEC_ID_AC3,
-    .video_codec       = CONFIG_LIBX264_ENCODER ?
+    .p.video_codec     = CONFIG_LIBX264_ENCODER ?
                          AV_CODEC_ID_H264 : AV_CODEC_ID_MPEG4,
     .init              = mkv_init,
     .deinit            = mkv_deinit,
     .write_header      = mkv_write_header,
     .write_packet      = mkv_write_flush_packet,
     .write_trailer     = mkv_write_trailer,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
+    .p.flags           = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
                          AVFMT_TS_NONSTRICT | AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){
+    .p.codec_tag       = (const AVCodecTag* const []){
          ff_codec_bmp_tags, ff_codec_wav_tags,
          additional_audio_tags, additional_video_tags, additional_subtitle_tags, 0
     },
-    .subtitle_codec    = AV_CODEC_ID_ASS,
+    .p.subtitle_codec  = AV_CODEC_ID_ASS,
     .query_codec       = mkv_query_codec,
     .check_bitstream   = mkv_check_bitstream,
-    .priv_class        = &matroska_webm_class,
+    .p.priv_class      = &matroska_webm_class,
 };
 #endif
 
@@ -3371,15 +3390,15 @@ static int webm_query_codec(enum AVCodecID codec_id, int std_compliance)
     return 0;
 }
 
-const AVOutputFormat ff_webm_muxer = {
-    .name              = "webm",
-    .long_name         = NULL_IF_CONFIG_SMALL("WebM"),
-    .mime_type         = "video/webm",
-    .extensions        = "webm",
+const FFOutputFormat ff_webm_muxer = {
+    .p.name            = "webm",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("WebM"),
+    .p.mime_type       = "video/webm",
+    .p.extensions      = "webm",
     .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CONFIG_LIBOPUS_ENCODER ? AV_CODEC_ID_OPUS : AV_CODEC_ID_VORBIS,
-    .video_codec       = CONFIG_LIBVPX_VP9_ENCODER? AV_CODEC_ID_VP9 : AV_CODEC_ID_VP8,
-    .subtitle_codec    = AV_CODEC_ID_WEBVTT,
+    .p.audio_codec     = CONFIG_LIBOPUS_ENCODER ? AV_CODEC_ID_OPUS : AV_CODEC_ID_VORBIS,
+    .p.video_codec     = CONFIG_LIBVPX_VP9_ENCODER? AV_CODEC_ID_VP9 : AV_CODEC_ID_VP8,
+    .p.subtitle_codec  = AV_CODEC_ID_WEBVTT,
     .init              = mkv_init,
     .deinit            = mkv_deinit,
     .write_header      = mkv_write_header,
@@ -3387,33 +3406,33 @@ const AVOutputFormat ff_webm_muxer = {
     .write_trailer     = mkv_write_trailer,
     .query_codec       = webm_query_codec,
     .check_bitstream   = mkv_check_bitstream,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
+    .p.flags           = AVFMT_GLOBALHEADER | AVFMT_VARIABLE_FPS |
                          AVFMT_TS_NONSTRICT | AVFMT_ALLOW_FLUSH,
-    .priv_class        = &matroska_webm_class,
+    .p.priv_class      = &matroska_webm_class,
 };
 #endif
 
 #if CONFIG_MATROSKA_AUDIO_MUXER
-const AVOutputFormat ff_matroska_audio_muxer = {
-    .name              = "matroska",
-    .long_name         = NULL_IF_CONFIG_SMALL("Matroska Audio"),
-    .mime_type         = "audio/x-matroska",
-    .extensions        = "mka",
+const FFOutputFormat ff_matroska_audio_muxer = {
+    .p.name            = "matroska",
+    .p.long_name       = NULL_IF_CONFIG_SMALL("Matroska Audio"),
+    .p.mime_type       = "audio/x-matroska",
+    .p.extensions      = "mka",
     .priv_data_size    = sizeof(MatroskaMuxContext),
-    .audio_codec       = CONFIG_LIBVORBIS_ENCODER ?
+    .p.audio_codec     = CONFIG_LIBVORBIS_ENCODER ?
                          AV_CODEC_ID_VORBIS : AV_CODEC_ID_AC3,
-    .video_codec       = AV_CODEC_ID_NONE,
+    .p.video_codec     = AV_CODEC_ID_NONE,
     .init              = mkv_init,
     .deinit            = mkv_deinit,
     .write_header      = mkv_write_header,
     .write_packet      = mkv_write_flush_packet,
     .write_trailer     = mkv_write_trailer,
     .check_bitstream   = mkv_check_bitstream,
-    .flags             = AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT |
+    .p.flags           = AVFMT_GLOBALHEADER | AVFMT_TS_NONSTRICT |
                          AVFMT_ALLOW_FLUSH,
-    .codec_tag         = (const AVCodecTag* const []){
+    .p.codec_tag       = (const AVCodecTag* const []){
         ff_codec_wav_tags, additional_audio_tags, 0
     },
-    .priv_class        = &matroska_webm_class,
+    .p.priv_class      = &matroska_webm_class,
 };
 #endif

@@ -23,10 +23,10 @@
 #include "libavutil/md5.h"
 #include "libavutil/mem.h"
 #include "libavutil/error.h"
-#include "avformat.h"
-#include "avio.h"
-#include "internal.h"
-#include "url.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/internal.h"
+#include "libavformat/url.h"
 
 struct MD5Context {
     struct AVMD5 *md5;

@@ -71,9 +71,9 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
 
 #define HUFFMAN_TABLE_SIZE (64 * 1024)
 #define IDCIN_FPS 14

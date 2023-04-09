@@ -17,9 +17,9 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "avformat.h"
-#include "internal.h"
-#include "mux.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
 #include "libavutil/intreadwrite.h"
 
 typedef struct IVFEncContext {
@@ -122,16 +122,16 @@ static const AVCodecTag codec_ivf_tags[] = {
     { AV_CODEC_ID_NONE, 0 }
 };
 
-const AVOutputFormat ff_ivf_muxer = {
+const FFOutputFormat ff_ivf_muxer = {
+    .p.name         = "ivf",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("On2 IVF"),
+    .p.extensions   = "ivf",
+    .p.audio_codec  = AV_CODEC_ID_NONE,
+    .p.video_codec  = AV_CODEC_ID_VP8,
+    .p.codec_tag    = (const AVCodecTag* const []){ codec_ivf_tags, 0 },
     .priv_data_size = sizeof(IVFEncContext),
-    .name         = "ivf",
-    .long_name    = NULL_IF_CONFIG_SMALL("On2 IVF"),
-    .extensions   = "ivf",
-    .audio_codec  = AV_CODEC_ID_NONE,
-    .video_codec  = AV_CODEC_ID_VP8,
     .init         = ivf_init,
     .write_header = ivf_write_header,
     .write_packet = ivf_write_packet,
     .write_trailer = ivf_write_trailer,
-    .codec_tag    = (const AVCodecTag* const []){ codec_ivf_tags, 0 },
 };

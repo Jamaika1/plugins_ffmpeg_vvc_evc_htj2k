@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "avio_internal.h"
-#include "isom.h"
-#include "movenc.h"
-#include "movenc_ttml.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/movenc.h"
+#include "libavformat/movenc_ttml.h"
 #include "libavcodec/packet_internal.h"
 
 static const unsigned char empty_ttml_document[] =

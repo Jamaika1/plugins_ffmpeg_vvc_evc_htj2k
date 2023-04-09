@@ -20,8 +20,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 static int mjpeg2000_probe(const AVProbeData *p)
 {

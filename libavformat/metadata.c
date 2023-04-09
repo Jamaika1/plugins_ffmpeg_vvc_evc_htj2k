@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "metadata.h"
+#include "libavformat/avformat.h"
+#include "libavformat/metadata.h"
 #include "libavutil/dict.h"
 #include "libavutil/avstring.h"
 

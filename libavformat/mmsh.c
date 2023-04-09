@@ -29,10 +29,10 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "internal.h"
-#include "mms.h"
-#include "http.h"
-#include "url.h"
+#include "libavformat/internal.h"
+#include "libavformat/mms.h"
+#include "libavformat/http.h"
+#include "libavformat/url.h"
 
 #define CHUNK_HEADER_LENGTH 4   // 2bytes chunk type and 2bytes chunk length.
 #define EXT_HEADER_LENGTH   8   // 4bytes sequence, 2bytes useless and 2bytes chunk length.

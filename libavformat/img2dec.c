@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
@@ -32,15 +32,15 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavcodec/gif.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "img2.h"
-#include "jpegxl_probe.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/img2.h"
+#include "libavformat/jpegxl_probe.h"
 #include "libavcodec/mjpeg.h"
 #include "libavcodec/vbn.h"
 #include "libavcodec/xwd.h"
-#include "subtitles.h"
+#include "libavformat/subtitles.h"
 
 #if HAVE_GLOB
 /* Locally define as 0 (bitwise-OR no-op) any missing glob options that
@@ -964,8 +964,13 @@ static int svg_probe(const AVProbeData *p)
 {
     const uint8_t *b = p->buf;
     const uint8_t *end = p->buf + p->buf_size;
-
-    if (memcmp(p->buf, "<?xml", 5))
+    while (b < end && av_isspace(*b))
+        b++;
+    if (b >= end - 5)
+        return 0;
+    if (!memcmp(b, "<svg", 4))
+        return AVPROBE_SCORE_EXTENSION + 1;
+    if (memcmp(p->buf, "<?xml", 5) && memcmp(b, "<!--", 4))
         return 0;
     while (b < end) {
         int inc = ff_subtitles_next_line(b);

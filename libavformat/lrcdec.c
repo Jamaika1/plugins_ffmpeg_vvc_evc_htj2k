@@ -23,11 +23,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "avformat.h"
-#include "internal.h"
-#include "lrc.h"
-#include "metadata.h"
-#include "subtitles.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/lrc.h"
+#include "libavformat/metadata.h"
+#include "libavformat/subtitles.h"
 #include "libavutil/bprint.h"
 #include "libavutil/dict.h"
 

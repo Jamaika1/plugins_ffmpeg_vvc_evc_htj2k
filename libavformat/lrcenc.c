@@ -23,12 +23,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "avformat.h"
-#include "internal.h"
-#include "lrc.h"
-#include "metadata.h"
-#include "mux.h"
-#include "version.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/lrc.h"
+#include "libavformat/metadata.h"
+#include "libavformat/mux.h"
+#include "libavformat/version.h"
 #include "libavutil/dict.h"
 #include "libavutil/log.h"
 #include "libavutil/macros.h"
@@ -125,14 +125,14 @@ static int lrc_write_packet(AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
-const AVOutputFormat ff_lrc_muxer = {
-    .name           = "lrc",
-    .long_name      = NULL_IF_CONFIG_SMALL("LRC lyrics"),
-    .extensions     = "lrc",
+const FFOutputFormat ff_lrc_muxer = {
+    .p.name           = "lrc",
+    .p.long_name      = NULL_IF_CONFIG_SMALL("LRC lyrics"),
+    .p.extensions     = "lrc",
+    .p.flags          = AVFMT_VARIABLE_FPS | AVFMT_GLOBALHEADER |
+                        AVFMT_TS_NEGATIVE | AVFMT_TS_NONSTRICT,
+    .p.subtitle_codec = AV_CODEC_ID_SUBRIP,
     .priv_data_size = 0,
     .write_header   = lrc_write_header,
     .write_packet   = lrc_write_packet,
-    .flags          = AVFMT_VARIABLE_FPS | AVFMT_GLOBALHEADER |
-                      AVFMT_TS_NEGATIVE | AVFMT_TS_NONSTRICT,
-    .subtitle_codec = AV_CODEC_ID_SUBRIP
 };

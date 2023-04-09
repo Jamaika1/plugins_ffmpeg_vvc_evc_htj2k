@@ -22,9 +22,9 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/dict_internal.h"
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
 
 typedef struct IFVContext {
     uint32_t next_video_index;

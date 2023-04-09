@@ -19,16 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "avio_internal.h"
-#include "internal.h"
-#include "pcm.h"
-#include "rawenc.h"
-#include "riff.h"
-#include "version.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/internal.h"
+#include "libavformat/mux.h"
+#include "libavformat/pcm.h"
+#include "libavformat/rawenc.h"
+#include "libavformat/riff.h"
+#include "libavformat/version.h"
 
 typedef struct MMFContext {
     int64_t atrpos, atsqpos, awapos;
@@ -309,14 +310,14 @@ const AVInputFormat ff_mmf_demuxer = {
 #endif
 
 #if CONFIG_MMF_MUXER
-const AVOutputFormat ff_mmf_muxer = {
-    .name           = "mmf",
-    .long_name      = NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
-    .mime_type      = "application/vnd.smaf",
-    .extensions     = "mmf",
+const FFOutputFormat ff_mmf_muxer = {
+    .p.name         = "mmf",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Yamaha SMAF"),
+    .p.mime_type    = "application/vnd.smaf",
+    .p.extensions   = "mmf",
     .priv_data_size = sizeof(MMFContext),
-    .audio_codec    = AV_CODEC_ID_ADPCM_YAMAHA,
-    .video_codec    = AV_CODEC_ID_NONE,
+    .p.audio_codec  = AV_CODEC_ID_ADPCM_YAMAHA,
+    .p.video_codec  = AV_CODEC_ID_NONE,
     .write_header   = mmf_write_header,
     .write_packet   = ff_raw_write_packet,
     .write_trailer  = mmf_write_trailer,

@@ -24,8 +24,8 @@
 #include "libavutil/getenv_utf8.h"
 #include "libavutil/opt.h"
 #include <sys/stat.h>
-#include "os_support.h"
-#include "url.h"
+#include "libavformat/os_support.h"
+#include "libavformat/url.h"
 
 // Define the posix PATH_MAX if not there already.
 // This fixes a compile issue for MSVC.

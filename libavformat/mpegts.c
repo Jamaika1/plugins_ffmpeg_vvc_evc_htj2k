@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/buffer.h"
 #include "libavutil/common.h"
@@ -36,15 +36,15 @@
 #include "libavcodec/bytestream.h"
 #include "libavcodec/get_bits.h"
 #include "libavcodec/opus.h"
-#include "avformat.h"
-#include "mpegts.h"
-#include "internal.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "mpeg.h"
-#include "isom.h"
+#include "libavformat/avformat.h"
+#include "libavformat/mpegts.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/mpeg.h"
+#include "libavformat/isom.h"
 #if CONFIG_ICONV
-#include "../libavcodec/librsvg/libiconv/iconv.h"
+#include <iconv.h>
 #endif
 
 /* maximum size in which we look for synchronization if
@@ -868,6 +868,7 @@ static const StreamType REGD_types[] = {
     { MKTAG('H', 'E', 'V', 'C'), AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_HEVC  },
     { MKTAG('V', 'V', 'C', ' '), AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_VVC   },
     { MKTAG('K', 'L', 'V', 'A'), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_SMPTE_KLV },
+    { MKTAG('V', 'A', 'N', 'C'), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_SMPTE_2038 },
     { MKTAG('I', 'D', '3', ' '), AVMEDIA_TYPE_DATA,  AV_CODEC_ID_TIMED_ID3 },
     { MKTAG('V', 'C', '-', '1'), AVMEDIA_TYPE_VIDEO, AV_CODEC_ID_VC1   },
     { MKTAG('O', 'p', 'u', 's'), AVMEDIA_TYPE_AUDIO, AV_CODEC_ID_OPUS  },
@@ -2177,8 +2178,12 @@ int ff_parse_mpeg2_descriptor(AVFormatContext *fc, AVStream *st, int stream_type
 
             st->codecpar->codec_type = AVMEDIA_TYPE_SUBTITLE;
             st->codecpar->codec_id   = AV_CODEC_ID_ARIB_CAPTION;
-            st->codecpar->profile    = picked_profile;
+            if (st->codecpar->profile != picked_profile) {
+                st->codecpar->profile = picked_profile;
+                sti->need_context_update = 1;
+            }
             sti->request_probe = 0;
+            sti->need_parsing = 0;
         }
         break;
     case 0xb0: /* DOVI video stream descriptor */

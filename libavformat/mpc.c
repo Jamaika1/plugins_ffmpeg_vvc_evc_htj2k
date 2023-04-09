@@ -21,11 +21,11 @@
 
 #include "libavutil/channel_layout.h"
 
-#include "avformat.h"
-#include "demux.h"
-#include "internal.h"
-#include "apetag.h"
-#include "id3v1.h"
+#include "libavformat/avformat.h"
+#include "libavformat/demux.h"
+#include "libavformat/internal.h"
+#include "libavformat/apetag.h"
+#include "libavformat/id3v1.h"
 #include "libavutil/dict.h"
 
 #define MPC_FRAMESIZE  1152

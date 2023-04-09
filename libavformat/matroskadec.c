@@ -28,8 +28,8 @@
  * @see specs available on the Matroska project page: http://www.matroska.org/
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -50,22 +50,23 @@
 #include "libavutil/time_internal.h"
 #include "libavutil/spherical.h"
 
+#include "libavcodec/avcodec.h"
 #include "libavcodec/bytestream.h"
 #include "libavcodec/flac.h"
 #include "libavcodec/mpeg4audio.h"
 #include "libavcodec/packet_internal.h"
 
-#include "avformat.h"
-#include "avio_internal.h"
-#include "demux.h"
-#include "dovi_isom.h"
-#include "internal.h"
-#include "isom.h"
-#include "matroska.h"
-#include "oggdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
+#include "libavformat/dovi_isom.h"
+#include "libavformat/internal.h"
+#include "libavformat/isom.h"
+#include "libavformat/matroska.h"
+#include "libavformat/oggdec.h"
 /* For ff_codec_get_id(). */
-#include "riff.h"
-#include "rmsipr.h"
+#include "libavformat/riff.h"
+#include "libavformat/rmsipr.h"
 
 #if CONFIG_BZLIB
 #include <bzlib.h>
@@ -74,7 +75,7 @@
 #include <zlib.h>
 #endif
 
-#include "qtpalette.h"
+#include "libavformat/qtpalette.h"
 
 #define EBML_UNKNOWN_LENGTH  UINT64_MAX /* EBML unknown length, in uint64_t */
 #define NEEDS_CHECKING                2 /* Indicates that some error checks
@@ -2812,6 +2813,35 @@ static int matroska_parse_tracks(AVFormatContext *s)
         } else if (codec_id == AV_CODEC_ID_VP9 && track->codec_priv.size) {
             /* we don't need any value stored in CodecPrivate.
                make sure that it's not exported as extradata. */
+            track->codec_priv.size = 0;
+        } else if (codec_id == AV_CODEC_ID_ARIB_CAPTION && track->codec_priv.size == 3) {
+            int component_tag = track->codec_priv.data[0];
+            int data_component_id = AV_RB16(track->codec_priv.data + 1);
+
+            switch (data_component_id) {
+            case 0x0008:
+                // [0x30..0x37] are component tags utilized for
+                // non-mobile captioning service ("profile A").
+                if (component_tag >= 0x30 && component_tag <= 0x37) {
+                    st->codecpar->profile = FF_PROFILE_ARIB_PROFILE_A;
+                }
+                break;
+            case 0x0012:
+                // component tag 0x87 signifies a mobile/partial reception
+                // (1seg) captioning service ("profile C").
+                if (component_tag == 0x87) {
+                    st->codecpar->profile = FF_PROFILE_ARIB_PROFILE_C;
+                }
+                break;
+            default:
+                break;
+            }
+
+            if (st->codecpar->profile == FF_PROFILE_UNKNOWN)
+                av_log(matroska->ctx, AV_LOG_WARNING,
+                       "Unknown ARIB caption profile utilized: %02x / %04x\n",
+                       component_tag, data_component_id);
+
             track->codec_priv.size = 0;
         }
         track->codec_priv.size -= extradata_offset;

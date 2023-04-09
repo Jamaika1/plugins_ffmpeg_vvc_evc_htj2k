@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/rawdec.h"
 
 #define VOS_STARTCODE        0x1B0
 #define USER_DATA_STARTCODE  0x1B2

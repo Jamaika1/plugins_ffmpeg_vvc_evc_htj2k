@@ -21,7 +21,7 @@
 
 #include "libavutil/stereo3d.h"
 
-#include "matroska.h"
+#include "libavformat/matroska.h"
 
 /* If you add a tag here that is not in ff_codec_bmp_tags[]
    or ff_codec_wav_tags[], add it also to additional_audio_tags[]
@@ -76,6 +76,7 @@ const CodecTags ff_mkv_codec_tags[]={
     {"S_DVBSUB"         , AV_CODEC_ID_DVB_SUBTITLE},
     {"S_HDMV/PGS"       , AV_CODEC_ID_HDMV_PGS_SUBTITLE},
     {"S_HDMV/TEXTST"    , AV_CODEC_ID_HDMV_TEXT_SUBTITLE},
+    {"S_ARIBSUB"        , AV_CODEC_ID_ARIB_CAPTION},
 
     {"V_AV1"            , AV_CODEC_ID_AV1},
     {"V_AVS2"           , AV_CODEC_ID_AVS2},

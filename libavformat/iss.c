@@ -27,8 +27,8 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "avformat.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
 #include "libavutil/avstring.h"
 
 #define ISS_SIG "IMA_ADPCM_Sound"

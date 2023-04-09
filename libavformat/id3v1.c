@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "id3v1.h"
+#include "libavformat/id3v1.h"
 #include "libavutil/dict.h"
 
 /* See Genre List at http://id3.org/id3v2.3.0 */

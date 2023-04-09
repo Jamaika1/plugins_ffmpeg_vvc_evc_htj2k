@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "avio.h"
-#include "isom.h"
+#include "libavformat/avformat.h"
+#include "libavformat/avio.h"
+#include "libavformat/isom.h"
 
 int ff_mov_read_esds(AVFormatContext *fc, AVIOContext *pb)
 {

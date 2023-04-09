@@ -35,9 +35,9 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/dict.h"
 #include "libavcodec/bytestream.h"
-#include "avformat.h"
-#include "id3v2.h"
-#include "internal.h"
+#include "libavformat/avformat.h"
+#include "libavformat/id3v2.h"
+#include "libavformat/internal.h"
 
 #define ID_8SVX       MKTAG('8','S','V','X')
 #define ID_16SV       MKTAG('1','6','S','V')

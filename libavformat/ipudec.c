@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avformat.h"
-#include "internal.h"
-#include "avio_internal.h"
-#include "rawdec.h"
+#include "libavformat/avformat.h"
+#include "libavformat/internal.h"
+#include "libavformat/avio_internal.h"
+#include "libavformat/rawdec.h"
 
 #include "libavutil/intreadwrite.h"
 
