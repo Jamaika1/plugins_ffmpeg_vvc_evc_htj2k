@@ -33,6 +33,7 @@
 
 #include "libavcodec/ac3dec.h"
 #include "libavcodec/codec_internal.h"
+#include "libavcodec/profiles.h"
 #include "extra/eac3dec.c"
 #include "extra/ac3dec.c"
 
@@ -92,6 +93,7 @@ const FFCodec ff_eac3_decoder = {
     .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLTP,
                                                       AV_SAMPLE_FMT_NONE },
     .p.priv_class   = &ac3_eac3_decoder_class,
+    .p.profiles     = NULL_IF_CONFIG_SMALL(ff_eac3_profiles),
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };
 #endif
