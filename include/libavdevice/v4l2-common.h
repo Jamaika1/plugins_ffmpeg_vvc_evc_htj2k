@@ -20,7 +20,7 @@
 #define AVDEVICE_V4L2_COMMON_H
 
 #undef __STRICT_ANSI__ //workaround due to broken kernel headers
-#include "config.h"
+#include "libavutil/config.h"
 #include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
