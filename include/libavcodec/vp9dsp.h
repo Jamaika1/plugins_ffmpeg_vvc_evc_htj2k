@@ -27,7 +27,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "vp9.h"
+#include "libavcodec/vp9.h"
 #include "libavutil/attributes_internal.h"
 
 typedef void (*vp9_mc_func)(uint8_t *dst, ptrdiff_t dst_stride,

@@ -167,12 +167,12 @@ typedef struct VVCLFDSPContext {
 } VVCLFDSPContext;
 
 typedef struct VVCSAODSPContext {
-    void (*band_filter[9])(uint8_t *_dst, uint8_t *_src, ptrdiff_t _dst_stride, ptrdiff_t _src_stride,
-        int16_t *sao_offset_val, int sao_left_class, int width, int height);
+    void (*band_filter[9])(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _dst_stride, ptrdiff_t _src_stride,
+        const int16_t *sao_offset_val, int sao_left_class, int width, int height);
 
     /* implicit src_stride parameter has value of 2 * MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE */
-    void (*edge_filter[9])(uint8_t *_dst /* align 16 */, uint8_t *_src /* align 32 */, ptrdiff_t dst_stride,
-        int16_t *sao_offset_val, int sao_eo_class, int width, int height);
+    void (*edge_filter[9])(uint8_t *_dst /* align 16 */, const uint8_t *_src /* align 32 */, ptrdiff_t dst_stride,
+        const int16_t *sao_offset_val, int sao_eo_class, int width, int height);
 
     void (*edge_restore[2])(uint8_t *_dst, uint8_t *_src, ptrdiff_t _dst_stride, ptrdiff_t _src_stride,
         struct SAOParams *sao, int *borders, int _width, int _height, int c_idx,

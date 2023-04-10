@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "bytestream.h"
 
@@ -75,7 +75,7 @@ static av_always_inline unsigned int vpx_rac_renorm(VPXRangeCoder *c)
 #if   ARCH_ARM
 #include "arm/vpx_arith.h"
 #elif ARCH_X86
-#include "libavcodec/x86/vpx_arith.h"
+#include "x86/vpx_arith.h"
 #endif
 
 #ifndef vpx_rac_get_prob
