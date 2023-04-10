@@ -279,7 +279,7 @@ static void
 intpl_luma_block_ext_c(pel_t *dst, int i_dst, pel_t *src, int i_src, int width, int height, const int8_t *coeff_h, const int8_t *coeff_v)
 {
 #define TMP_STRIDE      64
-    
+
     const int shift1 = g_bit_depth - 8;
     const int add1   = (1 << shift1) >> 1;
     const int shift2 = 20 - g_bit_depth;
@@ -509,10 +509,10 @@ void mc_luma(davs2_t *h, pel_t *dst, int i_dst, int posx, int posy, int width, i
     UNUSED_PARAMETER(h);
     posx >>= 2;
     posy >>= 2;
-    
+
 
     p_fref += posy * i_fref + posx;
-    
+
     if (dx == 0 && dy == 0) {
         gf_davs2.copy_pp[PART_INDEX(width, height)](dst, i_dst, p_fref, i_fref);
     } else if (dx == 0) {
@@ -673,7 +673,7 @@ void davs2_mc_init(uint32_t cpuid, ao_funcs_t *pf)
     pf->intpl_chroma_ext[1] = intpl_chroma_block_ext_c;
 
     /* init asm function handles */
-#if HAVE_MMX
+#if HAVE_MMX && ARCH_X86_64 /* only 64-bit asm for now */
     if (cpuid & DAVS2_CPU_SSE42) {
 #if HIGH_BIT_DEPTH
         //10bit assemble
@@ -712,12 +712,12 @@ void davs2_mc_init(uint32_t cpuid, ao_funcs_t *pf)
         //pf->intpl_chroma_ver[0] = intpl_chroma_block_ver_sse128;
         pf->intpl_chroma_hor[0] = intpl_chroma_block_hor_sse128;
         pf->intpl_chroma_ext[0] = intpl_chroma_block_ext_sse128;
-        
+
         pf->intpl_luma_hor[1][0] = intpl_luma_block_hor_sse128;
         pf->intpl_luma_hor[1][1] = intpl_luma_block_hor_sse128;
         pf->intpl_luma_hor[1][2] = intpl_luma_block_hor_sse128;
         pf->intpl_luma_ext[1] = intpl_luma_block_ext_sse128;
-        
+
         //pf->intpl_chroma_ver[1] = intpl_chroma_block_ver_sse128;
         pf->intpl_chroma_hor[1] = intpl_chroma_block_hor_sse128;
         pf->intpl_chroma_ext[1] = intpl_chroma_block_ext_sse128;
@@ -737,7 +737,7 @@ void davs2_mc_init(uint32_t cpuid, ao_funcs_t *pf)
         pf->intpl_luma_ver[1][2] = intpl_luma_block_ver2_sse128;
 #endif
     }
-    
+
     if (cpuid & DAVS2_CPU_AVX2) {
 #if !HIGH_BIT_DEPTH
         pf->intpl_luma_hor[1][0] = intpl_luma_block_hor_avx2;

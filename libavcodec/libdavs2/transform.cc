@@ -957,11 +957,14 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
 #if HAVE_MMX
     /* functions defined in file intrinsic_dct.c */
     if (cpuid & DAVS2_CPU_SSE2) {
+#if ARCH_X86_64
         fh->inv_transform_4x4_2nd = inv_transform_4x4_2nd_sse128;
         fh->inv_transform_2nd     = inv_transform_2nd_sse128;
+#endif
 
         for (i = 0; i < DCT_PATTERN_NUM; i++) {
             fh->idct[PART_4x4  ][i] = idct_4x4_sse128;
+#if ARCH_X86_64
             fh->idct[PART_8x8  ][i] = idct_8x8_sse128;
             fh->idct[PART_16x16][i] = idct_16x16_sse128;
             fh->idct[PART_32x32][i] = idct_32x32_sse128;
@@ -973,6 +976,7 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
             fh->idct[PART_8x32][i] = idct_8x32_sse128;
             fh->idct[PART_16x4][i] = idct_16x4_sse128;
             fh->idct[PART_32x8][i] = idct_32x8_sse128;
+#endif
 
 #if !HIGH_BIT_DEPTH
             fh->idct[PART_4x4 ][i] = FPFX(idct_4x4_sse2);
@@ -993,6 +997,7 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
         }
     }
 
+#if ARCH_X86_64
     /* TODO: 初始化非默认DCT模板 */
     if (cpuid & DAVS2_CPU_SSE2) {
         /* square */
@@ -1020,7 +1025,7 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
         fh->idct[PART_64x16][DCT_QUAD] = idct_64x16_quad_sse128;
     }
 
-#if ARCH_X86_64 && defined(__AVX2__)
+#if defined(__AVX2__)
     if (cpuid & DAVS2_CPU_AVX2) {
         fh->idct[PART_8x8  ][DCT_DEAULT]   = idct_8x8_avx2;
         fh->idct[PART_16x16][DCT_DEAULT] = idct_16x16_avx2;
@@ -1053,6 +1058,7 @@ void davs2_dct_init(uint32_t cpuid, ao_funcs_t *fh)
         // fh->idct[PART_64x16][DCT_HALF] = idct_64x16_half_avx2;
         // fh->idct[PART_64x16][DCT_QUAD] = idct_64x16_quad_avx2;
     }
+#endif  // if __AVX2__
 #endif  // if ARCH_X86_X64
 #endif  // if HAVE_MMX
 }

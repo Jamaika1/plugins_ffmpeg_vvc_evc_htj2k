@@ -65,6 +65,7 @@ void davs2_memory_init(uint32_t cpuid, ao_funcs_t* pf)
         pf->memzero_aligned = davs2_fast_memzero_mmx;
     }
 
+#if ARCH_X86_64
     if (cpuid & DAVS2_CPU_SSE) {
         // pf->memcpy_aligned  = davs2_memcpy_aligned_sse;
         // pf->memzero_aligned = davs2_memzero_aligned_sse;
@@ -78,5 +79,6 @@ void davs2_memory_init(uint32_t cpuid, ao_funcs_t* pf)
     if (cpuid & DAVS2_CPU_AVX2) {
         pf->memzero_aligned = davs2_memzero_aligned_c_avx;
     }
+#endif // ARCH_X86_64
 #endif // HAVE_MMX
 }

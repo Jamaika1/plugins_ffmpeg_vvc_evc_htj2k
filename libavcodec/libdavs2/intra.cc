@@ -2219,7 +2219,7 @@ static void intra_pred_ang_xy_23_c(pel_t *src, pel_t *dst, int i_dst, int dir_mo
  * fill reference samples for intra prediction
  * LCU内在上边界的PU
  */
-static 
+static
 void fill_reference_samples_0_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP, pel_t *EP, uint32_t i_avai, int bsx, int bsy)
 {
     int num_padding = 0;
@@ -2284,7 +2284,7 @@ void fill_reference_samples_0_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP,
  * fill reference samples for intra prediction
  * LCU内在上边界的PU
  */
-static 
+static
 void fill_reference_samples_x_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP, pel_t *EP, uint32_t i_avai, int bsx, int bsy)
 {
     const pel_t *pL = pTL + i_TL;
@@ -2361,7 +2361,7 @@ void fill_reference_samples_x_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP,
  * fill reference samples for intra prediction
  * LCU内在左边界上的PU
  */
-static 
+static
 void fill_reference_samples_y_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP, pel_t *EP, uint32_t i_avai, int bsx, int bsy)
 {
     const pel_t *pT = pTL + 1;
@@ -2427,7 +2427,7 @@ void fill_reference_samples_y_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP,
  * fill reference samples for intra prediction
  * LCU内不在边界上的PU
  */
-static 
+static
 void fill_reference_samples_xy_c(const pel_t *pTL, int i_TL, const pel_t *pLcuEP, pel_t *EP, uint32_t i_avai, int bsx, int bsy)
 {
     const pel_t *pT = pTL + 1;
@@ -2631,7 +2631,7 @@ void davs2_intra_pred_init(uint32_t cpuid, ao_funcs_t *pf)
     ipred[INTRA_ANG_Y_31]  = intra_pred_ang_y_31_c;
     ipred[INTRA_ANG_Y_32]  = intra_pred_ang_y_32_c;
 
-#if HAVE_MMX
+#if HAVE_MMX && ARCH_X86_64 /* only 64-bit asm for now */
     if (cpuid & DAVS2_CPU_SSE4) {
 #if !HIGH_BIT_DEPTH
         ipred[DC_PRED   ] = intra_pred_dc_sse128;
@@ -2671,6 +2671,12 @@ void davs2_intra_pred_init(uint32_t cpuid, ao_funcs_t *pf)
         pf->fill_edge_f[1]      = fill_edge_samples_x_sse128;
         pf->fill_edge_f[2]      = fill_edge_samples_y_sse128;
         pf->fill_edge_f[3]      = fill_edge_samples_xy_sse128;
+#else
+        ipred[DC_PRED] = intra_pred_dc_sse128_10bit;
+        ipred[PLANE_PRED] = intra_pred_plane_sse128_10bit;
+        ipred[BI_PRED] = intra_pred_bilinear_sse128_10bit;
+        ipred[HOR_PRED] = intra_pred_hor_sse128_10bit;
+        ipred[VERT_PRED] = intra_pred_ver_sse128_10bit;
 #endif
     }
 

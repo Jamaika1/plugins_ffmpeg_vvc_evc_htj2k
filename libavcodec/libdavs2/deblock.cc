@@ -123,7 +123,7 @@ static void lf_set_edge_filter_param(davs2_t *h, int i_level, int scu_x, int scu
 
         /* Is top border Slice border?
          * check edge condition, can not filter beyond frame/slice boundaries */
-        if (!h->seq_info.cross_loop_filter_flag && 
+        if (!h->seq_info.cross_loop_filter_flag &&
             h->scu_data[scu_xy].i_slice_nr != h->scu_data[scu_xy - h->i_width_in_scu].i_slice_nr) {
             return;
         }
@@ -561,13 +561,18 @@ void davs2_deblock_init(uint32_t cpuid, ao_funcs_t* fh)
     fh->set_deblock_const = NULL;
 
     /* init asm function handles */
-#if HAVE_MMX
+#if HAVE_MMX && ARCH_X86_64 /* only 64-bit asm for now */
     if ((cpuid & DAVS2_CPU_SSE4) && !HDR_CHROMA_DELTA_QP) {
 #if !HIGH_BIT_DEPTH
         fh->deblock_luma  [0] = deblock_edge_ver_sse128;
         fh->deblock_luma  [1] = deblock_edge_hor_sse128;
         fh->deblock_chroma[0] = deblock_edge_ver_c_sse128;
         fh->deblock_chroma[1] = deblock_edge_hor_c_sse128;
+#else
+        fh->deblock_luma[0] = deblock_edge_ver_sse128_10bit;
+        fh->deblock_luma[1] = deblock_edge_hor_sse128_10bit;
+        fh->deblock_chroma[0] = deblock_edge_ver_c_sse128_10bit;
+        fh->deblock_chroma[1] = deblock_edge_hor_c_sse128_10bit;
 #endif
     }
     if ((cpuid & DAVS2_CPU_AVX2) && !HDR_CHROMA_DELTA_QP) {
