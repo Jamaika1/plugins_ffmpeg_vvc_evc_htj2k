@@ -34,32 +34,28 @@
 #include "avcodec.h"
 #include "mqc.h"
 #include "jpeg2000dwt.h"
-#include "jpeg2000dsp.h"
-#include "bytestream.h"
 
 enum Jpeg2000Markers {
-  JPEG2000_SOC = 0xff4f, // start of codestream
-  JPEG2000_CAP = 0xff50, // Fixed information marker segments
-  JPEG2000_SIZ = 0xff51, // image and tile size
-  JPEG2000_COD = 0xff52, // coding style default
-  JPEG2000_COC = 0xff53, // coding style component
-  JPEG2000_TLM = 0xff55, // tile-part length, main header
-  JPEG2000_PLM = 0xff57, // packet length, main header
-  JPEG2000_PLT = 0xff58, // packet length, tile-part header
-  JPEG2000_CPF = 0xff59, // reversible transcoding of HT2K files to other code streams
-  JPEG2000_QCD = 0xff5c, // quantization default
-  JPEG2000_QCC = 0xff5d, // quantization component
-  JPEG2000_RGN = 0xff5e, // region of interest
-  JPEG2000_POC = 0xff5f, // progression order change
-  JPEG2000_PPM = 0xff60, // packed packet headers, main header
-  JPEG2000_PPT = 0xff61, // packed packet headers, tile-part header
-  JPEG2000_CRG = 0xff63, // component registration
-  JPEG2000_COM = 0xff64, // comment
-  JPEG2000_SOT = 0xff90, // start of tile-part
-  JPEG2000_SOP = 0xff91, // start of packet
-  JPEG2000_EPH = 0xff92, // end of packet header
-  JPEG2000_SOD = 0xff93, // start of data
-  JPEG2000_EOC = 0xffd9, // end of codestream
+    JPEG2000_SOC = 0xff4f, // start of codestream
+    JPEG2000_SIZ = 0xff51, // image and tile size
+    JPEG2000_COD,          // coding style default
+    JPEG2000_COC,          // coding style component
+    JPEG2000_TLM = 0xff55, // tile-part length, main header
+    JPEG2000_PLM = 0xff57, // packet length, main header
+    JPEG2000_PLT,          // packet length, tile-part header
+    JPEG2000_QCD = 0xff5c, // quantization default
+    JPEG2000_QCC,          // quantization component
+    JPEG2000_RGN,          // region of interest
+    JPEG2000_POC,          // progression order change
+    JPEG2000_PPM,          // packed packet headers, main header
+    JPEG2000_PPT,          // packed packet headers, tile-part header
+    JPEG2000_CRG = 0xff63, // component registration
+    JPEG2000_COM,          // comment
+    JPEG2000_SOT = 0xff90, // start of tile-part
+    JPEG2000_SOP,          // start of packet
+    JPEG2000_EPH,          // end of packet header
+    JPEG2000_SOD,          // start of data
+    JPEG2000_EOC = 0xffd9, // end of codestream
 };
 
 #define JPEG2000_SOP_FIXED_BYTES 0xFF910004
@@ -124,9 +120,6 @@ enum Jpeg2000Quantsty { // quantization style
 #define JPEG2000_PGOD_PCRL      0x03  // Position-component-resolution level-layer progression
 #define JPEG2000_PGOD_CPRL      0x04  // Component-position-resolution level-layer progression
 
-// misc constants
-#define JPEG2000_RSIZ_BIT  (1<<14)
-
 typedef struct Jpeg2000T1Context {
     int data[6144];
     uint16_t flags[6156];
@@ -183,7 +176,6 @@ typedef struct Jpeg2000Cblk {
     uint8_t npasses;
     uint8_t ninclpasses; // number coding of passes included in codestream
     uint8_t nonzerobits;
-    uint8_t zbp;        // Zero bit planes.
     uint8_t incl;
     uint16_t length;
     uint16_t *lengthinc;
@@ -197,7 +189,6 @@ typedef struct Jpeg2000Cblk {
     Jpeg2000Pass *passes;
     Jpeg2000Layer *layers;
     int coord[2][2]; // border coordinates {{x0, x1}, {y0, y1}}
-    int pass_lengths[2]; // Length of each pass
 } Jpeg2000Cblk; // code block
 
 typedef struct Jpeg2000Prec {
@@ -235,110 +226,6 @@ typedef struct Jpeg2000Component {
     int coord_o[2][2]; // border coordinates {{x0, x1}, {y0, y1}} -- original values from jpeg2000 headers
     uint8_t roi_shift; // ROI scaling value for the component
 } Jpeg2000Component;
-
-#define JP2_SIG_TYPE    0x6A502020
-#define JP2_SIG_VALUE   0x0D0A870A
-#define JP2_CODESTREAM  0x6A703263
-#define JP2_HEADER      0x6A703268
-
-#define HAD_COC 0x01
-#define HAD_QCC 0x02
-
-#define MAX_POCS 32
-
-typedef struct Jpeg2000POCEntry {
-  uint16_t LYEpoc;
-  uint16_t CSpoc;
-  uint16_t CEpoc;
-  uint8_t RSpoc;
-  uint8_t REpoc;
-  uint8_t Ppoc;
-} Jpeg2000POCEntry;
-
-typedef struct Jpeg2000POC {
-  Jpeg2000POCEntry poc[MAX_POCS];
-  int nb_poc;
-  int is_default;
-} Jpeg2000POC;
-
-typedef struct Jpeg2000TilePart {
-  uint8_t tile_index;                 // Tile index who refers the tile-part
-  const uint8_t *tp_end;
-  GetByteContext header_tpg;          // bit stream of header if PPM header is used
-  GetByteContext tpg;                 // bit stream in tile-part
-} Jpeg2000TilePart;
-
-/* RMK: For JPEG2000 DCINEMA 3 tile-parts in a tile
- * one per component, so tile_part elements have a size of 3 */
-typedef struct Jpeg2000Tile {
-  Jpeg2000Component   *comp;
-  uint8_t             properties[4];
-  Jpeg2000CodingStyle codsty[4];
-  Jpeg2000QuantStyle  qntsty[4];
-  Jpeg2000POC         poc;
-  Jpeg2000TilePart    tile_part[32];
-  uint8_t             has_ppt;                // whether this tile has a ppt marker
-  uint8_t             *packed_headers;        // contains packed headers. Used only along with PPT marker
-  int                 packed_headers_size;    // size in bytes of the packed headers
-  GetByteContext      packed_headers_stream;  // byte context corresponding to packed headers
-  uint16_t tp_idx;                    // Tile-part index
-  int coord[2][2];                    // border coordinates {{x0, x1}, {y0, y1}}
-} Jpeg2000DecTile;
-
-typedef struct Jpeg2000DecoderContext {
-  AVClass         *class;
-  AVCodecContext  *avctx;
-  GetByteContext  g;
-
-  int             width, height;
-  int             image_offset_x, image_offset_y;
-  int             tile_offset_x, tile_offset_y;
-  uint8_t         cbps[4];    // bits per sample in particular components
-  uint8_t         sgnd[4];    // if a component is signed
-  uint8_t         properties[4];
-
-  uint8_t         has_ppm;
-  uint8_t         *packed_headers; // contains packed headers. Used only along with PPM marker
-  int             packed_headers_size;
-  GetByteContext  packed_headers_stream;
-  uint8_t         in_tile_headers;
-
-  int             cdx[4], cdy[4];
-  int             precision;
-  int             ncomponents;
-  int             colour_space;
-  uint32_t        palette[256];
-  int8_t          pal8;
-  int             cdef[4];
-  int             tile_width, tile_height;
-  unsigned        numXtiles, numYtiles;
-  int             maxtilelen;
-  AVRational      sar;
-
-  Jpeg2000CodingStyle codsty[4];
-  Jpeg2000QuantStyle  qntsty[4];
-  Jpeg2000POC         poc;
-  uint8_t             roi_shift[4];
-
-  int             bit_index;
-
-  int             curtileno;
-
-  Jpeg2000DecTile    *tile;
-  Jpeg2000DSPContext dsp;
-
-  /*options parameters*/
-  int             reduction_factor;
-
-  /*Extended capabilities */
-  uint8_t  is_htj2k; // set to 1 to indicate image uses HTJ2K bitstream, 0 otherwise
-
-  uint32_t pcap;
-  uint16_t ccap[32];
-
-  uint16_t *pcpf; //Pcpf_i , found in CPF marker , see section A.6 of HTJ2K spec
-
-} Jpeg2000DecoderContext;
 
 /* misc tools */
 static inline int ff_jpeg2000_ceildivpow2(int a, int b)
