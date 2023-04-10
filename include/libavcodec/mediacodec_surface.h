@@ -23,7 +23,7 @@
 #ifndef AVCODEC_MEDIACODEC_SURFACE_H
 #define AVCODEC_MEDIACODEC_SURFACE_H
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 
 typedef struct FFANativeWindow {
     void *surface;

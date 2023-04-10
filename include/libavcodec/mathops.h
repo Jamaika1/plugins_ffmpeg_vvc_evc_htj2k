@@ -26,7 +26,7 @@
 
 #include "libavutil/attributes_internal.h"
 #include "libavutil/common.h"
-#include "config.h"
+#include "libavutil/config.h"
 
 #define MAX_NEG_CROP 1024
 
@@ -46,7 +46,7 @@ extern const uint8_t ff_zigzag_scan[16+1];
 #elif ARCH_PPC
 #   include "ppc/mathops.h"
 #elif ARCH_X86
-#   include "libavcodec/x86/mathops.h"
+#   include "x86/mathops.h"
 #endif
 
 /* generic implementation */

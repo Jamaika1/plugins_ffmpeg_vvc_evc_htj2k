@@ -22,7 +22,7 @@
 #if !defined(AVCODEC_RDFT_H) && (!defined(FFT_FLOAT) || FFT_FLOAT)
 #define AVCODEC_RDFT_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "fft.h"
 
 struct RDFTContext {

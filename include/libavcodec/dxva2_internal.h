@@ -25,7 +25,7 @@
 
 #define COBJMACROS
 
-#include "config.h"
+#include "libavutil/config.h"
 
 /* define the proper COM entries before forcing desktop APIs */
 #include <objbase.h>

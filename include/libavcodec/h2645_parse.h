@@ -62,7 +62,7 @@ typedef struct H2645NAL {
     int temporal_id;
 
     /*
-     * HEVC,VVC only, identifier of layer to which nal unit belongs
+     * HEVC only, identifier of layer to which nal unit belongs
      */
     int nuh_layer_id;
 

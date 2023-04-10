@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "avcodec.h"
 

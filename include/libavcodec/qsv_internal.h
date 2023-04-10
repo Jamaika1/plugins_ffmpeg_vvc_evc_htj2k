@@ -21,7 +21,7 @@
 #ifndef AVCODEC_QSV_INTERNAL_H
 #define AVCODEC_QSV_INTERNAL_H
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if CONFIG_VAAPI
 #define AVCODEC_QSV_LINUX_SESSION_HANDLE

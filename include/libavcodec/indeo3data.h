@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 /*
  * Define compressed VQ tables.

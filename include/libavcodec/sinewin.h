@@ -21,7 +21,7 @@
 #ifndef AVCODEC_SINEWIN_H
 #define AVCODEC_SINEWIN_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/mem_internal.h"
 
 #if CONFIG_HARDCODED_TABLES

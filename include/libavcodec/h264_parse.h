@@ -24,7 +24,7 @@
 #ifndef AVCODEC_H264_PARSE_H
 #define AVCODEC_H264_PARSE_H
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include <stdint.h>
 

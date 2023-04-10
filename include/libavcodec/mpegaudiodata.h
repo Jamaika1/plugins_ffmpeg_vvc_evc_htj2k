@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "vlc.h"
 
