@@ -31,7 +31,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if HAVE_BIGENDIAN
 #define B 3

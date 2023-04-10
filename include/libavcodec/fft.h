@@ -27,7 +27,7 @@
 #endif
 
 #include <stdint.h>
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/attributes_internal.h"
 #include "libavutil/mem_internal.h"

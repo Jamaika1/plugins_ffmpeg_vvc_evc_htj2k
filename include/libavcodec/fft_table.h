@@ -54,7 +54,7 @@
 #ifndef AVCODEC_FFT_TABLE_H
 #define AVCODEC_FFT_TABLE_H
 
-#include "fft.h"
+#include "libavcodec/fft.h"
 
 #define MAX_LOG2_NFFT 17 //!< Specifies maximum allowed fft size
 #define MAX_FFT_SIZE (1 << MAX_LOG2_NFFT)
