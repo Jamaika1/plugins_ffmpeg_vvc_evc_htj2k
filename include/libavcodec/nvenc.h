@@ -19,7 +19,7 @@
 #ifndef AVCODEC_NVENC_H
 #define AVCODEC_NVENC_H
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #if CONFIG_D3D11VA
 #define COBJMACROS
@@ -171,7 +171,7 @@ typedef struct NvencContext
     AVFifo *unused_surface_queue;
     AVFifo *output_surface_queue;
     AVFifo *output_surface_ready_queue;
-    AVFifo *timestamp_list;
+    AVFifo *reorder_queue;
 
     NV_ENC_SEI_PAYLOAD *sei_data;
     int sei_data_size;

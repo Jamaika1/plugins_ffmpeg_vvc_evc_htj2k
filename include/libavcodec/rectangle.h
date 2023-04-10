@@ -28,7 +28,7 @@
 #ifndef AVCODEC_RECTANGLE_H
 #define AVCODEC_RECTANGLE_H
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/common.h"
 #include "libavutil/avassert.h"
 

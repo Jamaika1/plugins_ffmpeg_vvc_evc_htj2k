@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
