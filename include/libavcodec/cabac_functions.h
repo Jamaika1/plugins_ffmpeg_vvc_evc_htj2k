@@ -33,7 +33,7 @@
 #include "libavutil/attributes.h"
 #include "libavutil/intmath.h"
 #include "cabac.h"
-#include "config.h"
+#include "libavutil/config.h"
 
 #ifndef UNCHECKED_BITSTREAM_READER
 #define UNCHECKED_BITSTREAM_READER !CONFIG_SAFE_BITSTREAM_READER
@@ -46,7 +46,7 @@
 #   include "arm/cabac.h"
 #endif
 #if ARCH_X86
-#   include "libavcodec/x86/cabac.h"
+#   include "x86/cabac.h"
 #endif
 #if ARCH_MIPS
 #   include "mips/cabac.h"

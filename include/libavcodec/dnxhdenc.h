@@ -26,7 +26,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/mem_internal.h"
 

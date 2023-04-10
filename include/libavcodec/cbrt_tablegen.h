@@ -27,7 +27,7 @@
 #include <math.h>
 #include "libavutil/attributes.h"
 #include "libavutil/intfloat.h"
-#include "aac_defines.h"
+#include "libavcodec/aac_defines.h"
 
 #if USE_FIXED
 #define CBRT(x) lrint((x) * 8192)

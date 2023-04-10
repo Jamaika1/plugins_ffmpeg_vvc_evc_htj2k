@@ -23,7 +23,7 @@
 
 #include "libavutil/attributes.h"
 #include "codec.h"
-#include "config.h"
+#include "libavutil/config.h"
 
 /**
  * The codec is not known to be init-threadsafe (i.e. it might be unsafe
@@ -80,6 +80,14 @@
  * Codec supports embedded ICC profiles (AV_FRAME_DATA_ICC_PROFILE).
  */
 #define FF_CODEC_CAP_ICC_PROFILES           (1 << 9)
+/**
+ * The encoder has AV_CODEC_CAP_DELAY set, but does not actually have delay - it
+ * only wants to be flushed at the end to update some context variables (e.g.
+ * 2pass stats) or produce a trailing packet. Besides that it immediately
+ * produces exactly one output packet per each input frame, just as no-delay
+ * encoders do.
+ */
+#define FF_CODEC_CAP_EOF_FLUSH              (1 << 10)
 
 /**
  * FFCodec.codec_tags termination value
