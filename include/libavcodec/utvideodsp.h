@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "libavutil/pixfmt.h"
-#include "config.h"
+#include "libavutil/config.h"
 
 typedef struct UTVideoDSPContext {
     void (*restore_rgb_planes)(uint8_t *src_r, uint8_t *src_g, uint8_t *src_b,

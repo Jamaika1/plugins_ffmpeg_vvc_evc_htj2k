@@ -36,7 +36,7 @@
 #define avpriv_request_sample(...)
 #include "tableprint.h"
 #include "vlc.h"
-#include "../libavutil/reverse.c"
+#include "libavutil/reverse.c"
 #include "vlc.c"
 
 // The following will have to be modified if VLCBaseType changes.
