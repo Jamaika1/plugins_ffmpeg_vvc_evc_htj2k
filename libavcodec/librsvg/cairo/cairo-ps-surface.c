@@ -148,7 +148,7 @@ static char *ctime_r(const time_t *timep, char *buf)
  * ury]" that specifies the bounding box (in PS coordinates) of the
  * EPS graphics. The parameters are: lower left x, lower left y, upper
  * right x, upper right y. Normally the bbox data is identical to the
- * %%%BoundingBox data in the EPS file.
+ * \%\%\%BoundingBox data in the EPS file.
  *
  **/
 

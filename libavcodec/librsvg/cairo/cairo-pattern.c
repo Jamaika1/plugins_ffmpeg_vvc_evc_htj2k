@@ -3439,9 +3439,10 @@ use_bilinear(double x, double y, double t)
 /**
  * _cairo_pattern_analyze_filter:
  * @pattern: surface pattern
- * Returns: the optimized #cairo_filter_t to use with @pattern.
  *
  * Possibly optimize the filter to a simpler value depending on transformation
+ *
+ * Returns: the optimized #cairo_filter_t to use with @pattern.
  **/
 cairo_filter_t
 _cairo_pattern_analyze_filter (const cairo_pattern_t *pattern)
