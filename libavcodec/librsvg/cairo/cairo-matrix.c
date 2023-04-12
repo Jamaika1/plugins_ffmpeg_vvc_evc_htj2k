@@ -373,14 +373,9 @@ _cairo_matrix_multiply (cairo_matrix_t *r,
  * the returned vector is as follows:
  *
  * <programlisting>
- * dx2 = dx1 * a + dy1 * c;
- * dy2 = dx1 * b + dy1 * d;
+ * dx_new = xx * dx + xy * dy;
+ * dy_new = yx * dx + yy * dy;
  * </programlisting>
- *
- * Affine transformations are position invariant, so the same vector
- * always transforms to the same vector. If (@x1,@y1) transforms
- * to (@x2,@y2) then (@x1+@dx1,@y1+@dy1) will transform to
- * (@x1+@dx2,@y1+@dy2) for all values of @x1 and @x2.
  *
  * Since: 1.0
  **/

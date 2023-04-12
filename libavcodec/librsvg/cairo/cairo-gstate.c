@@ -1748,7 +1748,7 @@ void
 _cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
 				const cairo_font_options_t *options)
 {
-    if (memcmp (options, &gstate->font_options, sizeof (cairo_font_options_t)) == 0)
+    if (_cairo_font_options_compare (options, &gstate->font_options))
 	return;
 
     _cairo_gstate_unset_scaled_font (gstate);

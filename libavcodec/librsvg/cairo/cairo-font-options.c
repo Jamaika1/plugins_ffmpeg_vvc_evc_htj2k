@@ -105,6 +105,41 @@ _cairo_font_options_init_copy (cairo_font_options_t		*options,
     }
 }
 
+cairo_bool_t
+_cairo_font_options_compare (const cairo_font_options_t	*a,
+                             const cairo_font_options_t	*b)
+{
+    if (a->antialias != b->antialias ||
+        a->subpixel_order != b->subpixel_order ||
+        a->lcd_filter != b->lcd_filter ||
+        a->hint_style != b->hint_style ||
+        a->hint_metrics != b->hint_metrics ||
+        a->round_glyph_positions != b->round_glyph_positions ||
+        a->color_mode != b->color_mode ||
+        a->palette_index != b->palette_index ||
+        a->custom_palette_size != b->custom_palette_size)
+    {
+        return FALSE;
+    }
+
+    if (a->variations && b->variations && strcmp (a->variations, b->variations) != 0)
+        return FALSE;
+    else if (a->variations != b->variations)
+        return FALSE;
+
+    if (a->custom_palette && b->custom_palette &&
+        memcmp (a->custom_palette, b->custom_palette, sizeof (cairo_palette_color_t) * a->custom_palette_size) != 0)
+    {
+        return FALSE;
+    }
+    else if (a->custom_palette != b->custom_palette)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 /**
  * cairo_font_options_create:
  *
@@ -662,7 +697,7 @@ cairo_font_options_get_variations (cairo_font_options_t *options)
 /**
  * cairo_font_options_set_color_mode:
  * @options: a #cairo_font_options_t
- * @font_color: the new color mode
+ * @color_mode: the new color mode
  *
  * Sets the color mode for the font options object. This controls
  * whether color fonts are to be rendered in color or as outlines.

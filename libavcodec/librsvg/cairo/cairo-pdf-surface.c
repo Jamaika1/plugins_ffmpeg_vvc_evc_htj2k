@@ -2556,7 +2556,7 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     cairo_pdf_surface_t *surface = abstract_surface;
     long long offset;
     cairo_pdf_resource_t catalog;
-    cairo_status_t status, status2;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS, status2;
     int size, i;
     cairo_pdf_jbig2_global_t *global;
     char *label;
