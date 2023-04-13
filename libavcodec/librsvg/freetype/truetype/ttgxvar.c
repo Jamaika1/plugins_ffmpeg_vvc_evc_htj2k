@@ -49,6 +49,7 @@
 #include <freetype/ttnameid.h>
 #include <freetype/ftmm.h>
 #include <freetype/ftlist.h>
+#include <freetype/internal/services/svmetric.h>
 
 #include "ttpload.h"
 #include "ttgxvar.h"
