@@ -1239,7 +1239,7 @@ static int parse_manifest(AVFormatContext *s, const char *url, AVIOContext *in)
         if (ret == 0)
             ret = AVERROR_INVALIDDATA;
     } else {
-        LIBXML_TEST_VERSION();
+        LIBXML_TEST_VERSION;
 
         doc = xmlReadMemory(buf.str, buf.len, c->base_url, NULL, 0);
         root_element = xmlDocGetRootElement(doc);
