@@ -41,6 +41,13 @@ XMLPUBVAR unsigned int xmlParserMaxDepth;
 #define XML_MAX_TEXT_LENGTH 10000000
 
 /**
+ * XML_MAX_HUGE_LENGTH:
+ *
+ * Maximum size allowed when XML_PARSE_HUGE is set.
+ */
+#define XML_MAX_HUGE_LENGTH 1000000000
+
+/**
  * XML_MAX_NAME_LENGTH:
  *
  * Maximum size allowed for a markup identifier.
@@ -132,7 +139,6 @@ XMLPUBVAR unsigned int xmlParserMaxDepth;
  *
  * [3] S ::= (#x20 | #x9 | #xD | #xA)+
  */
-#undef IS_BLANK /* [i_a] collision with xsldbg\src\libxsldbg\utils.h */
 #define IS_BLANK(c)  xmlIsBlankQ(c)
 
 /**
@@ -282,10 +288,9 @@ XMLPUBVAR unsigned int xmlParserMaxDepth;
 /**
  * Global variables used for predefined strings.
  */
-// [i_a] MSVC2010 in pedantic mode gives a warning for const globals which are not initialized; fixed to make sure these work across DLL/DLO boundaries, even for modern optimizing compilers.
-XMLPUBFUN const xmlChar *xmlStringText(void);
-XMLPUBFUN const xmlChar *xmlStringTextNoenc(void);
-XMLPUBFUN const xmlChar *xmlStringComment(void);
+XMLPUBVAR const xmlChar xmlStringText[];
+XMLPUBVAR const xmlChar xmlStringTextNoenc[];
+XMLPUBVAR const xmlChar xmlStringComment[];
 
 /*
  * Function to finish the work of the macros where needed.
@@ -577,6 +582,7 @@ XMLPUBFUN int			xmlCopyChar		(int len,
 						 xmlChar *out,
 						 int val);
 XMLPUBFUN void			xmlNextChar		(xmlParserCtxtPtr ctxt);
+XML_DEPRECATED
 XMLPUBFUN void			xmlParserInputShrink	(xmlParserInputPtr in);
 
 /*

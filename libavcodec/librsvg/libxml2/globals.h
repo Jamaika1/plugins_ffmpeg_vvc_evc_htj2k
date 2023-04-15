@@ -125,6 +125,7 @@ struct _xmlGlobalState
 
 	xmlSAXLocator xmlDefaultSAXLocator;
 	xmlSAXHandlerV1 xmlDefaultSAXHandler;
+	xmlSAXHandlerV1 docbDefaultSAXHandler; /* unused */
 	xmlSAXHandlerV1 htmlDefaultSAXHandler;
 
 	xmlFreeFunc xmlFree;
