@@ -365,8 +365,8 @@ xmlCtxtGenericNodeCheck(xmlDebugCtxtPtr ctxt, xmlNodePtr node) {
 	    xmlCtxtCheckName(ctxt, node->name);
 	    break;
         case XML_TEXT_NODE:
-	    if ((node->name == xmlStringText()) ||
-	        (node->name == xmlStringTextNoenc()))
+	    if ((node->name == xmlStringText) ||
+	        (node->name == xmlStringTextNoenc))
 		break;
 	    /* some case of entity substitution can lead to this */
 	    if ((ctxt->dict != NULL) &&
@@ -379,7 +379,7 @@ xmlCtxtGenericNodeCheck(xmlDebugCtxtPtr ctxt, xmlNodePtr node) {
 			 (const char *) node->name);
 	    break;
         case XML_COMMENT_NODE:
-	    if (node->name == xmlStringComment())
+	    if (node->name == xmlStringComment)
 		break;
 	    xmlDebugErr3(ctxt, XML_CHECK_WRONG_NAME,
 			 "Comment node has wrong name '%s'",
@@ -904,7 +904,7 @@ xmlCtxtDumpOneNode(xmlDebugCtxtPtr ctxt, xmlNodePtr node)
         case XML_TEXT_NODE:
             if (!ctxt->check) {
                 xmlCtxtDumpSpaces(ctxt);
-                if (node->name == xmlStringTextNoenc())
+                if (node->name == (const xmlChar *) xmlStringTextNoenc)
                     fprintf(ctxt->output, "TEXT no enc");
                 else
                     fprintf(ctxt->output, "TEXT");
@@ -1997,7 +1997,7 @@ xmlShellPrintXPathResult(xmlXPathObjectPtr list)
  */
 int
 xmlShellList(xmlShellCtxtPtr ctxt,
-             const char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
+             char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
              xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     xmlNodePtr cur;
@@ -2040,7 +2040,7 @@ xmlShellList(xmlShellCtxtPtr ctxt,
  */
 int
 xmlShellBase(xmlShellCtxtPtr ctxt,
-             const char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
+             char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
              xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     xmlChar *base;
@@ -2156,7 +2156,7 @@ xmlShellRegisterNamespace(xmlShellCtxtPtr ctxt, char *arg,
  * Returns 0 on success and a negative value otherwise.
  */
 static int
-xmlShellRegisterRootNamespaces(xmlShellCtxtPtr ctxt, const char *arg ATTRIBUTE_UNUSED,
+xmlShellRegisterRootNamespaces(xmlShellCtxtPtr ctxt, char *arg ATTRIBUTE_UNUSED,
       xmlNodePtr root, xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     xmlNsPtr ns;
@@ -2268,7 +2268,7 @@ xmlShellGrep(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
  */
 int
 xmlShellDir(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
-            const char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
+            char *arg ATTRIBUTE_UNUSED, xmlNodePtr node,
             xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     if (!ctxt)
@@ -2347,7 +2347,7 @@ xmlShellSetContent(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
  * Returns 0
  */
 static int
-xmlShellRNGValidate(xmlShellCtxtPtr sctxt, const char *schemas,
+xmlShellRNGValidate(xmlShellCtxtPtr sctxt, char *schemas,
             xmlNodePtr node ATTRIBUTE_UNUSED,
 	    xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
@@ -2397,7 +2397,7 @@ xmlShellRNGValidate(xmlShellCtxtPtr sctxt, const char *schemas,
  * Returns 0
  */
 int
-xmlShellCat(xmlShellCtxtPtr ctxt, const char *arg ATTRIBUTE_UNUSED,
+xmlShellCat(xmlShellCtxtPtr ctxt, char *arg ATTRIBUTE_UNUSED,
             xmlNodePtr node, xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     if (!ctxt)
@@ -2442,7 +2442,7 @@ xmlShellCat(xmlShellCtxtPtr ctxt, const char *arg ATTRIBUTE_UNUSED,
  * Returns 0 or -1 if loading failed
  */
 int
-xmlShellLoad(xmlShellCtxtPtr ctxt, const char *filename,
+xmlShellLoad(xmlShellCtxtPtr ctxt, char *filename,
              xmlNodePtr node ATTRIBUTE_UNUSED,
              xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
@@ -2498,7 +2498,7 @@ xmlShellLoad(xmlShellCtxtPtr ctxt, const char *filename,
  * Returns 0 or -1 in case of error
  */
 int
-xmlShellWrite(xmlShellCtxtPtr ctxt, const char *filename, xmlNodePtr node,
+xmlShellWrite(xmlShellCtxtPtr ctxt, char *filename, xmlNodePtr node,
               xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     if (node == NULL)
@@ -2565,7 +2565,7 @@ xmlShellWrite(xmlShellCtxtPtr ctxt, const char *filename, xmlNodePtr node,
  * Returns 0 or -1 in case of error
  */
 int
-xmlShellSave(xmlShellCtxtPtr ctxt, const char *filename,
+xmlShellSave(xmlShellCtxtPtr ctxt, char *filename,
              xmlNodePtr node ATTRIBUTE_UNUSED,
              xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
@@ -2627,7 +2627,7 @@ xmlShellSave(xmlShellCtxtPtr ctxt, const char *filename,
  * Returns 0 or -1 in case of error
  */
 int
-xmlShellValidate(xmlShellCtxtPtr ctxt, const char *dtd,
+xmlShellValidate(xmlShellCtxtPtr ctxt, char *dtd,
                  xmlNodePtr node ATTRIBUTE_UNUSED,
                  xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
@@ -2670,7 +2670,7 @@ xmlShellValidate(xmlShellCtxtPtr ctxt, const char *dtd,
  */
 int
 xmlShellDu(xmlShellCtxtPtr ctxt,
-	       const char *arg ATTRIBUTE_UNUSED, xmlNodePtr tree,
+           char *arg ATTRIBUTE_UNUSED, xmlNodePtr tree,
            xmlNodePtr node2 ATTRIBUTE_UNUSED)
 {
     xmlNodePtr node;
@@ -2793,7 +2793,7 @@ xmlShellPwd(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED, char *buffer,
  * using a environment similar to a UNIX commandline.
  */
 void
-xmlShell(xmlDocPtr doc, const char *filename, xmlShellReadlineFunc input,
+xmlShell(xmlDocPtr doc, char *filename, xmlShellReadlineFunc input,
          FILE * output)
 {
     char prompt[500] = "/ > ";

@@ -61,8 +61,6 @@
 #include "private/error.h"
 #include "private/io.h"
 
-#include "monolithic_examples.h"
-
 /* #define DEBUG_FTP 1  */
 #ifdef STANDALONE
 #ifndef DEBUG_FTP
@@ -2031,8 +2029,7 @@ xmlNanoFTPClose(void *ctx) {
     return(0);
 }
 
-#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
-
+#ifdef STANDALONE
 /************************************************************************
  *									*
  *			Basic test in Standalone mode			*
@@ -2055,15 +2052,10 @@ void ftpData(void *userData, const char *data, int len) {
     fwrite(data, len, 1, (FILE*)userData);
 }
 
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_nanoftp_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int main(int argc, char **argv) {
     void *ctxt;
     FILE *output;
-    const char *tstfile = NULL;
+    char *tstfile = NULL;
 
     xmlNanoFTPInit();
     if (argc > 1) {
@@ -2085,33 +2077,23 @@ int main(int argc, const char** argv) {
     xmlNanoFTPList(ctxt, ftpList, NULL, tstfile);
     output = fopen("/tmp/tstdata", "w");
     if (output != NULL) {
-		if (xmlNanoFTPGet(ctxt, ftpData, (void *) output, tstfile) < 0)
-			xmlGenericError(xmlGenericErrorContext,
-				"Failed to get file\n");
+	if (xmlNanoFTPGet(ctxt, ftpData, (void *) output, tstfile) < 0)
+	    xmlGenericError(xmlGenericErrorContext,
+		    "Failed to get file\n");
+
     }
     xmlNanoFTPClose(ctxt);
     xmlMemoryDump();
     exit(0);
 }
 #endif /* STANDALONE */
-
 #else /* !LIBXML_FTP_ENABLED */
-
-#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
-
+#ifdef STANDALONE
 #include <stdio.h>
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_nanoftp_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int main(int argc, char **argv) {
     xmlGenericError(xmlGenericErrorContext,
 	    "%s : FTP support not compiled in\n", argv[0]);
     return(0);
 }
-
 #endif /* STANDALONE */
-
 #endif /* LIBXML_FTP_ENABLED */
-

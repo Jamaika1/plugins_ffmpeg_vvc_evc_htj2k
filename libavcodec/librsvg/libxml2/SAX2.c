@@ -1632,12 +1632,15 @@ xmlSAX2StartElement(void *ctx, const xmlChar *fullname, const xmlChar **atts)
 	ctxt->validate = 0;
     }
 
-
-    /*
-     * Split the full name into a namespace prefix and the tag name
-     */
-    name = xmlSplitQName(ctxt, fullname, &prefix);
-
+    if (ctxt->html) {
+        prefix = NULL;
+        name = xmlStrdup(fullname);
+    } else {
+        /*
+         * Split the full name into a namespace prefix and the tag name
+         */
+        name = xmlSplitQName(ctxt, fullname, &prefix);
+    }
 
     /*
      * Note : the namespace resolution is deferred until the end of the
@@ -1914,7 +1917,7 @@ xmlSAX2TextNode(xmlParserCtxtPtr ctxt, const xmlChar *str, int len) {
 skip:
     ret->type = XML_TEXT_NODE;
 
-    ret->name = xmlStringText();
+    ret->name = xmlStringText;
     if (intern == NULL) {
 	ret->content = xmlStrndup(str, len);
 	if (ret->content == NULL) {
@@ -2596,7 +2599,7 @@ xmlSAX2Text(xmlParserCtxtPtr ctxt, const xmlChar *ch, int len,
 	int coalesceText = (lastChild != NULL) &&
 	    (lastChild->type == type) &&
 	    ((type != XML_TEXT_NODE) ||
-             (lastChild->name == xmlStringText()));
+             (lastChild->name == xmlStringText));
 	if ((coalesceText) && (ctxt->nodemem != 0)) {
 	    /*
 	     * The whole point of maintaining nodelen and nodemem,

@@ -26,8 +26,6 @@
 #include "parser.h"
 #include "globals.h"
 
-#include "monolithic_examples.h"
-
 #if defined(LIBXML_CATALOG_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
 static int shell = 0;
 static int sgml = 0;
@@ -38,7 +36,7 @@ static int del = 0;
 static int convert = 0;
 static int no_super_update = 0;
 static int verbose = 0;
-static const char *filename = NULL;
+static char *filename = NULL;
 
 
 #ifndef XML_SGML_DEFAULT_CATALOG
@@ -311,12 +309,7 @@ Usage : %s [options] catalogfile entities...\n\
 \t--no-super-update: do not update the SGML super catalog\n\
 \t-v --verbose : provide debug information\n");
 }
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_xmlcatalog_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int main(int argc, char **argv) {
     int i;
     int ret;
     int exit_value = 0;
@@ -327,7 +320,8 @@ int main(int argc, const char** argv) {
 	return(1);
     }
 
-	LIBXML_TEST_VERSION();
+    LIBXML_TEST_VERSION;
+
     for (i = 1; i < argc ; i++) {
 	if (!strcmp(argv[i], "-"))
 	    break;
@@ -609,12 +603,7 @@ int main(int argc, const char** argv) {
     return(exit_value);
 }
 #else
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_xmlcatalog_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
     fprintf(stderr, "libxml was not compiled with catalog and output support\n");
     return(1);
 }

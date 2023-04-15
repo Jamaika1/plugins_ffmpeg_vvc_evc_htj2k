@@ -26,8 +26,6 @@
 #include "xmlschemas.h"
 #include "xmlschemastypes.h"
 
-#include "monolithic_examples.h"
-
 #define LOGFILE "runsuite.log"
 static FILE *logfile = NULL;
 static int verbose = 0;
@@ -40,19 +38,9 @@ static int verbose = 0;
  ************************************************************************/
 
 static int checkTestFile(const char *filename) {
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-    struct _stat64 buf;
-#else
     struct stat buf;
-#endif
 
-    if (
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-        _stat64(filename, &buf)
-#else
-        stat(filename, &buf)
-#endif
-        == -1)
+    if (stat(filename, &buf) == -1)
         return(0);
 
 #if defined(_WIN32)
@@ -1040,12 +1028,8 @@ done:
  *									*
  ************************************************************************/
 
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_runsuite_tests_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int
+main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
     int ret = 0;
     int old_errors, old_tests, old_leaks;
 
@@ -1180,11 +1164,8 @@ int main(int argc, const char** argv) {
     return(ret);
 }
 #else /* !SCHEMAS */
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_runsuite_tests_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int
+main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
     fprintf(stderr, "runsuite requires support for schemas and xpath in libxml2\n");
 }
 #endif

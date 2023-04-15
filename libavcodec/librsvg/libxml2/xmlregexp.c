@@ -46,7 +46,7 @@
 #define MAX_PUSH 10000000
 
 #ifdef ERROR
-#undef ERROR /* [i_a] Win32 defines this one in winGDI.h :-( */
+#undef ERROR
 #endif
 #define ERROR(str)							\
     ctxt->error = XML_REGEXP_COMPILE_ERROR;				\
@@ -2892,8 +2892,7 @@ xmlRegCheckCharacterRange(xmlRegAtomType type, int codepoint, int neg,
 		   (codepoint == '_') || (codepoint == ':') ||
 		   IS_COMBINING(codepoint) || IS_EXTENDER(codepoint));
 	    break;
-#ifdef LIBXML_UNICODE_ENABLED
-		case XML_REGEXP_NOTDECIMAL:
+        case XML_REGEXP_NOTDECIMAL:
 	    neg = !neg;
             /* Falls through. */
         case XML_REGEXP_DECIMAL:
@@ -3019,68 +3018,9 @@ xmlRegCheckCharacterRange(xmlRegAtomType type, int codepoint, int neg,
 	    /* Seems it doesn't exist anymore in recent Unicode releases */
 	    ret = 0;
 	    break;
-		case XML_REGEXP_BLOCK_NAME:
-		ret = xmlUCSIsBlock(codepoint, (const char*)blockName);
-		break;
-#else
-		case XML_REGEXP_NOTDECIMAL:
-			neg = !neg;
-			/* Falls through. */
-		case XML_REGEXP_DECIMAL:
-			ret = isdigit(codepoint);
-			break;
-		case XML_REGEXP_REALCHAR:
-			neg = !neg;
-			/* Falls through. */
-		case XML_REGEXP_NOTREALCHAR:
-			ret = (codepoint < 0x20 || codepoint == 0x7F);
-			break;
-		case XML_REGEXP_LETTER:
-			ret = isalpha(codepoint);
-			break;
-		case XML_REGEXP_LETTER_UPPERCASE:
-			ret = (codepoint >= 'A' && codepoint <= 'Z');
-			break;
-		case XML_REGEXP_LETTER_LOWERCASE:
-			ret = (codepoint >= 'a' && codepoint <= 'z');
-			break;
-		case XML_REGEXP_LETTER_TITLECASE:
-			ret = (codepoint >= 'A' && codepoint <= 'Z');
-			break;
-		case XML_REGEXP_MARK:
-			ret = (codepoint > 0x20) && !isalpha(codepoint) && !isdigit(codepoint);
-			break;
-		case XML_REGEXP_NUMBER:
-			ret = isdigit(codepoint);
-			break;
-		case XML_REGEXP_NUMBER_DECIMAL:
-			ret = isdigit(codepoint);
-			break;
-		case XML_REGEXP_NUMBER_LETTER:
-			ret = isalpha(codepoint) || isdigit(codepoint);
-			break;
-		case XML_REGEXP_PUNCT:
-			ret = !!strchr("~!()[]{}|\\:;.,<>?/`'\"", codepoint);
-			break;
-		case XML_REGEXP_PUNCT_DASH:
-			ret = (codepoint == '-');
-			break;
-		case XML_REGEXP_PUNCT_OPEN:
-			ret = !!strchr("([{`'\"", codepoint);
-			break;
-		case XML_REGEXP_PUNCT_CLOSE:
-			ret = !!strchr(")]}`'\"", codepoint);
-			break;
-		case XML_REGEXP_PUNCT_INITQUOTE:
-			ret = !!strchr("`'\"", codepoint);
-			break;
-		case XML_REGEXP_PUNCT_FINQUOTE:
-			ret = !!strchr("`'\"", codepoint);
-			break;
-#endif
-		default:
-		ret = -1;
-		break;
+        case XML_REGEXP_BLOCK_NAME:
+	    ret = xmlUCSIsBlock(codepoint, (const char *) blockName);
+	    break;
     }
     if (neg)
 	return(!ret);
@@ -6737,16 +6677,16 @@ xmlExpNodePtr emptyExp = &emptyExpNode;
  */
 static unsigned short
 xmlExpHashNameComputeKey(const xmlChar *name) {
-    unsigned long value = 0L; /* [i_a] */
+    unsigned short value = 0L;
     char ch;
 
     if (name != NULL) {
-	value += 30 * (unsigned long)(unsigned char)(*name); /* [i_a] */
+	value += 30 * (*name);
 	while ((ch = *name++) != 0) {
-	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)(unsigned char)ch); /* [i_a] */
+	    value = value ^ ((value << 5) + (value >> 3) + (unsigned long)ch);
 	}
     }
-    return (unsigned short)(value);
+    return (value);
 }
 
 /*

@@ -80,8 +80,6 @@
 #include "xmlsave.h"
 #endif
 
-#include "monolithic_examples.h"
-
 #ifndef XML_XML_DEFAULT_CATALOG
 #define XML_XML_DEFAULT_CATALOG "file://" SYSCONFDIR "/xml/catalog"
 #endif
@@ -123,17 +121,17 @@ static int oldout = 0;
 #ifdef LIBXML_VALID_ENABLED
 static int valid = 0;
 static int postvalid = 0;
-static const char * dtdvalid = NULL;
-static const char * dtdvalidfpi = NULL;
+static char * dtdvalid = NULL;
+static char * dtdvalidfpi = NULL;
 #endif
 #ifdef LIBXML_SCHEMAS_ENABLED
-static const char * relaxng = NULL;
+static char * relaxng = NULL;
 static xmlRelaxNGPtr relaxngschemas = NULL;
-static const char * schema = NULL;
+static char * schema = NULL;
 static xmlSchemaPtr wxschemas = NULL;
 #endif
 #ifdef LIBXML_SCHEMATRON_ENABLED
-static const char * schematron = NULL;
+static char * schematron = NULL;
 static xmlSchematronPtr wxschematron = NULL;
 #endif
 static int repeat = 0;
@@ -154,7 +152,7 @@ static int pushsize = 4096;
 static int memory = 0;
 #endif
 static int testIO = 0;
-static const char *encoding = NULL;
+static char *encoding = NULL;
 #ifdef LIBXML_XINCLUDE_ENABLED
 static int xinclude = 0;
 #endif
@@ -354,17 +352,14 @@ myMallocFunc(size_t size)
 static void *
 myReallocFunc(void *mem, size_t size)
 {
-    void *ret;
+    size_t oldsize = xmlMemSize(mem);
 
-    ret = xmlMemRealloc(mem, size);
-    if (ret != NULL) {
-        if (xmlMemUsed() > maxmem) {
-            OOM();
-            xmlMemFree(ret);
-            return (NULL);
-        }
+    if (xmlMemUsed() + size - oldsize > (size_t) maxmem) {
+        OOM();
+        return (NULL);
     }
-    return (ret);
+
+    return (xmlMemRealloc(mem, size));
 }
 static char *
 myStrdupFunc(const char *str)
@@ -412,72 +407,6 @@ my_gettimeofday(struct timeval *tvp, void *tzp)
 #endif /* HAVE_SYS_TIME_H */
 #endif /* HAVE_SYS_TIMEB_H */
 #endif /* !HAVE_GETTIMEOFDAY */
-
-
-/* [i_a] */
-#ifndef HAVE_GETTIMEOFDAY
-#if defined (WIN32) || defined (_WIN32)
-
-/* adapted from code ripped from Curl mailing list & PostgreSQL sources */
-
-#include <time.h>
-#include <windows.h>
-
-struct timezone
-{
-	int  tz_minuteswest; /* minutes W of Greenwich */
-	int  tz_dsttime;     /* type of dst correction */
-};
-
-/* FILETIME of Jan 1 1970 00:00:00. */
-#define EPOCH    116444736000000000LL
-
-static int gettimeofday(struct timeval *tv, struct timezone *tzp)
-{
-  union
-  {
-    LONGLONG ns100;             /*time since 1 Jan 1601 in 100ns units */
-    FILETIME ft;
-  } now;
-
-  if (!tv)
-  {
-    errno = EINVAL;
-    return -1;
-  }
-
-#if 0
-  {
-    SYSTEMTIME system_time;
-
-    GetSystemTime(&system_time);
-    SystemTimeToFileTime(&system_time, &now.ft);
-  }
-#else
-  GetSystemTimeAsFileTime(&now.ft);
-#endif
-  tv->tv_usec = (long)((now.ns100 / 10LL) % 1000000LL);
-  tv->tv_sec = (long)((now.ns100 - EPOCH) / 10000000LL);
-
-#if 0
-  // Get the timezone, if they want it
-  if (tzp != NULL)
-  {
-    _tzset();
-    tzp->tz_minuteswest = _timezone;
-    tzp->tz_dsttime = _daylight;
-  }
-#else
-  assert(tzp == NULL);          /* shouldn't've been used */
-#endif
-  return 0;
-}
-
-#define HAVE_GETTIMEOFDAY 1
-
-#endif
-#endif
-
 
 #if defined(HAVE_GETTIMEOFDAY)
 static struct timeval begin, end;
@@ -807,7 +736,7 @@ xmlHTMLValidityWarning(void *ctx, const char *msg, ...)
  *     free the returned string.
  */
 static char *
-xmlShellReadline(const char *prompt) {
+xmlShellReadline(char *prompt) {
 #ifdef HAVE_LIBREADLINE
     char *line_read;
 
@@ -902,7 +831,7 @@ static xmlSAXHandler emptySAXHandlerStruct = {
 };
 
 static xmlSAXHandlerPtr emptySAXHandler = &emptySAXHandlerStruct;
-static xmlSAXHandlerPtr debugSAXHandler;
+extern xmlSAXHandlerPtr debugSAXHandler;
 static int callbacks;
 
 /**
@@ -1524,7 +1453,7 @@ static xmlSAXHandler debugSAXHandlerStruct = {
     NULL
 };
 
-static xmlSAXHandlerPtr debugSAXHandler = &debugSAXHandlerStruct;
+xmlSAXHandlerPtr debugSAXHandler = &debugSAXHandlerStruct;
 
 /*
  * SAX2 specific callbacks
@@ -1825,7 +1754,7 @@ static void processNode(xmlTextReaderPtr reader) {
 #endif
 }
 
-static void streamFile(const char *filename) {
+static void streamFile(char *filename) {
     xmlTextReaderPtr reader;
     int ret;
 #ifdef HAVE_MMAP
@@ -1853,15 +1782,6 @@ static void streamFile(const char *filename) {
 #endif
 	reader = xmlReaderForFile(filename, NULL, options);
 #ifdef LIBXML_PATTERN_ENABLED
-    if (pattern != NULL) {
-        patternc = xmlPatterncompile((const xmlChar *) pattern, NULL, 0, NULL);
-	if (patternc == NULL) {
-	    xmlGenericError(xmlGenericErrorContext,
-		    "Pattern %s failed to compile\n", pattern);
-            progresult = XMLLINT_ERR_SCHEMAPAT;
-	    pattern = NULL;
-	}
-    }
     if (patternc != NULL) {
         patstream = xmlPatternGetStreamCtxt(patternc);
 	if (patstream != NULL) {
@@ -2178,7 +2098,7 @@ static void doXPathQuery(xmlDocPtr doc, const char *query) {
  *			Tree Test processing				*
  *									*
  ************************************************************************/
-static void parseAndPrintFile(const char *filename, xmlParserCtxtPtr rectxt) {
+static void parseAndPrintFile(char *filename, xmlParserCtxtPtr rectxt) {
     xmlDocPtr doc = NULL;
 #ifdef LIBXML_TREE_ENABLED
     xmlDocPtr tmp;
@@ -3050,8 +2970,8 @@ static void usage(FILE *f, const char *name) {
     fprintf(f, "\t--repeat : repeat 100 times, for timing or profiling\n");
     fprintf(f, "\t--insert : ad-hoc test for valid insertions\n");
 #ifdef LIBXML_OUTPUT_ENABLED
-#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
-	fprintf(f, "\t--compress : turn on gzip compression of output\n");
+#ifdef LIBXML_ZLIB_ENABLED
+    fprintf(f, "\t--compress : turn on gzip compression of output\n");
 #endif
 #endif /* LIBXML_OUTPUT_ENABLED */
 #ifdef LIBXML_HTML_ENABLED
@@ -3146,12 +3066,8 @@ static void deregisterNode(xmlNodePtr node)
     nbregister--;
 }
 
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_xmllint_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int
+main(int argc, char **argv) {
     int i, acount;
     int files = 0;
     int version = 0;
@@ -3178,7 +3094,7 @@ int main(int argc, const char** argv) {
     if (maxmem != 0)
         xmlMemSetup(myFreeFunc, myMallocFunc, myReallocFunc, myStrdupFunc);
 
-	LIBXML_TEST_VERSION();
+    LIBXML_TEST_VERSION;
 
     for (i = 1; i < argc ; i++) {
 	if (argv[i][0] != '-' || argv[i][1] == 0)
@@ -3351,7 +3267,7 @@ int main(int argc, const char** argv) {
 	}
 #endif
 #ifdef LIBXML_OUTPUT_ENABLED
-#if defined(LIBXML_ZLIB_ENABLED) || defined(LIBXML_ZLIB_NG_ENABLED)
+#ifdef LIBXML_ZLIB_ENABLED
 	else if ((!strcmp(argv[i], "-compress")) ||
 	         (!strcmp(argv[i], "--compress"))) {
 	    compress++;

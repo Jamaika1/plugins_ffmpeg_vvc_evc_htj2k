@@ -18,18 +18,14 @@
 #define IN_LIBXML
 #include "libxml.h"
 
-#include <assert.h>
 #include <string.h> /* for memset() only ! */
 #include <stddef.h>
 #include <limits.h>
 #include <ctype.h>
 #include <stdlib.h>
 
-#if defined(LIBXML_ZLIB_ENABLED) && !defined(LIBXML_ZLIB_NG_ENABLED)
+#ifdef LIBXML_ZLIB_ENABLED
 #include <zlib.h>
-#endif
-#ifdef LIBXML_ZLIB_NG_ENABLED
-#include <zlib-ng.h>
 #endif
 
 #include "xmlmemory.h"
@@ -120,24 +116,12 @@ xmlTreeErr(int code, xmlNodePtr node, const char *extra)
  *									*
  ************************************************************************/
 /* #undef xmlStringText */
-const xmlChar *xmlStringText(void)
-{
-	static const xmlChar s[] = { 't', 'e', 'x', 't', 0 };
-	return s;
-}
+const xmlChar xmlStringText[] = { 't', 'e', 'x', 't', 0 };
 /* #undef xmlStringTextNoenc */
-const xmlChar *xmlStringTextNoenc(void)
-{
-	static const xmlChar s[] =
+const xmlChar xmlStringTextNoenc[] =
               { 't', 'e', 'x', 't', 'n', 'o', 'e', 'n', 'c', 0 };
-	return s;
-}
 /* #undef xmlStringComment */
-const xmlChar *xmlStringComment(void)
-{
-	static const xmlChar s[] = { 'c', 'o', 'm', 'm', 'e', 'n', 't', 0 };
-	return s;
-}
+const xmlChar xmlStringComment[] = { 'c', 'o', 'm', 'm', 'e', 'n', 't', 0 };
 
 static int xmlCompressMode = 0;
 static int xmlCheckDTD = 1;
@@ -2506,7 +2490,7 @@ xmlNewText(const xmlChar *content) {
     memset(cur, 0, sizeof(xmlNode));
     cur->type = XML_TEXT_NODE;
 
-    cur->name = xmlStringText();
+    cur->name = xmlStringText;
     if (content != NULL) {
 	cur->content = xmlStrdup(content);
     }
@@ -2739,7 +2723,7 @@ xmlNewTextLen(const xmlChar *content, int len) {
     memset(cur, 0, sizeof(xmlNode));
     cur->type = XML_TEXT_NODE;
 
-    cur->name = xmlStringText();
+    cur->name = xmlStringText;
     if (content != NULL) {
 	cur->content = xmlStrndup(content, len);
     }
@@ -2792,7 +2776,7 @@ xmlNewComment(const xmlChar *content) {
     memset(cur, 0, sizeof(xmlNode));
     cur->type = XML_COMMENT_NODE;
 
-    cur->name = xmlStringComment();
+    cur->name = xmlStringComment;
     if (content != NULL) {
 	cur->content = xmlStrdup(content);
     }
@@ -2891,10 +2875,6 @@ xmlSetTreeDoc(xmlNodePtr tree, xmlDocPtr doc) {
                     xmlRemoveID(tree->doc, prop);
                 }
 
-#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-                if (prop->doc)
-                    assert(xmlDictOwns(prop->doc->dict, prop->name) != 1);
-#endif
                 if (prop->doc != doc) {
                     xmlDictPtr oldPropDict = prop->doc ? prop->doc->dict : NULL;
                     prop->name = _copyStringForNewDictIfNeeded(oldPropDict, newDict, prop->name);
@@ -2929,13 +2909,6 @@ xmlSetTreeDoc(xmlNodePtr tree, xmlDocPtr doc) {
 	    xmlSetListDoc(tree->children, doc);
         }
 
-#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-        if (tree->doc) {
-            assert(xmlDictOwns(tree->doc->dict, tree->name) != 1);
-            assert(xmlDictOwns(tree->doc->dict, tree->content) != 1);
-        }
-        assert(tree->ns == NULL);
-#endif
         tree->name = _copyStringForNewDictIfNeeded(oldTreeDict, newDict, tree->name);
         tree->content = (xmlChar *)_copyStringForNewDictIfNeeded(oldTreeDict, NULL, tree->content);
         /* FIXME: tree->ns should be updated as in xmlStaticCopyNode(). */
@@ -4117,6 +4090,10 @@ xmlCopyNamespaceList(xmlNsPtr cur) {
 
     while (cur != NULL) {
         q = xmlCopyNamespace(cur);
+        if (q == NULL) {
+            xmlFreeNsList(ret);
+            return(NULL);
+        }
 	if (p == NULL) {
 	    ret = p = q;
 	} else {
@@ -4343,12 +4320,12 @@ xmlStaticCopyNode(xmlNodePtr node, xmlDocPtr doc, xmlNodePtr parent,
 
     ret->doc = doc;
     ret->parent = parent;
-    if (node->name == xmlStringText())
-	ret->name = xmlStringText();
-    else if (node->name == xmlStringTextNoenc())
-	ret->name = xmlStringTextNoenc();
-    else if (node->name == xmlStringComment())
-	ret->name = xmlStringComment();
+    if (node->name == xmlStringText)
+	ret->name = xmlStringText;
+    else if (node->name == xmlStringTextNoenc)
+	ret->name = xmlStringTextNoenc;
+    else if (node->name == xmlStringComment)
+	ret->name = xmlStringComment;
     else if (node->name != NULL) {
         if ((doc != NULL) && (doc->dict != NULL))
 	    ret->name = xmlDictLookup(doc->dict, node->name, -1);
@@ -7238,7 +7215,7 @@ xmlBufferCreateSize(size_t size) {
  * Returns the previous string contained by the buffer.
  */
 xmlChar *
-xmlBufferDetach(const xmlBufferPtr buf) {
+xmlBufferDetach(xmlBufferPtr buf) {
     xmlChar *ret;
 
     if (buf == NULL)
@@ -7400,21 +7377,12 @@ xmlBufferGrow(xmlBufferPtr buf, unsigned int len) {
 
     if (buf == NULL) return(-1);
 
-    if (len < buf->size - buf->use) {
-        buf->content[buf->use + len] = 0;
+    if (len < buf->size - buf->use)
         return(0);
-    }
     if (len >= UINT_MAX - buf->use) {
         xmlTreeErrMemory("growing buffer past UINT_MAX");
         return(-1);
     }
-
-    /*
-     * Windows has a BIG problem on realloc timing, so we try to double
-     * the buffer size (if that's enough) (bug 146697)
-     * Apparently BSD too, and it's probably best for linux too
-     * On an embedded system this may be something to change
-     */
 
     if (buf->size > (size_t) len) {
         size = buf->size > UINT_MAX / 2 ? UINT_MAX : buf->size * 2;
@@ -7442,8 +7410,6 @@ xmlBufferGrow(xmlBufferPtr buf, unsigned int len) {
 	buf->content = newbuf;
     }
     buf->size = size;
-    buf->content[buf->use] = 0;
-    buf->content[buf->use + len] = 0;
     return(buf->size - buf->use - 1);
 }
 
@@ -7590,6 +7556,7 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
 	    /* move data back to start */
 	    memmove(buf->contentIO, buf->content, buf->use);
 	    buf->content = buf->contentIO;
+	    buf->content[buf->use] = 0;
 	    buf->size += start_buf;
 	} else {
 	    rebuf = (xmlChar *) xmlRealloc(buf->contentIO, start_buf + newSize);
@@ -7617,6 +7584,7 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
 	    if (rebuf != NULL) {
 		memcpy(rebuf, buf->content, buf->use);
 		xmlFree(buf->content);
+		rebuf[buf->use] = 0;
 	    }
 	}
 	if (rebuf == NULL) {
@@ -7626,7 +7594,6 @@ xmlBufferResize(xmlBufferPtr buf, unsigned int size)
 	buf->content = rebuf;
     }
     buf->size = newSize;
-    buf->content[buf->use] = 0;
 
     return 1;
 }
@@ -7734,7 +7701,7 @@ xmlBufferAddHead(xmlBufferPtr buf, const xmlChar *str, int len) {
             memmove(&buf->content[0], str, len);
 	    buf->use += len;
 	    buf->size += len;
-	    buf->content[buf->use] = 0;
+            buf->content[buf->use] = 0;
 	    return(0);
 	}
     }
@@ -8348,7 +8315,7 @@ xmlDOMWrapRemoveNode(xmlDOMWrapCtxtPtr ctxt, xmlDocPtr doc,
 		     xmlNodePtr node, int options ATTRIBUTE_UNUSED)
 {
     xmlNsPtr *list = NULL;
-    int sizeList, nbList = 0, i, j;
+    int sizeList, nbList, i, j;
     xmlNsPtr ns;
 
     if ((node == NULL) || (doc == NULL) || (node->doc != doc))
@@ -9648,17 +9615,17 @@ xmlDOMWrapCloneNode(xmlDOMWrapCtxtPtr ctxt,
 	/*
 	* Clone the name of the node if any.
 	*/
-	if (cur->name == xmlStringText())
-	    clone->name = xmlStringText();
-	else if (cur->name == xmlStringTextNoenc())
+	if (cur->name == xmlStringText)
+	    clone->name = xmlStringText;
+	else if (cur->name == xmlStringTextNoenc)
 	    /*
-	    * NOTE: Although xmlStringTextNoenc() is never assigned to a node
+	    * NOTE: Although xmlStringTextNoenc is never assigned to a node
 	    *   in tree.c, it might be set in Libxslt via
 	    *   "xsl:disable-output-escaping".
 	    */
-	    clone->name = xmlStringTextNoenc();
-	else if (cur->name == xmlStringComment())
-	    clone->name = xmlStringComment();
+	    clone->name = xmlStringTextNoenc;
+	else if (cur->name == xmlStringComment)
+	    clone->name = xmlStringComment;
 	else if (cur->name != NULL) {
 	    DICT_CONST_COPY(cur->name, clone->name);
 	}

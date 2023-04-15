@@ -40,7 +40,7 @@
 /* #define DEBUG_STREAMING */
 
 #ifdef ERROR
-#undef ERROR /* [i_a] Win32 defines this one in winGDI.h :-( */
+#undef ERROR
 #endif
 #define ERROR(a, b, c, d)
 #define ERROR5(a, b, c, d, e)

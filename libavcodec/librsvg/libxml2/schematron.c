@@ -36,8 +36,6 @@
 
 #include "private/error.h"
 
-#include "monolithic_examples.h"
-
 #define SCHEMATRON_PARSE_OPTIONS XML_PARSE_NOENT
 
 #define SCT_OLD_NS BAD_CAST "http://www.ascc.net/xml/schematron"
@@ -2017,13 +2015,10 @@ xmlSchematronValidateDoc(xmlSchematronValidCtxtPtr ctxt, xmlDocPtr instance)
     return(ctxt->nberrors);
 }
 
-#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
-
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_schematron_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+#ifdef STANDALONE
+int
+main(void)
+{
     int ret;
     xmlDocPtr instance;
     xmlSchematronParserCtxtPtr pctxt;
@@ -2046,7 +2041,7 @@ int main(int argc, const char** argv) {
         fprintf(stderr, "failed to parse instance\n");
     }
     if ((schema != NULL) && (instance != NULL)) {
-        vctxt = xmlSchematronNewValidCtxt(schema, 0 /* options */ );
+        vctxt = xmlSchematronNewValidCtxt(schema);
         if (vctxt == NULL) {
             fprintf(stderr, "failed to build schematron validator\n");
         } else {
