@@ -40,12 +40,11 @@
 #include <stdio.h>
 #include "config.h"
 #include "attributes.h"
-#include "timer.h"
 #include "macros.h"
 #include "pixfmt.h"
 
 #if ARCH_X86
-#   include "libavutil/x86/emms.h"
+#   include "x86/emms.h"
 #endif
 
 #ifndef emms_c
