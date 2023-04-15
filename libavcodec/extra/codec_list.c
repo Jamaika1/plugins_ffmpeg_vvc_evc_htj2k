@@ -175,8 +175,9 @@ static const FFCodec * const codec_list[] = {
 &ff_mpeg4_encoder,
 &ff_mpeg4_decoder,
 //&ff_mpeg4_crystalhd_decoder,
-//&ff_mpeg4_v4l2m2m_decoder,
+//&ff_mpeg4_mediacodec_encoder,
 //&ff_mpeg4_mmal_decoder,
+//&ff_mpeg4_v4l2m2m_decoder,
 &ff_mpegvideo_decoder,
 //&ff_mpeg1_v4l2m2m_decoder,
 //&ff_mpeg2_mmal_decoder,
@@ -192,6 +193,7 @@ static const FFCodec * const codec_list[] = {
 &ff_msmpeg4v3_encoder,
 &ff_msmpeg4v3_decoder,
 //&ff_msmpeg4_crystalhd_decoder,
+//&ff_mpeg4_mediacodec_encoder,
 &ff_msp2_decoder,
 &ff_msrle_decoder,
 &ff_mss1_decoder,
@@ -586,6 +588,7 @@ static const FFCodec * const codec_list[] = {
 &ff_pcm_vidc_decoder,
 
 /* DPCM codecs */
+&ff_cbd2_dpcm_decoder,
 &ff_derf_dpcm_decoder,
 &ff_gremlin_dpcm_decoder,
 &ff_interplay_dpcm_decoder,
@@ -594,6 +597,7 @@ static const FFCodec * const codec_list[] = {
 &ff_sdx2_dpcm_decoder,
 &ff_sol_dpcm_decoder,
 &ff_xan_dpcm_decoder,
+&ff_wady_dpcm_decoder,
 
 /* ADPCM codecs */
 &ff_adpcm_4xm_decoder,
@@ -659,6 +663,7 @@ static const FFCodec * const codec_list[] = {
 &ff_adpcm_thp_le_decoder,
 &ff_adpcm_vima_decoder,
 &ff_adpcm_xa_decoder,
+&ff_adpcm_xmd_decoder,
 &ff_adpcm_yamaha_encoder,
 &ff_adpcm_yamaha_decoder,
 &ff_adpcm_zork_decoder,
@@ -720,7 +725,7 @@ static const FFCodec * const codec_list[] = {
 //&ff_qdmc_at_decoder,
 //&ff_qdm2_at_decoder,
 &ff_libaom_av1_encoder,
-&ff_libaribb24_decoder,
+//&ff_libaribb24_decoder,
 &ff_libcelt_decoder,
 &ff_libcodec2_encoder,
 &ff_libcodec2_decoder,
@@ -782,6 +787,12 @@ static const FFCodec * const codec_list[] = {
 &ff_bintext_decoder,
 &ff_xbin_decoder,
 &ff_idf_decoder,
+
+// null codecs
+&ff_vnull_decoder,
+&ff_vnull_encoder,
+&ff_anull_decoder,
+&ff_anull_encoder,
 
 /* hwaccel hooks only, so prefer external decoders */
 &ff_libkvazaar_encoder,
