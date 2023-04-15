@@ -893,7 +893,7 @@ int ff_imf_parse_cpl(AVIOContext *in, FFIMFCPL **cpl)
         goto clean_up;
     }
 
-    LIBXML_TEST_VERSION();
+    LIBXML_TEST_VERSION;
 
     doc = xmlReadMemory(buf.str, buf.len, NULL, NULL, 0);
     if (!doc) {
