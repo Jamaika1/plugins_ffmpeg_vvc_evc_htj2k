@@ -10,7 +10,7 @@
 #ifndef LIBXML2_XZLIB_H
 #define LIBXML2_XZLIB_H
 
-#include <libxml/xmlversion.h>
+#include "../xmlversion.h"
 
 #ifdef LIBXML_LZMA_ENABLED
 

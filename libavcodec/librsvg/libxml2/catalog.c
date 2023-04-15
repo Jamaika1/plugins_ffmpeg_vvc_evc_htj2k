@@ -75,6 +75,8 @@
 #endif
 
 #if defined(_WIN32) && defined(_MSC_VER)
+#undef XML_XML_DEFAULT_CATALOG
+static char XML_XML_DEFAULT_CATALOG[256] = "file://" SYSCONFDIR "/xml/catalog";
 #if !defined(_WINDOWS_)
 void* __stdcall GetModuleHandleA(const char*);
 unsigned long __stdcall GetModuleFileNameA(void*, char*, unsigned long);
@@ -952,18 +954,10 @@ xmlLoadFileContent(const char *filename)
     FILE *fd;
 #endif
     int len;
-#if defined(HAVE_STAT) && defined(_MSC_VER)
-    unsigned size; /* Follow non-posix compliant read() requirement. */
-#else
-    size_t size;
-#endif
+    long size;
 
 #ifdef HAVE_STAT
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-    struct _stat64 info;
-#else
     struct stat info;
-#endif
 #endif
     xmlChar *content;
 
@@ -971,13 +965,7 @@ xmlLoadFileContent(const char *filename)
         return (NULL);
 
 #ifdef HAVE_STAT
-    if (
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-        _stat64(filename, &info)
-#else
-        stat(filename, &info)
-#endif
-        < 0)
+    if (stat(filename, &info) < 0)
         return (NULL);
 #endif
 
@@ -990,15 +978,6 @@ xmlLoadFileContent(const char *filename)
         return (NULL);
     }
 #ifdef HAVE_STAT
-    if (sizeof(info.st_size) > sizeof(size) &&
-#ifdef _MSC_VER
-            info.st_size > UINT_MAX /* Follow non-posix compliant read() limitation. */
-#else
-            info.st_size > SIZE_MAX
-#endif
-        )
-        xmlGenericError(xmlGenericErrorContext,
-            "File size (%lld) too big", (long long) info.st_size);
     size = info.st_size;
 #else
     if (fseek(fd, 0, SEEK_END) || (size = ftell(fd)) == EOF || fseek(fd, 0, SEEK_SET)) {        /* File operations denied? ok, just close and return failure */
@@ -3117,87 +3096,82 @@ xmlInitializeCatalogData(void) {
 void
 xmlInitializeCatalog(void) {
     if (xmlCatalogInitialized != 0)
-		return;
+	return;
 
     xmlInitializeCatalogData();
     xmlRMutexLock(xmlCatalogMutex);
 
     if (getenv("XML_DEBUG_CATALOG"))
-		xmlDebugCatalogs = 1;
+	xmlDebugCatalogs = 1;
 
-	if (xmlDefaultCatalog == NULL) {
-		const char* catalogs;
-		char* path;
-		const char* cur;
-		const char* paths;
-		xmlChar* uri = NULL;
-		xmlCatalogPtr catal;
-		xmlCatalogEntryPtr* nextent;
+    if (xmlDefaultCatalog == NULL) {
+	const char *catalogs;
+	char *path;
+	const char *cur, *paths;
+	xmlCatalogPtr catal;
+	xmlCatalogEntryPtr *nextent;
 
-		catalogs = (const char*)getenv("XML_CATALOG_FILES");
-		if (catalogs == NULL)
+	catalogs = (const char *) getenv("XML_CATALOG_FILES");
+	if (catalogs == NULL)
 #if defined(_WIN32) && defined(_MSC_VER)
-		{
-			void* hmodule;
-
-			catalogs = XML_XML_DEFAULT_CATALOG;
-
-			hmodule = GetModuleHandleA("libxml2.dll");
-			if (hmodule == NULL)
-				hmodule = GetModuleHandleA(NULL);
-			if (hmodule != NULL) {
-				char buf[MAX_PATH + sizeof("\\..\\etc\\catalog")];
-				unsigned long len = GetModuleFileNameA(hmodule, buf, MAX_PATH);
-				if (len != 0) {
-					char* p = &(buf[len]);
-					while (*p != '\\' && p > buf)
-						p--;
-					if (p != buf) {
-						strcpy(p, "\\..\\etc\\catalog");
-						uri = xmlCanonicPath((const xmlChar*)buf);
-						if (uri != NULL) {
-							catalogs = (const char *)uri;
-						}
+    {
+		void* hmodule;
+		hmodule = GetModuleHandleA("libxml2.dll");
+		if (hmodule == NULL)
+			hmodule = GetModuleHandleA(NULL);
+		if (hmodule != NULL) {
+			char buf[256];
+			unsigned long len = GetModuleFileNameA(hmodule, buf, 255);
+			if (len != 0) {
+				char* p = &(buf[len]);
+				while (*p != '\\' && p > buf)
+					p--;
+				if (p != buf) {
+					xmlChar* uri;
+					strncpy(p, "\\..\\etc\\catalog", 255 - (p - buf));
+					uri = xmlCanonicPath((const xmlChar*)buf);
+					if (uri != NULL) {
+						strncpy(XML_XML_DEFAULT_CATALOG, (char* )uri, 255);
+						xmlFree(uri);
 					}
 				}
 			}
 		}
+		catalogs = XML_XML_DEFAULT_CATALOG;
+    }
 #else
-			catalogs = XML_XML_DEFAULT_CATALOG;
+	    catalogs = XML_XML_DEFAULT_CATALOG;
 #endif
 
-		catal = xmlCreateNewCatalog(XML_XML_CATALOG_TYPE,
-			xmlCatalogDefaultPrefer);
-		if (catal != NULL) {
-			/* the XML_CATALOG_FILES envvar is allowed to contain a
-			   space-separated list of entries. */
-			cur = catalogs;
-			nextent = &catal->xml;
-			while (*cur != '\0') {
-				while (xmlIsBlank_ch(*cur))
-					cur++;
-				if (*cur != 0) {
-					paths = cur;
-					while ((*cur != 0) && (!xmlIsBlank_ch(*cur)))
-						cur++;
-					path = (char*)xmlStrndup((const xmlChar*)paths, cur - paths);
-					if (path != NULL) {
-						*nextent = xmlNewCatalogEntry(XML_CATA_CATALOG, NULL,
-							NULL, BAD_CAST path, xmlCatalogDefaultPrefer, NULL);
-						if (*nextent != NULL)
-							nextent = &((*nextent)->next);
-						xmlFree(path);
-					}
-				}
-			}
-			xmlDefaultCatalog = catal;
+	catal = xmlCreateNewCatalog(XML_XML_CATALOG_TYPE,
+		xmlCatalogDefaultPrefer);
+	if (catal != NULL) {
+	    /* the XML_CATALOG_FILES envvar is allowed to contain a
+	       space-separated list of entries. */
+	    cur = catalogs;
+	    nextent = &catal->xml;
+	    while (*cur != '\0') {
+		while (xmlIsBlank_ch(*cur))
+		    cur++;
+		if (*cur != 0) {
+		    paths = cur;
+		    while ((*cur != 0) && (!xmlIsBlank_ch(*cur)))
+			cur++;
+		    path = (char *) xmlStrndup((const xmlChar *)paths, cur - paths);
+		    if (path != NULL) {
+			*nextent = xmlNewCatalogEntry(XML_CATA_CATALOG, NULL,
+				NULL, BAD_CAST path, xmlCatalogDefaultPrefer, NULL);
+			if (*nextent != NULL)
+			    nextent = &((*nextent)->next);
+			xmlFree(path);
+		    }
 		}
-
-		if (uri)
-			xmlFree(uri);
+	    }
+	    xmlDefaultCatalog = catal;
 	}
+    }
 
-	xmlRMutexUnlock(xmlCatalogMutex);
+    xmlRMutexUnlock(xmlCatalogMutex);
 }
 
 

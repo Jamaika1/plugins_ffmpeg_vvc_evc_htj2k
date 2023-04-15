@@ -394,10 +394,8 @@ xmlBufGrowInternal(xmlBufPtr buf, size_t len) {
     if ((buf == NULL) || (buf->error != 0)) return(0);
     CHECK_COMPAT(buf)
 
-    if (len < buf->size - buf->use) {
-        buf->content[buf->use + len] = 0;
+    if (len < buf->size - buf->use)
         return(buf->size - buf->use - 1);
-    }
     if (len >= SIZE_MAX - buf->use) {
         xmlBufMemoryError(buf, "growing buffer past SIZE_MAX");
         return(0);
@@ -441,8 +439,6 @@ xmlBufGrowInternal(xmlBufPtr buf, size_t len) {
 	buf->content = newbuf;
     }
     buf->size = size;
-    buf->content[buf->use] = 0;
-    buf->content[buf->use + len] = 0;
     UPDATE_COMPAT(buf)
     return(buf->size - buf->use - 1);
 }
@@ -724,6 +720,7 @@ xmlBufResize(xmlBufPtr buf, size_t size)
 	    /* move data back to start */
 	    memmove(buf->contentIO, buf->content, buf->use);
 	    buf->content = buf->contentIO;
+	    buf->content[buf->use] = 0;
 	    buf->size += start_buf;
 	} else {
 	    rebuf = (xmlChar *) xmlRealloc(buf->contentIO, start_buf + newSize);
@@ -752,6 +749,7 @@ xmlBufResize(xmlBufPtr buf, size_t size)
 	    if (rebuf != NULL) {
 		memcpy(rebuf, buf->content, buf->use);
 		xmlFree(buf->content);
+		rebuf[buf->use] = 0;
 	    }
 	}
 	if (rebuf == NULL) {
@@ -761,7 +759,6 @@ xmlBufResize(xmlBufPtr buf, size_t size)
 	buf->content = rebuf;
     }
     buf->size = newSize;
-    buf->content[buf->use] = 0;
     UPDATE_COMPAT(buf)
 
     return 1;

@@ -23,8 +23,6 @@
 #include "private/dict.h"
 #include "private/threads.h"
 
-#include "monolithic_examples.h"
-
 /* #define DEBUG_THREADS */
 
 #if defined(HAVE_POSIX_THREADS) && \

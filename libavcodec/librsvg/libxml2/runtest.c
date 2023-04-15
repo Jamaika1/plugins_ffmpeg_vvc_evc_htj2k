@@ -78,8 +78,6 @@
 #include <string.h>
 #endif
 
-#include "monolithic_examples.h"
-
 /*
  * O_BINARY is just for Windows compatibility - if it isn't defined
  * on this system, avoid any compilation error
@@ -108,7 +106,7 @@ struct testDesc {
 };
 
 static int update_results = 0;
-static const char* temp_directory = NULL;
+static char* temp_directory = NULL;
 static int checkTestFile(const char *filename);
 
 #if defined(_WIN32)
@@ -127,7 +125,7 @@ static int glob(const char *pattern, ATTRIBUTE_UNUSED int flags,
                 ATTRIBUTE_UNUSED int errfunc(const char *epath, int eerrno),
                 glob_t *pglob) {
     glob_t *ret;
-    WIN32_FIND_DATAA FindFileData;
+    WIN32_FIND_DATA FindFileData;
     HANDLE hFind;
     unsigned int nb_paths = 0;
     char directory[500];
@@ -615,19 +613,9 @@ static char *resultFilename(const char *filename, const char *out,
 }
 
 static int checkTestFile(const char *filename) {
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-    struct _stat64 buf;
-#else
     struct stat buf;
-#endif
 
-    if (
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-        _stat64(filename, &buf)
-#else
-        stat(filename, &buf)
-#endif
-        == -1)
+    if (stat(filename, &buf) == -1)
         return(0);
 
 #if defined(_WIN32)
@@ -706,11 +694,7 @@ static int compareFileMem(const char *filename, const char *mem, int size) {
     int fd;
     char bytes[4096];
     int idx = 0;
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-    struct _stat64 info;
-#else
     struct stat info;
-#endif
 
     if (update_results) {
         if (size == 0) {
@@ -727,21 +711,15 @@ static int compareFileMem(const char *filename, const char *mem, int size) {
         return(res != size);
     }
 
-    if (
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-        _stat64(filename, &info)
-#else
-        stat(filename, &info)
-#endif
-        < 0) {
+    if (stat(filename, &info) < 0) {
         if (size == 0)
             return(0);
         fprintf(stderr, "failed to stat %s\n", filename);
 	return(-1);
     }
     if (info.st_size != size) {
-        fprintf(stderr, "file %s is %lld bytes, result is %d bytes\n",
-	        filename, (long long) info.st_size, size);
+        fprintf(stderr, "file %s is %ld bytes, result is %d bytes\n",
+	        filename, (long) info.st_size, size);
         return(-1);
     }
     fd = open(filename, RD_FLAGS);
@@ -775,23 +753,11 @@ static int compareFileMem(const char *filename, const char *mem, int size) {
 
 static int loadMem(const char *filename, const char **mem, int *size) {
     int fd, res;
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-    struct _stat64 info;
-#else
     struct stat info;
-#endif
     char *base;
     int siz = 0;
-    if (
-#if defined(_MSC_VER) && _MSC_VER >= 1500
-        _stat64(filename, &info)
-#else
-        stat(filename, &info)
-#endif
-        < 0)
+    if (stat(filename, &info) < 0)
 	return(-1);
-    if (sizeof(info.st_size) > sizeof(siz) && info.st_size > INT_MAX)
-	return(-1); /* File size too big */
     base = malloc(info.st_size + 1);
     if (base == NULL)
 	return(-1);
@@ -5293,11 +5259,8 @@ runtest(int i) {
     return(ret);
 }
 
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_runtest_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int
+main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
     int i, a, ret = 0;
     int subset = 0;
 
@@ -5351,11 +5314,8 @@ int main(int argc, const char** argv) {
 }
 
 #else /* ! LIBXML_OUTPUT_ENABLED */
-#if defined(BUILD_MONOLITHIC)
-#define main(cnt, arr)      xml_runtest_main(cnt, arr)
-#endif
-
-int main(int argc, const char** argv) {
+int
+main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
     fprintf(stderr, "runtest requires output to be enabled in libxml2\n");
     return(0);
 }

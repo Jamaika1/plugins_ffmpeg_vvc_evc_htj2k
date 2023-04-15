@@ -62,9 +62,6 @@
 #if defined(TRIO_DOCUMENTATION)
 # include "doc/doc_nan.h"
 #endif
-
-#include "monolithic_examples.h"
-
 /** @addtogroup SpecialQuantities
     @{
 */
@@ -772,7 +769,7 @@ TRIO_ARGS1((number),
  *  Unix : -DSTANDALONE
  *  VMS  : /DEFINE=(STANDALONE)
  */
-#if defined(STANDALONE) || defined(BUILD_MONOLITHIC)
+#if defined(STANDALONE)
 # include <stdio.h>
 
 static TRIO_CONST char *
@@ -802,9 +799,6 @@ TRIO_ARGS2((prefix, number),
 	   TRIO_CONST char *prefix,
 	   double number)
 {
-#ifndef TRIO_FPCLASSIFY
-#define TRIO_FPCLASSIFY(n) fpclassify(n)
-#endif
   printf("%-6s: %s %-15s %g\n",
 	 prefix,
 	 trio_signbit(number) ? "-" : "+",
@@ -812,12 +806,7 @@ TRIO_ARGS2((prefix, number),
 	 number);
 }
 
-
-#if defined(BUILD_MONOLITHIC)
-#define main(void)      xml_trionan_main()
-#endif
-
-int main()
+int main(TRIO_NOARGS)
 {
   double my_nan;
   double my_pinf;

@@ -269,8 +269,7 @@ typedef trio_longlong_t trio_int64_t;
 
 #if (!(defined(TRIO_COMPILER_SUPPORTS_C99) \
  || defined(TRIO_COMPILER_SUPPORTS_UNIX01))) \
- && !defined(_WIN32_WCE) \
- && !defined(_MSC_VER) /* [i_a] */
+ && !defined(_WIN32_WCE)
 # define floorl(x) floor((double)(x))
 # define fmodl(x,y) fmod((double)(x),(double)(y))
 # define powl(x,y) pow((double)(x),(double)(y))
@@ -2889,7 +2888,7 @@ TRIO_ARGS6((self, number, flags, width, precision, base),
       exponentDigits = (uExponent == 0)
 	? 1
 	: (int)ceil(TrioLogarithm((double)(uExponent + 1),
-				  (isHex) ? 10 : base));
+				  (isHex) ? 10.0 : base));
     }
   else
     exponentDigits = 0;
@@ -3056,7 +3055,7 @@ TRIO_ARGS6((self, number, flags, width, precision, base),
         self->OutStream(self, '0');
 
       if (isHex)
-	base = 10;
+	base = 10.0;
       exponentBase = (int)TrioPower(base, exponentDigits - 1);
       for (i = 0; i < exponentDigits; i++)
 	{
