@@ -1249,5 +1249,9 @@ const FFCodec ff_vvc_decoder = {
     .p.capabilities          = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
     .caps_internal           = FF_CODEC_CAP_EXPORTS_CROPPING | FF_CODEC_CAP_INIT_CLEANUP |
                                FF_CODEC_CAP_AUTO_THREADS,
+    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,
+                                                     AV_PIX_FMT_YUV420P10LE,
+                                                     AV_PIX_FMT_NONE },
+    .bsfs            = "vvc_mp4toannexb",
     .p.profiles              = NULL_IF_CONFIG_SMALL(ff_vvc_profiles),
 };
