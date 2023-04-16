@@ -29,7 +29,7 @@
 #include <zlib.h>
 #endif
 #ifdef LIBXML_LZMA_ENABLED
-#include <lzma.h>
+#include "../lzma/lzma.h"
 #endif
 
 #include "private/xzlib.h"

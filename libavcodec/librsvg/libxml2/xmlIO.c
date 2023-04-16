@@ -28,7 +28,7 @@
 #include <zlib.h>
 #endif
 #ifdef LIBXML_LZMA_ENABLED
-#include <lzma.h>
+#include "../lzma/lzma.h"
 #endif
 
 #if defined(_WIN32)
