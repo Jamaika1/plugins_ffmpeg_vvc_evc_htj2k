@@ -30,7 +30,7 @@
 #endif
 #if CONFIG_LZMA
 #define LZMA_API_STATIC
-#include <lzma.h>
+#include "librsvg/lzma/lzma.h"
 #endif
 
 #include <float.h>
