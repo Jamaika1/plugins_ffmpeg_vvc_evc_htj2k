@@ -480,6 +480,7 @@ static int adjust_q_cbr(const AV1_COMP *cpi, int q, int active_worst_quality,
   const RATE_CONTROL *const rc = &cpi->rc;
   const PRIMARY_RATE_CONTROL *const p_rc = &cpi->ppi->p_rc;
   const AV1_COMMON *const cm = &cpi->common;
+  const SVC *const svc = &cpi->svc;
   const RefreshFrameInfo *const refresh_frame = &cpi->refresh_frame;
   int max_delta_down;
   int max_delta_up = 20;
@@ -499,7 +500,7 @@ static int adjust_q_cbr(const AV1_COMP *cpi, int q, int active_worst_quality,
       max_delta_down = AOMMIN(16, AOMMAX(1, rc->q_1_frame / 8));
     }
     if (!cpi->ppi->use_svc && cpi->is_screen_content_type) {
-      // Link max_delta_up linked to max_delta_down and buffer status.
+      // Link max_delta_up to max_delta_down and buffer status.
       if (p_rc->buffer_level > p_rc->optimal_buffer_level) {
         max_delta_up = AOMMAX(4, max_delta_down);
       } else {
@@ -511,7 +512,8 @@ static int adjust_q_cbr(const AV1_COMP *cpi, int q, int active_worst_quality,
                          ? AOMMIN(8, AOMMAX(1, rc->q_1_frame / 16))
                          : AOMMIN(16, AOMMAX(1, rc->q_1_frame / 8));
   }
-
+  if (svc->number_temporal_layers > 1 && svc->temporal_layer_id == 0)
+    max_delta_up = AOMMIN(max_delta_up, 14);
   // If resolution changes or avg_frame_bandwidth significantly changed,
   // then set this flag to indicate change in target bits per macroblock.
   const int change_target_bits_mb =
@@ -566,6 +568,18 @@ static int adjust_q_cbr(const AV1_COMP *cpi, int q, int active_worst_quality,
     // Limit the increase in Q from previous frame.
     else if (q - rc->q_1_frame > max_delta_up)
       q = rc->q_1_frame + max_delta_up;
+  }
+  // Constrain the Q for enhancement temporal layer, relative to base TLO.
+  if (svc->number_temporal_layers > 1 && svc->temporal_layer_id > 0 &&
+      svc->spatial_layer_id == 0) {
+    // Get base temporal layer TL0.
+    const int layer = LAYER_IDS_TO_IDX(0, 0, svc->number_temporal_layers);
+    LAYER_CONTEXT *lc = &svc->layer_context[layer];
+    // lc->rc.avg_frame_bandwidth and lc->p_rc.last_q correspond to the
+    // last TL0 frame.
+    if (rc->avg_frame_bandwidth < lc->rc.avg_frame_bandwidth &&
+        q < lc->p_rc.last_q[INTER_FRAME] - 4)
+      q = lc->p_rc.last_q[INTER_FRAME] - 4;
   }
   // For non-svc (single layer): if resolution has increased push q closer
   // to the active_worst to avoid excess overshoot.
@@ -1236,15 +1250,6 @@ static int rc_pick_q_and_bounds_no_stats_cbr(const AV1_COMP *cpi, int width,
       *top_index = q;
     else
       q = *top_index;
-  }
-
-  // Special case: we force the first few frames to use low q such that
-  // these frames are encoded at a high quality, which provides good
-  // references for following frames.
-  if (current_frame->frame_type != KEY_FRAME && !cpi->ppi->use_svc &&
-      current_frame->frame_number >= 10 && current_frame->frame_number <= 15) {
-    q = AOMMIN(p_rc->last_kf_qindex + 108, AOMMAX(5, q - 9));
-    q = AOMMIN(rc->worst_quality, AOMMAX(q, rc->best_quality));
   }
 
   assert(*top_index <= rc->worst_quality && *top_index >= rc->best_quality);

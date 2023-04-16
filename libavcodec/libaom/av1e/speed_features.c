@@ -1023,7 +1023,6 @@ static void set_good_speed_features_framesize_independent(
     sf->inter_sf.prune_comp_type_by_comp_avg = 2;
     sf->inter_sf.selective_ref_frame = 3;
     sf->inter_sf.use_dist_wtd_comp_flag = DIST_WTD_COMP_DISABLED;
-    // Enable fast search only for COMPOUND_DIFFWTD type.
     sf->inter_sf.enable_fast_compound_mode_search = 1;
     sf->inter_sf.reuse_mask_search_results = 1;
     sf->inter_sf.txfm_rd_gate_level = boosted ? 0 : 1;
@@ -1203,7 +1202,6 @@ static void set_good_speed_features_framesize_independent(
 
     sf->inter_sf.prune_inter_modes_if_skippable = 1;
     sf->inter_sf.txfm_rd_gate_level = boosted ? 0 : 4;
-    // Enable fast search for all valid compound modes.
     sf->inter_sf.enable_fast_compound_mode_search = 2;
 
     sf->intra_sf.chroma_intra_pruning_with_hog = 3;
@@ -1422,6 +1420,7 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
       sf->rt_sf.reduce_mv_pel_precision_highmotion = 0;
       if (cm->width * cm->height <= 352 * 288)
         sf->rt_sf.nonrd_prune_ref_frame_search = 2;
+      sf->rt_sf.force_large_partition_blocks_intra = 0;
     }
     if (speed >= 8) {
       if (cpi->svc.number_temporal_layers > 2)
@@ -1437,6 +1436,8 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
       sf->rt_sf.check_only_zero_zeromv_on_large_blocks = false;
     else
       sf->rt_sf.check_only_zero_zeromv_on_large_blocks = true;
+    sf->rt_sf.frame_level_mode_cost_update = false;
+
     // Compound mode enabling.
     if (rtc_ref->ref_frame_comp[0] || rtc_ref->ref_frame_comp[1] ||
         rtc_ref->ref_frame_comp[2]) {
@@ -1538,6 +1539,12 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
     if (sf->rt_sf.estimate_motion_for_var_based_partition == 2)
       sf->rt_sf.estimate_motion_for_var_based_partition = 1;
     if (speed >= 9) sf->rt_sf.estimate_motion_for_var_based_partition = 0;
+  }
+  if (is_lossless_requested(&cpi->oxcf.rc_cfg)) {
+    sf->rt_sf.use_rtc_tf = 0;
+    // TODO(aomedia:3412): The setting accurate_bit_estimate = 0
+    // can be removed once it's fixed for lossless mode.
+    sf->hl_sf.accurate_bit_estimate = 0;
   }
 }
 
@@ -2513,6 +2520,17 @@ void av1_set_speed_features_qindex_dependent(AV1_COMP *cpi, int speed) {
     if (cm->quant_params.base_qindex <= 200) {
       if (!boosted && !is_arf2_bwd_type)
         sf->inter_sf.reuse_mask_search_results = 1;
+    }
+  }
+
+  if (speed == 5) {
+    if (!(frame_is_intra_only(&cpi->common) ||
+          cm->features.allow_screen_content_tools)) {
+      const int qindex[2] = { 256, 128 };
+      // Set the sf value as 3 for low resolution and
+      // for higher resolutions with low quantizers.
+      if (cm->quant_params.base_qindex < qindex[is_480p_or_larger])
+        sf->tx_sf.tx_type_search.winner_mode_tx_type_pruning = 3;
     }
   }
 
