@@ -70,7 +70,7 @@
 #include "libavformat/rmsipr.h"
 
 #if CONFIG_BZLIB
-#include <bzlib.h>
+#include "../libavcodec/librsvg/bzip2/bzlib.h"
 #endif
 #if CONFIG_ZLIB
 #include <zlib.h>
