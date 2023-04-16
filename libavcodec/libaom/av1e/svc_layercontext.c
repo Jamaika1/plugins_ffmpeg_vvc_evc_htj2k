@@ -121,7 +121,9 @@ void av1_update_layer_context_change_config(AV1_COMP *const cpi,
       RATE_CONTROL *const lrc = &lc->rc;
       PRIMARY_RATE_CONTROL *const lp_rc = &lc->p_rc;
       lc->spatial_layer_target_bandwidth = spatial_layer_target;
-      bitrate_alloc = (float)lc->target_bandwidth / target_bandwidth;
+      if (target_bandwidth != 0) {
+        bitrate_alloc = (float)lc->target_bandwidth / target_bandwidth;
+      }
       lp_rc->starting_buffer_level =
           (int64_t)(p_rc->starting_buffer_level * bitrate_alloc);
       lp_rc->optimal_buffer_level =
@@ -216,8 +218,6 @@ void av1_restore_layer_context(AV1_COMP *const cpi) {
   // Restore layer rate control.
   cpi->rc = lc->rc;
   cpi->ppi->p_rc = lc->p_rc;
-  // Only for real-time mode, so speed >= 5.
-  if (lc->speed >= 5) cpi->oxcf.speed = lc->speed;
   cpi->oxcf.rc_cfg.target_bandwidth = lc->target_bandwidth;
   cpi->gf_frame_index = 0;
   cpi->mv_search_params.max_mv_magnitude = lc->max_mv_magnitude;
