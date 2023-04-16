@@ -43,7 +43,7 @@
 #ifdef FT_CONFIG_OPTION_USE_BZIP2
 
 #define BZ_NO_STDIO /* Do not need FILE */
-#include <bzlib.h>
+#include "../../bzip2/bzlib.h"
 
 
 /***************************************************************************/
