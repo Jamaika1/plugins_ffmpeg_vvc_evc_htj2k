@@ -63,16 +63,16 @@ FT_BEGIN_HEADER
    */
 
   /* Visual C, mingw */
-#if defined( _WIN32 )
+#if defined( _WIN32 ) && defined( FT2_BUILD_LIBRARY )
 
-#if defined( FT2_BUILD_LIBRARY ) && defined( DLL_EXPORT )
+#if defined( DLL_EXPORT )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE  __declspec( dllexport )
 #elif defined( DLL_IMPORT )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE  __declspec( dllimport )
 #endif
 
   /* gcc, clang */
-#elif ( defined( __GNUC__ ) && __GNUC__ >= 4 ) || defined( __clang__ )
+#elif (( defined( __GNUC__ ) && __GNUC__ >= 4 ) || defined( __clang__ )) && !defined( _WIN32 )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE \
           __attribute__(( visibility( "default" ) ))
 
