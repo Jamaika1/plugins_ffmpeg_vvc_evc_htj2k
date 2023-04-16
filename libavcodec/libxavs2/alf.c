@@ -99,7 +99,7 @@ typedef struct dh_nc {
 } DhNc;
 
 typedef struct {
-    int64_t     m_autoCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF];          // auto-correlation matrix
+    long long int     m_autoCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF];          // auto-correlation matrix
     double      m_crossCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF];          // cross-correlation
     double      pixAcc[NO_VAR_BINS];
 } AlfCorrData;
@@ -233,7 +233,7 @@ void copyALFparam(ALFParam *dst, ALFParam *src, int componentID)
 static
 void calcCorrOneCompRegionLuma(xavs2_t *h, alf_ctx_t *Enc_ALF, pel_t *org, int i_org, pel_t *rec, int i_rec,
                                int yPos, int xPos, int height, int width,
-                               int64_t m_autoCorr[][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
+                               long long int m_autoCorr[][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
                                double m_crossCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
                                double *pixAcc,
                                int isLeftAvail, int isRightAvail, int isAboveAvail, int isBelowAvail)
@@ -334,7 +334,7 @@ void calcCorrOneCompRegionLuma(xavs2_t *h, alf_ctx_t *Enc_ALF, pel_t *org, int i
  */
 static
 void calcCorrOneCompRegionChma(xavs2_t *h, pel_t *org, int i_org, pel_t *rec, int i_rec, int yPos, int xPos, int height, int width,
-                               int64_t m_autoCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF], double *m_crossCorr,
+                               long long int m_autoCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF], double *m_crossCorr,
                                int isLeftAvail, int isRightAvail, int isAboveAvail, int isBelowAvail)
 {
     int xPosEnd = xPos + width;
@@ -451,7 +451,7 @@ void deriveBoundaryAvail(xavs2_t *h, int pic_x, int pic_y,
     int size_lcu = 1 << h->i_lcu_level;
     int mb_x, mb_y;
     //int pic_mb_width = h->i_width_in_mincu;
-    //cu_info_t *cuCurr, *cuLeft, *cuRight, *cuAbove, *cuBelow; 
+    //cu_info_t *cuCurr, *cuLeft, *cuRight, *cuAbove, *cuBelow;
 
     mb_x      = pic_x >> MIN_CU_SIZE_IN_BIT;
     mb_y      = pic_y >> MIN_CU_SIZE_IN_BIT;

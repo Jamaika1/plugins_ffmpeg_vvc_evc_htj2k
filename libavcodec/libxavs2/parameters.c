@@ -439,7 +439,7 @@ int ParameterNameToMapIndex(xavs2_param_map_t *p_map_tab, const char *param_name
 /* ---------------------------------------------------------------------------
  */
 static INLINE
-void get_param_name(char *name, const char *param_item)
+void get_param_name(char *name, char *param_item)
 {
     char *str;
     name[0] = '\0';
@@ -629,7 +629,7 @@ xavs2_encoder_opt_set(xavs2_param_t *param, int argc, char *argv[])
     int   in_item = 0;
     int   i;
 
-    if ((contents = xavs2_get_configs(argc, argv)) == NULL) {
+    if ((contents = xavs2_get_configs(argc, (const char * const *)argv)) == NULL) {
         fprintf(stderr, "get contents from configure file error.");
         return -1;
     }

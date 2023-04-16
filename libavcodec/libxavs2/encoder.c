@@ -2038,7 +2038,7 @@ void *xavs2e_encode_one_frame(void *arg)
 
     /* start AEC frame coding */
     if (h->h_top->threadpool_aec != NULL && !h->param->enable_alf) {
-        xavs2_threadpool_run(h->h_top->threadpool_aec, encoder_aec_encode_one_frame, h, 0);
+        xavs2_threadpool_run(h->h_top->threadpool_aec, (void * (*)(void *)) encoder_aec_encode_one_frame, h, 0);
     }
 
     /* (3) encode all LCU rows in current frame ---------------------------
@@ -2147,7 +2147,7 @@ void *xavs2e_encode_one_frame(void *arg)
 #endif
 
         if (h->h_top->threadpool_aec != NULL) {
-            xavs2_threadpool_run(h->h_top->threadpool_aec, encoder_aec_encode_one_frame, h, 0);
+            xavs2_threadpool_run(h->h_top->threadpool_aec, (void * (*)(void *)) encoder_aec_encode_one_frame, h, 0);
         }
     }
 
