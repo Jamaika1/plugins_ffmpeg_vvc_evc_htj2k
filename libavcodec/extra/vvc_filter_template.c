@@ -33,9 +33,9 @@ static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const in
     }
 }
 
-static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src,
+static void FUNC(sao_band_filter)(uint8_t *_dst, const uint8_t *_src,
                                   ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                  int16_t *sao_offset_val, int sao_left_class,
+                                  const int16_t *sao_offset_val, int sao_left_class,
                                   int width, int height)
 {
     pixel *dst = (pixel *)_dst;
@@ -59,7 +59,7 @@ static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src,
 
 #define CMP(a, b) (((a) > (b)) - ((a) < (b)))
 
-static void FUNC(sao_edge_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_stride, int16_t *sao_offset_val,
+static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride, const int16_t *sao_offset_val,
                                   int eo, int width, int height) {
 
     static const uint8_t edge_idx[] = { 1, 2, 0, 3, 4 };
