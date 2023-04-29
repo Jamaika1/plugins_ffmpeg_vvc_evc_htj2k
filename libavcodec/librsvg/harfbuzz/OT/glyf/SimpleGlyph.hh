@@ -34,6 +34,11 @@ struct SimpleGlyph
   unsigned int length (unsigned int instruction_len) const
   { return instruction_len_offset () + 2 + instruction_len; }
 
+  bool has_instructions_length () const
+  {
+    return instruction_len_offset () + 2 <= bytes.length;
+  }
+
   unsigned int instructions_length () const
   {
     unsigned int instruction_length_offset = instruction_len_offset ();
@@ -94,6 +99,7 @@ struct SimpleGlyph
   /* zero instruction length */
   void drop_hints ()
   {
+    if (!has_instructions_length ()) return;
     GlyphHeader &glyph_header = const_cast<GlyphHeader &> (header);
     (HBUINT16 &) StructAtOffset<HBUINT16> (&glyph_header, instruction_len_offset ()) = 0;
   }
@@ -151,7 +157,7 @@ struct SimpleGlyph
     unsigned count = points_.length;
     for (unsigned i = 0; i < count; i++)
     {
-      unsigned flag = points_[i].flag;
+      unsigned flag = points_.arrayZ[i].flag;
       if (flag & short_flag)
       {
 	if (unlikely (p + 1 > end)) return false;
@@ -179,13 +185,14 @@ struct SimpleGlyph
   {
     const HBUINT16 *endPtsOfContours = &StructAfter<HBUINT16> (header);
     int num_contours = header.numberOfContours;
-    assert (num_contours);
+    assert (num_contours > 0);
     /* One extra item at the end, for the instruction-count below. */
     if (unlikely (!bytes.check_range (&endPtsOfContours[num_contours]))) return false;
     unsigned int num_points = endPtsOfContours[num_contours - 1] + 1;
 
     points_.alloc (num_points + 4, true); // Allocate for phantom points, to avoid a possible copy
-    if (!points_.resize (num_points)) return false;
+    if (!points_.resize (num_points, false)) return false;
+    hb_memset (points_.arrayZ, 0, sizeof (contour_point_t) * num_points);
     if (phantom_only) return true;
 
     for (int i = 0; i < num_contours; i++)

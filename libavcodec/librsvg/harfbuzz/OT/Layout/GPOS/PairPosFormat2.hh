@@ -50,11 +50,10 @@ struct PairPosFormat2_4
     unsigned int len1 = valueFormat1.get_len ();
     unsigned int len2 = valueFormat2.get_len ();
     unsigned int stride = HBUINT16::static_size * (len1 + len2);
-    unsigned int record_size = valueFormat1.get_size () + valueFormat2.get_size ();
     unsigned int count = (unsigned int) class1Count * (unsigned int) class2Count;
     return_trace (c->check_range ((const void *) values,
                                   count,
-                                  record_size) &&
+                                  stride) &&
                   valueFormat1.sanitize_values_stride_unsafe (c, this, &values[0], count, stride) &&
                   valueFormat2.sanitize_values_stride_unsafe (c, this, &values[len1], count, stride));
   }
@@ -164,7 +163,7 @@ struct PairPosFormat2_4
      * https://github.com/harfbuzz/harfbuzz/pull/3235#issuecomment-1029814978
      */
 #ifndef HB_SPLIT_KERN
-    if (0)
+    if (false)
 #endif
     {
       if (!len2)
