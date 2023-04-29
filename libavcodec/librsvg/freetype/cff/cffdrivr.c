@@ -471,6 +471,12 @@
     FT_Error  error = FT_Err_Ok;
 
 
+    if ( face->is_cff2 )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Fail;
+    }
+
     if ( cff && !cff->font_info )
     {
       CFF_FontRecDict  dict      = &cff->top_font.font_dict;
@@ -628,7 +634,7 @@
         return service->get_ps_font_name( FT_FACE( face ) );
     }
 
-    return (const char*)cff->font_name;
+    return cff ? (const char*)cff->font_name : NULL;
   }
 
 
