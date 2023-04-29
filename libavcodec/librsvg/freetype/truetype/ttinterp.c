@@ -7321,14 +7321,6 @@
    * GETINFO[]:    GET INFOrmation
    * Opcode range: 0x88
    * Stack:        uint32 --> uint32
-   *
-   * XXX: UNDOCUMENTED: Selector bits higher than 9 are currently (May
-   *      2015) not documented in the OpenType specification.
-   *
-   *      Selector bit 11 is incorrectly described as bit 8, while the
-   *      real meaning of bit 8 (vertical LCD subpixels) stays
-   *      undocumented.  The same mistake can be found in Greg Hitchcock's
-   *      whitepaper.
    */
   static void
   Ins_GETINFO( TT_ExecContext  exc,
@@ -7387,8 +7379,6 @@
      * VARIATION GLYPH
      * Selector Bit:  3
      * Return Bit(s): 10
-     *
-     * XXX: UNDOCUMENTED!
      */
     if ( (args[0] & 8 ) != 0 && exc->face->blend )
       K |= 1 << 10;
@@ -7847,7 +7837,7 @@
         /* a variable number of arguments             */
 
         /* it is the job of the application to `activate' GX handling, */
-        /* this is, calling any of the GX API functions on the current */
+        /* that is, calling any of the GX API functions on the current */
         /* font to select a variation instance                         */
         if ( exc->face->blend )
           exc->new_top = exc->args + exc->face->blend->num_axis;
@@ -8407,7 +8397,7 @@
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
         case 0x91:
           /* it is the job of the application to `activate' GX handling, */
-          /* this is, calling any of the GX API functions on the current */
+          /* that is, calling any of the GX API functions on the current */
           /* font to select a variation instance                         */
           if ( exc->face->blend )
             Ins_GETVARIATION( exc, args );
