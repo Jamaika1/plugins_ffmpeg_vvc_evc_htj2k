@@ -30,28 +30,28 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.10.4"
+#define LIBXML_DOTTED_VERSION "2.12.0"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 21004
+#define LIBXML_VERSION 21200
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "21004"
+#define LIBXML_VERSION_STRING "21200"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
  * extra version information, used to show a git commit description
  */
-#define LIBXML_VERSION_EXTRA "-921796b"
+#define LIBXML_VERSION_EXTRA "-e07f765"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -59,7 +59,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(21004)
+#define LIBXML_TEST_VERSION xmlCheckVersion(21200)
 
 #ifndef VMS
 #if 0
