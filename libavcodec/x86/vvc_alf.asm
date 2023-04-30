@@ -27,7 +27,7 @@ SECTION_RODATA
 %macro PARAM_SHUFFE 1
 %assign i (%1  * 2)
 %assign j ((i + 1) << 8) + (i)
-param_shuffe_%+%1:
+param_shuffe_ %+ %1:
 %rep 2
     times 4 dw j
     times 4 dw (j + 0x0808)
@@ -75,16 +75,16 @@ SECTION .text
     ;m%2 = 07 06 05 04
     ;m%3 = 11 10 09 08
 
-    vshufpd                 m%5, m%1, m%2, 0b0011       ;06 02 05 01
-    vshufpd                 m%6, m%3, m%5, 0b1001       ;06 10 01 09
+    vshufpd                 m%5, m%1, m%2, 0011b        ;06 02 05 01
+    vshufpd                 m%6, m%3, m%5, 1001b        ;06 10 01 09
 
-    vshufpd                 m%1, m%1, m%6, 0b1100       ;06 03 09 00
-    vshufpd                 m%2, m%2, m%6, 0b0110       ;10 07 01 04
-    vshufpd                 m%3, m%3, m%5, 0b0110       ;02 11 05 08
+    vshufpd                 m%1, m%1, m%6, 1100b        ;06 03 09 00
+    vshufpd                 m%2, m%2, m%6, 0110b        ;10 07 01 04
+    vshufpd                 m%3, m%3, m%5, 0110b        ;02 11 05 08
 
-    vpermpd                 m%1, m%1, 0b01_11_10_00     ;09 06 03 00
-    vshufpd                 m%2, m%2, m%2, 0b1001       ;10 07 04 01
-    vpermpd                 m%3, m%3, 0b10_00_01_11     ;11 08 05 02
+    vpermpd                 m%1, m%1, 01111000b         ;09 06 03 00
+    vshufpd                 m%2, m%2, m%2, 1001b        ;10 07 04 01
+    vpermpd                 m%3, m%3, 10000111b         ;11 08 05 02
 %endmacro
 
 %macro LOAD_LUMA_PARAMS_W4 6
@@ -149,10 +149,10 @@ SECTION .text
     %assign i (%1 % 4)
     %assign j (%1 / 4 + 3)
     %assign k (%1 / 4 + 6)
-    %define filters m%+j
-    %define clips m%+k
+    %define filters m %+ j
+    %define clips m %+ k
 
-    pshufb          m14, clips, [param_shuffe_%+i]          ;clip
+    pshufb          m14, clips, [param_shuffe_ %+ i]          ;clip
     pxor            m13, m13
     psubw           m13, m14                                ;-clip
 
@@ -165,7 +165,7 @@ SECTION .text
     vpunpckhwd      m15, m9, m10
     vpunpcklwd      m9, m9, m10
 
-    pshufb          m14, filters, [param_shuffe_%+i]       ;filter
+    pshufb          m14, filters, [param_shuffe_ %+ i]       ;filter
     vpunpcklwd      m10, m14, m14
     vpunpckhwd      m14, m14, m14
 
@@ -215,7 +215,7 @@ SECTION .text
         pinsrq          xm%1, [%2 + src_strideq], 1
         pinsrq          xm%3, [%2 + src_strideq * 2], 0
         pinsrq          xm%3, [%2 + src_stride3q], 1
-        vinsertf128     m%1, xm%3, 1
+        vinserti128     m%1, m%1, xm%3, 1
     %endif
 %endmacro
 
@@ -233,7 +233,7 @@ SECTION .text
 
 ;LOAD_PIXELS(dest, src, tmp)
 %macro LOAD_PIXELS 3
-    LOAD_PIXELS_%+BPC %1, %2, %3
+    LOAD_PIXELS_ %+ BPC %1, %2, %3
 %endmacro
 
 %macro STORE_PIXELS_16 3
@@ -242,7 +242,7 @@ SECTION .text
     %else
         pextrq          [%1], xm%2, 0
         pextrq          [%1 + dst_strideq], xm%2, 1
-        vperm2f128      m%2, m%2, 1
+        vperm2i128      m%2, m%2, m%2, 1
         pextrq          [%1 + dst_strideq * 2], xm%2, 0
         pextrq          [%1 + dst_stride3q], xm%2, 1
     %endif
@@ -263,7 +263,7 @@ SECTION .text
 
 ;STORE_PIXELS(dest, src, tmp)
 %macro STORE_PIXELS 3
-    STORE_PIXELS_%+BPC %1, %2, %3
+    STORE_PIXELS_ %+ BPC %1, %2, %3
 %endmacro
 
 ;CLASSIFY_LOAD_PIXELS(dest, src)
@@ -290,7 +290,7 @@ SECTION .text
 
 ; see c code for p0 to p6
 
-cglobal vvc_alf_filter_%2_w%3_%1bpc, 9, 14, 15, dst, dst_stride, src, src_stride, height, filter, clip, stride, pixel_max, \
+cglobal vvc_alf_filter_%2_w%3_%1bpc, 9, 14, 16, dst, dst_stride, src, src_stride, height, filter, clip, stride, pixel_max, \
     tmp, offset, src_stride3, src_stride0, dst_stride3
 ;pixel size
 %define ps (%1 / 8)
@@ -323,7 +323,7 @@ cglobal vvc_alf_filter_%2_w%3_%1bpc, 9, 14, 15, dst, dst_stride, src, src_stride
     paddw           m0, m2
 
     ;clip to pixel
-    pinsrw          xm2, pixel_maxw, 0
+    movd          xm2, pixel_maxd
     vpbroadcastw    m2, xm2
     pxor            m1, m1
     CLIPW           m0, m1, m2
@@ -361,7 +361,7 @@ cglobal vvc_alf_filter_%2_w%3_%1bpc, 9, 14, 15, dst, dst_stride, src, src_stride
 ;void ff_vvc_alf_classify_grad(int *gradient_sum,
 ;       const uint8_t *src, ptrdiff_t src_stride, intptr_t width, intptr_t height,
 ;       intptr_t vb_pos);
-cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, width, height, vb_pos, \
+cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 16, gradient_sum, src, src_stride, width, height, vb_pos, \
     x, y, s0, s1, s2, s3, vb_pos_below, src_stride3
 
     lea src_stride3q, [src_strideq * 2 + src_strideq]
@@ -438,7 +438,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
         phaddw   m8,  m10                       ;di,  each word represent 2x2 pixels
         phaddw   m0,  m9, m8                    ;all = each word represent 4x2 pixels, order is v_h_d0_d1 x 4
 
-        vinserti128  m15, xm0, 1
+        vinserti128  m15, m15, xm0, 1
         vpblendw     m1,  m0, m15, 0xaa         ;t
 
         phaddw       m1,  m0                    ;each word represent 8x2 pixels, adjacent word share 4x2 pixels
@@ -463,21 +463,21 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
 %macro SAVE_CLASSIFY_PARAM_W16 2
     lea tempq, [%1q + xq]
     movu [tempq], xm%2
-    vperm2i128 m%2, m%2, 1
+    vperm2i128 m%2, m%2, m%2, 1
     movu [tempq + widthq], xm%2
 %endmacro
 
 ;SAVE_CLASSIFY_PARAM_W8
 %macro SAVE_CLASSIFY_PARAM_W8 2
     movq [%1], xm%2
-    vperm2i128 m%2, m%2, 1
+    vperm2i128 m%2, m%2, m%2, 1
     movq [%1 + widthq], xm%2
 %endmacro
 
 ;SAVE_CLASSIFY_PARAM_W4
 %macro SAVE_CLASSIFY_PARAM_W4 2
     movd [%1], xm%2
-    vperm2i128 m%2, m%2, 1
+    vperm2i128 m%2, m%2, m%2, 1
     movd [%1 + widthq], xm%2
 %endmacro
 
@@ -488,7 +488,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
     cmp wd, 8
     jl %%w4
         SAVE_CLASSIFY_PARAM_W8 tempq, %2
-        vpermq m%2, m%2, 0b00_01_00_11
+        vpermq m%2, m%2, 00010011b
         add tempq, 8
         cmp wd, 8
         je %%end
@@ -513,7 +513,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
     pandn        m13, m11       ; y != vb_pos
 
     vpbroadcastd m14, [dw_3]
-    pblendvb     m14, [dw_2], m13    ;ac
+    pblendvb m14, m14, [dw_2], m13    ;ac
 
     pblendvb m3, m15, [gradq + sum_stride3q], m13
 
@@ -589,7 +589,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
     vpaddd m11, m7, m7
     vpaddd m11, m4
     vpaddd m10, m11
-    vpermq m10, m10, 0b11_01_10_00
+    vpermq m10, m10, 11011000b
     SAVE_CLASSIFY_PARAM transpose_idx, 10
 
     vpsrlq    m10, m8, 32
@@ -604,7 +604,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
     pmuldq    m2, m9, m5            ;d0 * hv1 low
     vpcmpgtq  m1, m2                ;dir1 - 1 low
 
-    vpblendd  m1, m10, 0xaa         ;dir1 - 1
+    vpblendd  m1, m1, m10, 0xaa     ;dir1 - 1
 
     pblendvb  m2, m5, m8, m1        ;hvd1
     pblendvb  m3, m6, m9, m1        ;hvd0
@@ -614,7 +614,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
 
     ;*class_idx = arg_var[av_clip_uintp2(sum_hv * ac >> (BIT_DEPTH - 1), 4)];
     vpmulld   m0, m14               ;sum_hv * ac
-    vpsrlvd   m0, m5
+    vpsrlvd   m0, m0, m5
     vpminsd   m0, [dw_15]
     movu      m6, [ARG_VAR_SHUFFE]
     pshufb    m6, m0                ;class_idx
@@ -640,7 +640,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
     pandn     m1, m7
     paddd     m1, m1                ;dir1 << 1
     paddd     m6, m1                ;class_idx
-    vpermq    m6, m6, 0b11_01_10_00
+    vpermq    m6, m6, 11011000b
 
     SAVE_CLASSIFY_PARAM class_idx, 6
 %endmacro
@@ -665,7 +665,7 @@ cglobal vvc_alf_classify_grad_%1bpc, 6, 14, 15, gradient_sum, src, src_stride, w
 ;pixel size
 %define ps (%1 / 8)
 ALF_CLASSIFY_GRAD %1
-cglobal vvc_alf_classify_%1bpc, 7, 15, 15, class_idx, transpose_idx, gradient_sum, width, height, vb_pos, bit_depth, \
+cglobal vvc_alf_classify_%1bpc, 7, 15, 16, class_idx, transpose_idx, gradient_sum, width, height, vb_pos, bit_depth, \
     x, y, grad, sum_stride, sum_stride3, temp, w
 
     sub bit_depthq, 1

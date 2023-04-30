@@ -28,7 +28,7 @@
 #include "libavutil/x86/cpu.h"
 #include "libavcodec/vvcdec.h"
 #include "libavcodec/vvcdsp.h"
-#include "libavcodec/x86/vvcdsp.h"
+#include "vvcdsp.h"
 
 #define PIXEL_MAX_8  ((1 << 8)  - 1)
 #define PIXEL_MAX_10 ((1 << 10) - 1)
