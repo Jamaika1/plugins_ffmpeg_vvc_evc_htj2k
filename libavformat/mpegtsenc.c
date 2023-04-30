@@ -471,8 +471,8 @@ static int get_m2ts_stream_type(AVFormatContext *s, AVStream *st)
         stream_type = STREAM_TYPE_VIDEO_HEVC;
         break;
     case AV_CODEC_ID_VVC:
-         //av_log(s, AV_LOG_ERROR,
-                    //"MPEGTS VVC %s.\n", avcodec_get_name(st->codecpar->codec_id));
+        av_log(s, AV_LOG_ERROR,
+                    "MPEGTS VVC %s.\n", avcodec_get_name(st->codecpar->codec_id));
         stream_type = STREAM_TYPE_VIDEO_VVC;
         break;
     case AV_CODEC_ID_PCM_BLURAY:
@@ -807,7 +807,7 @@ static int mpegts_write_pmt(AVFormatContext *s, MpegTSService *service)
                 put_registration_descriptor(&q, MKTAG('V', 'C', '-', '1'));
             } else if (stream_type == STREAM_TYPE_VIDEO_HEVC && s->strict_std_compliance <= FF_COMPLIANCE_NORMAL) {
                 put_registration_descriptor(&q, MKTAG('H', 'E', 'V', 'C'));
-            } else if (stream_type == STREAM_TYPE_VIDEO_HEVC && s->strict_std_compliance <= FF_COMPLIANCE_NORMAL) {
+            } else if (stream_type == STREAM_TYPE_VIDEO_VVC && s->strict_std_compliance <= FF_COMPLIANCE_NORMAL) {
                 put_registration_descriptor(&q, MKTAG('V', 'V', 'C', ' '));
             } else if (stream_type == STREAM_TYPE_VIDEO_CAVS || stream_type == STREAM_TYPE_VIDEO_AVS2 ||
                        stream_type == STREAM_TYPE_VIDEO_AVS3) {

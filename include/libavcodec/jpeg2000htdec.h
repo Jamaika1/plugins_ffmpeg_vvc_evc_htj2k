@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Guo Yejun
+ * Copyright (c) 2022 Caleb Etemesi <etemesicaleb@gmail.com>
  *
  * This file is part of FFmpeg.
  *
@@ -18,21 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYERS_H
-#define AVFILTER_DNN_DNN_BACKEND_NATIVE_LAYERS_H
+#ifndef AVCODEC_JPEG2000HTDEC_H
+#define AVCODEC_JPEG2000HTDEC_H
 
-#include <stdint.h>
-#include "dnn_backend_native.h"
+#include "jpeg2000dec.h"
 
-typedef int (*LAYER_EXEC_FUNC)(DnnOperand *operands, const int32_t *input_operand_indexes,
-                               int32_t output_operand_index, const void *parameters, NativeContext *ctx);
-typedef int (*LAYER_LOAD_FUNC)(Layer *layer, AVIOContext *model_file_context, int file_size, int operands_num);
+/**
+ * HT Block decoder as specified in Rec. ITU-T T.814 | ISO/IEC 15444-15
+ */
 
-typedef struct LayerFunc {
-    LAYER_EXEC_FUNC pf_exec;
-    LAYER_LOAD_FUNC pf_load;
-}LayerFunc;
+int ff_jpeg2000_decode_htj2k(const Jpeg2000DecoderContext *s, Jpeg2000CodingStyle *codsty,
+                            Jpeg2000T1Context *t1, Jpeg2000Cblk *cblk, int width,
+                            int height, int magp, uint8_t roi_shift);
 
-extern const LayerFunc ff_layer_funcs[DLT_COUNT];
-
-#endif
+#endif /* AVCODEC_JPEG2000HTDEC_H */
