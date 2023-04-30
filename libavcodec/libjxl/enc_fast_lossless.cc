@@ -30,9 +30,12 @@
 #elif (defined(__x86_64__) || defined(_M_X64)) && !defined(_MSC_VER)
 #include <immintrin.h>
 
-// manually add _mm512_cvtsi512_si32 definition on MacOS Mojave
+// manually add _mm512_cvtsi512_si32 definition if missing
+// (e.g. with Xcode on macOS Mojave)
 // copied from gcc 11.1.0 include/avx512fintrin.h line 14367-14373
-#if __APPLE__ && defined(__clang__) && defined(__MAC_10_0)
+#if defined(__clang__) &&                                           \
+    ((!defined(__apple_build_version__) && __clang_major__ < 10) || \
+     (defined(__apple_build_version__) && __apple_build_version__ < 12000032))
 inline int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm512_cvtsi512_si32(__m512i __A) {
   __v16si __B = (__v16si)__A;
@@ -49,7 +52,10 @@ _mm512_cvtsi512_si32(__m512i __A) {
 
 #ifndef FJXL_ENABLE_AVX512
 // On clang-7 or earlier, and gcc-10 or earlier, AVX512 seems broken.
-#if (defined(__clang__) && __clang_major__ > 7) || \
+#if (defined(__clang__) &&                                             \
+         (!defined(__apple_build_version__) && __clang_major__ > 7) || \
+     (defined(__apple_build_version__) &&                              \
+      __apple_build_version__ > 10010046)) ||                          \
     (defined(__GNUC__) && __GNUC__ > 10)
 #define FJXL_ENABLE_AVX512 1
 #endif
@@ -276,7 +282,7 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
       output->Write(2, 0b00);  // No extra channel
     }
     output->Write(1, 0);  // Not XYB
-    if (frame->nb_chans > 1) {
+    if (frame->nb_chans > 2) {
       output->Write(1, 1);  // color_encoding.all_default (sRGB)
     } else {
       output->Write(1, 0);     // color_encoding.all_default false
@@ -3826,7 +3832,6 @@ JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
     runner = trivial_runner;
   }
 
-  /*
 #if FJXL_ENABLE_AVX512
   if (__builtin_cpu_supports("avx512cd") &&
       __builtin_cpu_supports("avx512vbmi") &&
@@ -3844,7 +3849,6 @@ JxlFastLosslessFrameState* JxlFastLosslessPrepareFrame(
                                            effort, runner_opaque, runner);
   }
 #endif
-*/
 
   return default_implementation::JxlFastLosslessEncodeImpl(
       rgba, width, row_stride, height, nb_chans, bitdepth, big_endian, effort,
