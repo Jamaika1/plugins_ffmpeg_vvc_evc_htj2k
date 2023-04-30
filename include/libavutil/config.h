@@ -6,12 +6,12 @@
 #if defined(__AVX2__)
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v3 -ftree-vectorize -g0 -O3 -fPIC -mavx2 -mpclmul -maes -mbmi2 -mfma -mf16c " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
-                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
                              "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #else
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_demux.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o " \
-                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 -laom_x64 -laribb24_x64 -lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -ldav1d_x64 -ljxl_x64 -lkvazaar_x64 -llcms2_x64 -lopenh264_x64 -lopenjpeg_x64 -lsvtav1_x64 -luavs3d_x64 -luavs3e_x64 -lwebp_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxevd_x64 -lxeve_x64 -lxvid_x64 -lvorbis_x64 -ltwolame_x64 -ltheora_x64 -lspeex_x64 -lsnappy_x64 -lshine_x64 -lmp3lame_x64 -lgsm_x64 -ldavs2_x64 -lvpx_x64 -lcairo_pixman_x64 -luvg266_x64 -lxml2_x64 -logg_x64 -lpthread_x64 -lpng_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a " \
                              "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #endif
 #else
@@ -25,12 +25,12 @@
 #define CONFIG_THIS_YEAR 2023
 #define FFMPEG_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
 #define AVCONV_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
-#define CC_IDENT "GCC: (GNU) 11.3.1 20221227"
+#define CC_IDENT "GCC: (GNU) " __VERSION__
 #define av_restrict restrict
 #define EXTERN_PREFIX ""
 #define EXTERN_ASM
 #define BUILDSUF ""
-#define SLIBSUF ".dll"
+#define SLIBSUF ""
 #define HAVE_MMX2 HAVE_MMXEXT
 #define SWS_MAX_FILTER_SIZE 256
 #define ARCH_AARCH64 0
@@ -930,6 +930,7 @@
 #define CONFIG_PAM_DECODER 1
 #define CONFIG_PBM_DECODER 1
 #define CONFIG_PCX_DECODER 1
+#define CONFIG_PDV_DECODER 1
 #define CONFIG_PFM_DECODER 1
 #define CONFIG_PGM_DECODER 1
 #define CONFIG_PGMYUV_DECODER 1
