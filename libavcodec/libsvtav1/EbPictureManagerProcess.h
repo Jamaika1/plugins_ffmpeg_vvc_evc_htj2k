@@ -35,12 +35,13 @@ typedef struct PictureManagerContext {
     int      started_pics_dec_order_tail_idx;
 } PictureManagerContext;
 /***************************************
-     * Extern Function Declaration
-     ***************************************/
-EbErrorType picture_manager_context_ctor(EbThreadContext   *thread_context_ptr,
-                                         const EbEncHandle *enc_handle_ptr, int rate_control_index);
+ * Extern Function Declaration
+ ***************************************/
+EbErrorType svt_aom_picture_manager_context_ctor(EbThreadContext   *thread_ctx,
+                                                 const EbEncHandle *enc_handle_ptr,
+                                                 int                rate_control_index);
 
-extern void *picture_manager_kernel(void *input_ptr);
+extern void *svt_aom_picture_manager_kernel(void *input_ptr);
 
 #ifdef __cplusplus
 }

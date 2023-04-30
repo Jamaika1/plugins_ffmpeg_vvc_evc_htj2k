@@ -42,8 +42,8 @@ typedef struct EntropyCodingContext {
     uint8_t         cu_depth;
     uint32_t        cu_size;
     uint32_t        cu_size_log2;
-    uint32_t        blk_origin_x;
-    uint32_t        blk_origin_y;
+    uint32_t        blk_org_x;
+    uint32_t        blk_org_y;
     uint32_t        sb_origin_x;
     uint32_t        sb_origin_y;
     uint32_t        pu_itr;
@@ -69,10 +69,10 @@ typedef struct EntropyCodingContext {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType entropy_coding_context_ctor(EbThreadContext   *thread_context_ptr,
-                                               const EbEncHandle *enc_handle_ptr, int index,
-                                               int rate_control_index);
+extern EbErrorType svt_aom_entropy_coding_context_ctor(EbThreadContext   *thread_ctx,
+                                                       const EbEncHandle *enc_handle_ptr, int index,
+                                                       int rate_control_index);
 
-extern void *entropy_coding_kernel(void *input_ptr);
+extern void *svt_aom_entropy_coding_kernel(void *input_ptr);
 
 #endif // EbEntropyCodingProcess_h

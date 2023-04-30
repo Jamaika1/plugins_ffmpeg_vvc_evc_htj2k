@@ -24,37 +24,37 @@ extern "C" {
      * ModeDecisionSb
      *   performs CL (SB)
      *******************************************/
-extern EbErrorType mode_decision_sb_light_pd0(SequenceControlSet    *scs_ptr,
-                                              PictureControlSet     *pcs_ptr,
-                                              const MdcSbData *const mdcResultTbPtr,
-                                              SuperBlock *sb_ptr, uint16_t sb_origin_x,
-                                              uint16_t sb_origin_y, uint32_t sb_addr,
-                                              ModeDecisionContext *context_ptr);
-extern void mode_decision_sb_light_pd1(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-                                       const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
-                                       uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
-                                       ModeDecisionContext *context_ptr);
-extern EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-                                    const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
-                                    uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
-                                    ModeDecisionContext *context_ptr);
-extern void        av1_encode_decode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-                                     SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
-                                     uint32_t sb_origin_y, EncDecContext *context_ptr);
-extern EbErrorType av1_encdec_update(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-                                     SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
-                                     uint32_t sb_origin_y, EncDecContext *context_ptr);
+extern EbErrorType svt_aom_mode_decision_sb_light_pd0(SequenceControlSet    *scs,
+                                                      PictureControlSet     *pcs,
+                                                      const MdcSbData *const mdcResultTbPtr,
+                                                      SuperBlock *sb_ptr, uint16_t sb_origin_x,
+                                                      uint16_t sb_origin_y, uint32_t sb_addr,
+                                                      ModeDecisionContext *ctx);
+extern void svt_aom_mode_decision_sb_light_pd1(SequenceControlSet *scs, PictureControlSet *pcs,
+                                               const MdcSbData *const mdcResultTbPtr,
+                                               SuperBlock *sb_ptr, uint16_t sb_origin_x,
+                                               uint16_t sb_origin_y, uint32_t sb_addr,
+                                               ModeDecisionContext *ctx);
+extern EbErrorType svt_aom_mode_decision_sb(SequenceControlSet *scs, PictureControlSet *pcs,
+                                            const MdcSbData *const mdcResultTbPtr,
+                                            SuperBlock *sb_ptr, uint16_t sb_origin_x,
+                                            uint16_t sb_origin_y, uint32_t sb_addr,
+                                            ModeDecisionContext *ctx);
+extern void        svt_aom_encode_decode(SequenceControlSet *scs, PictureControlSet *pcs,
+                                         SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
+                                         uint32_t sb_origin_y, EncDecContext *ed_ctx);
+extern EbErrorType svt_aom_encdec_update(SequenceControlSet *scs, PictureControlSet *pcs,
+                                         SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
+                                         uint32_t sb_origin_y, EncDecContext *ed_ctx);
 
-void store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer, PictureControlSet *pcs_ptr,
-                          uint32_t sb_x, uint32_t sb_y, uint32_t sb_w, uint32_t sb_h);
+void svt_aom_store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer,
+                                  PictureControlSet *pcs, uint32_t sb_x, uint32_t sb_y,
+                                  uint32_t sb_w, uint32_t sb_h);
 
-void residual_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_stride, uint8_t *pred,
-                     uint32_t pred_offset, uint32_t pred_stride, int16_t *residual,
-                     uint32_t residual_offset, uint32_t residual_stride, Bool hbd,
-                     uint32_t area_width, uint32_t area_height);
-
-EB_EXTERN EbErrorType svt_aom_check_high_freq(PictureControlSet *pcs, SuperBlock *sb_ptr,
-                                              ModeDecisionContext *ctx);
+void svt_aom_residual_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_stride,
+                             uint8_t *pred, uint32_t pred_offset, uint32_t pred_stride,
+                             int16_t *residual, uint32_t residual_offset, uint32_t residual_stride,
+                             Bool hbd, uint32_t area_width, uint32_t area_height);
 
 static const uint16_t block_prob_tab[5][9][3][2] = {{{{75, 75}, {43, 43}, {17, 17}},
                                                      {{8, 9}, {29, 29}, {17, 17}},
@@ -357,6 +357,64 @@ static const uint32_t me_idx[] = {
     84, 20, 20, 20, 20, 20, 20, 20, 20, 75, 75, 75, 75, 75, 75, 75, 75, 75, 76, 76, 76, 76, 76, 76,
     76, 76, 76, 83, 83, 83, 83, 83, 83, 83, 83, 83, 84, 84, 84, 84, 84, 84, 84, 84, 84,
 };
+static const uint32_t me_idx_geom1[] = {
+    0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  5,  5,  5,  5,  5,  21, 22, 29, 30, 6,  6,  6,
+    6,  6,  23, 24, 31, 32, 9,  9,  9,  9,  9,  37, 38, 45, 46, 10, 10, 10, 10, 10, 39, 40,
+    47, 48, 2,  2,  2,  2,  2,  7,  7,  7,  7,  7,  25, 26, 33, 34, 8,  8,  8,  8,  8,  27,
+    28, 35, 36, 11, 11, 11, 11, 11, 41, 42, 49, 50, 12, 12, 12, 12, 12, 43, 44, 51, 52, 3,
+    3,  3,  3,  3,  13, 13, 13, 13, 13, 53, 54, 61, 62, 14, 14, 14, 14, 14, 55, 56, 63, 64,
+    17, 17, 17, 17, 17, 69, 70, 77, 78, 18, 18, 18, 18, 18, 71, 72, 79, 80, 4,  4,  4,  4,
+    4,  15, 15, 15, 15, 15, 57, 58, 65, 66, 16, 16, 16, 16, 16, 59, 60, 67, 68, 19, 19, 19,
+    19, 19, 73, 74, 81, 82, 20, 20, 20, 20, 20, 75, 76, 83, 84};
+static const uint32_t me_idx_geom2[] = {
+    0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  5,  5,  5,  5,  5,  21, 21, 21, 21, 21, 22, 22, 22, 22,
+    22, 29, 29, 29, 29, 29, 30, 30, 30, 30, 30, 6,  6,  6,  6,  6,  23, 23, 23, 23, 23, 24, 24, 24,
+    24, 24, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 9,  9,  9,  9,  9,  37, 37, 37, 37, 37, 38, 38,
+    38, 38, 38, 45, 45, 45, 45, 45, 46, 46, 46, 46, 46, 10, 10, 10, 10, 10, 39, 39, 39, 39, 39, 40,
+    40, 40, 40, 40, 47, 47, 47, 47, 47, 48, 48, 48, 48, 48, 2,  2,  2,  2,  2,  7,  7,  7,  7,  7,
+    25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 33, 33, 33, 33, 33, 34, 34, 34, 34, 34, 8,  8,  8,  8,
+    8,  27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 35, 35, 35, 35, 35, 36, 36, 36, 36, 36, 11, 11, 11,
+    11, 11, 41, 41, 41, 41, 41, 42, 42, 42, 42, 42, 49, 49, 49, 49, 49, 50, 50, 50, 50, 50, 12, 12,
+    12, 12, 12, 43, 43, 43, 43, 43, 44, 44, 44, 44, 44, 51, 51, 51, 51, 51, 52, 52, 52, 52, 52, 3,
+    3,  3,  3,  3,  13, 13, 13, 13, 13, 53, 53, 53, 53, 53, 54, 54, 54, 54, 54, 61, 61, 61, 61, 61,
+    62, 62, 62, 62, 62, 14, 14, 14, 14, 14, 55, 55, 55, 55, 55, 56, 56, 56, 56, 56, 63, 63, 63, 63,
+    63, 64, 64, 64, 64, 64, 17, 17, 17, 17, 17, 69, 69, 69, 69, 69, 70, 70, 70, 70, 70, 77, 77, 77,
+    77, 77, 78, 78, 78, 78, 78, 18, 18, 18, 18, 18, 71, 71, 71, 71, 71, 72, 72, 72, 72, 72, 79, 79,
+    79, 79, 79, 80, 80, 80, 80, 80, 4,  4,  4,  4,  4,  15, 15, 15, 15, 15, 57, 57, 57, 57, 57, 58,
+    58, 58, 58, 58, 65, 65, 65, 65, 65, 66, 66, 66, 66, 66, 16, 16, 16, 16, 16, 59, 59, 59, 59, 59,
+    60, 60, 60, 60, 60, 67, 67, 67, 67, 67, 68, 68, 68, 68, 68, 19, 19, 19, 19, 19, 73, 73, 73, 73,
+    73, 74, 74, 74, 74, 74, 81, 81, 81, 81, 81, 82, 82, 82, 82, 82, 20, 20, 20, 20, 20, 75, 75, 75,
+    75, 75, 76, 76, 76, 76, 76, 83, 83, 83, 83, 83, 84, 84, 84, 84, 84};
+static const uint32_t me_idx_geom3[] = {
+    0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  5,  5,  5,  5,  5,  21, 21, 21, 21, 21, 21, 21, 21, 21,
+    22, 22, 22, 22, 22, 22, 22, 22, 22, 29, 29, 29, 29, 29, 29, 29, 29, 29, 30, 30, 30, 30, 30, 30,
+    30, 30, 30, 6,  6,  6,  6,  6,  23, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24,
+    24, 24, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 9,  9,  9,  9,
+    9,  37, 37, 37, 37, 37, 37, 37, 37, 37, 38, 38, 38, 38, 38, 38, 38, 38, 38, 45, 45, 45, 45, 45,
+    45, 45, 45, 45, 46, 46, 46, 46, 46, 46, 46, 46, 46, 10, 10, 10, 10, 10, 39, 39, 39, 39, 39, 39,
+    39, 39, 39, 40, 40, 40, 40, 40, 40, 40, 40, 40, 47, 47, 47, 47, 47, 47, 47, 47, 47, 48, 48, 48,
+    48, 48, 48, 48, 48, 48, 2,  2,  2,  2,  2,  7,  7,  7,  7,  7,  25, 25, 25, 25, 25, 25, 25, 25,
+    25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 33, 33, 33, 33, 33, 33, 33, 33, 33, 34, 34, 34, 34, 34,
+    34, 34, 34, 34, 8,  8,  8,  8,  8,  27, 27, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28,
+    28, 28, 28, 35, 35, 35, 35, 35, 35, 35, 35, 35, 36, 36, 36, 36, 36, 36, 36, 36, 36, 11, 11, 11,
+    11, 11, 41, 41, 41, 41, 41, 41, 41, 41, 41, 42, 42, 42, 42, 42, 42, 42, 42, 42, 49, 49, 49, 49,
+    49, 49, 49, 49, 49, 50, 50, 50, 50, 50, 50, 50, 50, 50, 12, 12, 12, 12, 12, 43, 43, 43, 43, 43,
+    43, 43, 43, 43, 44, 44, 44, 44, 44, 44, 44, 44, 44, 51, 51, 51, 51, 51, 51, 51, 51, 51, 52, 52,
+    52, 52, 52, 52, 52, 52, 52, 3,  3,  3,  3,  3,  13, 13, 13, 13, 13, 53, 53, 53, 53, 53, 53, 53,
+    53, 53, 54, 54, 54, 54, 54, 54, 54, 54, 54, 61, 61, 61, 61, 61, 61, 61, 61, 61, 62, 62, 62, 62,
+    62, 62, 62, 62, 62, 14, 14, 14, 14, 14, 55, 55, 55, 55, 55, 55, 55, 55, 55, 56, 56, 56, 56, 56,
+    56, 56, 56, 56, 63, 63, 63, 63, 63, 63, 63, 63, 63, 64, 64, 64, 64, 64, 64, 64, 64, 64, 17, 17,
+    17, 17, 17, 69, 69, 69, 69, 69, 69, 69, 69, 69, 70, 70, 70, 70, 70, 70, 70, 70, 70, 77, 77, 77,
+    77, 77, 77, 77, 77, 77, 78, 78, 78, 78, 78, 78, 78, 78, 78, 18, 18, 18, 18, 18, 71, 71, 71, 71,
+    71, 71, 71, 71, 71, 72, 72, 72, 72, 72, 72, 72, 72, 72, 79, 79, 79, 79, 79, 79, 79, 79, 79, 80,
+    80, 80, 80, 80, 80, 80, 80, 80, 4,  4,  4,  4,  4,  15, 15, 15, 15, 15, 57, 57, 57, 57, 57, 57,
+    57, 57, 57, 58, 58, 58, 58, 58, 58, 58, 58, 58, 65, 65, 65, 65, 65, 65, 65, 65, 65, 66, 66, 66,
+    66, 66, 66, 66, 66, 66, 16, 16, 16, 16, 16, 59, 59, 59, 59, 59, 59, 59, 59, 59, 60, 60, 60, 60,
+    60, 60, 60, 60, 60, 67, 67, 67, 67, 67, 67, 67, 67, 67, 68, 68, 68, 68, 68, 68, 68, 68, 68, 19,
+    19, 19, 19, 19, 73, 73, 73, 73, 73, 73, 73, 73, 73, 74, 74, 74, 74, 74, 74, 74, 74, 74, 81, 81,
+    81, 81, 81, 81, 81, 81, 81, 82, 82, 82, 82, 82, 82, 82, 82, 82, 20, 20, 20, 20, 20, 75, 75, 75,
+    75, 75, 75, 75, 75, 75, 76, 76, 76, 76, 76, 76, 76, 76, 76, 83, 83, 83, 83, 83, 83, 83, 83, 83,
+    84, 84, 84, 84, 84, 84, 84, 84, 84};
 static const uint32_t me_idx_85[] = {
     0,  1,  5,  21, 22, 29, 30, 6,  23, 24, 31, 32, 9,  37, 38, 45, 46, 10, 39, 40, 47, 48,
     2,  7,  25, 26, 33, 34, 8,  27, 28, 35, 36, 11, 41, 42, 49, 50, 12, 43, 44, 51, 52, 3,
@@ -1104,14 +1162,11 @@ static const int32_t me_idx_128x128[4][BLOCK_MAX_COUNT_SB_128] = {
      20, 83, 84, 75, 83, 20, 20, 76, 84, 20, 20, 20, 20, 20, 20, 20, 20, 75, 75, 75, 75, 75, 75, 75,
      75, 75, 76, 76, 76, 76, 76, 76, 76, 76, 76, 83, 83, 83, 83, 83, 83, 83, 83, 83, 84, 84, 84, 84,
      84, 84, 84, 84, 84}};
-EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet  *sequence_control_set_ptr,
-                                                PictureControlSet   *pcs_ptr,
-                                                ModeDecisionContext *context_ptr);
 
-void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
-                        EbPictureBufferDesc *input_picture_ptr);
-void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
-                                  EbPictureBufferDesc *input_picture_ptr);
+void read_refine_me_mvs(PictureControlSet *pcs, ModeDecisionContext *ctx,
+                        EbPictureBufferDesc *input_pic);
+void perform_md_reference_pruning(PictureControlSet *pcs, ModeDecisionContext *ctx,
+                                  EbPictureBufferDesc *input_pic);
 #ifdef __cplusplus
 }
 #endif

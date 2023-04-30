@@ -18,13 +18,14 @@ extern "C" {
 #endif
 
 /**************************************
-     * Extern Function Declarations
-     **************************************/
-EbErrorType packetization_context_ctor(EbThreadContext   *thread_context_ptr,
-                                       const EbEncHandle *enc_handle_ptr, int rate_control_index,
-                                       int demux_index, int me_port_index);
+ * Extern Function Declarations
+ **************************************/
+EbErrorType svt_aom_packetization_context_ctor(EbThreadContext   *thread_ctx,
+                                               const EbEncHandle *enc_handle_ptr,
+                                               int rate_control_index, int demux_index,
+                                               int me_port_index);
 
-extern void *packetization_kernel(void *input_ptr);
+extern void *svt_aom_packetization_kernel(void *input_ptr);
 #ifdef __cplusplus
 }
 #endif

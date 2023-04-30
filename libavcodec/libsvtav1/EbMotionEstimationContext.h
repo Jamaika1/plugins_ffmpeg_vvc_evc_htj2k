@@ -42,11 +42,12 @@ typedef struct MePredictionUnit {
 } MePredictionUnit;
 
 typedef enum EbMeType {
-    ME_CLOSE_LOOP = 0,
-    ME_MCTF       = 1,
-    ME_TPL        = 2,
-    ME_OPEN_LOOP  = 3,
-    ME_FIRST_PASS = 4
+    ME_CLOSE_LOOP  = 0,
+    ME_MCTF        = 1,
+    ME_TPL         = 2,
+    ME_OPEN_LOOP   = 3,
+    ME_FIRST_PASS  = 4,
+    ME_DG_DETECTOR = 5
 } EbMeType;
 typedef enum EbMeTierZeroPu {
     // 2Nx2N [85 partitions]
@@ -278,26 +279,26 @@ typedef struct IntraReferenceSamplesOpenLoop {
 
 typedef struct MeHmeRefPruneCtrls {
     Bool enable_me_hme_ref_pruning;
-    uint16_t
-        prune_ref_if_hme_sad_dev_bigger_than_th; // TH used to prune references based on hme sad deviation
-    uint16_t
-        prune_ref_if_me_sad_dev_bigger_than_th; // TH used to prune references based on me sad deviation
-    Bool protect_closest_refs; // if true, do not prune closest ref frames
+    // TH used to prune references based on hme sad deviation
+    uint16_t prune_ref_if_hme_sad_dev_bigger_than_th;
+    // TH used to prune references based on me sad deviation
+    uint16_t prune_ref_if_me_sad_dev_bigger_than_th;
+    Bool     protect_closest_refs; // if true, do not prune closest ref frames
 } MeHmeRefPruneCtrls;
 
 typedef struct MeSrCtrls {
     uint8_t enable_me_sr_adjustment;
-    uint16_t
-        reduce_me_sr_based_on_mv_length_th; // reduce the ME search region if HME MVs and HME sad are small
-    uint16_t
-        stationary_hme_sad_abs_th; // reduce the ME search region if HME MVs and HME sad are small
-    uint16_t
-        stationary_me_sr_divisor; // Reduction factor for the ME search region if HME MVs and HME sad are small
-    uint16_t
-        reduce_me_sr_based_on_hme_sad_abs_th; // reduce the ME search region if HME sad is small
-    uint16_t
-        me_sr_divisor_for_low_hme_sad; // Reduction factor for the ME search region if HME sad is small
-    uint8_t distance_based_hme_resizing; // scale down the HME search area for high ref-indices
+    // reduce the ME search region if HME MVs and HME sad are small
+    uint16_t reduce_me_sr_based_on_mv_length_th;
+    // reduce the ME search region if HME MVs and HME sad are small
+    uint16_t stationary_hme_sad_abs_th;
+    // Reduction factor for the ME search region if HME MVs and HME sad are small
+    uint16_t stationary_me_sr_divisor;
+    // reduce the ME search region if HME sad is small
+    uint16_t reduce_me_sr_based_on_hme_sad_abs_th;
+    // Reduction factor for the ME search region if HME sad is small
+    uint16_t me_sr_divisor_for_low_hme_sad;
+    uint8_t  distance_based_hme_resizing; // scale down the HME search area for high ref-indices
 } MeSrCtrls;
 
 #define SEARCH_REGION_COUNT 2
@@ -436,10 +437,11 @@ typedef struct MeContext {
     EbMeType                    me_type;
     EbDownScaledBufDescPtrArray mctf_ref_desc_ptr_array;
 
-    uint8_t                     num_of_list_to_search;
-    uint8_t                     num_of_ref_pic_to_search[2];
-    uint8_t                     temporal_layer_index;
-    Bool                        is_used_as_reference_flag;
+    uint8_t num_of_list_to_search;
+    uint8_t num_of_ref_pic_to_search[2];
+    uint8_t temporal_layer_index;
+    // Flag will be true if the current frame is used as a reference picture by other frames.
+    Bool                        is_ref;
     EbDownScaledBufDescPtrArray me_ds_ref_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // tf
     uint8_t      tf_chroma;
@@ -475,11 +477,13 @@ typedef struct MeContext {
     uint8_t      bypass_blk_step;
     uint32_t     b64_width;
     uint32_t     b64_height;
+    uint8_t      performed_phme[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][2];
+    uint32_t     prev_me_stage_based_exit_th;
 } MeContext;
 
 typedef uint64_t (*EB_ME_DISTORTION_FUNC)(uint8_t *src, uint32_t src_stride, uint8_t *ref,
                                           uint32_t ref_stride, uint32_t width, uint32_t height);
-extern EbErrorType me_context_ctor(MeContext *object_ptr);
+extern EbErrorType svt_aom_me_context_ctor(MeContext *object_ptr);
 
 #ifdef __cplusplus
 }
