@@ -138,6 +138,7 @@ static const AVFilter * const filter_list[] = {
 
 &ff_asrc_aevalsrc,
 &ff_asrc_afdelaysrc,
+&ff_asrc_afireqsrc,
 &ff_asrc_afirsrc,
 &ff_asrc_anoisesrc,
 &ff_asrc_anullsrc,
