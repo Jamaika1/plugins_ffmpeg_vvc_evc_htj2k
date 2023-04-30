@@ -415,7 +415,7 @@ const FFOutputFormat ff_evc_muxer = {
 #endif
 
 #if CONFIG_VVC_MUXER
-static int vvc_check_bitstream(struct AVFormatContext *s, struct AVStream *st, const AVPacket *pkt)
+static int vvc_check_bitstream(AVFormatContext *s, AVStream *st, const AVPacket *pkt)
 {
     if (pkt->size >= 5 && AV_RB32(pkt->data) != 0x0000001 &&
                           AV_RB24(pkt->data) != 0x000001)

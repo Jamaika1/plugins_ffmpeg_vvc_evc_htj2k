@@ -1480,7 +1480,7 @@ static int mov_write_vvcc_tag(AVIOContext *pb, MOVTrack *track)
     //ffio_wfourcc(pb, "vvcC");
     ffio_wfourcc_full_box(pb, "vvcC");
 
-    if (track->tag == MKTAG('v','v','i','1'))
+    if (track->tag == MKTAG('v','v','i','1') || track->tag == MKTAG('v','v','c','1'))
         ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 1);
     else
         ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 0);
@@ -1742,7 +1742,7 @@ static int mov_get_evc_codec_tag(AVFormatContext *s, MOVTrack *track)
     int tag = track->par->codec_tag;
 
     if (!tag)
-        tag = MKTAG('e', 'v', 'c', 'i');
+        tag = MKTAG('e', 'v', 'c', '1');
 
     return tag;
 }
@@ -1752,7 +1752,7 @@ static int mov_get_vvc_codec_tag(AVFormatContext *s, MOVTrack *track)
     int tag = track->par->codec_tag;
 
     if (!tag)
-        tag = MKTAG('v', 'v', 'c', 'i');
+        tag = MKTAG('v', 'v', 'c', '1');
 
     return tag;
 }
@@ -3330,14 +3330,20 @@ static int64_t calc_pts_duration(MOVMuxContext *mov, MOVTrack *track)
     return end - start;
 }
 
+static int mov_mdhd_mvhd_tkhd_version(MOVMuxContext *mov, MOVTrack *track, int64_t duration)
+{
+    if (track && track->mode == MODE_ISM)
+        return 1;
+    if (duration < INT32_MAX)
+        return 0;
+    return 1;
+}
+
 static int mov_write_mdhd_tag(AVIOContext *pb, MOVMuxContext *mov,
                               MOVTrack *track)
 {
     int64_t duration = calc_samples_pts_duration(mov, track);
-    int version = duration < INT32_MAX ? 0 : 1;
-
-    if (track->mode == MODE_ISM)
-        version = 1;
+    int version = mov_mdhd_mvhd_tkhd_version(mov, track, duration);
 
     (version == 1) ? avio_wb32(pb, 44) : avio_wb32(pb, 32); /* size */
     ffio_wfourcc(pb, "mdhd");
@@ -3423,8 +3429,6 @@ static int mov_write_tkhd_tag(AVIOContext *pb, MOVMuxContext *mov,
         else
             duration *= mov->avif_loop_count;
 
-     version = duration < INT32_MAX ? 0 : 1;
-
     if (st) {
         if (mov->per_stream_grouping)
             group = st->index;
@@ -3440,8 +3444,7 @@ static int mov_write_tkhd_tag(AVIOContext *pb, MOVMuxContext *mov,
     if (track->flags & MOV_TRACK_ENABLED)
         flags |= MOV_TKHD_FLAG_ENABLED;
 
-    if (track->mode == MODE_ISM)
-        version = 1;
+    version = mov_mdhd_mvhd_tkhd_version(mov, track, duration);
 
     (version == 1) ? avio_wb32(pb, 104) : avio_wb32(pb, 92); /* size */
     ffio_wfourcc(pb, "tkhd");
@@ -3924,7 +3927,7 @@ static int mov_write_mvhd_tag(AVIOContext *pb, MOVMuxContext *mov)
         max_track_id  = 1;
     }
 
-    version = max_track_len < UINT32_MAX ? 0 : 1;
+    version = mov_mdhd_mvhd_tkhd_version(mov, NULL, max_track_len);
     avio_wb32(pb, version == 1 ? 120 : 108); /* size */
 
     ffio_wfourcc(pb, "mvhd");
@@ -4919,8 +4922,8 @@ static int mov_write_trun_tag(AVIOContext *pb, MOVMuxContext *mov,
         if (i > first && get_sample_flags(track, &track->cluster[i]) != track->default_sample_flags)
             flags |= MOV_TRUN_SAMPLE_FLAGS;
     }
-    if (!(flags & MOV_TRUN_SAMPLE_FLAGS) && track->entry > 0 &&
-         get_sample_flags(track, &track->cluster[0]) != track->default_sample_flags)
+    if (!(flags & MOV_TRUN_SAMPLE_FLAGS) && track->entry > first &&
+         get_sample_flags(track, &track->cluster[first]) != track->default_sample_flags)
         flags |= MOV_TRUN_FIRST_SAMPLE_FLAGS;
     if (track->flags & MOV_TRACK_CTTS)
         flags |= MOV_TRUN_SAMPLE_CTS;
@@ -6304,7 +6307,7 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
             if (par->codec_id == AV_CODEC_ID_H264 && par->extradata_size > 4) {
                 int nal_size_length = (par->extradata[4] & 0x3) + 1;
                 ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
-            } else if(par->codec_id == AV_CODEC_ID_HEVC && par->extradata_size > 21) {
+            } else if((par->codec_id == AV_CODEC_ID_HEVC || par->codec_id == AV_CODEC_ID_VVC) && par->extradata_size > 21) {
                 int nal_size_length = (par->extradata[21] & 0x3) + 1;
                 ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
             } else {
@@ -7389,7 +7392,7 @@ static int mov_init(AVFormatContext *s)
 
         if (mov->encryption_scheme == MOV_ENC_CENC_AES_CTR) {
             ret = ff_mov_cenc_init(&track->cenc, mov->encryption_key,
-                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC),
+                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC || track->par->codec_id == AV_CODEC_ID_VVC),
                 s->flags & AVFMT_FLAG_BITEXACT);
             if (ret)
                 return ret;
