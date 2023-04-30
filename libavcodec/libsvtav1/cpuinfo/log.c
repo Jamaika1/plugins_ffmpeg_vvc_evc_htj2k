@@ -23,7 +23,7 @@
   #endif
 #endif
 
-#include <cpuinfo/log.h>
+#include "cpuinfo/log.h"
 
 
 /* Messages up to this size are formatted entirely on-stack, and don't allocate heap memory */
