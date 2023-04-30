@@ -18,7 +18,7 @@
 /********************************************************************************************************************************/
 // entropymode.c
 
-const AomCdfProb default_kf_y_mode_cdf[KF_MODE_CONTEXTS][KF_MODE_CONTEXTS][CDF_SIZE(
+const AomCdfProb svt_aom_default_kf_y_mode_cdf[KF_MODE_CONTEXTS][KF_MODE_CONTEXTS][CDF_SIZE(
     INTRA_MODES)] = {
     {{AOM_CDF13(15588, 17027, 19338, 20218, 20682, 21110, 21825, 23244, 24189, 28165, 29093,
                 30466)},
@@ -851,7 +851,7 @@ static const AomCdfProb default_switchable_interp_cdf[SWITCHABLE_FILTER_CONTEXTS
                             {AOM_CDF3(601, 943)},
                             {AOM_CDF3(14969, 21398)}};
 
-void init_mode_probs(FRAME_CONTEXT *fc) {
+void svt_aom_init_mode_probs(FRAME_CONTEXT *fc) {
     svt_memcpy(
         fc->palette_y_size_cdf, default_palette_y_size_cdf, sizeof(default_palette_y_size_cdf));
     svt_memcpy(
@@ -862,7 +862,7 @@ void init_mode_probs(FRAME_CONTEXT *fc) {
     svt_memcpy(fc->palette_uv_color_index_cdf,
                default_palette_uv_color_index_cdf,
                sizeof(default_palette_uv_color_index_cdf));
-    svt_memcpy(fc->kf_y_cdf, default_kf_y_mode_cdf, sizeof(default_kf_y_mode_cdf));
+    svt_memcpy(fc->kf_y_cdf, svt_aom_default_kf_y_mode_cdf, sizeof(svt_aom_default_kf_y_mode_cdf));
     svt_memcpy(fc->angle_delta_cdf, default_angle_delta_cdf, sizeof(default_angle_delta_cdf));
     svt_memcpy(fc->comp_inter_cdf, default_comp_inter_cdf, sizeof(default_comp_inter_cdf));
     svt_memcpy(fc->comp_ref_type_cdf, default_comp_ref_type_cdf, sizeof(default_comp_ref_type_cdf));
@@ -3277,12 +3277,12 @@ void svt_av1_reset_cdf_symbol_counters(FRAME_CONTEXT *fc) {
 
 #define MAX_COLOR_CONTEXT_HASH 8
 // Negative values are invalid
-int palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1] = {
+int svt_aom_palette_color_index_context_lookup[MAX_COLOR_CONTEXT_HASH + 1] = {
     -1, -1, 0, -1, -1, 4, 3, 2, 1};
 
 #define NUM_PALETTE_NEIGHBORS 3 // left, top-left and top.
-int av1_get_palette_color_index_context_optimized(const uint8_t *color_map, int stride, int r,
-                                                  int c, int *color_idx) {
+int svt_aom_get_palette_color_index_context_optimized(const uint8_t *color_map, int stride, int r,
+                                                      int c, int *color_idx) {
     assert(r > 0 || c > 0);
 
     // This goes in the order of left, top, and top-left. This has the advantage
@@ -3379,7 +3379,7 @@ int av1_get_palette_color_index_context_optimized(const uint8_t *color_map, int 
     assert(color_index_ctx_hash <= MAX_COLOR_CONTEXT_HASH);
 
     // Lookup context from hash.
-    const int color_index_ctx = palette_color_index_context_lookup[color_index_ctx_hash];
+    const int color_index_ctx = svt_aom_palette_color_index_context_lookup[color_index_ctx_hash];
     assert(color_index_ctx >= 0);
     assert(color_index_ctx < PALETTE_COLOR_INDEX_CONTEXTS);
     return color_index_ctx;
