@@ -28,7 +28,7 @@ extern "C" {
  * has been modified, and reset anytime the major API version has
  * been changed. Used to keep track if a field has been added or not.
  */
-#define SVT_AV1_ENC_ABI_VERSION 7
+#define SVT_AV1_ENC_ABI_VERSION 8
 
 //***HME***
 
@@ -43,7 +43,6 @@ extern "C" {
 #endif
 #endif /* ATTRIBUTE_PACKED */
 typedef enum ATTRIBUTE_PACKED {
-    ENC_MRS        = -2, // Highest quality research mode (slowest)
     ENC_MR         = -1, //Research mode with higher quality than M0
     ENC_M0         = 0,
     ENC_M1         = 1,
@@ -113,10 +112,6 @@ struct EbSvtAv1MasteringDisplayInfo {
 typedef struct PredictionStructureConfigEntry {
     uint32_t temporal_layer_index;
     uint32_t decode_order;
-#if !OPT_RPS_CONSTR_3
-    int32_t ref_list0[REF_LIST_MAX_DEPTH];
-    int32_t ref_list1[REF_LIST_MAX_DEPTH];
-#endif
 } PredictionStructureConfigEntry;
 
 // super-res modes
@@ -210,6 +205,13 @@ typedef enum SvtAv1FrameUpdateType {
     SVT_AV1_INTNL_ARF_UPDATE, // Internal Altref Frame
     SVT_AV1_FRAME_UPDATE_TYPES
 } SvtAv1FrameUpdateType;
+
+typedef struct SvtAv1FrameScaleEvts {
+    uint32_t  evt_num;
+    uint64_t *start_frame_nums;
+    uint32_t *resize_kf_denoms;
+    uint32_t *resize_denoms;
+} SvtAv1FrameScaleEvts;
 
 // Will contain the EbEncApi which will live in the EncHandle class
 // Only modifiable during config-time.
@@ -336,11 +338,11 @@ typedef struct EbSvtAv1EncConfiguration {
 #endif
 
     /**
-     * @brief Enable writing of HDR metadata in the bitstream
+     * @brief Currently unused.
      *
-     * Default is false.
+     * Default is 0.
      */
-    Bool high_dynamic_range_input;
+    uint8_t high_dynamic_range_input;
 
     /**
      * @brief Bitstream profile to use.
@@ -900,6 +902,33 @@ typedef struct EbSvtAv1EncConfiguration {
     * 1 = enable Dynamic GoP
     *  Default is 1. */
     Bool enable_dg;
+
+    /**
+     * @brief startup_mg_size
+     *
+     * When enabled, a MG with specified size will be inserted after the key frame.
+     * The MG size is determined by 2^startup_mg_size.
+     *
+     * 0: off
+     * 2: set hierarchical levels to 2 (MG size 4)
+     * 3: set hierarchical levels to 3 (MG size 8)
+     * 4: set hierarchical levels to 4 (MG size 16)
+     * Default is 0.
+     */
+    uint8_t startup_mg_size;
+
+    /* @brief reference scaling events for random access mode (reize-mode = 4)
+     *
+     * evt_num:          total count of events
+     * start_frame_nums: array of scaling start frame numbers
+     * resize_kf_denoms: array of scaling denominators of key-frame
+     * resize_denoms:    array of scaling denominators of non-key-frame
+     */
+    SvtAv1FrameScaleEvts frame_scale_evts;
+
+    /*Add 64 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
+    uint8_t padding[64];
+
 } EbSvtAv1EncConfiguration;
 
 /**
