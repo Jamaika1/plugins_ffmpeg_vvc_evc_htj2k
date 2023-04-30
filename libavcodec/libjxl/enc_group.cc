@@ -42,131 +42,55 @@ using hwy::HWY_NAMESPACE::Round;
 // NOTE: caller takes care of extracting quant from rect of RawQuantField.
 void QuantizeBlockAC(const Quantizer& quantizer, const bool error_diffusion,
                      size_t c, float qm_multiplier, size_t quant_kind,
-                     size_t xsize, size_t ysize,
+                     size_t xsize, size_t ysize, float* thresholds,
                      const float* JXL_RESTRICT block_in, int32_t* quant,
                      int32_t* JXL_RESTRICT block_out) {
   PROFILER_FUNC;
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
   float qac = quantizer.Scale() * (*quant);
   // Not SIMD-fied for now.
-  float thres[4] = {0.58f, 0.66f, 0.66f, 0.7f};
-  if (c == 0) {
-    for (int i = 1; i < 4; ++i) {
-      thres[i] = 0.71f;
-    }
-  }
-  if (c == 2) {
-    for (int i = 1; i < 4; ++i) {
-      thres[i] = 0.75f;
-    }
-  }
-  if (xsize > 1 || ysize > 1) {
+  if (c != 1 && (xsize > 1 || ysize > 1)) {
     for (int i = 0; i < 4; ++i) {
-      thres[i] -= Clamp1(0.003f * xsize * ysize, 0.f, (c > 0 ? 0.08f : 0.12f));
-      if (thres[i] < 0.54) {
-        thres[i] = 0.54;
+      thresholds[i] -= Clamp1(0.003f * xsize * ysize, 0.f, 0.08f);
+      if (thresholds[i] < 0.54) {
+        thresholds[i] = 0.54;
       }
     }
   }
-  if (!error_diffusion) {
-    HWY_CAPPED(float, kBlockDim) df;
-    HWY_CAPPED(int32_t, kBlockDim) di;
-    HWY_CAPPED(uint32_t, kBlockDim) du;
-    const auto quant = Set(df, qac * qm_multiplier);
-
-    for (size_t y = 0; y < ysize * kBlockDim; y++) {
-      size_t yfix = static_cast<size_t>(y >= ysize * kBlockDim / 2) * 2;
-      const size_t off = y * kBlockDim * xsize;
-      for (size_t x = 0; x < xsize * kBlockDim; x += Lanes(df)) {
-        auto thr = Zero(df);
-        if (xsize == 1) {
-          HWY_ALIGN uint32_t kMask[kBlockDim] = {0,   0,   0,   0,
-                                                 ~0u, ~0u, ~0u, ~0u};
-          const auto mask = MaskFromVec(BitCast(df, Load(du, kMask + x)));
-          thr =
-              IfThenElse(mask, Set(df, thres[yfix + 1]), Set(df, thres[yfix]));
-        } else {
-          // Same for all lanes in the vector.
-          thr = Set(
-              df,
-              thres[yfix + static_cast<size_t>(x >= xsize * kBlockDim / 2)]);
-        }
-
-        const auto q = Mul(Load(df, qm + off + x), quant);
-        const auto in = Load(df, block_in + off + x);
-        const auto val = Mul(q, in);
-        const auto nzero_mask = Ge(Abs(val), thr);
-        const auto v = ConvertTo(di, IfThenElseZero(nzero_mask, Round(val)));
-        Store(v, di, block_out + off + x);
-      }
-    }
-    return;
-  }
-
-retry:
-  int hfNonZeros[4] = {};
-  float hfError[4] = {};
-  float hfMaxError[4] = {};
-  size_t hfMaxErrorIx[4] = {};
+  HWY_CAPPED(float, kBlockDim) df;
+  HWY_CAPPED(int32_t, kBlockDim) di;
+  HWY_CAPPED(uint32_t, kBlockDim) du;
+  const auto quantv = Set(df, qac * qm_multiplier);
   for (size_t y = 0; y < ysize * kBlockDim; y++) {
-    for (size_t x = 0; x < xsize * kBlockDim; x++) {
-      const size_t pos = y * kBlockDim * xsize + x;
-      if (x < xsize && y < ysize) {
-        // Ensure block is initialized
-        block_out[pos] = 0;
-        continue;
+    size_t yfix = static_cast<size_t>(y >= ysize * kBlockDim / 2) * 2;
+    const size_t off = y * kBlockDim * xsize;
+    for (size_t x = 0; x < xsize * kBlockDim; x += Lanes(df)) {
+      auto thr = Zero(df);
+      if (xsize == 1) {
+        HWY_ALIGN uint32_t kMask[kBlockDim] = {0, 0, 0, 0, ~0u, ~0u, ~0u, ~0u};
+        const auto mask = MaskFromVec(BitCast(df, Load(du, kMask + x)));
+        thr = IfThenElse(mask, Set(df, thresholds[yfix + 1]),
+                         Set(df, thresholds[yfix]));
+      } else {
+        // Same for all lanes in the vector.
+        thr = Set(
+            df,
+            thresholds[yfix + static_cast<size_t>(x >= xsize * kBlockDim / 2)]);
       }
-      const size_t hfix = (static_cast<size_t>(y >= ysize * kBlockDim / 2) * 2 +
-                           static_cast<size_t>(x >= xsize * kBlockDim / 2));
-      const float val = block_in[pos] * (qm[pos] * qac * qm_multiplier);
-      const float v = (std::abs(val) < thres[hfix]) ? 0 : rintf(val);
-      block_out[pos] = static_cast<int32_t>(v);
-      const float error = std::abs(val) - std::abs(v);
-      hfError[hfix] += error * error;
-      if (hfMaxError[hfix] < error) {
-        hfMaxError[hfix] = error;
-        hfMaxErrorIx[hfix] = pos;
-      }
-      if (v != 0.0f) {
-        hfNonZeros[hfix] += std::abs(v);
-      }
-    }
-  }
-  if (c != 1) return;
-  constexpr size_t kPartialBlockKinds =
-      (1 << AcStrategy::Type::IDENTITY) | (1 << AcStrategy::Type::DCT2X2) |
-      (1 << AcStrategy::Type::DCT4X4) | (1 << AcStrategy::Type::DCT4X8) |
-      (1 << AcStrategy::Type::DCT8X4) | (1 << AcStrategy::Type::AFV0) |
-      (1 << AcStrategy::Type::AFV1) | (1 << AcStrategy::Type::AFV2) |
-      (1 << AcStrategy::Type::AFV3);
-  if ((1 << quant_kind) & kPartialBlockKinds) return;
-  float hfErrorLimit = 0.029f * (xsize * ysize) * kDCTBlockSize * 0.25f;
-  bool goretry = false;
-  for (int i = 1; i < 4; ++i) {
-    if (hfError[i] >= hfErrorLimit &&
-        hfNonZeros[i] <= (xsize + ysize) * 0.25f) {
-      if (thres[i] >= 0.4f) {
-        thres[i] -= 0.01f;
-        goretry = true;
-      }
-    }
-  }
-  if (goretry) goto retry;
-
-  for (int i = 1; i < 4; ++i) {
-    if (hfError[i] >= hfErrorLimit && hfNonZeros[i] == 0) {
-      const size_t pos = hfMaxErrorIx[i];
-      if (hfMaxError[i] >= 0.4f) {
-        block_out[pos] = block_in[pos] > 0.0f ? 1.0f : -1.0f;
-      }
+      const auto q = Mul(Load(df, qm + off + x), quantv);
+      const auto in = Load(df, block_in + off + x);
+      const auto val = Mul(q, in);
+      const auto nzero_mask = Ge(Abs(val), thr);
+      const auto v = ConvertTo(di, IfThenElseZero(nzero_mask, Round(val)));
+      Store(v, di, block_out + off + x);
     }
   }
 }
 
-bool AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
+void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
                         float qm_multiplier, size_t quant_kind, size_t xsize,
-                        size_t ysize, const float* JXL_RESTRICT block_in,
-                        int32_t* quant) {
+                        size_t ysize, float* thresholds,
+                        const float* JXL_RESTRICT block_in, int32_t* quant) {
   // No quantization adjusting for these small blocks.
   // Quantization adjusting attempts to fix some known issues
   // with larger blocks and on the 8x8 dct's emerging 8x8 blockiness
@@ -177,31 +101,22 @@ bool AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       (1 << AcStrategy::Type::DCT8X4) | (1 << AcStrategy::Type::AFV0) |
       (1 << AcStrategy::Type::AFV1) | (1 << AcStrategy::Type::AFV2) |
       (1 << AcStrategy::Type::AFV3);
-  if ((1 << quant_kind) & kPartialBlockKinds) return true;
+  if ((1 << quant_kind) & kPartialBlockKinds) return;
 
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
   float qac = quantizer.Scale() * (*quant);
-  float thres[4] = {0.58f, 0.66f, 0.66f, 0.7f};
-  if (c == 0) {
-    for (int i = 1; i < 4; ++i) {
-      thres[i] = 0.71f;
-    }
-  }
-  if (c == 2) {
-    for (int i = 1; i < 4; ++i) {
-      thres[i] = 0.75f;
-    }
-  }
   if (xsize > 1 || ysize > 1) {
     for (int i = 0; i < 4; ++i) {
-      thres[i] -= Clamp1(0.003f * xsize * ysize, 0.f, (c > 0 ? 0.08f : 0.12f));
-      if (thres[i] < 0.54) {
-        thres[i] = 0.54;
+      thresholds[i] -= Clamp1(0.003f * xsize * ysize, 0.f, 0.08f);
+      if (thresholds[i] < 0.54) {
+        thresholds[i] = 0.54;
       }
     }
   }
   float sum_of_highest_freq_row_and_column = 0;
   float hfNonZeros[4] = {};
+  float hfMaxError[4] = {};
+
   for (size_t y = 0; y < ysize * kBlockDim; y++) {
     for (size_t x = 0; x < xsize * kBlockDim; x++) {
       const size_t pos = y * kBlockDim * xsize + x;
@@ -211,13 +126,27 @@ bool AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       const size_t hfix = (static_cast<size_t>(y >= ysize * kBlockDim / 2) * 2 +
                            static_cast<size_t>(x >= xsize * kBlockDim / 2));
       const float val = block_in[pos] * (qm[pos] * qac * qm_multiplier);
-      const float v = (std::abs(val) < thres[hfix]) ? 0 : rintf(val);
+      const float v = (std::abs(val) < thresholds[hfix]) ? 0 : rintf(val);
+      if (c == 1 && v == 0) {
+        const float error = std::abs(val);
+        if (hfMaxError[hfix] < error) {
+          hfMaxError[hfix] = error;
+        }
+      }
       if (v != 0.0f) {
-        hfNonZeros[hfix] += std::abs(val);
+        hfNonZeros[hfix] += std::abs(v);
         if ((y == ysize * kBlockDim - 1 || x == xsize * kBlockDim - 1) &&
             (x >= xsize * 4 && y >= ysize * 4)) {
           sum_of_highest_freq_row_and_column += std::abs(val);
         }
+      }
+    }
+  }
+  if (c == 1) {
+    static const double kLimit = 0.49f;
+    for (int i = 1; i < 4; ++i) {
+      if (hfNonZeros[i] == 0.0 && hfMaxError[i] > kLimit) {
+        thresholds[i] = 0.9999 * hfMaxError[i];
       }
     }
   }
@@ -252,7 +181,23 @@ bool AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       }
     }
   }
-  return hfNonZeros[0] > 2.0f * xsize * ysize;
+  {
+    // Reduce quant in highly active areas.
+    int32_t div = (xsize + ysize) / 2;
+    int32_t activity = (hfNonZeros[0] + div / 2) / div;
+    int32_t orig_qp_limit = std::max(4, *quant / 2);
+    for (int i = 1; i < 4; ++i) {
+      activity = std::min<int32_t>(activity, (hfNonZeros[i] + div / 2) / div);
+    }
+    if (activity >= 15) {
+      activity = 15;
+    }
+    int32_t qp = *quant - activity;
+    if (qp < orig_qp_limit) {
+      qp = orig_qp_limit;
+    }
+    *quant = qp;
+  }
 }
 
 // NOTE: caller takes care of extracting quant from rect of RawQuantField.
@@ -263,6 +208,7 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
                                const float* JXL_RESTRICT biases, int32_t* quant,
                                float* JXL_RESTRICT inout,
                                int32_t* JXL_RESTRICT quantized) {
+  float thres_y[4] = {0.58f, 0.64f, 0.64f, 0.64f};
   {
     int32_t max_quant = 0;
     int quant_orig = *quant;
@@ -270,21 +216,24 @@ void QuantizeRoundtripYBlockAC(PassesEncoderState* enc_state, const size_t size,
                     enc_state->b_qm_multiplier};
     int clut[3] = {1, 0, 2};
     for (int ii = 0; ii < 3; ++ii) {
+      float thres[4] = {0.58f, 0.64f, 0.64f, 0.64f};
       int c = clut[ii];
       *quant = quant_orig;
-      bool stop_adjusting =
-          AdjustQuantBlockAC(quantizer, c, val[c], quant_kind, xsize, ysize,
-                             inout + c * size, quant);
-      max_quant = std::max(*quant, max_quant);
-      if (stop_adjusting) {
-        break;
+      AdjustQuantBlockAC(quantizer, c, val[c], quant_kind, xsize, ysize,
+                         &thres[0], inout + c * size, quant);
+      // Dead zone adjustment
+      if (c == 1) {
+        for (int k = 0; k < 4; ++k) {
+          thres_y[k] = thres[k];
+        }
       }
+      max_quant = std::max(*quant, max_quant);
     }
     *quant = max_quant;
   }
 
   QuantizeBlockAC(quantizer, error_diffusion, 1, 1.0f, quant_kind, xsize, ysize,
-                  inout + size, quant, quantized + size);
+                  &thres_y[0], inout + size, quant, quantized + size);
 
   PROFILER_ZONE("enc quant adjust bias");
   const float* JXL_RESTRICT dequant_matrix =
@@ -414,10 +363,11 @@ void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
 
           // Quantize X and B channels and set DC.
           for (size_t c : {0, 2}) {
+            float thres[4] = {0.58f, 0.62f, 0.62f, 0.62f};
             QuantizeBlockAC(enc_state->shared.quantizer, error_diffusion, c,
                             c == 0 ? enc_state->x_qm_multiplier
                                    : enc_state->b_qm_multiplier,
-                            acs.RawStrategy(), xblocks, yblocks,
+                            acs.RawStrategy(), xblocks, yblocks, &thres[0],
                             coeffs_in + c * size, &quant_ac,
                             quantized + c * size);
             DCFromLowestFrequencies(acs.Strategy(), coeffs_in + c * size,
