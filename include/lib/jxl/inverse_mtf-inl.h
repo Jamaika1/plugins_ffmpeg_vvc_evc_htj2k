@@ -51,7 +51,7 @@ inline void MoveToFront(uint8_t* v, uint8_t index) {
 }
 
 inline void InverseMoveToFrontTransform(uint8_t* v, int v_len) {
-  uint8_t mtf[256 + 64];
+  HWY_ALIGN uint8_t mtf[256 + 64];
   int i;
   for (i = 0; i < 256; ++i) {
     mtf[i] = static_cast<uint8_t>(i);
