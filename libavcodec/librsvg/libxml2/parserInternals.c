@@ -513,6 +513,8 @@ xmlParserInputShrink(xmlParserInputPtr in) {
  * xmlNextChar:
  * @ctxt:  the XML parser context
  *
+ * DEPRECATED: Internal function, do not use.
+ *
  * Skip to the next char input char.
  */
 
@@ -657,6 +659,8 @@ encoding_error:
  * xmlCurrentChar:
  * @ctxt:  the XML parser context
  * @len:  pointer to the length of the char read
+ *
+ * DEPRECATED: Internal function, do not use.
  *
  * The current char value, if using UTF-8 this may actually span multiple
  * bytes in the input buffer. Implement the end of line normalization:
@@ -817,6 +821,8 @@ encoding_error:
  * @ctxt:  the XML parser context
  * @cur:  pointer to the beginning of the char
  * @len:  pointer to the length of the char read
+ *
+ * DEPRECATED: Internal function, do not use.
  *
  * The current char value, if using UTF-8 this may actually span multiple
  * bytes in the input buffer.
@@ -1177,12 +1183,20 @@ xmlSwitchInputEncoding(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
     }
 
     if (in->encoder != NULL) {
+        if (in->encoder == handler)
+            return (0);
+
         /*
-         * TODO: Detect encoding mismatch. We should start by comparing
-         * in->encoder->name and handler->name, but there are a few
-         * compatible encodings like UTF-16 and UCS-2 or UTF-32 and UCS-4.
+         * Switching encodings during parsing is a really bad idea,
+         * but WebKit/Chromium switches from ISO-8859-1 to UTF-16 as soon as
+         * it finds Unicode characters with code points larger than 255.
+         *
+         * TODO: We should check whether the "raw" input buffer is empty and
+         * convert the old content using the old encoder.
          */
-        xmlCharEncCloseFunc(handler);
+
+        xmlCharEncCloseFunc(in->encoder);
+        in->encoder = handler;
         return (0);
     }
 
@@ -1234,7 +1248,17 @@ xmlSwitchInputEncoding(xmlParserCtxtPtr ctxt, xmlParserInputPtr input,
         in->rawconsumed = processed;
         use = xmlBufUse(in->raw);
 
-        nbchars = xmlCharEncInput(in, 0);
+        /*
+         * TODO: We must flush and decode the whole buffer to make functions
+         * like xmlReadMemory work with a user-provided encoding. If the
+         * encoding is specified directly, we should probably set
+         * XML_PARSE_IGNORE_ENC in xmlDoRead to avoid switching encodings
+         * twice. Then we could set "flush" to false which should save
+         * a considerable amount of memory when parsing from memory.
+         * It's probably even possible to remove this whole if-block
+         * completely.
+         */
+        nbchars = xmlCharEncInput(in, 1);
         xmlBufResetInput(in->buffer, input);
         if (nbchars < 0) {
             /* TODO: This could be an out of memory or an encoding error. */
@@ -1375,6 +1399,8 @@ xmlNewIOInputStream(xmlParserCtxtPtr ctxt, xmlParserInputBufferPtr input,
  * xmlNewEntityInputStream:
  * @ctxt:  an XML parser context
  * @entity:  an Entity pointer
+ *
+ * DEPRECATED: Internal function, do not use.
  *
  * Create a new input stream based on an xmlEntityPtr
  *
