@@ -117,8 +117,8 @@ typedef struct EncodeContext {
     uint32_t          input_picture_queue_head_index;
     uint32_t          input_picture_queue_tail_index;
     // Picture Manager List
-    ReferenceQueueEntry **reference_picture_list;
-    uint32_t              reference_picture_list_length;
+    ReferenceQueueEntry **ref_pic_list;
+    uint32_t              ref_pic_list_length;
 
     // Initial Rate Control Reorder Queue
     InitialRateControlReorderEntry **initial_rate_control_reorder_queue;
@@ -151,10 +151,8 @@ typedef struct EncodeContext {
     EncMode  enc_mode;
 
     // Dynamic GOP
-    uint32_t previous_mini_gop_hierarchical_levels;
-#if FTR_PRED_STRUCT_CLASSIFIER
-    uint64_t mini_gop_cnt_per_gop;
-#endif
+    uint32_t         previous_mini_gop_hierarchical_levels;
+    uint64_t         mini_gop_cnt_per_gop;
     EbObjectWrapper *previous_picture_control_set_wrapper_ptr;
     uint64_t picture_number_alt; // The picture number overlay includes all the overlay frames
 
@@ -186,10 +184,8 @@ typedef struct EncodeContext {
     EbHandle                          rc_param_queue_mutex;
     // reference scaling random access event
     EbRefFrameScale resize_evt;
-#if OPT_LD_QPM
     //Superblock end index for cycling refresh through the frame.
     uint32_t cr_sb_end;
-#endif
 } EncodeContext;
 
 typedef struct EncodeContextInitData {
@@ -199,6 +195,5 @@ typedef struct EncodeContextInitData {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType encode_context_ctor(EncodeContext *encode_context_ptr,
-                                       EbPtr          object_init_data_ptr);
+extern EbErrorType svt_aom_encode_context_ctor(EncodeContext *enc_ctx, EbPtr object_init_data_ptr);
 #endif // EbEncodeContext_h

@@ -30,13 +30,13 @@
 // when x->mv_cost_type is set to MV_COST_L1.
 // LOWRES
 #define SSE_LAMBDA_LOWRES 2 // Used by mv_cost_err_fn
-#define SAD_LAMBDA_LOWRES 32 // Used by mvsad_err_cost during full pixel search
+// #define SAD_LAMBDA_LOWRES 32 // Used by mvsad_err_cost during full pixel search
 // MIDRES
 #define SSE_LAMBDA_MIDRES 0 // Used by mv_cost_err_fn
-#define SAD_LAMBDA_MIDRES 15 // Used by mvsad_err_cost during full pixel search
+// #define SAD_LAMBDA_MIDRES 15 // Used by mvsad_err_cost during full pixel search
 // HDRES
 #define SSE_LAMBDA_HDRES 1 // Used by mv_cost_err_fn
-#define SAD_LAMBDA_HDRES 8 // Used by mvsad_err_cost during full pixel search
+// #define SAD_LAMBDA_HDRES 8 // Used by mvsad_err_cost during full pixel search
 
 // Returns the cost of using the current mv during the motion search. This is
 // used when var is used as the error metric.
@@ -677,14 +677,7 @@ static AOM_FORCE_INLINE void two_level_checks_fast(
                                     is_scaled);
         }
 }
-static const uint8_t eb_av1_var_offs[MAX_SB_SIZE] = {
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128,
-    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
+extern const uint8_t svt_aom_eb_av1_var_offs[MAX_SB_SIZE];
 int svt_av1_find_best_sub_pixel_tree_pruned(MacroBlockD *xd, const struct AV1Common *const cm,
                                             const SUBPEL_MOTION_SEARCH_PARAMS *ms_params,
                                             MV start_mv, MV *bestmv, int *distortion,
@@ -723,7 +716,7 @@ int svt_av1_find_best_sub_pixel_tree_pruned(MacroBlockD *xd, const struct AV1Com
     const uint8_t     *ref        = svt_get_buf_from_mv(ms_buffers->ref, *bestmv);
     unsigned int       sse;
     const unsigned int var = var_params->vfp->vf(
-        ref, ms_buffers->ref->stride, eb_av1_var_offs, 0, &sse);
+        ref, ms_buffers->ref->stride, svt_aom_eb_av1_var_offs, 0, &sse);
     int block_var = ROUND_POWER_OF_TWO(var, num_pels_log2_lookup[bsize]);
 
     if (block_var < ms_params->pred_variance_th)
@@ -794,7 +787,7 @@ int svt_av1_find_best_sub_pixel_tree(MacroBlockD *xd, const struct AV1Common *co
     const uint8_t     *ref        = svt_get_buf_from_mv(ms_buffers->ref, *bestmv);
     unsigned int       sse;
     const unsigned int var = var_params->vfp->vf(
-        ref, ms_buffers->ref->stride, eb_av1_var_offs, 0, &sse);
+        ref, ms_buffers->ref->stride, svt_aom_eb_av1_var_offs, 0, &sse);
     int block_var = ROUND_POWER_OF_TWO(var, num_pels_log2_lookup[bsize]);
 
     if (block_var < ms_params->pred_variance_th)
@@ -846,6 +839,6 @@ int svt_av1_find_best_sub_pixel_tree(MacroBlockD *xd, const struct AV1Common *co
 // =============================================================================
 //  SVT Functions
 // =============================================================================
-int fp_mv_err_cost(const MV *mv, const MV_COST_PARAMS *mv_cost_params) {
+int svt_aom_fp_mv_err_cost(const MV *mv, const MV_COST_PARAMS *mv_cost_params) {
     return svt_mv_err_cost_(mv, mv_cost_params);
 }

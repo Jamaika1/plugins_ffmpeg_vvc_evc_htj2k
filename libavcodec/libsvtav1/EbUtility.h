@@ -25,31 +25,32 @@ typedef struct BlockList {
     uint8_t  list_size;
     uint16_t blk_mds_table[3]; //stores a max of 3 redundant blocks
 } BlockList_t;
-
 typedef enum GeomIndex {
     GEOM_0, //64x64  ->8x8  NSQ:OFF
-    GEOM_1, //64x64  ->4x4  NSQ:ON
-    GEOM_2, //128x128->4x4  NSQ:ON
+    GEOM_1, //64x64  ->8x8  NSQ:ON (only H & V shapes, but not 8x4 and 4x8)
+    GEOM_2, //64x64  ->8x8  NSQ:ON (only H & V shapes)
+    GEOM_3, //64x64  ->4x4  NSQ:ON (only H & V shapes)
+    GEOM_4, //64x64  ->4x4  NSQ:ON (all shapes)
+    GEOM_5, //128x128->4x4  NSQ:ON (all shapes
     GEOM_TOT
 } GeomIndex;
-
-void build_blk_geom(GeomIndex geom);
+void svt_aom_build_blk_geom(GeomIndex geom);
 
 typedef struct BlockGeom {
-    GeomIndex geom_idx; //type of geom this block belongs
+    GeomIndex svt_aom_geom_idx; //type of geom this block belongs
     uint8_t   depth; // depth of the block
     Part      shape; // P_N..P_V4 . P_S is not used.
-    uint8_t   origin_x; // orgin x from topleft of sb
-    uint8_t   origin_y; // orgin x from topleft of sb
+    uint8_t   org_x; // orgin x from topleft of sb
+    uint8_t   org_y; // orgin x from topleft of sb
 
-    uint8_t
-             d1i; // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)
+    // index of the block in d1 dimension 0..24  (0 is parent square, 1 top half of H , ...., 24:last quarter of V4)
+    uint8_t  d1i;
     uint16_t sqi_mds; // index of the parent square in md  scan.
     uint16_t parent_depth_idx_mds; // index of the parent block of a given depth
     uint16_t d1_depth_offset; // offset to the next d1 sq block
     uint16_t ns_depth_offset; // offset to the next nsq block (skip remaining d2 blocks)
-    uint8_t
-                totns; // max number of ns blocks within one partition 1..4 (N:1,H:2,V:2,HA:3,HB:3,VA:3,VB:3,H4:4,V4:4)
+    // max number of ns blocks within one partition 1..4 (N:1,H:2,V:2,HA:3,HB:3,VA:3,VB:3,H4:4,V4:4)
+    uint8_t     totns;
     uint8_t     nsi; // non square index within a partition  0..totns-1
     uint8_t     similar; // 1: means that this block is similar (same shape/location) to another
     uint8_t     quadi; // parent square is in which quadrant 0..3
@@ -127,34 +128,41 @@ static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_
 }
 
 #define NOT_USED_VALUE 0
-
 //gives the index of parent from the last qudrant child
 static const uint32_t parent_depth_offset[GEOM_TOT][6] = {
     {NOT_USED_VALUE, 64, 16, 4, NOT_USED_VALUE, NOT_USED_VALUE},
+    {NOT_USED_VALUE, 128, 32, 8, NOT_USED_VALUE, NOT_USED_VALUE},
+    {NOT_USED_VALUE, 320, 80, 20, NOT_USED_VALUE, NOT_USED_VALUE},
+    {NOT_USED_VALUE, 512, 128, 32, 8, NOT_USED_VALUE},
     {NOT_USED_VALUE, 832, 208, 52, 8, NOT_USED_VALUE},
     {NOT_USED_VALUE, 3320, 832, 208, 52, 8}};
 //gives the index of next quadrant child within a depth
 static const uint32_t ns_depth_offset[GEOM_TOT][6] = {
-
     {85, 21, 5, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+    {169, 41, 9, 1, NOT_USED_VALUE, NOT_USED_VALUE},
+    {425, 105, 25, 5, NOT_USED_VALUE, NOT_USED_VALUE},
+    {681, 169, 41, 9, 1, NOT_USED_VALUE},
     {1101, 269, 61, 9, 1, NOT_USED_VALUE},
     {4421, 1101, 269, 61, 9, 1}};
 //gives the next depth block(first qudrant child) from a given parent square
-static const uint32_t d1_depth_offset[GEOM_TOT][6] = {
-
-    {1, 1, 1, 1, 1, NOT_USED_VALUE}, {25, 25, 25, 5, 1, NOT_USED_VALUE}, {17, 25, 25, 25, 5, 1}};
-extern BlockGeom blk_geom_mds[MAX_NUM_BLOCKS_ALLOC];
+static const uint32_t d1_depth_offset[GEOM_TOT][6] = {{1, 1, 1, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 1, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 5, 1, NOT_USED_VALUE},
+                                                      {5, 5, 5, 5, 1, NOT_USED_VALUE},
+                                                      {25, 25, 25, 5, 1, NOT_USED_VALUE},
+                                                      {17, 25, 25, 25, 5, 1}};
+extern BlockGeom      svt_aom_blk_geom_mds[MAX_NUM_BLOCKS_ALLOC];
 
 static INLINE const BlockGeom* get_blk_geom_mds(uint32_t bidx_mds) {
-    return &blk_geom_mds[bidx_mds];
+    return &svt_aom_blk_geom_mds[bidx_mds];
 }
 // CU Stats Helper Functions
 typedef struct CodedBlockStats {
     uint8_t depth;
     uint8_t size;
     uint8_t size_log2;
-    uint8_t origin_x;
-    uint8_t origin_y;
+    uint8_t org_x;
+    uint8_t org_y;
     uint8_t cu_num_in_depth;
     uint8_t parent32x32_index;
 } CodedBlockStats;
@@ -163,7 +171,7 @@ extern void*                  svt_aom_memalign(size_t align, size_t size);
 extern void*                  svt_aom_malloc(size_t size);
 extern void                   svt_aom_free(void* memblk);
 extern void*                  svt_aom_memset16(void* dest, int32_t val, size_t length);
-extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
+extern const CodedBlockStats* svt_aom_get_coded_blk_stats(const uint32_t cu_idx);
 
 #define PU_ORIGIN_ADJUST(cu_origin, cu_size, offset) ((((cu_size) * (offset)) >> 2) + (cu_origin))
 #define PU_SIZE_ADJUST(cu_size, puSize) (((cu_size) * (puSize)) >> 2)
@@ -265,14 +273,14 @@ extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
 // Helper functions for EbLinkedListNode.
 
 // concatenate two linked list, and return the pointer to the new concatenated list
-EbLinkedListNode* concat_eb_linked_list(EbLinkedListNode* a, EbLinkedListNode* b);
+EbLinkedListNode* svt_aom_concat_eb_linked_list(EbLinkedListNode* a, EbLinkedListNode* b);
 
 // split a linked list into two. return the pointer to a linked list whose nodes meets the condition
 // predicate_func(node) == TRUE, the rest of the nodes will be collected into another linked list to which (*restLL) is
 // set. Does not gaurantee the original order of the nodes.
 
-EbLinkedListNode* split_eb_linked_list(EbLinkedListNode* input, EbLinkedListNode** restLL,
-                                       Bool (*predicate_func)(EbLinkedListNode*));
+EbLinkedListNode* svt_aom_split_eb_linked_list(EbLinkedListNode* input, EbLinkedListNode** restLL,
+                                               Bool (*predicate_func)(EbLinkedListNode*));
 
 #define MINI_GOP_MAX_COUNT 15
 #define MINI_GOP_WINDOW_MAX_COUNT 8 // widow subdivision: 8 x 3L
@@ -286,7 +294,7 @@ typedef struct MiniGopStats {
     uint32_t end_index;
     uint32_t lenght;
 } MiniGopStats;
-extern const MiniGopStats* get_mini_gop_stats(const uint32_t mini_gop_index);
+extern const MiniGopStats* svt_aom_get_mini_gop_stats(const uint32_t mini_gop_index);
 typedef enum MinigopIndex {
     L6_INDEX   = 0,
     L5_0_INDEX = 1,

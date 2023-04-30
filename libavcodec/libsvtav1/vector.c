@@ -20,8 +20,6 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#define __STDC_WANT_LIB_EXT1__ 1
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,11 +96,11 @@ Iterator svt_aom_vector_iterator(Vector *vector, size_t index) {
     return iterator;
 }
 
-void *iterator_get(Iterator *iterator) { return iterator->pointer; }
-void  iterator_increment(Iterator *iterator) {
-     assert(iterator != NULL);
-     // iterator->pointer += iterator->element_size;
-     iterator->pointer = (unsigned char *)iterator->pointer + iterator->element_size;
+void *svt_aom_iterator_get(Iterator *iterator) { return iterator->pointer; }
+void  svt_aom_iterator_increment(Iterator *iterator) {
+    assert(iterator != NULL);
+    // iterator->pointer += iterator->element_size;
+    iterator->pointer = (unsigned char *)iterator->pointer + iterator->element_size;
 }
 
 /***** PRIVATE *****/

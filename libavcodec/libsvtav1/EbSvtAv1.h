@@ -24,8 +24,8 @@ struct SvtMetadataArray;
 
 // API Version
 #define SVT_AV1_VERSION_MAJOR 1
-#define SVT_AV1_VERSION_MINOR 4
-#define SVT_AV1_VERSION_PATCHLEVEL 1
+#define SVT_AV1_VERSION_MINOR 5
+#define SVT_AV1_VERSION_PATCHLEVEL 0
 
 #define SVT_AV1_CHECK_VERSION(major, minor, patch)                            \
     (SVT_AV1_VERSION_MAJOR > (major) ||                                       \
@@ -165,9 +165,12 @@ typedef struct EbSvtIOFormat //former EbSvtEncInput
     uint8_t *cr;
 
     // Hosts LSB 2 bits of 10bit input/output when the compressed 10bit format is used
-    uint8_t *luma_ext;
-    uint8_t *cb_ext;
-    uint8_t *cr_ext;
+#if !SVT_AV1_CHECK_VERSION(1, 5, 0)
+    /* DEPRECATED: to be removed in 1.5.0. */
+    void *luma_ext;
+    void *cb_ext;
+    void *cr_ext;
+#endif
 
     uint32_t y_stride;
     uint32_t cr_stride;
@@ -176,8 +179,8 @@ typedef struct EbSvtIOFormat //former EbSvtEncInput
     uint32_t width;
     uint32_t height;
 
-    uint32_t origin_x;
-    uint32_t origin_y;
+    uint32_t org_x;
+    uint32_t org_y;
 
     EbColorFormat color_fmt;
     EbBitDepth    bit_depth;

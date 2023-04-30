@@ -42,10 +42,10 @@ typedef struct OutputBitstreamUnit {
 /**********************************
      * Extern Function Declarations
      **********************************/
-extern EbErrorType output_bitstream_unit_ctor(OutputBitstreamUnit *bitstream_ptr,
-                                              uint32_t             buffer_size);
+extern EbErrorType svt_aom_output_bitstream_unit_ctor(OutputBitstreamUnit *bitstream_ptr,
+                                                      uint32_t             buffer_size);
 
-extern EbErrorType output_bitstream_reset(OutputBitstreamUnit *bitstream_ptr);
+extern EbErrorType svt_aom_output_bitstream_reset(OutputBitstreamUnit *bitstream_ptr);
 
 /********************************************************************************************************************************/
 /********************************************************************************************************************************/
@@ -98,13 +98,13 @@ static INLINE int32_t get_msb(uint32_t n) {
 
 #define OD_DIVU_DMAX (1024)
 
-extern uint32_t od_divu_small_consts[OD_DIVU_DMAX][2];
+extern uint32_t svt_aom_od_divu_small_consts[OD_DIVU_DMAX][2];
 
 /*Translate unsigned division by small divisors into multiplications.*/
-#define OD_DIVU_SMALL(_x, _d)                                       \
-    ((uint32_t)((od_divu_small_consts[(_d)-1][0] * (uint64_t)(_x) + \
-                 od_divu_small_consts[(_d)-1][1]) >>                \
-                32) >>                                              \
+#define OD_DIVU_SMALL(_x, _d)                                               \
+    ((uint32_t)((svt_aom_od_divu_small_consts[(_d)-1][0] * (uint64_t)(_x) + \
+                 svt_aom_od_divu_small_consts[(_d)-1][1]) >>                \
+                32) >>                                                      \
      (OD_ILOG_NZ(_d) - 1))
 
 #define OD_DIVU(_x, _d) (((_d) < OD_DIVU_DMAX) ? (OD_DIVU_SMALL((_x), (_d))) : ((_x) / (_d)))
@@ -230,7 +230,7 @@ struct DaalaWriter {
     uint32_t pos;
     uint8_t *buffer;
     uint32_t buffer_size;
-    OutputBitstreamUnit     *
+    OutputBitstreamUnit *
         buffer_parent; // save a pointer to the container holding the buffer, in case the buffer must be resized
     OdEcEnc ec;
     uint8_t allow_update_cdf;
@@ -264,7 +264,7 @@ static INLINE void daala_write_symbol(DaalaWriter *w, int32_t symb, const AomCdf
 // bitwriter.h
 typedef struct DaalaWriter AomWriter;
 static INLINE void         aom_start_encode(AomWriter *bc, OutputBitstreamUnit *buffer) {
-            svt_aom_daala_start_encode(bc, buffer);
+    svt_aom_daala_start_encode(bc, buffer);
 }
 static INLINE int32_t aom_stop_encode(AomWriter *bc) { return svt_aom_daala_stop_encode(bc); }
 

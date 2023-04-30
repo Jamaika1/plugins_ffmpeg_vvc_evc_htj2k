@@ -17,37 +17,6 @@
 #include "EbPictureBufferDesc.h"
 #include "EbUtility.h"
 
-// TODO: is this just padding with zeros? Is this needed?
-void initialize_samples_neighboring_reference_picture16_bit(EbByte   recon_samples_buffer_ptr,
-                                                            uint16_t stride, uint16_t recon_width,
-                                                            uint16_t recon_height,
-                                                            uint16_t left_padding,
-                                                            uint16_t top_padding) {
-    uint16_t *recon_samples_ptr;
-    uint16_t  sample_count;
-
-    // 1. zero out the top row
-    recon_samples_ptr = (uint16_t *)recon_samples_buffer_ptr + (top_padding - 1) * stride +
-        left_padding - 1;
-    EB_MEMSET((uint8_t *)recon_samples_ptr, 0, sizeof(uint16_t) * (1 + recon_width + 1));
-
-    // 2. zero out the bottom row
-    recon_samples_ptr = (uint16_t *)recon_samples_buffer_ptr +
-        (top_padding + recon_height) * stride + left_padding - 1;
-    EB_MEMSET((uint8_t *)recon_samples_ptr, 0, sizeof(uint16_t) * (1 + recon_width + 1));
-
-    // 3. zero out the left column
-    recon_samples_ptr = (uint16_t *)recon_samples_buffer_ptr + top_padding * stride + left_padding -
-        1;
-    for (sample_count = 0; sample_count < recon_height; sample_count++)
-        recon_samples_ptr[sample_count * stride] = 0;
-    // 4. zero out the right column
-    recon_samples_ptr = (uint16_t *)recon_samples_buffer_ptr + top_padding * stride + left_padding +
-        recon_width;
-    for (sample_count = 0; sample_count < recon_height; sample_count++)
-        recon_samples_ptr[sample_count * stride] = 0;
-}
-
 void initialize_samples_neighboring_reference_picture_8bit(EbByte   recon_samples_buffer_ptr,
                                                            uint16_t stride, uint16_t recon_width,
                                                            uint16_t recon_height,
@@ -76,32 +45,32 @@ void initialize_samples_neighboring_reference_picture_8bit(EbByte   recon_sample
         recon_samples_ptr[sample_count * stride] = 0;
 }
 
-void initialize_samples_neighboring_reference_picture(
-    EbReferenceObject           *reference_object,
-    EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr, EbBitDepth bit_depth) {
+static void initialize_samples_neighboring_reference_picture(
+    EbReferenceObject *ref_object, EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr,
+    EbBitDepth bit_depth) {
     UNUSED(bit_depth);
     {
         initialize_samples_neighboring_reference_picture_8bit(
-            reference_object->reference_picture->buffer_y,
-            reference_object->reference_picture->stride_y,
-            reference_object->reference_picture->width,
-            reference_object->reference_picture->height,
+            ref_object->reference_picture->buffer_y,
+            ref_object->reference_picture->stride_y,
+            ref_object->reference_picture->width,
+            ref_object->reference_picture->height,
             picture_buffer_desc_init_data_ptr->left_padding,
             picture_buffer_desc_init_data_ptr->top_padding);
 
         initialize_samples_neighboring_reference_picture_8bit(
-            reference_object->reference_picture->buffer_cb,
-            reference_object->reference_picture->stride_cb,
-            reference_object->reference_picture->width >> 1,
-            reference_object->reference_picture->height >> 1,
+            ref_object->reference_picture->buffer_cb,
+            ref_object->reference_picture->stride_cb,
+            ref_object->reference_picture->width >> 1,
+            ref_object->reference_picture->height >> 1,
             picture_buffer_desc_init_data_ptr->left_padding >> 1,
             picture_buffer_desc_init_data_ptr->top_padding >> 1);
 
         initialize_samples_neighboring_reference_picture_8bit(
-            reference_object->reference_picture->buffer_cr,
-            reference_object->reference_picture->stride_cr,
-            reference_object->reference_picture->width >> 1,
-            reference_object->reference_picture->height >> 1,
+            ref_object->reference_picture->buffer_cr,
+            ref_object->reference_picture->stride_cr,
+            ref_object->reference_picture->width >> 1,
+            ref_object->reference_picture->height >> 1,
             picture_buffer_desc_init_data_ptr->left_padding >> 1,
             picture_buffer_desc_init_data_ptr->top_padding >> 1);
     }
@@ -140,8 +109,7 @@ static void svt_reference_object_dctor(EbPtr p) {
  *  values that are fixed for the life of
  *  the descriptor.
  *****************************************/
-EbErrorType svt_reference_object_ctor(EbReferenceObject *reference_object,
-                                      EbPtr              object_init_data_ptr) {
+EbErrorType svt_reference_object_ctor(EbReferenceObject *ref_object, EbPtr object_init_data_ptr) {
     EbReferenceObjectDescInitData *ref_init_ptr = (EbReferenceObjectDescInitData *)
         object_init_data_ptr;
     EbPictureBufferDescInitData *picture_buffer_desc_init_data_ptr =
@@ -149,69 +117,67 @@ EbErrorType svt_reference_object_ctor(EbReferenceObject *reference_object,
     EbPictureBufferDescInitData picture_buffer_desc_init_data_16bit_ptr =
         *picture_buffer_desc_init_data_ptr;
 
-    reference_object->dctor = svt_reference_object_dctor;
+    ref_object->dctor = svt_reference_object_dctor;
     //TODO:12bit
     if (picture_buffer_desc_init_data_16bit_ptr.bit_depth == EB_TEN_BIT) {
         // Hsan: set split_mode to 0 to construct the packed reference buffer (used @ EP)
         // Use 10bit here to use in MD
         picture_buffer_desc_init_data_16bit_ptr.split_mode = TRUE;
         picture_buffer_desc_init_data_16bit_ptr.bit_depth  = EB_TEN_BIT;
-        EB_NEW(reference_object->reference_picture,
+        EB_NEW(ref_object->reference_picture,
                svt_picture_buffer_desc_ctor,
                (EbPtr)&picture_buffer_desc_init_data_16bit_ptr);
     } else {
         // Hsan: set split_mode to 0 to as 8BIT input
         picture_buffer_desc_init_data_ptr->split_mode = FALSE;
-        EB_NEW(reference_object->reference_picture,
+        EB_NEW(ref_object->reference_picture,
                svt_picture_buffer_desc_ctor,
                (EbPtr)picture_buffer_desc_init_data_ptr);
 
         initialize_samples_neighboring_reference_picture(
-            reference_object,
+            ref_object,
             picture_buffer_desc_init_data_ptr,
             picture_buffer_desc_init_data_16bit_ptr.bit_depth);
     }
-    reference_object->input_picture = NULL;
+    ref_object->input_picture = NULL;
 
-    uint32_t mi_rows = reference_object->reference_picture->height >> MI_SIZE_LOG2;
-    uint32_t mi_cols = reference_object->reference_picture->width >> MI_SIZE_LOG2;
+    uint32_t mi_rows = ref_object->reference_picture->height >> MI_SIZE_LOG2;
+    uint32_t mi_cols = ref_object->reference_picture->width >> MI_SIZE_LOG2;
     // there should be one unit info per plane and per rest unit
-    EB_MALLOC_2D(reference_object->unit_info,
+    EB_MALLOC_2D(ref_object->unit_info,
                  MAX_MB_PLANE,
                  picture_buffer_desc_init_data_ptr->rest_units_per_tile);
 
     if (picture_buffer_desc_init_data_ptr->mfmv) {
         //MFMV map is 8x8 based.
         const int mem_size = ((mi_rows + 1) >> 1) * ((mi_cols + 1) >> 1);
-        EB_CALLOC_ALIGNED_ARRAY(reference_object->mvs, mem_size);
+        EB_CALLOC_ALIGNED_ARRAY(ref_object->mvs, mem_size);
     }
-    reference_object->quarter_reference_picture   = NULL;
-    reference_object->sixteenth_reference_picture = NULL;
+    ref_object->quarter_reference_picture   = NULL;
+    ref_object->sixteenth_reference_picture = NULL;
 
-    reference_object->ds_pics.picture_ptr           = reference_object->reference_picture;
-    reference_object->ds_pics.quarter_picture_ptr   = reference_object->quarter_reference_picture;
-    reference_object->ds_pics.sixteenth_picture_ptr = reference_object->sixteenth_reference_picture;
-    memset(&reference_object->film_grain_params, 0, sizeof(reference_object->film_grain_params));
+    ref_object->ds_pics.picture_ptr           = ref_object->reference_picture;
+    ref_object->ds_pics.quarter_picture_ptr   = ref_object->quarter_reference_picture;
+    ref_object->ds_pics.sixteenth_picture_ptr = ref_object->sixteenth_reference_picture;
+    memset(&ref_object->film_grain_params, 0, sizeof(ref_object->film_grain_params));
     // set all supplemental downscaled reference picture pointers to NULL
     for (uint8_t sr_denom_idx = 0; sr_denom_idx < NUM_SR_SCALES + 1; sr_denom_idx++) {
         for (uint8_t resize_denom_idx = 0; resize_denom_idx < NUM_RESIZE_SCALES + 1;
              resize_denom_idx++) {
-            reference_object->downscaled_reference_picture[sr_denom_idx][resize_denom_idx] = NULL;
-            reference_object->downscaled_picture_number[sr_denom_idx][resize_denom_idx] =
-                (uint64_t)~0;
-            EB_CREATE_MUTEX(reference_object->resize_mutex[sr_denom_idx][resize_denom_idx]);
+            ref_object->downscaled_reference_picture[sr_denom_idx][resize_denom_idx] = NULL;
+            ref_object->downscaled_picture_number[sr_denom_idx][resize_denom_idx]    = (uint64_t)~0;
+            EB_CREATE_MUTEX(ref_object->resize_mutex[sr_denom_idx][resize_denom_idx]);
         }
     }
 
-    reference_object->mi_rows = mi_rows;
-    reference_object->mi_cols = mi_cols;
-    EB_MALLOC_ARRAY(reference_object->sb_intra, picture_buffer_desc_init_data_ptr->sb_total_count);
-    EB_MALLOC_ARRAY(reference_object->sb_skip, picture_buffer_desc_init_data_ptr->sb_total_count);
-    EB_MALLOC_ARRAY(reference_object->sb_64x64_mvp,
+    ref_object->mi_rows = mi_rows;
+    ref_object->mi_cols = mi_cols;
+    EB_MALLOC_ARRAY(ref_object->sb_intra, picture_buffer_desc_init_data_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(ref_object->sb_skip, picture_buffer_desc_init_data_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(ref_object->sb_64x64_mvp, picture_buffer_desc_init_data_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(ref_object->sb_me_64x64_dist,
                     picture_buffer_desc_init_data_ptr->sb_total_count);
-    EB_MALLOC_ARRAY(reference_object->sb_me_64x64_dist,
-                    picture_buffer_desc_init_data_ptr->sb_total_count);
-    EB_MALLOC_ARRAY(reference_object->sb_me_8x8_cost_var,
+    EB_MALLOC_ARRAY(ref_object->sb_me_8x8_cost_var,
                     picture_buffer_desc_init_data_ptr->sb_total_count);
     return EB_ErrorNone;
 }
@@ -226,10 +192,9 @@ EbErrorType svt_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_ini
     return EB_ErrorNone;
 }
 
-EbErrorType svt_reference_object_reset(EbReferenceObject  *reference_object,
-                                       SequenceControlSet *scs_ptr) {
-    reference_object->mi_rows = scs_ptr->max_input_luma_height >> MI_SIZE_LOG2;
-    reference_object->mi_cols = scs_ptr->max_input_luma_width >> MI_SIZE_LOG2;
+EbErrorType svt_reference_object_reset(EbReferenceObject *ref_object, SequenceControlSet *scs) {
+    ref_object->mi_rows = scs->max_input_luma_height >> MI_SIZE_LOG2;
+    ref_object->mi_cols = scs->max_input_luma_width >> MI_SIZE_LOG2;
 
     return EB_ErrorNone;
 }
@@ -238,7 +203,7 @@ static void svt_pa_reference_object_dctor(EbPtr p) {
     EbPaReferenceObject *obj = (EbPaReferenceObject *)p;
     if (obj->dummy_obj)
         return;
-    EB_DELETE(obj->input_padded_picture_ptr);
+    EB_DELETE(obj->input_padded_pic);
     EB_DELETE(obj->quarter_downsampled_picture_ptr);
     EB_DELETE(obj->sixteenth_downsampled_picture_ptr);
     for (uint8_t sr_denom_idx = 0; sr_denom_idx < NUM_SR_SCALES + 1; sr_denom_idx++) {
@@ -275,7 +240,7 @@ EbErrorType svt_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_,
     pa_ref_obj_->dctor = svt_pa_reference_object_dctor;
 
     // Reference picture constructor
-    EB_NEW(pa_ref_obj_->input_padded_picture_ptr,
+    EB_NEW(pa_ref_obj_->input_padded_pic,
            svt_picture_buffer_desc_ctor,
            (EbPtr)picture_buffer_desc_init_data_ptr);
     // Downsampled reference picture constructor
@@ -341,58 +306,44 @@ EbErrorType svt_tpl_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object
 ** Check if reference pictures are needed
 ** release them when appropriate
 ************************************************/
-void release_pa_reference_objects(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
-    (void)scs_ptr;
+void svt_aom_release_pa_reference_objects(SequenceControlSet *scs, PictureParentControlSet *pcs) {
+    (void)scs;
     // PA Reference Pictures
-    if (pcs_ptr->slice_type != I_SLICE) {
-#if CLN_REMOVE_REF_CNT
+    if (pcs->slice_type != I_SLICE) {
         const uint32_t num_of_list_to_search =
-            (pcs_ptr->slice_type == P_SLICE) ? 1 /*List 0 only*/ : 2 /*List 0 + 1*/;
-#else
-        uint32_t num_of_list_to_search =
-            (pcs_ptr->slice_type == P_SLICE) ? 1 /*List 0 only*/ : 2 /*List 0 + 1*/;
-#endif
+            (pcs->slice_type == P_SLICE) ? 1 /*List 0 only*/ : 2 /*List 0 + 1*/;
 
         // List Loop
         for (uint32_t list_index = REF_LIST_0; list_index < num_of_list_to_search; ++list_index) {
             // Release PA Reference Pictures
-#if CLN_REMOVE_REF_CNT
-            uint8_t num_of_ref_pic_to_search = (list_index == REF_LIST_0)
-                ? pcs_ptr->ref_list0_count
-                : pcs_ptr->ref_list1_count;
-#else
-            uint8_t num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
-                ? MIN(pcs_ptr->ref_list0_count, scs_ptr->reference_count)
-                : (list_index == REF_LIST_0)
-                ? MIN(pcs_ptr->ref_list0_count, scs_ptr->reference_count)
-                : MIN(pcs_ptr->ref_list1_count, scs_ptr->reference_count);
-#endif
+            uint8_t num_of_ref_pic_to_search = (list_index == REF_LIST_0) ? pcs->ref_list0_count
+                                                                          : pcs->ref_list1_count;
 
             for (uint32_t ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search;
                  ++ref_pic_index) {
-                if (pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index] != NULL) {
-                    //assert((int32_t)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]->live_count > 0);
-                    svt_release_object(pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]);
+                if (pcs->ref_pa_pic_ptr_array[list_index][ref_pic_index] != NULL) {
+                    //assert((int32_t)pcs->ref_pa_pic_ptr_array[list_index][ref_pic_index]->live_count > 0);
+                    svt_release_object(pcs->ref_pa_pic_ptr_array[list_index][ref_pic_index]);
 
-                    if (pcs_ptr->ref_y8b_array[list_index][ref_pic_index]) {
+                    if (pcs->ref_y8b_array[list_index][ref_pic_index]) {
                         //y8b  needs to get decremented at the same time of pa ref
-                        svt_release_object(pcs_ptr->ref_y8b_array[list_index][ref_pic_index]);
+                        svt_release_object(pcs->ref_y8b_array[list_index][ref_pic_index]);
                     }
                 }
             }
         }
     }
 
-    if (pcs_ptr->pa_reference_picture_wrapper_ptr != NULL) {
-        //assert((int32_t)pcs_ptr->pa_reference_picture_wrapper_ptr->live_count > 0);
-        svt_release_object(pcs_ptr->pa_reference_picture_wrapper_ptr);
+    if (pcs->pa_ref_pic_wrapper != NULL) {
+        //assert((int32_t)pcs->pa_ref_pic_wrapper->live_count > 0);
+        svt_release_object(pcs->pa_ref_pic_wrapper);
 
-        if (pcs_ptr->eb_y8b_wrapper_ptr) {
+        if (pcs->y8b_wrapper) {
             //y8b needs to get decremented at the same time of pa ref
-            svt_release_object(pcs_ptr->eb_y8b_wrapper_ptr);
+            svt_release_object(pcs->y8b_wrapper);
         }
     }
     // Mark that the PCS released PA references
-    pcs_ptr->reference_released = 1;
+    pcs->reference_released = 1;
     return;
 }

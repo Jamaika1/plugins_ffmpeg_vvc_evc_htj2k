@@ -66,14 +66,10 @@ typedef struct SequenceControlSet {
     /*!< Pointer to the dtor of the struct*/
     EbDctor dctor;
     /*!< Encoding context pointer containing the handle pointer */
-    EncodeContext *encode_context_ptr;
+    EncodeContext *enc_ctx;
     /*!< 2ndpass enc mode, available at firstpass encoder */
     /*!< API structure */
     EbSvtAv1EncConfiguration static_config;
-#if !OPT_RPS_CONSTR_3
-    /*!< Pointer to prediction structure containing the mini-gop information */
-    PredictionStructure *pred_struct_ptr;
-#endif
     /*!< Super block geomerty pointer */
     SbGeom *sb_geom;
     /*!< Array of superblock parameters computed at the resource coordination stage */
@@ -87,12 +83,6 @@ typedef struct SequenceControlSet {
             parameters/features are set to be set for the full stream
             but encoding decisions may still be taken at a picture / sub picture level
     */
-#if !CLN_REMOVE_REF_CNT
-    /*!< Maximum number of references that a picture can have within the stream needs to be cleaned up*/
-    uint32_t max_ref_count;
-    /*!< Maximum number of references that a picture can have within the stream */
-    uint32_t reference_count;
-#endif
     /*!< Maximum number of allowed temporal layers */
     uint32_t max_temporal_layers;
     /*!< Overflow bits used for the picture order count increments */
@@ -109,20 +99,21 @@ typedef struct SequenceControlSet {
     /*!< Down-sampling method @ ME and alt-ref temporal filtering
         (The signal changes per preset; 0: filtering, 1: decimation) Default is 0. */
     uint8_t  down_sampling_method_me_search;
-    uint32_t geom_idx; //geometry type
+    uint32_t svt_aom_geom_idx; //geometry type
 
     /*  1..15    | 17..31  | 33..47  |
               16 |       32|       48|
       lad mg=2: delay the first MG (1-16) until the next 2 MGs(17-48) are gop , TF, and ME ready
     */
-    uint8_t
-        lad_mg; //delay all pictures within a given MG, until N future MGs are  gop , TF, and ME ready
-    uint8_t
-        tpl_lad_mg; //delay all pictures within a given MG, until N future MGs are  gop , TF, and ME ready used for tpl
-    /*!< 1: Specifies that loop restoration filter should use boundary pixels in the search.  Must be
-            set at the sequence level because it requires a buffer allocation to copy the pixels
-            to be used in the search.
-         0: Specifies that loop restoration filter should not use boundary pixels in the search.*/
+    // delay all pictures within a given MG, until N future MGs are  gop , TF, and ME ready
+    uint8_t lad_mg;
+    // delay all pictures within a given MG, until N future MGs are  gop , TF, and ME ready used for
+    // tpl
+    uint8_t tpl_lad_mg;
+    /*!< 1: Specifies that loop restoration filter should use boundary pixels in the search.  Must
+       be set at the sequence level because it requires a buffer allocation to copy the pixels to be
+       used in the search. 0: Specifies that loop restoration filter should not use boundary pixels
+       in the search.*/
     uint8_t use_boundaries_in_rest_search;
     uint8_t enable_pic_mgr_dec_order; // if enabled: pic mgr starts pictures in dec order
     uint8_t enable_dec_order; // if enabled: encoding are in dec order
@@ -264,8 +255,8 @@ typedef struct SequenceControlSet {
     uint8_t rc_stat_gen_pass_mode;
     int     cqp_base_q_tf;
     int     cqp_base_q;
-    uint8_t
-                    is_short_clip; //less than 200 frames or gop_constraint_rc is set, used in VBR and set in multipass encode
+    // less than 200 frames or gop_constraint_rc is set, used in VBR and set in multipass encode
+    uint8_t         is_short_clip;
     uint8_t         passes;
     IppPassControls ipp_pass_ctrls;
     MidPassControls mid_pass_ctrls;
@@ -432,15 +423,13 @@ typedef struct SequenceControlSet {
     bool stats_based_sb_lambda_modulation;
     // Desired dimensions for an externally triggered resize
     ResizePendingParams resize_pending_params;
-#if OPT_LD_LATENCY_MD
     // Enable low latency KF coding for RTC
     bool low_latency_kf;
-#endif
 } SequenceControlSet;
 typedef struct EbSequenceControlSetInstance {
     EbDctor             dctor;
-    EncodeContext      *encode_context_ptr;
-    SequenceControlSet *scs_ptr;
+    EncodeContext      *enc_ctx;
+    SequenceControlSet *scs;
 } EbSequenceControlSetInstance;
 
 /**************************************
@@ -448,12 +437,12 @@ typedef struct EbSequenceControlSetInstance {
      **************************************/
 extern EbErrorType svt_sequence_control_set_instance_ctor(EbSequenceControlSetInstance *object_ptr);
 
-extern EbErrorType b64_geom_init(SequenceControlSet *scs_ptr);
+extern EbErrorType svt_aom_b64_geom_init(SequenceControlSet *scs);
 
-extern EbErrorType derive_input_resolution(EbInputResolution *input_resolution,
-                                           uint32_t           input_size);
+extern EbErrorType svt_aom_derive_input_resolution(EbInputResolution *input_resolution,
+                                                   uint32_t           input_size);
 
-EbErrorType sb_geom_init(SequenceControlSet *scs_ptr);
+EbErrorType svt_aom_sb_geom_init(SequenceControlSet *scs);
 
 #ifdef __cplusplus
 }

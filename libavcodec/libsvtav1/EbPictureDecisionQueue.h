@@ -22,7 +22,7 @@
 typedef struct PaReferenceEntry {
     EbDctor          dctor;
     EbObjectWrapper *input_object_ptr;
-    EbObjectWrapper *eb_y8b_wrapper_ptr;
+    EbObjectWrapper *y8b_wrapper;
     uint64_t         picture_number;
     /* clang-format off */
     bool is_valid; // The entry will be valid when it represents a valid DPB entry.
@@ -33,6 +33,6 @@ typedef struct PaReferenceEntry {
     uint8_t  is_alt_ref;
 } PaReferenceEntry;
 
-extern EbErrorType pa_reference_queue_entry_ctor(PaReferenceEntry *entry_ptr);
+extern EbErrorType svt_aom_pa_reference_queue_entry_ctor(PaReferenceEntry *entry_ptr);
 
 #endif // EbPictureDecisionQueue_h

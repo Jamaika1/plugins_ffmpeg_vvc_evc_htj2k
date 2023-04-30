@@ -14,7 +14,27 @@
 #include "EbInvTransforms.h"
 #include "common_dsp_rtcd.h"
 
-const int8_t *eb_inv_txfm_shift_ls[TX_SIZES_ALL] = {
+static const int8_t inv_shift_4x4[2]   = {0, -4};
+static const int8_t inv_shift_8x8[2]   = {-1, -4};
+static const int8_t inv_shift_16x16[2] = {-2, -4};
+static const int8_t inv_shift_32x32[2] = {-2, -4};
+static const int8_t inv_shift_64x64[2] = {-2, -4};
+static const int8_t inv_shift_4x8[2]   = {0, -4};
+static const int8_t inv_shift_8x4[2]   = {0, -4};
+static const int8_t inv_shift_8x16[2]  = {-1, -4};
+static const int8_t inv_shift_16x8[2]  = {-1, -4};
+static const int8_t inv_shift_16x32[2] = {-1, -4};
+static const int8_t inv_shift_32x16[2] = {-1, -4};
+static const int8_t inv_shift_32x64[2] = {-1, -4};
+static const int8_t inv_shift_64x32[2] = {-1, -4};
+static const int8_t inv_shift_4x16[2]  = {-1, -4};
+static const int8_t inv_shift_16x4[2]  = {-1, -4};
+static const int8_t inv_shift_8x32[2]  = {-2, -4};
+static const int8_t inv_shift_32x8[2]  = {-2, -4};
+static const int8_t inv_shift_16x64[2] = {-2, -4};
+static const int8_t inv_shift_64x16[2] = {-2, -4};
+
+const int8_t *svt_aom_inv_txfm_shift_ls[TX_SIZES_ALL] = {
     inv_shift_4x4,   inv_shift_8x8,   inv_shift_16x16, inv_shift_32x32, inv_shift_64x64,
     inv_shift_4x8,   inv_shift_8x4,   inv_shift_8x16,  inv_shift_16x8,  inv_shift_16x32,
     inv_shift_32x16, inv_shift_32x64, inv_shift_64x32, inv_shift_4x16,  inv_shift_16x4,
@@ -1104,8 +1124,8 @@ void svt_av1_iadst16_new(const int32_t *input, int32_t *output, int8_t cos_bit,
     bf1[14] = bf0[9];
     bf1[15] = -bf0[1];
 }
-void av1_iadst32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
-                     const int8_t *stage_range) {
+static void av1_iadst32_new(const int32_t *input, int32_t *output, int8_t cos_bit,
+                            const int8_t *stage_range) {
     const int32_t  size = 32;
     const int32_t *cospi;
 
@@ -2357,7 +2377,7 @@ void av1_iidentity64_c(const int32_t *input, int32_t *output, int8_t cos_bit,
         output[i] = round_shift((int64_t)new_sqrt2 * 4 * input[i], new_sqrt2_bits);
     assert(stage_range[0] + new_sqrt2_bits <= 32);
 }
-static INLINE TxfmFunc inv_txfm_type_to_func(TxfmType txfmtype) {
+TxfmFunc svt_aom_inv_txfm_type_to_func(TxfmType txfmtype) {
     switch (txfmtype) {
     case TXFM_TYPE_DCT4: return svt_av1_idct4_new;
     case TXFM_TYPE_DCT8: return svt_av1_idct8_new;
@@ -2439,7 +2459,7 @@ void svt_av1_get_inv_txfm_cfg(TxType tx_type, TxSize tx_size, Txfm2dFlipCfg *cfg
     set_flip_cfg(tx_type, cfg);
     const TxType1D tx_type_1d_col = vtx_tab[tx_type];
     const TxType1D tx_type_1d_row = htx_tab[tx_type];
-    cfg->shift                    = eb_inv_txfm_shift_ls[tx_size];
+    cfg->shift                    = svt_aom_inv_txfm_shift_ls[tx_size];
     const int32_t txw_idx         = get_txw_idx(tx_size);
     const int32_t txh_idx         = get_txh_idx(tx_size);
     cfg->cos_bit_col              = inv_cos_bit_col[txw_idx][txh_idx];
@@ -2475,8 +2495,8 @@ static INLINE void inv_txfm2d_add_c(const int32_t *input, uint16_t *output_r, in
 
     const int8_t   cos_bit_col   = cfg->cos_bit_col;
     const int8_t   cos_bit_row   = cfg->cos_bit_row;
-    const TxfmFunc txfm_func_col = inv_txfm_type_to_func(cfg->txfm_type_col);
-    const TxfmFunc txfm_func_row = inv_txfm_type_to_func(cfg->txfm_type_row);
+    const TxfmFunc txfm_func_col = svt_aom_inv_txfm_type_to_func(cfg->txfm_type_col);
+    const TxfmFunc txfm_func_row = svt_aom_inv_txfm_type_to_func(cfg->txfm_type_row);
     ASSERT(txfm_func_col);
     ASSERT(txfm_func_row);
     // txfm_buf's length is  txfm_size_row * txfm_size_col + 2 *
@@ -3165,11 +3185,12 @@ static void highbd_inv_txfm_add_64x16(const TranLow *input, uint8_t *dest_r, int
                                  txfm_param->bd);
 }
 
-EbErrorType av1_inv_transform_recon8bit(int32_t *coeff_buffer, //1D buffer
-                                        uint8_t *recon_buffer_r, uint32_t recon_stride_r,
-                                        uint8_t *recon_buffer_w, uint32_t recon_stride_w,
-                                        TxSize txsize, TxType transform_type,
-                                        PlaneType component_type, uint32_t eob, uint8_t lossless) {
+EbErrorType svt_aom_inv_transform_recon8bit(int32_t *coeff_buffer, //1D buffer
+                                            uint8_t *recon_buffer_r, uint32_t recon_stride_r,
+                                            uint8_t *recon_buffer_w, uint32_t recon_stride_w,
+                                            TxSize txsize, TxType transform_type,
+                                            PlaneType component_type, uint32_t eob,
+                                            uint8_t lossless) {
     UNUSED(component_type);
     EbErrorType return_error = EB_ErrorNone;
     TxfmParam   txfm_param;
@@ -3267,11 +3288,11 @@ static void highbd_inv_txfm_add(const TranLow *input, uint8_t *dest_r, int32_t s
     }
 }
 
-EbErrorType av1_inv_transform_recon(int32_t *coeff_buffer, //1D buffer
-                                    uint8_t *recon_buffer_r, uint32_t recon_stride_r,
-                                    uint8_t *recon_buffer_w, uint32_t recon_stride_w, TxSize txsize,
-                                    uint32_t bit_depth, TxType transform_type,
-                                    PlaneType component_type, uint32_t eob, uint8_t lossless) {
+EbErrorType svt_aom_inv_transform_recon(int32_t *coeff_buffer, //1D buffer
+                                        uint8_t *recon_buffer_r, uint32_t recon_stride_r,
+                                        uint8_t *recon_buffer_w, uint32_t recon_stride_w,
+                                        TxSize txsize, uint32_t bit_depth, TxType transform_type,
+                                        PlaneType component_type, uint32_t eob, uint8_t lossless) {
     UNUSED(component_type);
     EbErrorType return_error = EB_ErrorNone;
     TxfmParam   txfm_param;
@@ -3324,7 +3345,7 @@ void svt_av1_inv_txfm_add_c(const TranLow *dqcoeff, uint8_t *dst_r, int32_t stri
 }
 
 // av1_cospi_arr[i][j] = (int32_t)round(cos(M_PI*j/128) * (1<<(cos_bit_min+i)));
-const int32_t eb_av1_cospi_arr_data[7][64] = {
+const int32_t svt_aom_eb_av1_cospi_arr_data[7][64] = {
     {1024, 1024, 1023, 1021, 1019, 1016, 1013, 1009, 1004, 999, 993, 987, 980, 972, 964, 955,
      946,  936,  926,  915,  903,  891,  878,  865,  851,  837, 822, 807, 792, 775, 759, 742,
      724,  706,  688,  669,  650,  630,  610,  590,  569,  548, 526, 505, 483, 460, 438, 415,
@@ -3357,15 +3378,15 @@ const int32_t eb_av1_cospi_arr_data[7][64] = {
      37736, 36410, 35062, 33692, 32303, 30893, 29466, 28020, 26558, 25080, 23586, 22078, 20557,
      19024, 17479, 15924, 14359, 12785, 11204, 9616,  8022,  6424,  4821,  3216,  1608}};
 
-// eb_av1_sinpi_arr_data[i][j] = (int32_t)round((sqrt(2) * sin(j*Pi/9) * 2 / 3) * (1
+// svt_aom_eb_av1_sinpi_arr_data[i][j] = (int32_t)round((sqrt(2) * sin(j*Pi/9) * 2 / 3) * (1
 // << (cos_bit_min + i))) modified so that elements j=1,2 sum to element j=4.
-const int32_t eb_av1_sinpi_arr_data[7][5] = {{0, 330, 621, 836, 951},
-                                             {0, 660, 1241, 1672, 1901},
-                                             {0, 1321, 2482, 3344, 3803},
-                                             {0, 2642, 4964, 6689, 7606},
-                                             {0, 5283, 9929, 13377, 15212},
-                                             {0, 10566, 19858, 26755, 30424},
-                                             {0, 21133, 39716, 53510, 60849}};
+const int32_t svt_aom_eb_av1_sinpi_arr_data[7][5] = {{0, 330, 621, 836, 951},
+                                                     {0, 660, 1241, 1672, 1901},
+                                                     {0, 1321, 2482, 3344, 3803},
+                                                     {0, 2642, 4964, 6689, 7606},
+                                                     {0, 5283, 9929, 13377, 15212},
+                                                     {0, 10566, 19858, 26755, 30424},
+                                                     {0, 21133, 39716, 53510, 60849}};
 // Coefficient scaling and quantization with AV1 TX are tailored to
 // the AV1 TX transforms.  Regardless of the bit-depth of the input,
 // the transform stages scale the coefficient values up by a factor of
@@ -3541,7 +3562,7 @@ int16_t svt_aom_ac_quant_qtx(int qindex, int delta, EbBitDepth bit_depth) {
     }
 }
 
-int32_t get_qzbin_factor(int32_t q, EbBitDepth bit_depth) {
+int32_t svt_aom_get_qzbin_factor(int32_t q, EbBitDepth bit_depth) {
     const int32_t quant = svt_aom_dc_quant_qtx(q, 0, bit_depth);
     switch (bit_depth) {
     case EB_EIGHT_BIT: return q == 0 ? 64 : (quant < 148 ? 84 : 80);
@@ -3553,7 +3574,7 @@ int32_t get_qzbin_factor(int32_t q, EbBitDepth bit_depth) {
     }
 }
 
-void invert_quant(int16_t *quant, int16_t *shift, int32_t d) {
+void svt_aom_invert_quant(int16_t *quant, int16_t *shift, int32_t d) {
     uint32_t t;
     int32_t  l, m;
     t = d;

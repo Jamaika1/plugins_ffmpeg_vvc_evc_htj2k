@@ -62,13 +62,13 @@ EbErrorType svt_picture_buffer_desc_ctor_noy8b(EbPictureBufferDesc *pictureBuffe
         picture_buffer_desc_init_data_ptr->left_padding +
         picture_buffer_desc_init_data_ptr->right_padding;
 
-    assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
-               "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
+    svt_aom_assert_err(pictureBufferDescPtr->stride_y % 8 == 0,
+                       "Luma Stride should be n*8 to accomodate 2b-compression flow \n");
 
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr =
         (pictureBufferDescPtr->stride_y + subsampling_x) >> subsampling_x;
-    pictureBufferDescPtr->origin_x     = picture_buffer_desc_init_data_ptr->left_padding;
-    pictureBufferDescPtr->origin_y     = picture_buffer_desc_init_data_ptr->top_padding;
+    pictureBufferDescPtr->org_x        = picture_buffer_desc_init_data_ptr->left_padding;
+    pictureBufferDescPtr->org_y        = picture_buffer_desc_init_data_ptr->top_padding;
     pictureBufferDescPtr->origin_bot_y = picture_buffer_desc_init_data_ptr->bot_padding;
 
     pictureBufferDescPtr->luma_size = pictureBufferDescPtr->stride_y *
@@ -159,8 +159,8 @@ EbErrorType svt_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBufferDescP
         picture_buffer_desc_init_data_ptr->right_padding;
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr =
         (pictureBufferDescPtr->stride_y + subsampling_x) >> subsampling_x;
-    pictureBufferDescPtr->origin_x     = picture_buffer_desc_init_data_ptr->left_padding;
-    pictureBufferDescPtr->origin_y     = picture_buffer_desc_init_data_ptr->top_padding;
+    pictureBufferDescPtr->org_x        = picture_buffer_desc_init_data_ptr->left_padding;
+    pictureBufferDescPtr->org_y        = picture_buffer_desc_init_data_ptr->top_padding;
     pictureBufferDescPtr->origin_bot_y = picture_buffer_desc_init_data_ptr->bot_padding;
 
     pictureBufferDescPtr->luma_size = pictureBufferDescPtr->stride_y *
@@ -257,8 +257,8 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBuffe
         picture_buffer_desc_init_data_ptr->right_padding;
     pictureBufferDescPtr->stride_cb = pictureBufferDescPtr->stride_cr =
         (pictureBufferDescPtr->stride_y + subsampling_x) >> subsampling_x;
-    pictureBufferDescPtr->origin_x     = picture_buffer_desc_init_data_ptr->left_padding;
-    pictureBufferDescPtr->origin_y     = picture_buffer_desc_init_data_ptr->top_padding;
+    pictureBufferDescPtr->org_x        = picture_buffer_desc_init_data_ptr->left_padding;
+    pictureBufferDescPtr->org_y        = picture_buffer_desc_init_data_ptr->top_padding;
     pictureBufferDescPtr->origin_bot_y = picture_buffer_desc_init_data_ptr->bot_padding;
 
     pictureBufferDescPtr->luma_size = pictureBufferDescPtr->stride_y *
@@ -293,17 +293,17 @@ EbErrorType svt_recon_picture_buffer_desc_ctor(EbPictureBufferDesc *pictureBuffe
     }
     return EB_ErrorNone;
 }
-void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
-                                     Yv12BufferConfig    *aomBuffDsc) {
+void svt_aom_link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
+                                             Yv12BufferConfig    *aomBuffDsc) {
     //forces an 8 bit version
     //NOTe:  Not all fileds are connected. add more connections as needed.
     {
-        aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->origin_x +
-            (picBuffDsc->origin_y * picBuffDsc->stride_y);
-        aomBuffDsc->u_buffer = picBuffDsc->buffer_cb + picBuffDsc->origin_x / 2 +
-            (picBuffDsc->origin_y / 2 * picBuffDsc->stride_cb);
-        aomBuffDsc->v_buffer = picBuffDsc->buffer_cr + picBuffDsc->origin_x / 2 +
-            (picBuffDsc->origin_y / 2 * picBuffDsc->stride_cb);
+        aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->org_x +
+            (picBuffDsc->org_y * picBuffDsc->stride_y);
+        aomBuffDsc->u_buffer = picBuffDsc->buffer_cb + picBuffDsc->org_x / 2 +
+            (picBuffDsc->org_y / 2 * picBuffDsc->stride_cb);
+        aomBuffDsc->v_buffer = picBuffDsc->buffer_cr + picBuffDsc->org_x / 2 +
+            (picBuffDsc->org_y / 2 * picBuffDsc->stride_cb);
 
         aomBuffDsc->y_width  = picBuffDsc->width;
         aomBuffDsc->uv_width = picBuffDsc->width / 2;
@@ -314,7 +314,7 @@ void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
         aomBuffDsc->y_stride  = picBuffDsc->stride_y;
         aomBuffDsc->uv_stride = picBuffDsc->stride_cb;
 
-        aomBuffDsc->border = picBuffDsc->origin_x;
+        aomBuffDsc->border = picBuffDsc->org_x;
 
         aomBuffDsc->subsampling_x = 1;
         aomBuffDsc->subsampling_y = 1;
@@ -328,19 +328,20 @@ void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
     }
 }
 
-void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc,
-                                uint16_t pad_right, uint16_t pad_bottom, Bool is_16bit) {
+void svt_aom_link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc,
+                                        Yv12BufferConfig *aomBuffDsc, uint16_t pad_right,
+                                        uint16_t pad_bottom, Bool is_16bit) {
     (void)is_16bit;
 
     const int32_t ss_x = 1, ss_y = 1;
     //NOTe:  Not all fileds are connected. add more connections as needed.
     if ((picBuffDsc->bit_depth == EB_EIGHT_BIT) && (picBuffDsc->is_16bit_pipeline != 1)) {
-        aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->origin_x +
-            (picBuffDsc->origin_y * picBuffDsc->stride_y);
-        aomBuffDsc->u_buffer = picBuffDsc->buffer_cb + (picBuffDsc->origin_x >> ss_x) +
-            ((picBuffDsc->origin_y >> ss_y) * picBuffDsc->stride_cb);
-        aomBuffDsc->v_buffer = picBuffDsc->buffer_cr + (picBuffDsc->origin_x >> ss_x) +
-            ((picBuffDsc->origin_y >> ss_y) * picBuffDsc->stride_cb);
+        aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->org_x +
+            (picBuffDsc->org_y * picBuffDsc->stride_y);
+        aomBuffDsc->u_buffer = picBuffDsc->buffer_cb + (picBuffDsc->org_x >> ss_x) +
+            ((picBuffDsc->org_y >> ss_y) * picBuffDsc->stride_cb);
+        aomBuffDsc->v_buffer = picBuffDsc->buffer_cr + (picBuffDsc->org_x >> ss_x) +
+            ((picBuffDsc->org_y >> ss_y) * picBuffDsc->stride_cb);
 
         aomBuffDsc->y_width  = picBuffDsc->width;
         aomBuffDsc->uv_width = (picBuffDsc->width + ss_x) >> ss_x;
@@ -351,7 +352,7 @@ void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfi
         aomBuffDsc->y_stride  = picBuffDsc->stride_y;
         aomBuffDsc->uv_stride = picBuffDsc->stride_cb;
 
-        aomBuffDsc->border = picBuffDsc->origin_x;
+        aomBuffDsc->border = picBuffDsc->org_x;
 
         aomBuffDsc->subsampling_x = ss_x;
         aomBuffDsc->subsampling_y = ss_y;
@@ -393,12 +394,11 @@ void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfi
         aomBuffDsc->u_buffer = CONVERT_TO_BYTEPTR(picBuffDsc->buffer_cb);
         aomBuffDsc->v_buffer = CONVERT_TO_BYTEPTR(picBuffDsc->buffer_cr);
 
-        aomBuffDsc->y_buffer += picBuffDsc->origin_x +
-            (picBuffDsc->origin_y * picBuffDsc->stride_y);
-        aomBuffDsc->u_buffer += (picBuffDsc->origin_x >> ss_x) +
-            ((picBuffDsc->origin_y >> ss_y) * picBuffDsc->stride_cb);
-        aomBuffDsc->v_buffer += (picBuffDsc->origin_x >> ss_x) +
-            ((picBuffDsc->origin_y >> ss_y) * picBuffDsc->stride_cb);
+        aomBuffDsc->y_buffer += picBuffDsc->org_x + (picBuffDsc->org_y * picBuffDsc->stride_y);
+        aomBuffDsc->u_buffer += (picBuffDsc->org_x >> ss_x) +
+            ((picBuffDsc->org_y >> ss_y) * picBuffDsc->stride_cb);
+        aomBuffDsc->v_buffer += (picBuffDsc->org_x >> ss_x) +
+            ((picBuffDsc->org_y >> ss_y) * picBuffDsc->stride_cb);
 
         aomBuffDsc->y_width  = picBuffDsc->width;
         aomBuffDsc->uv_width = (picBuffDsc->width + ss_x) >> ss_x;
@@ -409,7 +409,7 @@ void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfi
         aomBuffDsc->y_stride  = picBuffDsc->stride_y;
         aomBuffDsc->uv_stride = picBuffDsc->stride_cb;
 
-        aomBuffDsc->border = picBuffDsc->origin_x;
+        aomBuffDsc->border = picBuffDsc->org_x;
 
         aomBuffDsc->subsampling_x = ss_x;
         aomBuffDsc->subsampling_y = ss_y;
