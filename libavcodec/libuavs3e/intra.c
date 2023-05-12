@@ -112,7 +112,7 @@ static double intra_pu_rdcost(core_t *core, lbac_t *lbac, pel rec[N_C][MAX_CU_DI
         if (cur_info->pb_part == SIZE_2Nx2N) {
             cost += calc_dist_filter_boundary(core, pic, core->pic_org, cu_width, cu_height, rec[Y_C], cu_width, x, y, 1, cur_info->num_nz[TB0][Y_C] != 0, NULL, NULL, 0, 0);
         } else {
-            cost += block_pel_ssd(tb_width_log2, tb_h, rec_tb, org_luma_tb, cu_width, s_org, bit_depth); 
+            cost += block_pel_ssd(tb_width_log2, tb_h, rec_tb, org_luma_tb, cu_width, s_org, bit_depth);
         }
         update_intra_info_map_scu(map->map_scu, map->map_ipm, pb_x, pb_y, pb_w, pb_h, info->i_scu, intra_mode);
         copy_rec_y_to_pic(rec_tb, tb_x, tb_y, tb_w, tb_h, cu_width, pic);
@@ -212,7 +212,7 @@ static void check_one_mode(core_t *core, pel *org, int s_org, int ipm, int ipred
 	com_mode_t *cur_info = &core->mod_info_curr;
 	int bit_depth        =  core->info->bit_depth_internal;
 	pel *pred_buf        =  core->intra_pred_all[ipm];
-    
+
 	com_intra_pred(core->nb[Y_C] + INTRA_NEIB_MID, pred_buf, ipm, pb_w, pb_h, bit_depth, avail_cu, cur_info->ipf_flag);
 
 	u64 satd = calc_satd_intra(pb_w, pb_h, org, pred_buf, s_org, pb_w, bit_depth);
@@ -331,7 +331,7 @@ static int make_ipred_list(core_t *core, int pb_width, int pb_height, int cu_wid
 
         if (need_add[0] && mode == mpm[0]) {
             need_add[0] = 0;
-        } 
+        }
         if (need_add[1] && mode == mpm[1]) {
             need_add[1] = 0;
         }
@@ -464,7 +464,7 @@ double analyze_intra_cu(core_t *core, lbac_t *lbac_best, int texture_dir)
             cost_temp = 0;
             memset(num_nz_y_pb_part, 0, MAX_NUM_TB * sizeof(int));
 
-            if (((pb_part_size == SIZE_2NxnU || pb_part_size == SIZE_2NxnD) && !try_non_2NxhN) || 
+            if (((pb_part_size == SIZE_2NxnU || pb_part_size == SIZE_2NxnD) && !try_non_2NxhN) ||
                 ((pb_part_size == SIZE_nLx2N || pb_part_size == SIZE_nRx2N) && !try_non_hNx2N)) {
                 continue;
             }
@@ -574,9 +574,9 @@ double analyze_intra_cu(core_t *core, lbac_t *lbac_best, int texture_dir)
 						}
 					}
 				}
-                
+
                 cost_temp += cost_pb_best;
-            
+
                 //update PU map
                 update_intra_info_map_scu(map->map_scu, map->map_ipm, pb_x, pb_y, pb_w, pb_h, info->i_scu, best_ipd_pb_part[pb_part_idx]);
                 copy_rec_y_to_pic(rec_y_pb_part + (pb_y - y) * cu_width + (pb_x - x), pb_x, pb_y, pb_w, pb_h, cu_width, pic_rec);
@@ -611,7 +611,7 @@ double analyze_intra_cu(core_t *core, lbac_t *lbac_best, int texture_dir)
                 int cbf_y = num_nz_y_pb_part[0] + num_nz_y_pb_part[1] + num_nz_y_pb_part[2] + num_nz_y_pb_part[3];
                 s64 delta_dist = calc_dist_filter_boundary(core, pic_rec, pic_org, cu_width, cu_height, rec[Y_C], cu_width, x, y, 1, cbf_y, NULL, NULL, 0, 1);
                 cost_temp += delta_dist;
-                best_dist_y_pb_part[PB0] += (s32)delta_dist; 
+                best_dist_y_pb_part[PB0] += (s32)delta_dist;
             }
             if (pb_part_size == SIZE_2Nx2N) {
                 cost_2Nx2N = cost_temp;
