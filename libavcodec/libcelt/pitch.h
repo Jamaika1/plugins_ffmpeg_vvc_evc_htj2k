@@ -50,13 +50,13 @@
 # include "arm/pitch_arm.h"
 #endif
 
-void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x_lp,
+void celt2_pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x_lp,
       int len, int C, int arch);
 
-void pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTRICT y,
+void celt2_pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTRICT y,
                   int len, int max_pitch, int *pitch, int arch);
 
-opus_val16 remove_doubling(opus_val16 *x, int maxperiod, int minperiod,
+opus_val16 celt2_remove_doubling(opus_val16 *x, int maxperiod, int minperiod,
       int N, int *T0, int prev_period, opus_val16 prev_gain, int arch);
 
 

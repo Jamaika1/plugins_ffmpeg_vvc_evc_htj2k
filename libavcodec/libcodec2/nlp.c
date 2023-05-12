@@ -314,7 +314,7 @@ float nlp(
 	nlp->mem_x = nlp->sq[i];
 	nlp->mem_y = notch;
 	nlp->sq[i] = notch + 1.0;  /* With 0 input vectors to codec,
-				      kiss_fft2() would take a long
+				      kiss2_fft() would take a long
 				      time to execute when running in
 				      real time.  Problem was traced
 				      to kiss_fft function call in

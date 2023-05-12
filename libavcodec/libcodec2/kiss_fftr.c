@@ -25,7 +25,7 @@ struct kiss_fftr_state{
 #endif
 };
 
-kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
+kiss_fftr_cfg kiss2_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
 {
     int i;
     kiss_fftr_cfg st = NULL;
@@ -37,7 +37,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     }
     nfft >>= 1;
 
-    kiss_fft_alloc (nfft, inverse_fft, NULL, &subsize);
+    kiss2_fft_alloc (nfft, inverse_fft, NULL, &subsize);
     memneeded = sizeof(struct kiss_fftr_state) + subsize + sizeof(kiss_fft_cpx) * ( nfft * 3 / 2);
 
     if (lenmem == NULL) {
@@ -53,7 +53,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     st->substate = (kiss_fft_cfg) (st + 1); /*just beyond kiss_fftr_state struct */
     st->tmpbuf = (kiss_fft_cpx *) (((char *) st->substate) + subsize);
     st->super_twiddles = st->tmpbuf + nfft;
-    kiss_fft_alloc(nfft, inverse_fft, st->substate, &subsize);
+    kiss2_fft_alloc(nfft, inverse_fft, st->substate, &subsize);
 
     for (i = 0; i < nfft/2; ++i) {
         float phase =
@@ -65,7 +65,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     return st;
 }
 
-void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata)
+void kiss2_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata)
 {
     /* input buffer timedata is stored row-wise */
     int k,ncfft;
@@ -76,7 +76,7 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     ncfft = st->substate->nfft;
 
     /*perform the parallel fft of two real signals packed in real,imag*/
-    kiss_fft2( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
+    kiss2_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
     /* The real part of the DC element of the frequency spectrum in st->tmpbuf
      * contains the sum of the even-numbered elements of the input time sequence
      * The imag part is the sum of the odd-numbered elements
@@ -118,7 +118,7 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     }
 }
 
-void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata)
+void kiss2_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *timedata)
 {
     /* input buffer timedata is stored row-wise */
     int k, ncfft;
@@ -150,5 +150,5 @@ void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata,kiss_fft_scalar *t
         st->tmpbuf[ncfft - k].i *= -1;
 #endif
     }
-    kiss_fft2 (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
+    kiss2_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
 }

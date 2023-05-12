@@ -137,7 +137,7 @@ static void celt_fir5(opus_val16 *x,
 }
 
 
-void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x_lp,
+void celt2_pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x_lp,
       int len, int C, int arch)
 {
    int i;
@@ -290,7 +290,7 @@ celt_pitch_xcorr_c(const opus_val16 *_x, const opus_val16 *_y,
 #endif
 }
 
-void pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTRICT y,
+void celt2_pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTRICT y,
                   int len, int max_pitch, int *pitch, int arch)
 {
    int i, j;
@@ -437,7 +437,7 @@ static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy
 #endif
 
 static const int second_check[16] = {0, 0, 3, 2, 3, 2, 5, 2, 3, 2, 3, 2, 5, 2, 3, 2};
-opus_val16 remove_doubling(opus_val16 *x, int maxperiod, int minperiod,
+opus_val16 celt2_remove_doubling(opus_val16 *x, int maxperiod, int minperiod,
       int N, int *T0_, int prev_period, opus_val16 prev_gain, int arch)
 {
    int k, i, T, T0;

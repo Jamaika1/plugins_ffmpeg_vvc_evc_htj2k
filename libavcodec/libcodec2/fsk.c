@@ -163,7 +163,7 @@ struct FSK * fsk_create_core(int Fs, int Rs, int M, int P, int Nsym, int f1_tx, 
     for(i=0; i<M*fsk->Nmem; i++)
         fsk->f_dc[i] = comp0();
 
-    fsk->fft_cfg = kiss_fft_alloc(Ndft,0,NULL,NULL); assert(fsk->fft_cfg != NULL);
+    fsk->fft_cfg = kiss2_fft_alloc(Ndft,0,NULL,NULL); assert(fsk->fft_cfg != NULL);
     fsk->Sf = (float*)malloc(sizeof(float)*fsk->Ndft); assert(fsk->Sf != NULL);
     for(i=0;i<Ndft;i++)fsk->Sf[i] = 0;
 
@@ -494,7 +494,7 @@ void fsk_demod_freq_est(struct FSK *fsk, COMP fsk_in[], float *freqs, int M) {
         }
 
         /* Do the FFT */
-        kiss_fft2(fft_cfg,fftin,fftout);
+        kiss2_fft(fft_cfg,fftin,fftout);
 
         /* FFT shift to put DC bin at Ndft/2 */
         kiss_fft_cpx tmp;

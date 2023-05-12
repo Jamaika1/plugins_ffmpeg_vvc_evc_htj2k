@@ -630,7 +630,7 @@ void codec2_decode_3200(struct CODEC2 *c2, short speech[], const unsigned char *
     interpolate_lsp_ver2(&lsps[0][0], c2->prev_lsps_dec, &lsps[1][0], 0.5, LPC_ORD);
 
     for(i=0; i<2; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);
@@ -773,7 +773,7 @@ void codec2_decode_2400(struct CODEC2 *c2, short speech[], const unsigned char *
 
     interpolate_lsp_ver2(&lsps[0][0], c2->prev_lsps_dec, &lsps[1][0], 0.5, LPC_ORD);
     for(i=0; i<2; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);
@@ -969,7 +969,7 @@ void codec2_decode_1600(struct CODEC2 *c2, short speech[], const unsigned char *
 	interpolate_lsp_ver2(&lsps[i][0], c2->prev_lsps_dec, &lsps[3][0], weight, LPC_ORD);
     }
     for(i=0; i<4; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);
@@ -1139,7 +1139,7 @@ void codec2_decode_1400(struct CODEC2 *c2, short speech[], const unsigned char *
 	interpolate_lsp_ver2(&lsps[i][0], c2->prev_lsps_dec, &lsps[3][0], weight, LPC_ORD);
     }
     for(i=0; i<4; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);
@@ -1311,7 +1311,7 @@ void codec2_decode_1300(struct CODEC2 *c2, short speech[], const unsigned char *
     /* then recover spectral amplitudes */
 
     for(i=0; i<4; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);
@@ -1503,7 +1503,7 @@ void codec2_decode_1200(struct CODEC2 *c2, short speech[], const unsigned char *
 	interpolate_lsp_ver2(&lsps[i][0], c2->prev_lsps_dec, &lsps[3][0], weight, LPC_ORD);
     }
     for(i=0; i<4; i++) {
-	lsp_to_lpc2(&lsps[i][0], &ak[i][0], LPC_ORD);
+	codec2_lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 	aks_to_M2(c2->fftr_fwd_cfg, &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, 0,
                   c2->lpc_pf, c2->bass_boost, c2->beta, c2->gamma, Aw);
 	apply_lpc_correction(&model[i]);

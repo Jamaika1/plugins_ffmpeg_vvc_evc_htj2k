@@ -118,7 +118,7 @@ static OPUS_INLINE int ec_tell(ec_ctx *_this){
   Return: The number of bits scaled by 2**BITRES.
           This will always be slightly larger than the exact value (e.g., all
            rounding error is in the positive direction).*/
-opus_uint32 ec2_tell_frac(ec_ctx *_this);
+opus_uint32 celt2_ec_tell_frac(ec_ctx *_this);
 
 /* Tested exhaustively for all n and for 1<=d<=256 */
 static OPUS_INLINE opus_uint32 celt_udiv(opus_uint32 n, opus_uint32 d) {

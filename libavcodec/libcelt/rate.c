@@ -498,7 +498,7 @@ static OPUS_INLINE int interp_bits2pulses(const CELTMode *m, int start, int end,
       }
 
       /* Fine energy can't take advantage of the re-balancing in
-          quant_all_bands2().
+          celt2_quant_all_bands().
          Instead, do the re-balancing here.*/
       if(excess > 0)
       {
@@ -516,7 +516,7 @@ static OPUS_INLINE int interp_bits2pulses(const CELTMode *m, int start, int end,
       celt_assert(ebits[j] >= 0);
    }
    /* Save any remaining bits over the cap for the rebalancing in
-       quant_all_bands2(). */
+       celt2_quant_all_bands(). */
    *_balance = balance;
 
    /* The skipped bands use all their bits for fine energy. */

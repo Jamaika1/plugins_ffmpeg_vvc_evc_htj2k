@@ -43,13 +43,13 @@ extern "C" {
 # include <xmmintrin.h>
 # define kiss_fft_scalar __m128
 #define KISS_FFT_MALLOC(nbytes) memalign(16,nbytes)
-#else	
+#else
 #define KISS_FFT_MALLOC celt_alloc
-#endif	
+#endif
 
 
 #ifdef FIXED_POINT
-#include "arch.h"	
+#include "arch.h"
 #define DOUBLE_PRECISION
 
 #ifdef DOUBLE_PRECISION
@@ -115,9 +115,9 @@ typedef struct kiss_fft_state{
 
 //typedef struct kiss_fft_state* kiss_fft_cfg;
 
-/** 
+/**
  *  kiss_fft_alloc
- *  
+ *
  *  Initialize a FFT (or IFFT) algorithm's cfg/state buffer.
  *
  *  typical usage:      kiss_fft_cfg mycfg=kiss_fft_alloc(1024,0,NULL,NULL);
@@ -127,20 +127,20 @@ typedef struct kiss_fft_state{
  *
  *  If lenmem is NULL, then kiss_fft_alloc will allocate a cfg buffer using malloc.
  *  The returned value should be free()d when done to avoid memory leaks.
- *  
+ *
  *  The state can be placed in a user supplied buffer 'mem':
  *  If lenmem is not NULL and mem is not NULL and *lenmem is large enough,
  *      then the function places the cfg in mem and the size used in *lenmem
  *      and returns mem.
- *  
+ *
  *  If lenmem is not NULL and ( mem is NULL or *lenmem is not large enough),
- *      then the function returns NULL and places the minimum cfg 
+ *      then the function returns NULL and places the minimum cfg
  *      buffer size in *lenmem.
  * */
 
-kiss_fft_state *kiss_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem, const kiss_fft_state *base);
+kiss_fft_state *celt_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem, const kiss_fft_state *base);
 
-kiss_fft_state *kiss_fft_alloc(int nfft,void * mem,size_t * lenmem);
+kiss_fft_state *celt_fft_alloc(int nfft,void * mem,size_t * lenmem);
 
 /**
  * kiss_fft(cfg,in_out_buf)
@@ -152,14 +152,14 @@ kiss_fft_state *kiss_fft_alloc(int nfft,void * mem,size_t * lenmem);
  * Note that each element is complex and can be accessed like
     f[k].r and f[k].i
  * */
-void kiss_fft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
-void kiss_ifft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
+void celt_fft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
+void celt_ifft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
 
-void kiss_fft_free(const kiss_fft_state *cfg);
+void celt_fft_free(const kiss_fft_state *cfg);
 
 
 #ifdef __cplusplus
-} 
+}
 #endif
 
 #endif
