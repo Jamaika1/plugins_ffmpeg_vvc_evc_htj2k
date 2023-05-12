@@ -74,7 +74,7 @@ codec2_fft_cfg codec2_fft_alloc(int nfft, int inverse_fft, void* mem, size_t* le
 {
     codec2_fft_cfg retval;
 #ifdef USE_KISS_FFT
-    retval = kiss_fft_alloc(nfft, inverse_fft, mem, lenmem);
+    retval = kiss2_fft_alloc(nfft, inverse_fft, mem, lenmem);
 #else
     retval = MALLOC(sizeof(codec2_fft_struct));
     retval->inverse  = inverse_fft;
@@ -104,7 +104,7 @@ codec2_fftr_cfg codec2_fftr_alloc(int nfft, int inverse_fft, void* mem, size_t* 
 {
     codec2_fftr_cfg retval;
 #ifdef USE_KISS_FFT
-    retval = kiss_fftr_alloc(nfft, inverse_fft, mem, lenmem);
+    retval = kiss2_fftr_alloc(nfft, inverse_fft, mem, lenmem);
 #else
     retval = MALLOC(sizeof(codec2_fftr_struct));
     retval->inverse  = inverse_fft;
@@ -141,11 +141,11 @@ void codec2_fft_inplace(codec2_fft_cfg cfg, codec2_fft_cpx* inout)
     {
         kiss_fft_cpx in[512];
         memcpy(in,inout,cfg->nfft*sizeof(kiss_fft_cpx));
-        kiss_fft2(cfg, in, (kiss_fft_cpx*)inout);
+        kiss2_fft(cfg, in, (kiss_fft_cpx*)inout);
     }
     else
     {
-        kiss_fft2(cfg, (kiss_fft_cpx*)inout, (kiss_fft_cpx*)inout);
+        kiss2_fft(cfg, (kiss_fft_cpx*)inout, (kiss_fft_cpx*)inout);
     }
 #else
     arm_cfft_f32(cfg->instance,(float*)inout,cfg->inverse,1);

@@ -55,7 +55,7 @@ static inline void codec2_fftr(codec2_fftr_cfg cfg, codec2_fft_scalar* in, codec
 {
 
 #ifdef USE_KISS_FFT
-      kiss_fftr(cfg, in, (kiss_fft_cpx*)out);
+      kiss2_fftr(cfg, in, (kiss_fft_cpx*)out);
 #else
     arm_rfft_fast_f32(cfg->instance,in,(float*)out,cfg->inverse);
     out->imag = 0; // remove out[FFT_ENC/2]->real stored in out[0].imag
@@ -65,7 +65,7 @@ static inline void codec2_fftr(codec2_fftr_cfg cfg, codec2_fft_scalar* in, codec
 static inline void codec2_fftri(codec2_fftr_cfg cfg, codec2_fft_cpx* in, codec2_fft_scalar* out)
 {
 #ifdef USE_KISS_FFT
-      kiss_fftri(cfg, (kiss_fft_cpx*)in, out);
+      kiss2_fftri(cfg, (kiss_fft_cpx*)in, out);
 #else
     arm_rfft_fast_f32(cfg->instance,(float*)in,out,cfg->inverse);
     // arm_scale_f32(out,cfg->instance->fftLenRFFT,out,cfg->instance->fftLenRFFT);
@@ -83,7 +83,7 @@ static inline void codec2_fft(codec2_fft_cfg cfg, codec2_fft_cpx* in, codec2_fft
 {
 
 #ifdef USE_KISS_FFT
-      kiss_fft2(cfg, (kiss_fft_cpx*)in, (kiss_fft_cpx*)out);
+      kiss2_fft(cfg, (kiss_fft_cpx*)in, (kiss_fft_cpx*)out);
 #else
     memcpy(out,in,cfg->instance->fftLen*2*sizeof(float));
     arm_cfft_f32(cfg->instance,(float*)out,cfg->inverse, 1);
