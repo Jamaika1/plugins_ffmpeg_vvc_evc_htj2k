@@ -43,7 +43,7 @@
 /*****************************************************************************
  * basic types
  *****************************************************************************/
-#if defined(WIN32) || defined(WIN64)
+#if defined(_MSC_VER)
 typedef __int8                      s8;
 typedef unsigned __int8             u8;
 typedef __int16                    s16;
@@ -154,7 +154,7 @@ typedef int BOOL;
 #define com_malloc(size)          align_malloc((size))
 #define com_free(m)               if(m){align_free(m); (m) = NULL; }
 
-#define ALIGN_SHIFT  5 
+#define ALIGN_SHIFT  5
 #define ALIGN_BASIC (1 << ALIGN_SHIFT)
 #define ALIGN_MASK (ALIGN_BASIC - 1)
 #define ALIGN_POINTER(x) (x + ALIGN_MASK - (((intptr_t)x + ALIGN_MASK) & ((intptr_t)ALIGN_MASK)))
@@ -168,7 +168,7 @@ typedef int BOOL;
 #if defined(_WIN32) && !defined(__GNUC__)
 #define DECLARE_ALIGNED(var, n) __declspec(align(n)) var
 #else
-#define DECLARE_ALIGNED(var, n) var __attribute__((aligned (n))) 
+#define DECLARE_ALIGNED(var, n) var __attribute__((aligned (n)))
 #endif
 #define ALIGNED_32(var)    DECLARE_ALIGNED(var, 32)
 #define ALIGNED_16(var)    DECLARE_ALIGNED(var, 16)
@@ -226,7 +226,7 @@ typedef union uavs3d_union128_t {
 #include <assert.h>
 
 #if CHECK_RAND_STRM
-#define assert(x) 
+#define assert(x)
 #endif
 
 #ifdef UAVS3D_DEBUG
@@ -252,7 +252,7 @@ typedef union uavs3d_union128_t {
 }
 
 /*****************************************************************************
- *  basic operation 
+ *  basic operation
  *****************************************************************************/
 
 #define COM_ABS(a)                     abs(a)
