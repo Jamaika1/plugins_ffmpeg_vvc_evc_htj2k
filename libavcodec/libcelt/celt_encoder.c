@@ -628,7 +628,7 @@ static int tf_analysis(const CELTMode *m, int len, int isTransient,
       if (isTransient && !narrow)
       {
          OPUS_COPY(tmp_1, tmp, N);
-         haar2(tmp_1, N>>LM, 1<<LM);
+         celt2_haar1(tmp_1, N>>LM, 1<<LM);
          L1 = l1_metric(tmp_1, N, LM+1, bias);
          if (L1<best_L1)
          {
@@ -646,7 +646,7 @@ static int tf_analysis(const CELTMode *m, int len, int isTransient,
          else
             B = k+1;
 
-         haar2(tmp, N>>k, 1<<k);
+         celt2_haar1(tmp, N>>k, 1<<k);
 
          L1 = l1_metric(tmp, N, B, bias);
 
@@ -1195,15 +1195,15 @@ static int run_prefilter(CELTEncoder *st, celt_sig *in, celt_sig *prefilter_mem,
       VARDECL(opus_val16, pitch_buf);
       ALLOC(pitch_buf, (COMBFILTER_MAXPERIOD+N)>>1, opus_val16);
 
-      pitch_downsample(pre, pitch_buf, COMBFILTER_MAXPERIOD+N, CC, st->arch);
+      celt2_pitch_downsample(pre, pitch_buf, COMBFILTER_MAXPERIOD+N, CC, st->arch);
       /* Don't search for the fir last 1.5 octave of the range because
          there's too many false-positives due to short-term correlation */
-      pitch_search(pitch_buf+(COMBFILTER_MAXPERIOD>>1), pitch_buf, N,
+      celt2_pitch_search(pitch_buf+(COMBFILTER_MAXPERIOD>>1), pitch_buf, N,
             COMBFILTER_MAXPERIOD-3*COMBFILTER_MINPERIOD, &pitch_index,
             st->arch);
       pitch_index = COMBFILTER_MAXPERIOD-pitch_index;
 
-      gain1 = remove_doubling(pitch_buf, COMBFILTER_MAXPERIOD, COMBFILTER_MINPERIOD,
+      gain1 = celt2_remove_doubling(pitch_buf, COMBFILTER_MAXPERIOD, COMBFILTER_MINPERIOD,
             N, &pitch_index, st->prefilter_period, st->prefilter_gain, st->arch);
       if (pitch_index > COMBFILTER_MAXPERIOD-2)
          pitch_index = COMBFILTER_MAXPERIOD-2;
@@ -1516,7 +1516,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
       tell0_frac=tell=1;
       nbFilledBytes=0;
    } else {
-      tell0_frac=ec2_tell_frac(enc);
+      tell0_frac=celt2_ec_tell_frac(enc);
       tell=ec_tell(enc);
       nbFilledBytes=(tell+4)>>3;
    }
@@ -1717,7 +1717,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    if (secondMdct)
    {
       compute_mdcts(mode, 0, in, freq, C, CC, LM, st->upsample, st->arch);
-      compute_band2_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
+      celt2_compute_band_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
       celt2_amp2Log2(mode, effEnd, end, bandE, bandLogE2, C);
       for (c=0;c<C;c++)
       {
@@ -1732,7 +1732,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    celt_assert(!celt_isnan(freq[0]) && (C==1 || !celt_isnan(freq[N])));
    if (CC==2&&C==1)
       tf_chan = 0;
-   compute_band2_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
+   celt2_compute_band_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
 
    if (st->lfe)
    {
@@ -1856,7 +1856,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
          isTransient = 1;
          shortBlocks = M;
          compute_mdcts(mode, shortBlocks, in, freq, C, CC, LM, st->upsample, st->arch);
-         compute_band2_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
+         celt2_compute_band_energies(mode, freq, bandE, effEnd, C, LM, st->arch);
          celt2_amp2Log2(mode, effEnd, end, bandE, bandLogE, C);
          /* Compensate for the scaling of short vs long mdcts */
          for (c=0;c<C;c++)
@@ -1874,7 +1874,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    ALLOC(X, C*N, celt_norm);         /**< Interleaved normalised MDCTs */
 
    /* Band normalisation */
-   normalise_bands2(mode, freq, X, bandE, effEnd, C, M);
+   celt2_normalise_bands(mode, freq, X, bandE, effEnd, C, M);
 
    enable_tf_analysis = effectiveBytes>=15*C && !hybrid && st->complexity>=2 && !st->lfe;
 
@@ -1929,7 +1929,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
          }
       }
    } while (++c < C);
-   quant2_coarse_energy(mode, start, end, effEnd, bandLogE,
+   celt2_quant_coarse_energy(mode, start, end, effEnd, bandLogE,
          oldBandE, total_bits, error, enc,
          C, LM, nbAvailableBytes, st->force_intra,
          &st->delayedIntra, st->complexity >= 4, st->loss_rate, st->lfe);
@@ -1958,7 +1958,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
             st->spread_decision = SPREAD_NORMAL;
       } else {
          /* Disable new spreading+tapset estimator until we can show it works
-            better than the old one. So far it seems like spreading_decision2()
+            better than the old one. So far it seems like celt2_spreading_decision()
             works best. */
 #if 0
          if (st->analysis.valid)
@@ -1972,7 +1972,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
          } else
 #endif
          {
-            st->spread_decision = spreading_decision2(mode, X,
+            st->spread_decision = celt2_spreading_decision(mode, X,
                   &st->tonal_average, st->spread_decision, &st->hf_average,
                   &st->tapset_decision, pf_on&&!shortBlocks, effEnd, C, M, spread_weight);
          }
@@ -1991,7 +1991,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    dynalloc_logp = 6;
    total_bits<<=BITRES;
    total_boost = 0;
-   tell = ec2_tell_frac(enc);
+   tell = celt2_ec_tell_frac(enc);
    for (i=start;i<end;i++)
    {
       int width, quanta;
@@ -2010,7 +2010,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
          int flag;
          flag = j<offsets[i];
          ec_enc_bit_logp(enc, flag, dynalloc_loop_logp);
-         tell = ec2_tell_frac(enc);
+         tell = celt2_ec_tell_frac(enc);
          if (!flag)
             break;
          boost += quanta;
@@ -2053,7 +2053,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
             st->intensity, surround_trim, equiv_rate, st->arch);
       }
       ec_enc_icdf(enc, alloc_trim, trim_icdf, 7);
-      tell = ec2_tell_frac(enc);
+      tell = celt2_ec_tell_frac(enc);
    }
 
    /* Variable bitrate */
@@ -2174,7 +2174,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    ALLOC(fine_priority, nbEBands, int);
 
    /* bits =           packet size                    - where we are - safety*/
-   bits = (((opus_int32)nbCompressedBytes*8)<<BITRES) - ec2_tell_frac(enc) - 1;
+   bits = (((opus_int32)nbCompressedBytes*8)<<BITRES) - celt2_ec_tell_frac(enc) - 1;
    anti_collapse_rsv = isTransient&&LM>=2&&bits>=((LM+2)<<BITRES) ? (1<<BITRES) : 0;
    bits -= anti_collapse_rsv;
    signalBandwidth = end-1;
@@ -2205,11 +2205,11 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
    else
       st->lastCodedBands = codedBands;
 
-   quant2_fine_energy(mode, start, end, oldBandE, error, fine_quant, enc, C);
+   celt2_quant_fine_energy(mode, start, end, oldBandE, error, fine_quant, enc, C);
 
    /* Residual quantisation */
    ALLOC(collapse_masks, C*nbEBands, unsigned char);
-   quant_all_bands2(1, mode, start, end, X, C==2 ? X+N : NULL, collapse_masks,
+   celt2_quant_all_bands(1, mode, start, end, X, C==2 ? X+N : NULL, collapse_masks,
          bandE, pulses, shortBlocks, st->spread_decision,
          dual_stereo, st->intensity, tf_res, nbCompressedBytes*(8<<BITRES)-anti_collapse_rsv,
          balance, enc, LM, codedBands, &st->rng, st->complexity, st->arch, st->disable_inv);
@@ -2222,7 +2222,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
 #endif
       ec_enc_bits(enc, anti_collapse_on, 1);
    }
-   quant2_energy_finalise(mode, start, end, oldBandE, error, fine_quant, fine_priority, nbCompressedBytes*8-ec_tell(enc), enc, C);
+   celt2_quant_energy_finalise(mode, start, end, oldBandE, error, fine_quant, fine_priority, nbCompressedBytes*8-ec_tell(enc), enc, C);
    OPUS_CLEAR(energyError, nbEBands*CC);
    c=0;
    do {
@@ -2245,7 +2245,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
 
       if (anti_collapse_on)
       {
-         anti_collapse2(mode, X, collapse_masks, LM, C, N,
+         celt2_anti_collapse(mode, X, collapse_masks, LM, C, N,
                start, end, oldBandE, oldLogE, oldLogE2, pulses, st->rng);
       }
 

@@ -258,7 +258,7 @@ static int quant_coarse_energy_impl(const CELTMode *m, int start, int end,
    return lfe ? 0 : badness;
 }
 
-void quant2_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
+void celt2_quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       const opus_val16 *eBands, opus_val16 *oldEBands, opus_uint32 budget,
       opus_val16 *error, ec_enc *enc, int C, int LM, int nbAvailableBytes,
       int force_intra, opus_val32 *delayedIntra, int two_pass, int loss_rate, int lfe)
@@ -316,7 +316,7 @@ void quant2_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       int badness2;
       VARDECL(unsigned char, intra_bits);
 
-      tell_intra = ec2_tell_frac(enc);
+      tell_intra = celt2_ec_tell_frac(enc);
 
       enc_intra_state = *enc;
 
@@ -335,7 +335,7 @@ void quant2_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       badness2 = quant_coarse_energy_impl(m, start, end, eBands, oldEBands, budget,
             tell, e_prob_model[LM][intra], error, enc, C, LM, 0, max_decay, lfe);
 
-      if (two_pass && (badness1 < badness2 || (badness1 == badness2 && ((opus_int32)ec2_tell_frac(enc))+intra_bias > tell_intra)))
+      if (two_pass && (badness1 < badness2 || (badness1 == badness2 && ((opus_int32)celt2_ec_tell_frac(enc))+intra_bias > tell_intra)))
       {
          *enc = enc_intra_state;
          /* Copy intra bits to bit-stream */
@@ -358,7 +358,7 @@ void quant2_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
    RESTORE_STACK;
 }
 
-void quant2_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, opus_val16 *error, int *fine_quant, ec_enc *enc, int C)
+void celt2_quant_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, opus_val16 *error, int *fine_quant, ec_enc *enc, int C)
 {
    int i, c;
 
@@ -395,7 +395,7 @@ void quant2_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEB
    }
 }
 
-void quant2_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *oldEBands, opus_val16 *error, int *fine_quant, int *fine_priority, int bits_left, ec_enc *enc, int C)
+void celt2_quant_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *oldEBands, opus_val16 *error, int *fine_quant, int *fine_priority, int bits_left, ec_enc *enc, int C)
 {
    int i, prio, c;
 
@@ -425,7 +425,7 @@ void quant2_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *o
    }
 }
 
-void unquant2_coarse_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int intra, ec_dec *dec, int C, int LM)
+void celt2_unquant_coarse_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int intra, ec_dec *dec, int C, int LM)
 {
    const unsigned char *prob_model = e_prob_model[LM][intra];
    int i, c;
@@ -490,7 +490,7 @@ void unquant2_coarse_energy(const CELTMode *m, int start, int end, opus_val16 *o
    }
 }
 
-void unquant2_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int *fine_quant, ec_dec *dec, int C)
+void celt2_unquant_fine_energy(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int *fine_quant, ec_dec *dec, int C)
 {
    int i, c;
    /* Decode finer resolution */
@@ -513,7 +513,7 @@ void unquant2_fine_energy(const CELTMode *m, int start, int end, opus_val16 *old
    }
 }
 
-void unquant2_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int *fine_quant,  int *fine_priority, int bits_left, ec_dec *dec, int C)
+void celt2_unquant_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *oldEBands, int *fine_quant,  int *fine_priority, int bits_left, ec_dec *dec, int C)
 {
    int i, prio, c;
 

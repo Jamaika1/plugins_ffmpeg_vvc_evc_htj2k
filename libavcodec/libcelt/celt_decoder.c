@@ -403,7 +403,7 @@ void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
    {
       /* Copying a mono streams to two channels */
       celt_sig *freq2;
-      denormalise_bands2(mode, X, freq, oldBandE, start, effEnd, M,
+      celt2_denormalise_bands(mode, X, freq, oldBandE, start, effEnd, M,
             downsample, silence);
       /* Store a temporary copy in the output buffer because the IMDCT destroys its input. */
       freq2 = out_syn[1]+overlap/2;
@@ -417,10 +417,10 @@ void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
       /* Downmixing a stereo stream to mono */
       celt_sig *freq2;
       freq2 = out_syn[0]+overlap/2;
-      denormalise_bands2(mode, X, freq, oldBandE, start, effEnd, M,
+      celt2_denormalise_bands(mode, X, freq, oldBandE, start, effEnd, M,
             downsample, silence);
       /* Use the output buffer as temp array before downmixing. */
-      denormalise_bands2(mode, X+N, freq2, oldBandE+nbEBands, start, effEnd, M,
+      celt2_denormalise_bands(mode, X+N, freq2, oldBandE+nbEBands, start, effEnd, M,
             downsample, silence);
       for (i=0;i<N;i++)
          freq[i] = ADD32(HALF32(freq[i]), HALF32(freq2[i]));
@@ -429,7 +429,7 @@ void celt_synthesis(const CELTMode *mode, celt_norm *X, celt_sig * out_syn[],
    } else {
       /* Normal case (mono or stereo) */
       c=0; do {
-         denormalise_bands2(mode, X+c*N, freq, oldBandE+c*nbEBands, start, effEnd, M,
+         celt2_denormalise_bands(mode, X+c*N, freq, oldBandE+c*nbEBands, start, effEnd, M,
                downsample, silence);
          for (b=0;b<B;b++)
             clt_mdct_backward(&mode->mdct, &freq[b], out_syn[c]+NB*b, mode->window, overlap, shift, B, arch);
@@ -489,9 +489,9 @@ static int celt_plc_pitch_search(celt_sig *decode_mem[2], int C, int arch)
    VARDECL( opus_val16, lp_pitch_buf );
    SAVE_STACK;
    ALLOC( lp_pitch_buf, DECODE_BUFFER_SIZE>>1, opus_val16 );
-   pitch_downsample(decode_mem, lp_pitch_buf,
+   celt2_pitch_downsample(decode_mem, lp_pitch_buf,
          DECODE_BUFFER_SIZE, C, arch);
-   pitch_search(lp_pitch_buf+(PLC_PITCH_LAG_MAX>>1), lp_pitch_buf,
+   celt2_pitch_search(lp_pitch_buf+(PLC_PITCH_LAG_MAX>>1), lp_pitch_buf,
          DECODE_BUFFER_SIZE-PLC_PITCH_LAG_MAX,
          PLC_PITCH_LAG_MAX-PLC_PITCH_LAG_MIN, &pitch_index, arch);
    pitch_index = PLC_PITCH_LAG_MAX-pitch_index;
@@ -1007,7 +1007,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
    /* Decode the global flags (first symbols in the stream) */
    intra_ener = tell+3<=total_bits ? ec_dec_bit_logp(dec, 3) : 0;
    /* Get band energies */
-   unquant2_coarse_energy(mode, start, end, oldBandE,
+   celt2_unquant_coarse_energy(mode, start, end, oldBandE,
          intra_ener, dec, C, LM);
 
    ALLOC(tf_res, nbEBands, int);
@@ -1026,7 +1026,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
 
    dynalloc_logp = 6;
    total_bits<<=BITRES;
-   tell = ec2_tell_frac(dec);
+   tell = celt2_ec_tell_frac(dec);
    for (i=start;i<end;i++)
    {
       int width, quanta;
@@ -1042,7 +1042,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
       {
          int flag;
          flag = ec_dec_bit_logp(dec, dynalloc_loop_logp);
-         tell = ec2_tell_frac(dec);
+         tell = celt2_ec_tell_frac(dec);
          if (!flag)
             break;
          boost += quanta;
@@ -1059,7 +1059,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
    alloc_trim = tell+(6<<BITRES) <= total_bits ?
          ec_dec_icdf(dec, trim_icdf, 7) : 5;
 
-   bits = (((opus_int32)len*8)<<BITRES) - ec2_tell_frac(dec) - 1;
+   bits = (((opus_int32)len*8)<<BITRES) - celt2_ec_tell_frac(dec) - 1;
    anti_collapse_rsv = isTransient&&LM>=2&&bits>=((LM+2)<<BITRES) ? (1<<BITRES) : 0;
    bits -= anti_collapse_rsv;
 
@@ -1070,7 +1070,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
          alloc_trim, &intensity, &dual_stereo, bits, &balance, pulses,
          fine_quant, fine_priority, C, LM, dec, 0, 0, 0);
 
-   unquant2_fine_energy(mode, start, end, oldBandE, fine_quant, dec, C);
+   celt2_unquant_fine_energy(mode, start, end, oldBandE, fine_quant, dec, C);
 
    c=0; do {
       OPUS_MOVE(decode_mem[c], decode_mem[c]+N, DECODE_BUFFER_SIZE-N+overlap/2);
@@ -1087,7 +1087,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
    ALLOC(X, C*N, celt_norm);   /**< Interleaved normalised MDCTs */
 #endif
 
-   quant_all_bands2(0, mode, start, end, X, C==2 ? X+N : NULL, collapse_masks,
+   celt2_quant_all_bands(0, mode, start, end, X, C==2 ? X+N : NULL, collapse_masks,
          NULL, pulses, shortBlocks, spread_decision, dual_stereo, intensity, tf_res,
          len*(8<<BITRES)-anti_collapse_rsv, balance, dec, LM, codedBands, &st->rng, 0,
          st->arch, st->disable_inv);
@@ -1097,11 +1097,11 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
       anti_collapse_on = ec_dec_bits(dec, 1);
    }
 
-   unquant2_energy_finalise(mode, start, end, oldBandE,
+   celt2_unquant_energy_finalise(mode, start, end, oldBandE,
          fine_quant, fine_priority, len*8-ec_tell(dec), dec, C);
 
    if (anti_collapse_on)
-      anti_collapse2(mode, X, collapse_masks, LM, C, N,
+      celt2_anti_collapse(mode, X, collapse_masks, LM, C, N,
             start, end, oldBandE, oldLogE, oldLogE2, pulses, st->rng, st->arch);
 
    if (silence)
