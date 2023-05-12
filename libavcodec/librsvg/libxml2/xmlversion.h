@@ -51,7 +51,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * extra version information, used to show a git commit description
  */
-#define LIBXML_VERSION_EXTRA "-e07f765"
+#define LIBXML_VERSION_EXTRA "-687a2b7"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -231,15 +231,6 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 /**
- * LIBXML_DOCB_ENABLED:
- *
- * Whether the SGML Docbook support is configured in
- */
-#if 0
-#define LIBXML_DOCB_ENABLED
-#endif
-
-/**
  * LIBXML_XPATH_ENABLED:
  *
  * Whether XPath is configured in
@@ -410,15 +401,6 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 /**
- * LIBXML_ZLIB_NG_ENABLED:
- *
- * Whether the Zlib-NG support is compiled in
- */
-#if 0
-#define LIBXML_ZLIB_NG_ENABLED
-#endif
-
-/**
  * LIBXML_LZMA_ENABLED:
  *
  * Whether the Lzma support is compiled in
@@ -428,12 +410,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 #ifdef __GNUC__
-
-/**
- * ATTRIBUTE_UNUSED:
- *
- * Macro used to signal to GCC unused function parameters
- */
+/** DOC_DISABLE */
 
 #ifndef ATTRIBUTE_UNUSED
 # if ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 7)))
@@ -442,12 +419,6 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #  define ATTRIBUTE_UNUSED
 # endif
 #endif
-
-/**
- * LIBXML_ATTR_ALLOC_SIZE:
- *
- * Macro used to indicate to GCC this is an allocator function
- */
 
 #ifndef LIBXML_ATTR_ALLOC_SIZE
 # if (!defined(__clang__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))))
@@ -458,12 +429,6 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #else
 # define LIBXML_ATTR_ALLOC_SIZE(x)
 #endif
-
-/**
- * LIBXML_ATTR_FORMAT:
- *
- * Macro used to indicate to GCC the parameter are printf like
- */
 
 #ifndef LIBXML_ATTR_FORMAT
 # if ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
@@ -476,24 +441,30 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
 #endif
 
 #ifndef XML_DEPRECATED
-#  ifdef IN_LIBXML
+#  if defined (IN_LIBXML) || (__GNUC__ * 100 + __GNUC_MINOR__ < 301)
 #    define XML_DEPRECATED
-#  else
 /* Available since at least GCC 3.1 */
+#  else
 #    define XML_DEPRECATED __attribute__((deprecated))
 #  endif
 #endif
 
-#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 406))
-#define XML_IGNORE_FPTR_CAST_WARNINGS \
-    _Pragma("GCC diagnostic push") \
-    _Pragma("GCC diagnostic ignored \"-Wpedantic\"") \
-    _Pragma("GCC diagnostic ignored \"-Wcast-function-type\"")
-#define XML_POP_WARNINGS \
+#if defined(__clang__) || (__GNUC__ * 100 + __GNUC_MINOR__ >= 406)
+  #if defined(__clang__) || (__GNUC__ * 100 + __GNUC_MINOR__ >= 800)
+    #define XML_IGNORE_FPTR_CAST_WARNINGS \
+      _Pragma("GCC diagnostic push") \
+      _Pragma("GCC diagnostic ignored \"-Wpedantic\"") \
+      _Pragma("GCC diagnostic ignored \"-Wcast-function-type\"")
+  #else
+    #define XML_IGNORE_FPTR_CAST_WARNINGS \
+      _Pragma("GCC diagnostic push") \
+      _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+  #endif
+  #define XML_POP_WARNINGS \
     _Pragma("GCC diagnostic pop")
 #else
-#define XML_IGNORE_FPTR_CAST_WARNINGS
-#define XML_POP_WARNINGS
+  #define XML_IGNORE_FPTR_CAST_WARNINGS
+  #define XML_POP_WARNINGS
 #endif
 
 /** DOC_ENABLE */
@@ -523,20 +494,35 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * is deprecated.
  */
 #ifndef XML_DEPRECATED
-#define XML_DEPRECATED
+#  if defined (IN_LIBXML) || !defined (_MSC_VER)
+#    define XML_DEPRECATED
+/* Available since Visual Studio 2005 */
+#  elif defined (_MSC_VER) && (_MSC_VER >= 1400)
+#    define XML_DEPRECATED __declspec(deprecated)
+#  endif
 #endif
 /**
  * LIBXML_IGNORE_FPTR_CAST_WARNINGS:
  *
  * Macro used to ignore pointer cast warnings that can't be worked around.
  */
-#define XML_IGNORE_FPTR_CAST_WARNINGS
+#if defined (_MSC_VER) && (_MSC_VER >= 1400)
+#  define XML_IGNORE_FPTR_CAST_WARNINGS __pragma(warning(push))
+#else
+#  define XML_IGNORE_FPTR_CAST_WARNINGS
+#endif
 /**
- * LIBXML_POP_WARNINGS:
+ * XML_POP_WARNINGS:
  *
  * Macro used to restore warnings state.
  */
-#define XML_POP_WARNINGS
+#ifndef XML_POP_WARNINGS
+#  if defined (_MSC_VER) && (_MSC_VER >= 1400)
+#    define XML_POP_WARNINGS __pragma(warning(pop))
+#  else
+#    define XML_POP_WARNINGS
+#  endif
+#endif
 #endif /* __GNUC__ */
 
 #ifdef __cplusplus
