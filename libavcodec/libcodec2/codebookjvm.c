@@ -1,14 +1,14 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under 
+ * This intermediary file and the files that used to create it are under
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspjvm1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   0.435217,  0.668864,  1.0103,  1.22042,  1.50398,  1.78468,  2.13546,  2.35747,  2.61891,  2.73804,
   0.179285,  0.33316,  0.500638,  0.79695,  1.03999,  1.23497,  1.6523,  1.84823,  2.62556,  2.80497,
   0.268785,  0.356576,  0.595753,  1.04434,  1.24938,  1.42868,  1.68699,  1.86469,  2.33991,  2.5138,
@@ -523,7 +523,7 @@ static const float codes0[] = {
   0.22437,  0.317969,  0.439666,  0.812931,  1.3985,  1.62663,  1.79418,  2.114,  2.30916,  2.49684
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspjvm2.txt */
-static const float codes1[] = {
+static float codes1[] = {
   0.005167,  -0.03731,  -0.002159,  0.016849,  0.130396,
   0.039445,  0.03168,  -0.074412,  -0.031499,  0.060536,
   0.019479,  -0.030564,  -0.048137,  -0.056279,  -0.027829,
@@ -1038,7 +1038,7 @@ static const float codes1[] = {
   -0.006432,  -0.012089,  -0.086842,  0.104105,  0.061991
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspjvm3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   0.007066,  0.075781,  -0.070082,  -0.092014,  -0.066477,
   0.09051,  0.106622,  0.025911,  -0.01676,  0.003724,
   -0.024628,  0.058332,  0.012876,  0.059557,  -0.002092,

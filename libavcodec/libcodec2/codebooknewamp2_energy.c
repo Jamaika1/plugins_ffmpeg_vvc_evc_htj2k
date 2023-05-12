@@ -8,7 +8,7 @@
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/newamp2_energy_q.txt */
-static const float codes0[] = {
+static float codes0[] = {
   0.1,
   5,
   10,

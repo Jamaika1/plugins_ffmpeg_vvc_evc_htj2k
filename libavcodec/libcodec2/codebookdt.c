@@ -8,7 +8,7 @@
 #include "defines.h"
 
   /* codebook/lspdt1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   -75,
   -50,
   -25,
@@ -19,7 +19,7 @@ static const float codes0[] = {
   100
 };
   /* codebook/lspdt2.txt */
-static const float codes1[] = {
+static float codes1[] = {
   -75,
   -50,
   -25,
@@ -30,50 +30,50 @@ static const float codes1[] = {
   100
 };
   /* codebook/lspdt3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   -50,
   0,
   50,
   100
 };
   /* codebook/lspdt4.txt */
-static const float codes3[] = {
+static float codes3[] = {
   -50,
   0,
   50,
   100
 };
   /* codebook/lspdt5.txt */
-static const float codes4[] = {
+static float codes4[] = {
   -50,
   0,
   50,
   100
 };
   /* codebook/lspdt6.txt */
-static const float codes5[] = {
+static float codes5[] = {
   -50,
   0,
   50,
   100
 };
   /* codebook/lspdt7.txt */
-static const float codes6[] = {
+static float codes6[] = {
   -50,
   50
 };
   /* codebook/lspdt8.txt */
-static const float codes7[] = {
+static float codes7[] = {
   -50,
   50
 };
   /* codebook/lspdt9.txt */
-static const float codes8[] = {
+static float codes8[] = {
   -50,
   50
 };
   /* codebook/lspdt10.txt */
-static const float codes9[] = {
+static float codes9[] = {
   -50,
   50
 };

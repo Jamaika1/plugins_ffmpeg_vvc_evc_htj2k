@@ -8,7 +8,7 @@
 #include "defines.h"
 
   /* ../src/codebook/lspres_centre1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   300,
   350,
   400,
@@ -19,14 +19,14 @@ static const float codes0[] = {
   650
 };
   /* ../src/codebook/lspres_bw1.txt */
-static const float codes1[] = {
+static float codes1[] = {
   35,
   80,
   140,
   250
 };
   /* ../src/codebook/lsp3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   500,
   550,
   600,
@@ -45,7 +45,7 @@ static const float codes2[] = {
   1250
 };
   /* ../src/codebook/lsp4.txt */
-static const float codes3[] = {
+static float codes3[] = {
   700,
   800,
   900,

@@ -1,14 +1,14 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under 
+ * This intermediary file and the files that used to create it are under
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   550,
   600,
   650,
@@ -19,14 +19,14 @@ static const float codes0[] = {
   900
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel2.txt */
-static const float codes1[] = {
+static float codes1[] = {
   50,
   100,
   200,
   300
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   800,
   850,
   900,
@@ -45,7 +45,7 @@ static const float codes2[] = {
   1650
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel4.txt */
-static const float codes3[] = {
+static float codes3[] = {
   25,
   50,
   75,
@@ -56,7 +56,7 @@ static const float codes3[] = {
   250
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel5.txt */
-static const float codes4[] = {
+static float codes4[] = {
   1350,
   1400,
   1450,
@@ -67,7 +67,7 @@ static const float codes4[] = {
   1700
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/mel6.txt */
-static const float codes5[] = {
+static float codes5[] = {
   25,
   50,
   100,

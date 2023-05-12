@@ -1,14 +1,14 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under 
+ * This intermediary file and the files that used to create it are under
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   225,
   250,
   275,
@@ -27,7 +27,7 @@ static const float codes0[] = {
   600
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp2.txt */
-static const float codes1[] = {
+static float codes1[] = {
   325,
   350,
   375,
@@ -46,7 +46,7 @@ static const float codes1[] = {
   700
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   500,
   550,
   600,
@@ -65,7 +65,7 @@ static const float codes2[] = {
   1250
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp4.txt */
-static const float codes3[] = {
+static float codes3[] = {
   700,
   800,
   900,
@@ -84,7 +84,7 @@ static const float codes3[] = {
   2200
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp5.txt */
-static const float codes4[] = {
+static float codes4[] = {
   950,
   1050,
   1150,
@@ -103,7 +103,7 @@ static const float codes4[] = {
   2450
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp6.txt */
-static const float codes5[] = {
+static float codes5[] = {
   1100,
   1200,
   1300,
@@ -122,7 +122,7 @@ static const float codes5[] = {
   2600
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp7.txt */
-static const float codes6[] = {
+static float codes6[] = {
   1500,
   1600,
   1700,
@@ -141,7 +141,7 @@ static const float codes6[] = {
   3000
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp8.txt */
-static const float codes7[] = {
+static float codes7[] = {
   2300,
   2400,
   2500,
@@ -152,7 +152,7 @@ static const float codes7[] = {
   3000
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp9.txt */
-static const float codes8[] = {
+static float codes8[] = {
   2500,
   2600,
   2700,
@@ -163,7 +163,7 @@ static const float codes8[] = {
   3200
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lsp10.txt */
-static const float codes9[] = {
+static float codes9[] = {
   2900,
   3100,
   3300,

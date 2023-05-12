@@ -1,14 +1,14 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under 
+ * This intermediary file and the files that used to create it are under
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/gecb.txt */
-static const float codes0[] = {
+static float codes0[] = {
   2.71,  12.0184,
   0.04675,  -2.73881,
   0.120993,  8.38895,

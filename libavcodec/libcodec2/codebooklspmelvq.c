@@ -1,14 +1,14 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under 
+ * This intermediary file and the files that used to create it are under
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspmelvq1.txt */
-static const float codes0[] = {
+static float codes0[] = {
   640.185,  893.139,  1393.85,  1494.06,  1656.26,  1700.82,
   558.516,  716.906,  1057.36,  1182.62,  1503.8,  1610.03,
   615.108,  769.622,  1120.16,  1222.84,  1366.46,  1465.05,
@@ -75,7 +75,7 @@ static const float codes0[] = {
   699.08,  886.655,  1300.9,  1399.28,  1579.94,  1646.79
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspmelvq2.txt */
-static const float codes1[] = {
+static float codes1[] = {
   4.44342,  51.1708,  7.45726,  -27.4373,  -18.5056,  -18.1989,
   51.58,  63.3166,  57.7796,  -44.1591,  -18.4834,  -6.93392,
   -20.2795,  -21.7454,  4.66947,  52.1569,  30.4367,  36.8582,
@@ -142,7 +142,7 @@ static const float codes1[] = {
   45.2559,  28.8742,  60.0723,  64.461,  3.51203,  -27.883
 };
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspmelvq3.txt */
-static const float codes2[] = {
+static float codes2[] = {
   -9.63558,  27.5501,  15.4445,  -4.34872,  -1.8587,  1.27054,
   -15.5343,  23.0515,  -15.4436,  -2.01887,  -6.19433,  -13.5085,
   8.38867,  -1.60998,  -32.3903,  10.1765,  1.9467,  12.2454,
