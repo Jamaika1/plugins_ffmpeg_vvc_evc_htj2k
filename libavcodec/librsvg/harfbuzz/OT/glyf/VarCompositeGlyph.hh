@@ -103,15 +103,24 @@ struct VarCompositeGlyphRecord
   }
 
   void transform_points (hb_array_t<const contour_point_t> record_points,
-			 contour_point_vector_t &points) const
+			 hb_array_t<contour_point_t> points) const
   {
     float matrix[4];
     contour_point_t trans;
 
     get_transformation_from_points (record_points.arrayZ, matrix, trans);
 
-    points.transform (matrix);
-    points.translate (trans);
+    auto arrayZ = points.arrayZ;
+    unsigned count = points.length;
+
+    if (matrix[0] != 1.f || matrix[1] != 0.f ||
+	matrix[2] != 0.f || matrix[3] != 1.f)
+      for (unsigned i = 0; i < count; i++)
+        arrayZ[i].transform (matrix);
+
+    if (trans.x != 0.f || trans.y != 0.f)
+      for (unsigned i = 0; i < count; i++)
+        arrayZ[i].translate (trans);
   }
 
   static inline void transform (float (&matrix)[4], contour_point_t &trans,
@@ -204,7 +213,7 @@ struct VarCompositeGlyphRecord
 
     points.alloc (points.length + num_points + 4); // For phantom points
     if (unlikely (!points.resize (points.length + num_points, false))) return false;
-    contour_point_t *rec_points = points.as_array ().sub_array (points.length - num_points).arrayZ;
+    contour_point_t *rec_points = points.arrayZ + (points.length - num_points);
     memset (rec_points, 0, num_points * sizeof (rec_points[0]));
 
     unsigned fl = flags;
@@ -215,7 +224,7 @@ struct VarCompositeGlyphRecord
 
     const F2DOT14 *q = (const F2DOT14 *) (axes_size +
 					  (fl & GID_IS_24BIT ? 3 : 2) +
-					  &StructAfter<const HBUINT8> (numAxes));
+					  (const HBUINT8 *) &pad);
 
     unsigned count = num_axes;
     if (fl & AXES_HAVE_VARIATION)

@@ -44,7 +44,14 @@ struct contour_point_t
   void init (float x_ = 0.f, float y_ = 0.f, bool is_end_point_ = false)
   { flag = 0; x = x_; y = y_; is_end_point = is_end_point_; }
 
+  void transform (const float (&matrix)[4])
+  {
+    float x_ = x * matrix[0] + y * matrix[2];
+	  y  = x * matrix[1] + y * matrix[3];
+    x  = x_;
+  }
   void translate (const contour_point_t &p) { x += p.x; y += p.y; }
+
 
   float x = 0.f;
   float y = 0.f;
@@ -62,32 +69,6 @@ struct contour_point_vector_t : hb_vector_t<contour_point_t>
     auto arrayZ = this->arrayZ + old_len;
     unsigned count = a.length;
     hb_memcpy (arrayZ, a.arrayZ, count * sizeof (arrayZ[0]));
-  }
-
-  void transform (const float (&matrix)[4])
-  {
-    if (matrix[0] == 1.f && matrix[1] == 0.f &&
-	matrix[2] == 0.f && matrix[3] == 1.f)
-      return;
-    auto arrayZ = this->arrayZ;
-    unsigned count = length;
-    for (unsigned i = 0; i < count; i++)
-    {
-      contour_point_t &p = arrayZ[i];
-      float x_ = p.x * matrix[0] + p.y * matrix[2];
-	   p.y = p.x * matrix[1] + p.y * matrix[3];
-      p.x = x_;
-    }
-  }
-
-  void translate (const contour_point_t& delta)
-  {
-    if (delta.x == 0.f && delta.y == 0.f)
-      return;
-    auto arrayZ = this->arrayZ;
-    unsigned count = length;
-    for (unsigned i = 0; i < count; i++)
-      arrayZ[i].translate (delta);
   }
 };
 
@@ -238,7 +219,7 @@ struct gvar
 	int idx = -1;
 	for (unsigned j = 0; j < axis_count; j++)
 	{
-	  F2DOT14 peak = tuple.arrayZ[j];
+	  const F2DOT14 &peak = tuple.arrayZ[j];
 	  if (peak.to_int () != 0)
 	  {
 	    if (idx != -1)
@@ -249,7 +230,7 @@ struct gvar
 	    idx = j;
 	  }
 	}
-	shared_tuple_active_idx[i] = idx;
+	shared_tuple_active_idx.arrayZ[i] = idx;
       }
     }
     ~accelerator_t () { table.destroy (); }
@@ -320,7 +301,7 @@ struct gvar
       do
       {
 	float scalar = iterator.current_tuple->calculate_scalar (coords, num_coords, shared_tuples,
-								 shared_tuple_active_idx.in_error () ? nullptr : &shared_tuple_active_idx);
+								 &shared_tuple_active_idx);
 	if (scalar == 0.f) continue;
 	const HBUINT8 *p = iterator.get_serialized_data ();
 	unsigned int length = iterator.current_tuple->get_data_size ();
@@ -360,7 +341,8 @@ struct gvar
 
 	  if (flush)
 	  {
-	    for (unsigned int i = 0; i < points.length; i++)
+	    unsigned count = points.length;
+	    for (unsigned int i = 0; i < count; i++)
 	      points.arrayZ[i].translate (deltas.arrayZ[i]);
 	    flush = false;
 
@@ -396,7 +378,6 @@ struct gvar
 	      {
 		unsigned int pt_index = i;
 		auto &delta = deltas.arrayZ[pt_index];
-		delta.flag = 1;	/* this point is referenced, i.e., explicit deltas specified */
 		delta.x += x_deltas.arrayZ[i] * scalar;
 		delta.y += y_deltas.arrayZ[i] * scalar;
 	      }
@@ -418,7 +399,6 @@ struct gvar
 	      {
 		unsigned int pt_index = i;
 		auto &delta = deltas.arrayZ[pt_index];
-		delta.flag = 1;	/* this point is referenced, i.e., explicit deltas specified */
 		delta.x += x_deltas.arrayZ[i];
 		delta.y += y_deltas.arrayZ[i];
 	      }
@@ -440,7 +420,8 @@ struct gvar
 	{
 	  if (!end_points)
 	  {
-	    for (unsigned i = 0; i < points.length; ++i)
+	    unsigned count = points.length;
+	    for (unsigned i = 0; i < count; ++i)
 	      if (points.arrayZ[i].is_end_point)
 		end_points.push (i);
 	    if (unlikely (end_points.in_error ())) return false;
@@ -500,8 +481,11 @@ struct gvar
       } while (iterator.move_to_next ());
 
       if (flush)
-	for (unsigned int i = 0; i < points.length; i++)
+      {
+        unsigned count = points.length;
+	for (unsigned int i = 0; i < count; i++)
 	  points.arrayZ[i].translate (deltas.arrayZ[i]);
+      }
 
       return true;
     }
