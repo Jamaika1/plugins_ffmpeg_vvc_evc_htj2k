@@ -119,7 +119,7 @@ static void kf_bfly4(
          C_MUL4(scratch[0],Fout[m] , *tw1 );
          C_MUL4(scratch[1],Fout[m2] , *tw2 );
          C_MUL4(scratch[2],Fout[m3] , *tw3 );
-             
+
          Fout->r = PSHR(Fout->r, 2);
          Fout->i = PSHR(Fout->i, 2);
          C_SUB( scratch[5] , *Fout, scratch[1] );
@@ -133,7 +133,7 @@ static void kf_bfly4(
          tw2 += fstride*2;
          tw3 += fstride*3;
          C_ADDTO( *Fout , scratch[3] );
-             
+
          Fout[m].r = scratch[5].r + scratch[4].i;
          Fout[m].i = scratch[5].i - scratch[4].r;
          Fout[m3].r = scratch[5].r - scratch[4].i;
@@ -168,7 +168,7 @@ static void ki_bfly4(
          C_MULC(scratch[0],Fout[m] , *tw1 );
          C_MULC(scratch[1],Fout[m2] , *tw2 );
          C_MULC(scratch[2],Fout[m3] , *tw3 );
-             
+
          C_SUB( scratch[5] , *Fout, scratch[1] );
          C_ADDTO(*Fout, scratch[1]);
          C_ADD( scratch[3] , scratch[0] , scratch[2] );
@@ -178,7 +178,7 @@ static void ki_bfly4(
          tw2 += fstride*2;
          tw3 += fstride*3;
          C_ADDTO( *Fout , scratch[3] );
-             
+
          Fout[m].r = scratch[5].r - scratch[4].i;
          Fout[m].i = scratch[5].i + scratch[4].r;
          Fout[m3].r = scratch[5].r + scratch[4].i;
@@ -446,7 +446,7 @@ static void kf_work(
     const int p=*factors++; /* the radix  */
     const int m=*factors++; /* stage's fft length/p */
     /*printf ("fft %d %d %d %d %d %d %d\n", p*m, m, p, s2, fstride*in_stride, N, m2);*/
-    if (m!=1) 
+    if (m!=1)
         kf_work( Fout , f, fstride*p, in_stride, factors,st, N*p, m);
 
     /* Compensate for longer twiddles table (when sharing) */
@@ -459,7 +459,7 @@ static void kf_work(
         case 3: kf_bfly3(Fout,fstride,st,m, N, m2); break;
         case 5: kf_bfly5(Fout,fstride,st,m, N, m2); break;
 #endif
-    }    
+    }
 }
 
 
@@ -477,7 +477,7 @@ static void ki_work(
    const int p=*factors++; /* the radix  */
    const int m=*factors++; /* stage's fft length/p */
    /*printf ("fft %d %d %d %d %d %d %d\n", p*m, m, p, s2, fstride*in_stride, N, m2);*/
-   if (m!=1) 
+   if (m!=1)
       ki_work( Fout , f, fstride*p, in_stride, factors,st, N*p, m);
 
    /* Compensate for longer twiddles table (when sharing) */
@@ -490,7 +490,7 @@ static void ki_work(
       case 3: ki_bfly3(Fout,fstride,st,m, N, m2); break;
       case 5: ki_bfly5(Fout,fstride,st,m, N, m2); break;
 #endif
-   }    
+   }
 }
 
 
@@ -531,10 +531,10 @@ void compute_bitrev_table(
 
 
 /*  facbuf is populated by p1,m1,p2,m2, ...
-    where 
+    where
     p[i] * m[i] = m[i-1]
     m0 = n                  */
-static 
+static
 int kf_factor(int n,celt_int16 * facbuf)
 {
     int p=4;
@@ -590,7 +590,7 @@ static void compute_twiddles(kiss_twiddle_cpx *twiddles, int nfft)
  * The return value is a contiguous block of memory, allocated with malloc.  As such,
  * It can be freed with free(), rather than a kiss_fft-specific function.
  * */
-kiss_fft_state *kiss_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  const kiss_fft_state *base)
+kiss_fft_state *celt_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  const kiss_fft_state *base)
 {
     kiss_fft_state *st=NULL;
     size_t memneeded = sizeof(struct kiss_fft_state); /* twiddle factors*/
@@ -626,7 +626,7 @@ kiss_fft_state *kiss_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  co
         }
         if (!kf_factor(nfft,st->factors))
         {
-           kiss_fft_free(st);
+           celt_fft_free(st);
            return NULL;
         }
 
@@ -637,12 +637,12 @@ kiss_fft_state *kiss_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  co
     return st;
 }
 
-kiss_fft_state *kiss_fft_alloc(int nfft,void * mem,size_t * lenmem )
+kiss_fft_state *celt_fft_alloc(int nfft,void * mem,size_t * lenmem )
 {
-   return kiss_fft_alloc_twiddles(nfft, mem, lenmem, NULL);
+   return celt_fft_alloc_twiddles(nfft, mem, lenmem, NULL);
 }
 
-void kiss_fft_free(const kiss_fft_state *cfg)
+void celt_fft_free(const kiss_fft_state *cfg)
 {
    if (cfg)
    {
@@ -671,7 +671,7 @@ static void kiss_fft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,kis
     kf_work( fout, fin, 1,in_stride, st->factors,st, 1, 1);
 }
 
-void kiss_fft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+void celt_fft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
 {
     kiss_fft_stride(cfg,fin,fout,1);
 }
@@ -686,7 +686,7 @@ static void kiss_ifft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,ki
    ki_work( fout, fin, 1,in_stride, st->factors,st, 1, 1);
 }
 
-void kiss_ifft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+void celt_ifft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
 {
    kiss_ifft_stride(cfg,fin,fout,1);
 }
