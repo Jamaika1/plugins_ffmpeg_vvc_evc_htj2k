@@ -29,7 +29,7 @@ struct kiss_fftr_state{
 #endif
 };
 
-kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
+kiss_fftr_cfg speex_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem)
 {
     int i;
     kiss_fftr_cfg st = NULL;
@@ -41,7 +41,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     }
     nfft >>= 1;
 
-    kiss_fft_alloc (nfft, inverse_fft, NULL, &subsize);
+    speex_fft_alloc (nfft, inverse_fft, NULL, &subsize);
     memneeded = sizeof(struct kiss_fftr_state) + subsize + sizeof(kiss_fft_cpx) * ( nfft * 2);
 
     if (lenmem == NULL) {
@@ -57,7 +57,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     st->substate = (kiss_fft_cfg) (st + 1); /*just beyond kiss_fftr_state struct */
     st->tmpbuf = (kiss_fft_cpx *) (((char *) st->substate) + subsize);
     st->super_twiddles = st->tmpbuf + nfft;
-    kiss_fft_alloc(nfft, inverse_fft, st->substate, &subsize);
+    speex_fft_alloc(nfft, inverse_fft, st->substate, &subsize);
 
 #ifdef FIXED_POINT
     for (i=0;i<nfft;++i) {
@@ -78,7 +78,7 @@ kiss_fftr_cfg kiss_fftr_alloc(int nfft,int inverse_fft,void * mem,size_t * lenme
     return st;
 }
 
-void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata)
+void speex_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *freqdata)
 {
     /* input buffer timedata is stored row-wise */
     int k,ncfft;
@@ -91,7 +91,7 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     ncfft = st->substate->nfft;
 
     /*perform the parallel fft of two real signals packed in real,imag*/
-    kiss_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
+    speex_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
     /* The real part of the DC element of the frequency spectrum in st->tmpbuf
      * contains the sum of the even-numbered elements of the input time sequence
      * The imag part is the sum of the odd-numbered elements
@@ -133,7 +133,7 @@ void kiss_fftr(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_cpx *fr
     }
 }
 
-void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata, kiss_fft_scalar *timedata)
+void speex_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata, kiss_fft_scalar *timedata)
 {
     /* input buffer timedata is stored row-wise */
     int k, ncfft;
@@ -167,10 +167,10 @@ void kiss_fftri(kiss_fftr_cfg st,const kiss_fft_cpx *freqdata, kiss_fft_scalar *
         st->tmpbuf[ncfft - k].i *= -1;
 #endif
     }
-    kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
+    speex_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
 }
 
-void kiss_fftr2(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_scalar *freqdata)
+void speex_fftr2(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_scalar *freqdata)
 {
    /* input buffer timedata is stored row-wise */
    int k,ncfft;
@@ -184,7 +184,7 @@ void kiss_fftr2(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_scalar
    ncfft = st->substate->nfft;
 
    /*perform the parallel fft of two real signals packed in real,imag*/
-   kiss_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
+   speex_fft( st->substate , (const kiss_fft_cpx*)timedata, st->tmpbuf );
     /* The real part of the DC element of the frequency spectrum in st->tmpbuf
    * contains the sum of the even-numbered elements of the input time sequence
    * The imag part is the sum of the odd-numbered elements
@@ -258,7 +258,7 @@ void kiss_fftr2(kiss_fftr_cfg st,const kiss_fft_scalar *timedata,kiss_fft_scalar
    }
 }
 
-void kiss_fftri2(kiss_fftr_cfg st,const kiss_fft_scalar *freqdata,kiss_fft_scalar *timedata)
+void speex_fftri2(kiss_fftr_cfg st,const kiss_fft_scalar *freqdata,kiss_fft_scalar *timedata)
 {
    /* input buffer timedata is stored row-wise */
    int k, ncfft;
@@ -293,5 +293,5 @@ void kiss_fftri2(kiss_fftr_cfg st,const kiss_fft_scalar *freqdata,kiss_fft_scala
       st->tmpbuf[ncfft - k].i *= -1;
 #endif
    }
-   kiss_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
+   speex_fft (st->substate, st->tmpbuf, (kiss_fft_cpx *) timedata);
 }
