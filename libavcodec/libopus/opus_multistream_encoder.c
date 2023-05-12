@@ -110,7 +110,7 @@ static int validate_ambisonics(int nb_channels, int *nb_streams, int *nb_coupled
    if (nb_channels < 1 || nb_channels > 227)
       return 0;
 
-   order_plus_one = isqrt32(nb_channels);
+   order_plus_one = celt2_isqrt32(nb_channels);
    acn_channels = order_plus_one * order_plus_one;
    nondiegetic_channels = nb_channels - acn_channels;
 
@@ -295,7 +295,7 @@ void surround_analysis(const CELTMode *celt_mode, const void *pcm, opus_val16 *b
                freq[i] = 0;
          }
 
-         compute_band2_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
+         celt2_compute_band_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
          /* If we have multiple frames, take the max energy. */
          for (i=0;i<21;i++)
             bandE[i] = MAX32(bandE[i], tmpE[i]);
