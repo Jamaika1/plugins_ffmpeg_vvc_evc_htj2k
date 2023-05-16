@@ -30,30 +30,30 @@
  * MJPEG decoder.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/display.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "copy_block.h"
-#include "decode.h"
-#include "hwconfig.h"
-#include "idctdsp.h"
-#include "internal.h"
-#include "jpegtables.h"
-#include "mjpeg.h"
-#include "mjpegdec.h"
-#include "jpeglsdec.h"
-#include "profiles.h"
-#include "put_bits.h"
-#include "tiff.h"
-#include "exif.h"
-#include "bytestream.h"
-#include "tiff_common.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/copy_block.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/jpegtables.h"
+#include "libavcodec/mjpeg.h"
+#include "libavcodec/mjpegdec.h"
+#include "libavcodec/jpeglsdec.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/tiff.h"
+#include "libavcodec/exif.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/tiff_common.h"
 
 
 static int init_default_huffman_tables(MJpegDecodeContext *s)
@@ -441,8 +441,8 @@ int ff_mjpeg_decode_sof(MJpegDecodeContext *s)
             s->height < ((s->orig_height * 3) / 4)) {
             s->interlaced                    = 1;
             s->bottom_field                  = s->interlace_polarity;
-            s->picture_ptr->interlaced_frame = 1;
-            s->picture_ptr->top_field_first  = !s->interlace_polarity;
+            s->picture_ptr->flags |= AV_FRAME_FLAG_INTERLACED;
+            s->picture_ptr->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST * !s->interlace_polarity;
             height *= 2;
         }
 
@@ -745,7 +745,7 @@ int ff_mjpeg_decode_sof(MJpegDecodeContext *s)
 
         if (s->avctx->skip_frame == AVDISCARD_ALL) {
             s->picture_ptr->pict_type = AV_PICTURE_TYPE_I;
-            s->picture_ptr->key_frame = 1;
+            s->picture_ptr->flags |= AV_FRAME_FLAG_KEY;
             s->got_picture            = 1;
             return 0;
         }
@@ -754,7 +754,7 @@ int ff_mjpeg_decode_sof(MJpegDecodeContext *s)
         if (ff_get_buffer(s->avctx, s->picture_ptr, AV_GET_BUFFER_FLAG_REF) < 0)
             return -1;
         s->picture_ptr->pict_type = AV_PICTURE_TYPE_I;
-        s->picture_ptr->key_frame = 1;
+        s->picture_ptr->flags |= AV_FRAME_FLAG_KEY;
         s->got_picture            = 1;
 
         // Lets clear the palette to avoid leaving uninitialized values in it

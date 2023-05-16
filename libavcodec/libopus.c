@@ -22,7 +22,7 @@
 #include "libopus/opus_defines.h"
 
 #include "libavutil/error.h"
-#include "libopus.h"
+#include "libavcodec/libopus.h"
 
 int ff_opus_error_to_averror(int err)
 {

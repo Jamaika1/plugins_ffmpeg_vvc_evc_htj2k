@@ -27,13 +27,13 @@
 #include "libavutil/ffmath.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "internal.h"
-#include "mathops.h"
-#include "libopus.h"
-#include "vorbis_data.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/libopus.h"
+#include "libavcodec/vorbis_data.h"
 
 struct libopus_context {
     AVClass *class;

@@ -27,10 +27,10 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "avs3.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/avs3.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libuavs3d/uavs3d.h"
 
 typedef struct uavs3d_context {
@@ -96,7 +96,10 @@ FF_ENABLE_DEPRECATION_WARNINGS
         av_log(NULL, AV_LOG_WARNING, "Error frame type in uavs3d: %d.\n", dec_frame->type);
     } else {
         frm->pict_type = ff_avs3_image_type[dec_frame->type];
-        frm->key_frame = (frm->pict_type == AV_PICTURE_TYPE_I);
+        if (frm->pict_type == AV_PICTURE_TYPE_I)
+            frm->flags |= AV_FRAME_FLAG_KEY;
+        else
+            frm->flags &= ~AV_FRAME_FLAG_KEY;
     }
 
     for (i = 0; i < 3; i++) {

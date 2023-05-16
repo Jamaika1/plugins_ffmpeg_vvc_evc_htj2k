@@ -21,11 +21,11 @@
 
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "bytestream.h"
-#include "mathops.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/mathops.h"
 
 static const int16_t steps[16] = {
     4084, 18, 41, 64, 112, 198, 355, 1122,
@@ -179,7 +179,10 @@ const FFCodec ff_misc4_decoder = {
     .priv_data_size   = sizeof(MISC4Context),
     .init             = misc4_init,
     FF_CODEC_DECODE_CB(misc4_decode),
-    .p.capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_SUBFRAMES |
+    .p.capabilities   = AV_CODEC_CAP_DR1 |
+#if FF_API_SUBFRAMES
+                        AV_CODEC_CAP_SUBFRAMES |
+#endif
                         AV_CODEC_CAP_CHANNEL_CONF,
     .p.sample_fmts    = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16,
                                                         AV_SAMPLE_FMT_NONE },

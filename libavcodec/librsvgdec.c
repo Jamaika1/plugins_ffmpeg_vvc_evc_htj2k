@@ -19,9 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/opt.h"
 #include "librsvg/config.h"
 #include "librsvg/rsvg.h"
@@ -74,7 +74,7 @@ static int librsvg_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     if ((ret = ff_get_buffer(avctx, frame, 0)))
         return ret;
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
 
     image = cairo_image_surface_create_for_data(frame->data[0], CAIRO_FORMAT_ARGB32,
                                                 frame->width, frame->height,

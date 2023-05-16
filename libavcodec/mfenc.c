@@ -22,13 +22,13 @@
 #define _WIN32_WINNT 0x0602
 #endif
 
-#include "encode.h"
-#include "mf_utils.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mf_utils.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
-#include "codec_internal.h"
-#include "internal.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/internal.h"
 #include "compat/w32dlfcn.h"
 
 typedef struct MFContext {
@@ -659,7 +659,11 @@ static int mf_encv_output_adjust(AVCodecContext *avctx, IMFMediaType *type)
         framerate = avctx->framerate;
     } else {
         framerate = av_inv_q(avctx->time_base);
+#if FF_API_TICKS_PER_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
         framerate.den *= avctx->ticks_per_frame;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     }
 
     ff_MFSetAttributeRatio((IMFAttributes *)type, &MF_MT_FRAME_RATE, framerate.num, framerate.den);

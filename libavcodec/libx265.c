@@ -33,13 +33,13 @@
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h"
-#include "packet_internal.h"
-#include "atsc_a53.h"
-#include "sei.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/packet_internal.h"
+#include "libavcodec/atsc_a53.h"
+#include "libavcodec/sei.h"
 
 typedef struct ReorderedData {
 #if FF_API_REORDERED_OPAQUE
@@ -220,7 +220,13 @@ static av_cold int libx265_encode_init(AVCodecContext *avctx)
         ctx->params->fpsDenom    = avctx->framerate.den;
     } else {
         ctx->params->fpsNum      = avctx->time_base.den;
-        ctx->params->fpsDenom    = avctx->time_base.num * avctx->ticks_per_frame;
+FF_DISABLE_DEPRECATION_WARNINGS
+        ctx->params->fpsDenom    = avctx->time_base.num
+#if FF_API_TICKS_PER_FRAME
+                                   * avctx->ticks_per_frame
+#endif
+                                   ;
+FF_ENABLE_DEPRECATION_WARNINGS
     }
     ctx->params->sourceWidth     = avctx->width;
     ctx->params->sourceHeight    = avctx->height;

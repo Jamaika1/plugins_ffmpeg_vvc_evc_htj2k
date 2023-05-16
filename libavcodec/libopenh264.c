@@ -26,7 +26,7 @@
 #include "libavutil/error.h"
 #include "libavutil/log.h"
 
-#include "libopenh264.h"
+#include "libavcodec/libopenh264.h"
 
 // Convert libopenh264 log level to equivalent ffmpeg log level.
 static int libopenh264_to_ffmpeg_log_level(int libopenh264_log_level)
