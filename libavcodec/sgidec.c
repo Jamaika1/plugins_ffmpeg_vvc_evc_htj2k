@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "sgi.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/sgi.h"
 
 /**
  * Expand an RLE row into a channel.
@@ -249,7 +249,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *p,
         break;
     }
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
 
     /* Skip header. */
     bytestream2_seek(&g, SGI_HEADER_SIZE, SEEK_SET);

@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "encode.h"
-#include "get_bits.h"
-#include "golomb.h"
-#include "put_golomb.h"
-#include "rangecoder.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/put_golomb.h"
+#include "libavcodec/rangecoder.h"
 
 
 /**
@@ -473,7 +473,7 @@ static void predictor_init_state(int *k, int *state, int order)
 
 static int predictor_calc_error(int *k, int *state, int order, int error)
 {
-    int i, x = error - shift_down(k[order-1] *  (unsigned)state[order-1], LATTICE_SHIFT);
+    int i, x = error - (unsigned)shift_down(k[order-1] *  (unsigned)state[order-1], LATTICE_SHIFT);
 
 #if 1
     int *k_ptr = &(k[order-2]),
@@ -1013,7 +1013,7 @@ static int sonic_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     if (s->lossless)
         quant = 1;
     else
-        quant = get_symbol(&c, state, 0) * SAMPLE_FACTOR;
+        quant = get_symbol(&c, state, 0) * (unsigned)SAMPLE_FACTOR;
 
 //    av_log(NULL, AV_LOG_INFO, "quant: %d\n", quant);
 
