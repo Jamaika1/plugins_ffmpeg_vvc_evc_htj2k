@@ -30,10 +30,10 @@
 
 #include "libavutil/imgutils.h"
 
-#include "bytestream.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 // TODO: masking bits
 typedef enum {
@@ -1887,10 +1887,10 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
     }
 
     if (avpkt->flags & AV_PKT_FLAG_KEY) {
-        frame->key_frame = 1;
+        frame->flags |= AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_I;
     } else {
-        frame->key_frame = 0;
+        frame->flags &= ~AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_P;
     }
 

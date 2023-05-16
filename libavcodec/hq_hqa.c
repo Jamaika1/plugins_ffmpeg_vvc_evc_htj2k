@@ -22,15 +22,15 @@
 
 #include "libavutil/attributes.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "canopus.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/canopus.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
-#include "hq_hqa.h"
-#include "hq_hqadsp.h"
+#include "libavcodec/hq_hqa.h"
+#include "libavcodec/hq_hqadsp.h"
 
 /* HQ/HQA slices are a set of macroblocks belonging to a frame, and
  * they usually form a pseudorandom pattern (probably because it is
@@ -354,7 +354,7 @@ static int hq_hqa_decode_frame(AVCodecContext *avctx, AVFrame *pic,
         return ret;
     }
 
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
     pic->pict_type = AV_PICTURE_TYPE_I;
 
     *got_frame = 1;

@@ -34,16 +34,16 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "thread.h"
-#include "jpeg2000.h"
-#include "jpeg2000dsp.h"
-#include "profiles.h"
-#include "jpeg2000dec.h"
-#include "jpeg2000htdec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/jpeg2000.h"
+#include "libavcodec/jpeg2000dsp.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/jpeg2000dec.h"
+#include "libavcodec/jpeg2000htdec.h"
 
 #define JP2_SIG_TYPE    0x6A502020
 #define JP2_SIG_VALUE   0x0D0A870A
@@ -2482,7 +2482,7 @@ static int jpeg2000_decode_frame(AVCodecContext *avctx, AVFrame *picture,
     if ((ret = ff_thread_get_buffer(avctx, picture, 0)) < 0)
         goto end;
     picture->pict_type = AV_PICTURE_TYPE_I;
-    picture->key_frame = 1;
+    picture->flags |= AV_FRAME_FLAG_KEY;
 
     if (ret = jpeg2000_read_bitstream_packets(s))
         goto end;

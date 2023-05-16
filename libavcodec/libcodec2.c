@@ -21,12 +21,12 @@
 
 #include "libcodec2/codec2.h"
 #include "libavutil/channel_layout.h"
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 #include "libavutil/opt.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "encode.h"
-#include "codec2utils.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/codec2utils.h"
 
 typedef struct {
     const AVClass *class;
