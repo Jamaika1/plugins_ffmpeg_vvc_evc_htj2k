@@ -41,7 +41,7 @@
 #include "libavfilter/buffersink.h"
 #include "libavformat/avio_internal.h"
 #include "libavformat/internal.h"
-#include "avdevice.h"
+#include "libavdevice/avdevice.h"
 
 typedef struct {
     AVClass *class;          ///< class for private options
@@ -174,6 +174,10 @@ av_cold static int lavfi_read_header(AVFormatContext *avctx)
      * create a mapping between them and the streams */
     for (i = 0, inout = output_links; inout; i++, inout = inout->next) {
         int stream_idx = 0, suffix = 0, use_subcc = 0;
+        if (!inout->name) {
+            av_log(avctx, AV_LOG_ERROR, "Missing %d outpad name\n", i);
+            FAIL(AVERROR(EINVAL));
+        }
         sscanf(inout->name, "out%n%d%n", &suffix, &stream_idx, &suffix);
         if (!suffix) {
             av_log(avctx,  AV_LOG_ERROR,

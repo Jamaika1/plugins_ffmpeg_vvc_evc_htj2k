@@ -19,17 +19,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dshow_capture.h"
+#include "libavdevice/dshow_capture.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
 #include "libavutil/mem.h"
 #include "libavformat/internal.h"
 #include "libavformat/riff.h"
-#include "avdevice.h"
+#include "libavdevice/avdevice.h"
 #include "libavcodec/raw.h"
-#include "objidl.h"
-#include "shlwapi.h"
+#include <objidl.h>
+#include <shlwapi.h>
 // NB: technically, we should include dxva.h and use
 // DXVA_ExtendedFormat, but that type is not defined in
 // the MinGW headers. The DXVA2_ExtendedFormat and the
@@ -47,8 +47,8 @@
 // These may be provided by DirectShow devices (e.g. LAVFilters
 // does so). So we use those values here too (the equivalence is
 // indicated by Microsoft example code: https://docs.microsoft.com/en-us/windows/win32/api/dxva2api/ns-dxva2api-dxva2_videodesc)
-#include "d3d9types.h"
-#include "dxva2api.h"
+#include <d3d9types.h>
+#include <dxva2api.h>
 
 #ifndef AMCONTROL_COLORINFO_PRESENT
 // not defined in some versions of MinGW's dvdmedia.h

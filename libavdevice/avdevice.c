@@ -17,8 +17,8 @@
  */
 
 #include "libavutil/avassert.h"
-#include "avdevice.h"
-#include "internal.h"
+#include "libavdevice/avdevice.h"
+#include "libavdevice/internal.h"
 #include "libavformat/mux.h"
 
 int avdevice_app_to_dev_control_message(struct AVFormatContext *s, enum AVAppToDevMessageType type,

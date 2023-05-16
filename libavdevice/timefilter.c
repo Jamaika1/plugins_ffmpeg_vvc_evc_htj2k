@@ -29,7 +29,7 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/mem.h"
 
-#include "timefilter.h"
+#include "libavdevice/timefilter.h"
 
 struct TimeFilter {
     // Delay Locked Loop data. These variables refer to mathematical

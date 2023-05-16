@@ -28,7 +28,7 @@
  * @author Christophe Gisquet <word1.word2@gmail.com>
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavformat/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
