@@ -20,10 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/opt.h"
 
 typedef struct {
@@ -63,7 +63,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *pic,
         return ret;
 
     pic->pict_type = AV_PICTURE_TYPE_I;
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
 
     for (field = 0; field < 2; field++) {
         int i;

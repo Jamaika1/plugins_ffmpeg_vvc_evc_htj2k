@@ -31,16 +31,16 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "elsdec.h"
-#include "get_bits.h"
-#include "idctdsp.h"
-#include "jpegtables.h"
-#include "mjpegdec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/elsdec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/jpegtables.h"
+#include "libavcodec/mjpegdec.h"
 
 #define EPIC_PIX_STACK_SIZE 1024
 #define EPIC_PIX_STACK_MAX  (EPIC_PIX_STACK_SIZE - 1)
@@ -1560,7 +1560,10 @@ static int g2m_decode_frame(AVCodecContext *avctx, AVFrame *pic,
         if ((ret = ff_get_buffer(avctx, pic, 0)) < 0)
             return ret;
 
-        pic->key_frame = got_header;
+        if (got_header)
+            pic->flags |= AV_FRAME_FLAG_KEY;
+        else
+            pic->flags &= ~AV_FRAME_FLAG_KEY;
         pic->pict_type = got_header ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
 
         for (i = 0; i < avctx->height; i++)
