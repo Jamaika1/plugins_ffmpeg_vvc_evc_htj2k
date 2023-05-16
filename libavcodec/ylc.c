@@ -25,12 +25,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 #include "libavutil/pixfmt.h"
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "thread.h"
-#include "unary.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/unary.h"
 
 typedef struct YLCContext {
     VLC vlc[4];
@@ -427,7 +427,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *p,
     }
 
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     *got_frame   = 1;
 
     return avpkt->size;

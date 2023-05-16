@@ -23,11 +23,11 @@
 #include <inttypes.h>
 
 #include "libavutil/imgutils.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "xwd.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/xwd.h"
 
 static int xwd_decode_frame(AVCodecContext *avctx, AVFrame *p,
                             int *got_frame, AVPacket *avpkt)
@@ -216,7 +216,7 @@ static int xwd_decode_frame(AVCodecContext *avctx, AVFrame *p,
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
         return ret;
 
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     p->pict_type = AV_PICTURE_TYPE_I;
 
     if (avctx->pix_fmt == AV_PIX_FMT_PAL8) {

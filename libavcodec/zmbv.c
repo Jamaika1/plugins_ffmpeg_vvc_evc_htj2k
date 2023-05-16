@@ -29,10 +29,10 @@
 #include "libavutil/common.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/zlib_wrapper.h"
 
 #include <zlib.h>
 
@@ -559,11 +559,11 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
         return ret;
 
     if (c->flags & ZMBV_KEYFRAME) {
-        frame->key_frame = 1;
+        frame->flags |= AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_I;
         zmbv_decode_intra(c);
     } else {
-        frame->key_frame = 0;
+        frame->flags &= ~AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_P;
         if (c->decomp_len < 2LL * ((c->width + c->bw - 1) / c->bw) * ((c->height + c->bh - 1) / c->bh))
             return AVERROR_INVALIDDATA;
