@@ -28,21 +28,21 @@
 
 #define LONG_BITSTREAM_READER
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/internal.h"
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "hwconfig.h"
-#include "idctdsp.h"
-#include "profiles.h"
-#include "proresdec.h"
-#include "proresdata.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/proresdec.h"
+#include "libavcodec/proresdata.h"
+#include "libavcodec/thread.h"
 
 static void permute(uint8_t *dst, const uint8_t *src, const uint8_t permutation[64])
 {
@@ -252,8 +252,9 @@ static int decode_frame_header(ProresContext *ctx, const uint8_t *buf,
         ctx->scan = ctx->progressive_scan; // permuted
     } else {
         ctx->scan = ctx->interlaced_scan; // permuted
-        ctx->frame->interlaced_frame = 1;
-        ctx->frame->top_field_first = ctx->frame_type == 1;
+        ctx->frame->flags |= AV_FRAME_FLAG_INTERLACED;
+        if (ctx->frame_type == 1)
+            ctx->frame->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST;
     }
 
     if (ctx->alpha_info) {
@@ -706,7 +707,7 @@ static int decode_slice_thread(AVCodecContext *avctx, void *arg, int jobnr, int 
     dest_u = pic->data[1] + (slice->mb_y << 4) * chroma_stride + (slice->mb_x << mb_x_shift);
     dest_v = pic->data[2] + (slice->mb_y << 4) * chroma_stride + (slice->mb_x << mb_x_shift);
 
-    if (ctx->frame_type && ctx->first_field ^ ctx->frame->top_field_first) {
+    if (ctx->frame_type && ctx->first_field ^ !!(ctx->frame->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)) {
         dest_y += pic->linesize[0];
         dest_u += pic->linesize[1];
         dest_v += pic->linesize[2];
@@ -792,7 +793,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     ctx->frame = frame;
     ctx->frame->pict_type = AV_PICTURE_TYPE_I;
-    ctx->frame->key_frame = 1;
+    ctx->frame->flags |= AV_FRAME_FLAG_KEY;
     ctx->first_field = 1;
 
     buf += 8;

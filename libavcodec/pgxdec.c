@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 static int pgx_get_number(AVCodecContext *avctx, GetByteContext *g, int *number) {
     int ret = AVERROR_INVALIDDATA;
@@ -140,7 +140,7 @@ static int pgx_decode_frame(AVCodecContext *avctx, AVFrame *p,
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
         return ret;
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     avctx->bits_per_raw_sample = depth;
     if (bpp == 8)
         write_frame_8(p, &g, width, height, sign, depth);

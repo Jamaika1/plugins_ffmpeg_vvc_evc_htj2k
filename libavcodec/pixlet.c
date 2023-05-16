@@ -23,13 +23,13 @@
 
 #include "libavutil/intmath.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "thread.h"
-#include "unary.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/unary.h"
 
 #define NB_LEVELS 4
 
@@ -667,7 +667,7 @@ static int pixlet_decode_frame(AVCodecContext *avctx, AVFrame *p,
     bytestream2_skip(&ctx->gb, 8);
 
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     p->color_range = AVCOL_RANGE_JPEG;
 
     ret = ff_thread_get_buffer(avctx, p, 0);

@@ -27,10 +27,10 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 typedef struct ProSumerContext {
     GetByteContext gb;
@@ -195,7 +195,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
     }
 
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     *got_frame = 1;
 
     return avpkt->size;

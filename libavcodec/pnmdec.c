@@ -23,11 +23,11 @@
 
 #include "libavutil/half2float.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "put_bits.h"
-#include "pnm.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/pnm.h"
 
 static void samplecpy(uint8_t *dst, const uint8_t *src, int n, int maxval)
 {
@@ -65,7 +65,7 @@ static int pnm_decode_frame(AVCodecContext *avctx, AVFrame *p,
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
         return ret;
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     avctx->bits_per_raw_sample = av_log2(s->maxval) + 1;
 
     switch (avctx->pix_fmt) {
