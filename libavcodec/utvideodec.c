@@ -32,13 +32,13 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/pixdesc.h"
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "thread.h"
-#include "utvideo.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/utvideo.h"
 
 typedef struct HuffEntry {
     uint8_t len;
@@ -869,9 +869,10 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
         break;
     }
 
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->interlaced_frame = !!c->interlaced;
+    if (c->interlaced)
+        frame->flags |= AV_FRAME_FLAG_INTERLACED;
 
     *got_frame = 1;
 

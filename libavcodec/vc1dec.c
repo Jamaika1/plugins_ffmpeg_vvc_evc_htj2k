@@ -26,24 +26,24 @@
  * VC-1 and WMV3 decoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "h263dec.h"
-#include "hwconfig.h"
-#include "mpeg_er.h"
-#include "mpegvideo.h"
-#include "mpegvideodec.h"
-#include "msmpeg4_vc1_data.h"
-#include "profiles.h"
-#include "simple_idct.h"
-#include "vc1.h"
-#include "vc1data.h"
-#include "vc1_vlc_data.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/msmpeg4_vc1_data.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/simple_idct.h"
+#include "libavcodec/vc1.h"
+#include "libavcodec/vc1data.h"
+#include "libavcodec/vc1_vlc_data.h"
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
@@ -1060,7 +1060,10 @@ static int vc1_decode_frame(AVCodecContext *avctx, AVFrame *pict,
 
     // for skipping the frame
     s->current_picture.f->pict_type = s->pict_type;
-    s->current_picture.f->key_frame = s->pict_type == AV_PICTURE_TYPE_I;
+    if (s->pict_type == AV_PICTURE_TYPE_I)
+        s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
 
     /* skip B-frames if we don't have reference frames */
     if (!s->last_picture_ptr && s->pict_type == AV_PICTURE_TYPE_B) {
@@ -1078,13 +1081,12 @@ static int vc1_decode_frame(AVCodecContext *avctx, AVFrame *pict,
     }
 
     v->s.current_picture_ptr->field_picture = v->field_mode;
-    v->s.current_picture_ptr->f->interlaced_frame = (v->fcm != PROGRESSIVE);
-    v->s.current_picture_ptr->f->top_field_first  = v->tff;
+    v->s.current_picture_ptr->f->flags |= AV_FRAME_FLAG_INTERLACED * (v->fcm != PROGRESSIVE);
+    v->s.current_picture_ptr->f->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST * !!v->tff;
 
     // process pulldown flags
     s->current_picture_ptr->f->repeat_pict = 0;
     // Pulldown flags are only valid when 'broadcast' has been set.
-    // So ticks_per_frame will be 2
     if (v->rff) {
         // repeat field
         s->current_picture_ptr->f->repeat_pict = 1;

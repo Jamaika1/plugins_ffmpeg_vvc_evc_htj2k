@@ -20,7 +20,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
@@ -34,19 +34,78 @@
 #include "libavutil/stereo3d.h"
 #include "libavutil/timecode.h"
 
-#include "bswapdsp.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "golomb.h"
-#include "vvc.h"
-#include "vvcdec.h"
-#include "vvc_ctu.h"
-#include "vvc_data.h"
-#include "vvc_thread.h"
-#include "profiles.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/vvc.h"
+#include "libavcodec/vvcdec.h"
+#include "libavcodec/vvc_ctu.h"
+#include "libavcodec/vvc_data.h"
+#include "libavcodec/vvc_parse.h"
+#include "libavcodec/vvc_refs.h"
+#include "libavcodec/vvc_thread.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
+
+static void export_stream_params(VVCContext *s, const VVCSPS *sps)
+{
+    AVCodecContext *avctx = s->avctx;
+    const VVCParamSets *ps = &s->ps;
+    const VVCVPS *vps = (const VVCVPS*)ps->vps_list[sps->video_parameter_set_id]->data;
+    const VVCWindow *ow = &sps->output_window;
+    unsigned int num = 0, den = 0;
+
+    avctx->pix_fmt             = sps->pix_fmt;
+    avctx->coded_width         = sps->width;
+    avctx->coded_height        = sps->height;
+    avctx->width               = sps->width  - ow->left_offset - ow->right_offset;
+    avctx->height              = sps->height - ow->top_offset  - ow->bottom_offset;
+    avctx->has_b_frames        = sps->dpb.max_num_reorder_pics[sps->max_sublayers - 1];
+    avctx->profile             = sps->ptl.general_profile_idc;
+    avctx->level               = sps->ptl.general_level_idc;
+
+    //ff_set_sar(avctx, vui.common.sar);
+
+    //if (sps->vui.common.video_signal_type_present_flag)
+        //avctx->color_range = sps->vui.full_range_flag ? AVCOL_RANGE_JPEG
+                                                      //: AVCOL_RANGE_MPEG;
+    //else
+        avctx->color_range = AVCOL_RANGE_MPEG;
+
+    if (sps->vui.colour_description_present_flag) {
+        avctx->color_primaries = sps->vui.colour_primaries;
+        avctx->color_trc       = sps->vui.transfer_characteristics;
+        avctx->colorspace      = sps->vui.matrix_coeffs;
+    } else {
+        avctx->color_primaries = AVCOL_PRI_UNSPECIFIED;
+        avctx->color_trc       = AVCOL_TRC_UNSPECIFIED;
+        avctx->colorspace      = AVCOL_SPC_UNSPECIFIED;
+    }
+
+    avctx->chroma_sample_location = AVCHROMA_LOC_UNSPECIFIED;
+    if (sps->chroma_format_idc == 1) {
+        if (sps->vui.chroma_loc_info_present_flag) {
+            if (sps->vui.chroma_sample_loc_type_top_field <= 5)
+                avctx->chroma_sample_location = sps->vui.chroma_sample_loc_type_top_field + 1;
+        } else
+            avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
+    }
+
+    /*if (vps->vps_timing_info_present_flag) {
+        num = vps->vps_num_units_in_tick;
+        den = vps->vps_time_scale;
+    } else if (sps->vui.vui_timing_info_present_flag) {
+        num = sps->vui.vui_num_units_in_tick;
+        den = sps->vui.vui_time_scale;
+    }*/
+
+    if (num != 0 && den != 0)
+        av_reduce(&avctx->framerate.den, &avctx->framerate.num,
+                  num, den, 1 << 30);
+}
 
 static int vvc_frame_start(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
 {
@@ -368,7 +427,7 @@ static int pixel_buffer_init(VVCFrameContext *fc, const int width, const int hei
         fc->tab.width != width || fc->tab.height != height ||
         fc->tab.ctu_width != ctu_width || fc->tab.ctu_height != ctu_height) {
         pixel_buffer_free(fc);
-        for(int c_idx = 0; c_idx < c_end; c_idx++) {
+        for (int c_idx = 0; c_idx < c_end; c_idx++) {
             const int w = width >> sps->hshift[c_idx];
             const int h = height >> sps->vshift[c_idx];
             fc->tab.sao_pixel_buffer_h[c_idx] = av_malloc((w * 2 * ctu_height) << ps);
@@ -377,7 +436,7 @@ static int pixel_buffer_init(VVCFrameContext *fc, const int width, const int hei
                 return AVERROR(ENOMEM);
         }
 
-        for(int c_idx = 0; c_idx < c_end; c_idx++) {
+        for (int c_idx = 0; c_idx < c_end; c_idx++) {
             const int w = width >> sps->hshift[c_idx];
             const int h = height >> sps->vshift[c_idx];
             const int border_pixels = c_idx ? ALF_BORDER_CHROMA : ALF_BORDER_LUMA;
@@ -426,7 +485,7 @@ static int pic_arrays_init(VVCContext *s, VVCFrameContext *fc)
     const int ctu_size              = 1 << sps->ctb_log2_size_y << sps->ctb_log2_size_y;
     const int pic_size_in_min_cb    = pps->min_cb_width * pps->min_cb_height;
     const int pic_size_in_min_pu    = pps->min_pu_width * pps->min_pu_height;
-    const int pic_size_in_min_tu    = pps->min_tb_width * pps->min_tb_height;
+    const int pic_size_in_min_tu    = pps->min_tu_width * pps->min_tu_height;
     const int w32                   = AV_CEIL_RSHIFT(pps->width,  5);
     const int h32                   = AV_CEIL_RSHIFT(pps->height,  5);
     const int w64                   = AV_CEIL_RSHIFT(pps->width,  6);
@@ -666,14 +725,6 @@ static int vvc_ref_frame(VVCFrameContext *fc, VVCFrame *dst, VVCFrame *src)
     if (ret < 0)
         return ret;
 
-#if 0
-    if (src->needs_fg) {
-        ret = ff_thread_ref_frame(&dst->tf_grain, &src->tf_grain);
-        if (ret < 0)
-            return ret;
-        dst->needs_fg = 1;
-    }
-#endif
     dst->progress_buf = av_buffer_ref(src->progress_buf);
 
     dst->tab_mvf_buf = av_buffer_ref(src->tab_mvf_buf);
@@ -695,14 +746,6 @@ static int vvc_ref_frame(VVCFrameContext *fc, VVCFrame *dst, VVCFrame *src)
     dst->flags = src->flags;
     dst->sequence = src->sequence;
 
-#if 0
-    if (src->hwaccel_picture_private) {
-        dst->hwaccel_priv_buf = av_buffer_ref(src->hwaccel_priv_buf);
-        if (!dst->hwaccel_priv_buf)
-            goto fail;
-        dst->hwaccel_picture_private = dst->hwaccel_priv_buf->data;
-    }
-#endif
     return 0;
 fail:
     ff_vvc_unref_frame(fc, dst, ~0);
@@ -846,19 +889,6 @@ static int decode_nal_unit(VVCContext *s, VVCFrameContext *fc, const H2645NAL *n
 
     switch (nal->type) {
     case VVC_VPS_NUT:
-#if 0
-        if (s->avctx->hwaccel && s->avctx->hwaccel->decode_params) {
-            ret = s->avctx->hwaccel->decode_params(s->avctx,
-                                                   nal->type,
-                                                   nal->raw_data,
-                                                   nal->raw_size);
-            if (ret < 0)
-                goto fail;
-        }
-        ret = ff_vvc_decode_nal_vps(gb, s->avctx, &s->ps);
-        if (ret < 0)
-            goto fail;
-#endif
         break;
     case VVC_SPS_NUT:
         if (s->avctx->hwaccel && s->avctx->hwaccel->decode_params) {
@@ -1026,12 +1056,41 @@ static int submit_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *output, int
     return 0;
 }
 
+static int vvc_decode_extradata(VVCContext *s, uint8_t *buf, int length, int first)
+{
+    int ret, i;
+
+    ret = ff_vvc_decode_extradata(buf, length, &s->ps, s, &s->is_nalff,
+                                   &s->nal_length_size, s->avctx->err_recognition,
+                                   s->apply_defdispwin, s->avctx);
+    if (ret < 0)
+        return ret;
+
+    /* export stream parameters from the first SPS */
+    for (i = 0; i < FF_ARRAY_ELEMS(s->ps.sps_list); i++) {
+        if (first && s->ps.sps_list[i]) {
+            const VVCSPS *sps = (const VVCSPS*)s->ps.sps_list[i]->data;
+            export_stream_params(s, sps);
+            break;
+        }
+    }
+
+    /* export stream parameters from SEI */
+    /*ret = export_stream_params_from_sei(s);
+    if (ret < 0)
+        return ret;*/
+
+    return 0;
+}
+
 static int vvc_decode_frame(AVCodecContext *avctx, AVFrame *output,
     int *got_output, AVPacket *avpkt)
 {
     VVCContext *s = avctx->priv_data;
     VVCFrameContext *fc;
     int ret;
+    uint8_t *sd;
+    size_t sd_size;
 
     if (!avpkt->size) {
         while (s->nb_delayed) {
@@ -1054,6 +1113,13 @@ static int vvc_decode_frame(AVCodecContext *avctx, AVFrame *output,
             }
         }
         return 0;
+    }
+
+    sd = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA, &sd_size);
+    if (sd && sd_size > 0) {
+        ret = vvc_decode_extradata(s, sd, sd_size, 0);
+        if (ret < 0)
+            return ret;
     }
 
     fc = get_frame_context(s, s->fcs, s->nb_frames);
@@ -1158,7 +1224,7 @@ static av_cold int vvc_decode_free(AVCodecContext *avctx)
     int i;
 
     vvc_decode_flush(avctx);
-    ff_executor_free(&s->executor);
+    avpriv_executor_free(&s->executor);
     if (s->fcs) {
         for (i = 0; i < s->nb_fcs; i++)
             frame_context_free(s->fcs + i);
@@ -1181,7 +1247,7 @@ static av_cold int vvc_decode_init(AVCodecContext *avctx)
 {
     VVCContext *s       = avctx->priv_data;
     int ret;
-    TaskCallbacks callbacks = {
+    AVTaskCallbacks callbacks = {
         s,
         sizeof(VVCLocalContext),
         ff_vvc_task_priority_higher,
@@ -1203,10 +1269,19 @@ static av_cold int vvc_decode_init(AVCodecContext *avctx)
             goto fail;
     }
 
-    s->executor = ff_executor_alloc(&callbacks, s->nb_fcs * 3 / 2);
+    s->executor = avpriv_executor_alloc(&callbacks, s->nb_fcs * 3 / 2);
     s->eos = 1;
     GDR_SET_RECOVERED(s);
     pthread_once(&once_control, vvc_one_time_init);
+
+    if (!avctx->internal->is_copy) {
+        if (avctx->extradata_size > 0 && avctx->extradata) {
+            ret = vvc_decode_extradata(s, avctx->extradata, avctx->extradata_size, 1);
+            if (ret < 0) {
+                return ret;
+            }
+        }
+    }
 
     return 0;
 
@@ -1219,17 +1294,11 @@ fail:
 #define PAR (AV_OPT_FLAG_DECODING_PARAM | AV_OPT_FLAG_VIDEO_PARAM)
 
 static const AVOption options[] = {
-#if 0
-    { "apply_defdispwin", "Apply default display window from VUI", OFFSET(apply_defdispwin),
-        AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, PAR },
-    { "strict-displaywin", "stricly apply default display window size", OFFSET(apply_defdispwin),
-        AV_OPT_TYPE_BOOL, {.i64 = 0}, 0, 1, PAR },
-#endif
     { NULL },
 };
 
 static const AVClass vvc_decoder_class = {
-    .class_name = "vvc decoder",
+    .class_name = "VVC decoder",
     .item_name  = av_default_item_name,
     .option     = options,
     .version    = LIBAVUTIL_VERSION_INT,
@@ -1237,7 +1306,7 @@ static const AVClass vvc_decoder_class = {
 
 const FFCodec ff_vvc_decoder = {
     .p.name                  = "vvc",
-    .p.long_name             = NULL_IF_CONFIG_SMALL("VVC (Versatile Video Coding)"),
+    CODEC_LONG_NAME("VVC (Versatile Video Coding)"),
     .p.type                  = AVMEDIA_TYPE_VIDEO,
     .p.id                    = AV_CODEC_ID_VVC,
     .priv_data_size          = sizeof(VVCContext),
@@ -1248,10 +1317,6 @@ const FFCodec ff_vvc_decoder = {
     .flush                   = vvc_decode_flush,
     .p.capabilities          = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
     .caps_internal           = FF_CODEC_CAP_EXPORTS_CROPPING | FF_CODEC_CAP_INIT_CLEANUP |
-                               FF_CODEC_CAP_AUTO_THREADS,
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,
-                                                     AV_PIX_FMT_YUV420P10LE,
-                                                     AV_PIX_FMT_NONE },
-    .bsfs            = "vvc_mp4toannexb",
+                               FF_CODEC_CAP_ALLOCATE_PROGRESS,
     .p.profiles              = NULL_IF_CONFIG_SMALL(ff_vvc_profiles),
 };

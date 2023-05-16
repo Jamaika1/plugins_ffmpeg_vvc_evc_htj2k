@@ -22,9 +22,9 @@
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/thread.h"
 
 typedef struct ThreadData {
     AVFrame *frame;
@@ -102,7 +102,7 @@ static int v410_decode_frame(AVCodecContext *avctx, AVFrame *pic,
     if ((ret = ff_thread_get_buffer(avctx, pic, 0)) < 0)
         return ret;
 
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
     pic->pict_type = AV_PICTURE_TYPE_I;
 
     td.buf = src;

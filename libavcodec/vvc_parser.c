@@ -25,6 +25,8 @@
 #include "decode.h"
 #include "internal.h"
 #include "parser.h"
+#include "vvc_parse.h"
+#include "vvcdec.h"
 
 #define START_CODE 0x000001 ///< start_code_prefix_one_3bytes
 
@@ -54,6 +56,7 @@ typedef struct AuDetector {
 
 typedef struct VVCParserContext {
     ParseContext pc;
+    VVCParamSets ps;
     CodedBitstreamContext *cbc;
 
     CodedBitstreamFragment picture_unit;
@@ -64,7 +67,12 @@ typedef struct VVCParserContext {
 
     AuDetector au_detector;
 
+    int is_avc;
+    int nal_length_size;
     int parsed_extradata;
+
+    int poc;
+    int pocTid0;
 } VVCParserContext;
 
 static const enum AVPixelFormat pix_fmts_8bit[] = {
@@ -495,11 +503,14 @@ static int vvc_parser_parse(AVCodecParserContext *ctx, AVCodecContext *avctx,
 {
     int next;
     VVCParserContext *s = ctx->priv_data;
+    VVCContext *s1 = avctx->priv_data;
     ParseContext *pc = &s->pc;
 
     if (avctx->extradata && !s->parsed_extradata) {
-        av_log(avctx, AV_LOG_INFO, "extra data is not supported yet.\n");
-        return AVERROR_PATCHWELCOME;
+        ff_vvc_decode_extradata(avctx->extradata, avctx->extradata_size, &s->ps, s1,
+                                 &s->is_avc, &s->nal_length_size, avctx->err_recognition,
+                                 1, avctx);
+        s->parsed_extradata = 1;
     }
 
     if (ctx->flags & PARSER_FLAG_COMPLETE_FRAMES) {
