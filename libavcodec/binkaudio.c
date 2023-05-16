@@ -28,7 +28,7 @@
  *  http://wiki.multimedia.cx/index.php?title=Bink_Audio
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intfloat.h"
@@ -36,12 +36,12 @@
 #include "libavutil/tx.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "codec_internal.h"
-#include "internal.h"
-#include "wma_freqs.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/wma_freqs.h"
 
 #define MAX_DCT_CHANNELS 6
 #define MAX_CHANNELS 2

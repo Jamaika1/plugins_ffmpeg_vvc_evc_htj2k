@@ -38,9 +38,9 @@
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 
 typedef uint8_t cvid_codebook[12];
@@ -379,7 +379,7 @@ static int cinepak_decode (CinepakContext *s)
 
     num_strips = FFMIN(num_strips, MAX_STRIPS);
 
-    s->frame->key_frame = 0;
+    s->frame->flags &= ~AV_FRAME_FLAG_KEY;
 
     for (i=0; i < num_strips; i++) {
         if ((s->data + 12) > eod)
@@ -395,7 +395,7 @@ static int cinepak_decode (CinepakContext *s)
         s->strips[i].x2 = AV_RB16 (&s->data[10]);
 
         if (s->strips[i].id == 0x10)
-            s->frame->key_frame = 1;
+            s->frame->flags |= AV_FRAME_FLAG_KEY;
 
         strip_size = AV_RB24 (&s->data[1]) - 12;
         if (strip_size < 0)

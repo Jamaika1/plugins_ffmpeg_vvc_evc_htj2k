@@ -29,12 +29,12 @@
 
 #include "libavutil/intfloat.h"
 #include "libavutil/display.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
 
 typedef struct CRIContext {
     AVCodecContext *jpeg_avctx;   // wrapper context for MJPEG
@@ -408,7 +408,7 @@ skip:
     }
 
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
 
     *got_frame = 1;
 

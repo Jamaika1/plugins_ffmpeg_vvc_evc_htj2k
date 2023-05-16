@@ -23,8 +23,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "config.h"
-#include "celp_filters.h"
+#include "libavutil/config.h"
+#include "libavcodec/celp_filters.h"
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
 

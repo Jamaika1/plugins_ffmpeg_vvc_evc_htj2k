@@ -20,11 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/put_bits.h"
 #include "libavutil/pixdesc.h"
 
 struct BitpackedContext {

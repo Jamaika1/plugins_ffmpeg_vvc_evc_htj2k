@@ -24,9 +24,9 @@
  * Bink DSP routines
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "binkdsp.h"
+#include "libavcodec/binkdsp.h"
 
 #define A1  2896 /* (1/sqrt(2))<<12 */
 #define A2  2217

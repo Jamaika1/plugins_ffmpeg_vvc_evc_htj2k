@@ -28,11 +28,11 @@
  */
 
 #include "libavutil/common.h"
-#include "avcodec.h"
-#include "bethsoftvideo.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bethsoftvideo.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 typedef struct BethsoftvidContext {
     AVFrame *frame;

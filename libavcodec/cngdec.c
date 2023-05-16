@@ -24,11 +24,11 @@
 #include "libavutil/common.h"
 #include "libavutil/ffmath.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "celp_filters.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/celp_filters.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/internal.h"
 #include "libavutil/lfg.h"
 
 typedef struct CNGContext {

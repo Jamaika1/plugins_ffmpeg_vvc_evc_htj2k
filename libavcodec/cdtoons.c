@@ -29,10 +29,10 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/internal.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 #define CDTOONS_HEADER_SIZE   44
 #define CDTOONS_MAX_SPRITES 1200

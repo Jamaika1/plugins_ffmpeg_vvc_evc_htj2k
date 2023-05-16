@@ -26,7 +26,7 @@
  */
 
 #include "libavutil/attributes.h"
-#include "bgmc.h"
+#include "libavcodec/bgmc.h"
 
 #define FREQ_BITS  14                      // bits used by frequency counters
 #define VALUE_BITS 18                      // bits used to represent the values

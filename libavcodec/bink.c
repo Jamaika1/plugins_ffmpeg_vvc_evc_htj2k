@@ -27,14 +27,14 @@
 #include "libavutil/thread.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "binkdata.h"
-#include "binkdsp.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "hpeldsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/binkdata.h"
+#include "libavcodec/binkdsp.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/hpeldsp.h"
 
 #define BINK_FLAG_ALPHA 0x00100000
 #define BINK_FLAG_GRAY  0x00020000

@@ -18,9 +18,9 @@
 
 #include "libavutil/avassert.h"
 
-#include "cbs.h"
-#include "cbs_internal.h"
-#include "cbs_vp9.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
+#include "libavcodec/cbs_vp9.h"
 
 
 static int cbs_vp9_read_s(CodedBitstreamContext *ctx, GetBitContext *gbc,

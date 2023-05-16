@@ -18,10 +18,10 @@
 
 #include "libavutil/avassert.h"
 
-#include "cbs.h"
-#include "cbs_internal.h"
-#include "cbs_mpeg2.h"
-#include "startcode.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
+#include "libavcodec/cbs_mpeg2.h"
+#include "libavcodec/startcode.h"
 
 
 #define HEADER(name) do { \

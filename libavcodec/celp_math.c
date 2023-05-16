@@ -22,11 +22,11 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/avassert.h"
 #include "libavutil/intmath.h"
-#include "mathops.h"
-#include "celp_math.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/celp_math.h"
 
 #ifdef G729_BITEXACT
 static const uint16_t exp2a[]=

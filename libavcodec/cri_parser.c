@@ -27,7 +27,7 @@
 #include "libavutil/bswap.h"
 #include "libavutil/common.h"
 
-#include "parser.h"
+#include "libavcodec/parser.h"
 
 typedef struct CRIParser {
     ParseContext pc;

@@ -22,10 +22,10 @@
 #include <math.h>
 
 #include "libavutil/common.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "lpc.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/lpc.h"
 
 typedef struct CNGContext {
     LPCContext lpc;

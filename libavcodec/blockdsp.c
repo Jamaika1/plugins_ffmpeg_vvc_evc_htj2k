@@ -19,9 +19,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "blockdsp.h"
+#include "libavcodec/blockdsp.h"
 
 static void clear_block_c(int16_t *block)
 {

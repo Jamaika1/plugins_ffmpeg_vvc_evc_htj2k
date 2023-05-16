@@ -23,9 +23,9 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 
 #define FRAME_HEADER_SIZE 64
@@ -94,10 +94,10 @@ static int cpia_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
 
     if (header[28] == NOT_COMPRESSED) {
         frame->pict_type = AV_PICTURE_TYPE_I;
-        frame->key_frame = 1;
+        frame->flags |= AV_FRAME_FLAG_KEY;
     } else {
         frame->pict_type = AV_PICTURE_TYPE_P;
-        frame->key_frame = 0;
+        frame->flags &= ~AV_FRAME_FLAG_KEY;
     }
 
     // Get buffer filled with previous frame

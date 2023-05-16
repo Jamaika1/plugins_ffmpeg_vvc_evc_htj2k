@@ -21,8 +21,8 @@
 
 #include "libavutil/log.h"
 
-#include "bsf.h"
-#include "bsf_internal.h"
+#include "libavcodec/bsf.h"
+#include "libavcodec/bsf_internal.h"
 
 extern const FFBitStreamFilter ff_aac_adtstoasc_bsf;
 extern const FFBitStreamFilter ff_av1_frame_merge_bsf;

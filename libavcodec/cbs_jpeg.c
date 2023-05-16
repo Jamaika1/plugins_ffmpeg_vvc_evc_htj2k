@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "cbs.h"
-#include "cbs_internal.h"
-#include "cbs_jpeg.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
+#include "libavcodec/cbs_jpeg.h"
 
 
 #define HEADER(name) do { \

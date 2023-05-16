@@ -19,9 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "ass.h"
-#include "codec_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
+#include "libavcodec/codec_internal.h"
 #include "libavutil/opt.h"
 
 #define SCREEN_ROWS 15

@@ -26,15 +26,15 @@
  */
 
 #include "libavutil/avassert.h"
-#include "avcodec.h"
-#include "get_bits.h"
-#include "golomb.h"
-#include "cavs.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "mathops.h"
-#include "mpeg12data.h"
-#include "startcode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/cavs.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/startcode.h"
 
 static const uint8_t mv_scan[4] = {
     MV_FWD_X0, MV_FWD_X1,
@@ -1019,6 +1019,9 @@ static int decode_pic(AVSContext *h)
         if (h->stream_revision > 0)
             skip_bits(&h->gb, 1); //marker_bit
     }
+
+    if (get_bits_left(&h->gb) < 23)
+        return AVERROR_INVALIDDATA;
 
     ret = ff_get_buffer(h->avctx, h->cur.f, h->cur.f->pict_type == AV_PICTURE_TYPE_B ?
                         0 : AV_GET_BUFFER_FLAG_REF);
