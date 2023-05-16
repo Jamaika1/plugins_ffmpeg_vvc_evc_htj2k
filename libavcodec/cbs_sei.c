@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "cbs.h"
-#include "cbs_internal.h"
-#include "cbs_h264.h"
-#include "cbs_h265.h"
-#include "cbs_h266.h"
-#include "cbs_sei.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
+#include "libavcodec/cbs_h264.h"
+#include "libavcodec/cbs_h265.h"
+#include "libavcodec/cbs_h266.h"
+#include "libavcodec/cbs_sei.h"
 
 static void cbs_free_user_data_registered(void *opaque, uint8_t *data)
 {

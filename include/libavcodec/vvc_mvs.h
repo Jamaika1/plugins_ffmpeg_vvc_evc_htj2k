@@ -28,7 +28,6 @@
 void ff_vvc_round_mv(Mv *mv, int lshift, int rshift);
 void ff_vvc_clip_mv(Mv *mv);
 void ff_vvc_mv_scale(Mv *dst, const Mv *src, int td, int tb);
-void ff_vvc_set_neighbour_available(VVCLocalContext *lc, int x0, int y0,            int nPbW, int nPbH);
 void ff_vvc_luma_mv_merge_mode(VVCLocalContext *lc, int merge_idx, int ciip_flag, MvField *mv);
 void ff_vvc_luma_mv_merge_gpm(VVCLocalContext *lc, const int merge_gpm_idx[2], MvField *mv);
 void ff_vvc_mvp(VVCLocalContext *lc, const int *mvp_lx_flag, const int amvr_shift,  MotionInfo *mi);
@@ -43,7 +42,5 @@ int ff_vvc_no_backward_pred_flag(const VVCFrameContext *fc);
 MvField* ff_vvc_get_mvf(const VVCFrameContext *fc, const int x0, const int y0);
 void ff_vvc_set_mvf(const VVCLocalContext *lc, const int x0, const int y0, const int w, const int h, const MvField *mvf);
 void ff_vvc_set_intra_mvf(const VVCLocalContext *lc);
-void ff_vvc_set_dmvr_info(VVCFrameContext *fc, int x0, const int y0, int width, int height, const MvField *mvf);
-void ff_vvc_apply_dmvr_info_ctb(VVCFrameContext *fc, int x0, const int y0);
 
 #endif //AVCODEC_VVC_MVS_H

@@ -32,7 +32,7 @@
 #include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/time.h"
-#include "avdevice.h"
+#include "libavdevice/avdevice.h"
 #include "libavformat/mux.h"
 
 typedef struct {

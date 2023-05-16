@@ -22,12 +22,12 @@
  */
 
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "lzw.h"
-#include "gif.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/lzw.h"
+#include "libavcodec/gif.h"
 
 /* This value is intentionally set to "transparent white" color.
  * It is much better to have white background instead of black
@@ -501,7 +501,7 @@ static int gif_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
             return AVERROR(ENOMEM);
 
         s->frame->pict_type = AV_PICTURE_TYPE_I;
-        s->frame->key_frame = 1;
+        s->frame->flags |= AV_FRAME_FLAG_KEY;
         s->keyframe_ok = 1;
     } else {
         if (!s->keyframe_ok) {
@@ -513,7 +513,7 @@ static int gif_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
             return ret;
 
         s->frame->pict_type = AV_PICTURE_TYPE_P;
-        s->frame->key_frame = 0;
+        s->frame->flags &= ~AV_FRAME_FLAG_KEY;
     }
 
     ret = gif_parse_next_image(s, s->frame);

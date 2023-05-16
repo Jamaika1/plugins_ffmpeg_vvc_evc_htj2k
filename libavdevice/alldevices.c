@@ -20,7 +20,7 @@
 
 #include "libavformat/internal.h"
 #include "libavformat/mux.h"
-#include "avdevice.h"
+#include "libavdevice/avdevice.h"
 
 /* devices */
 extern const AVInputFormat  ff_alsa_demuxer;

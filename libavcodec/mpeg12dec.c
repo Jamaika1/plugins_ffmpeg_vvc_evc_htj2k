@@ -38,25 +38,25 @@
 #include "libavutil/stereo3d.h"
 #include "libavutil/timecode.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "error_resilience.h"
-#include "hwconfig.h"
-#include "idctdsp.h"
-#include "internal.h"
-#include "mpeg_er.h"
-#include "mpeg12.h"
-#include "mpeg12codecs.h"
-#include "mpeg12data.h"
-#include "mpeg12dec.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodata.h"
-#include "mpegvideodec.h"
-#include "profiles.h"
-#include "startcode.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/mpeg12.h"
+#include "libavcodec/mpeg12codecs.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/mpeg12dec.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/startcode.h"
+#include "libavcodec/thread.h"
 
 #define A53_MAX_CC_COUNT 2000
 
@@ -1265,7 +1265,11 @@ static int mpeg_decode_postinit(AVCodecContext *avctx)
         if (avctx->codec_id == AV_CODEC_ID_MPEG1VIDEO) {
             // MPEG-1 fps
             avctx->framerate = ff_mpeg12_frame_rate_tab[s1->frame_rate_index];
+#if FF_API_TICKS_PER_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
             avctx->ticks_per_frame     = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
             avctx->chroma_sample_location = AVCHROMA_LOC_CENTER;
         } else { // MPEG-2
@@ -1275,7 +1279,11 @@ static int mpeg_decode_postinit(AVCodecContext *avctx)
                       ff_mpeg12_frame_rate_tab[s1->frame_rate_index].num * s1->frame_rate_ext.num,
                       ff_mpeg12_frame_rate_tab[s1->frame_rate_index].den * s1->frame_rate_ext.den,
                       1 << 30);
+#if FF_API_TICKS_PER_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
             avctx->ticks_per_frame = 2;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
             switch (s->chroma_format) {
             case 1: avctx->chroma_sample_location = AVCHROMA_LOC_LEFT; break;
@@ -1343,7 +1351,10 @@ static int mpeg1_decode_picture(AVCodecContext *avctx, const uint8_t *buf,
         s->mpeg_f_code[1][1] = f_code;
     }
     s->current_picture.f->pict_type = s->pict_type;
-    s->current_picture.f->key_frame = s->pict_type == AV_PICTURE_TYPE_I;
+    if (s->pict_type == AV_PICTURE_TYPE_I)
+        s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
 
     if (avctx->debug & FF_DEBUG_PICT_INFO)
         av_log(avctx, AV_LOG_DEBUG,
@@ -1525,7 +1536,10 @@ static int mpeg_decode_picture_coding_extension(Mpeg1Context *s1)
         } else
             s->pict_type = AV_PICTURE_TYPE_B;
         s->current_picture.f->pict_type = s->pict_type;
-        s->current_picture.f->key_frame = s->pict_type == AV_PICTURE_TYPE_I;
+        if (s->pict_type == AV_PICTURE_TYPE_I)
+            s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+        else
+            s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
     }
 
     s->intra_dc_precision         = get_bits(&s->gb, 2);
@@ -3046,7 +3060,7 @@ static int ipu_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         return AVERROR_INVALIDDATA;
 
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     *got_frame = 1;
 
     return avpkt->size;

@@ -24,13 +24,13 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "libopus.h"
-#include "audio_frame_queue.h"
-#include "vorbis_data.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/libopus.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/vorbis_data.h"
 
 typedef struct LibopusEncOpts {
     int vbr;

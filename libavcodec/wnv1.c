@@ -27,10 +27,10 @@
 #include "libavutil/thread.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
 static const uint8_t code_tab[16][2] = {
     {  7, 1 }, {  8, 3 }, {  6, 3 }, { 9, 4 }, {  5, 4 }, { 10, 5 }, {  4, 5 },
@@ -69,7 +69,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *p,
 
     if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
         return ret;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
 
     if ((ret = init_get_bits8(&gb, buf + 8, buf_size - 8)) < 0)
         return ret;

@@ -28,13 +28,13 @@
  * Creative YUV (CYUV) Video Decoder.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <string.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/internal.h"
 
 static av_cold int cyuv_decode_init(AVCodecContext *avctx)

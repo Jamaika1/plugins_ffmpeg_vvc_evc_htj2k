@@ -27,6 +27,7 @@
 #include <stdatomic.h>
 
 #include "libavutil/buffer.h"
+#include "libavutil/executor.h"
 #include "libavutil/md5.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
@@ -36,87 +37,85 @@
 #include "cabac.h"
 #include "cbs_h266.h"
 #include "get_bits.h"
-#include "vvcpred.h"
 #include "h2645_parse.h"
 #include "vvc.h"
-#include "executor.h"
 #include "vvc_ps.h"
 #include "vvcdsp.h"
 #include "internal.h"
 #include "threadframe.h"
 #include "videodsp.h"
 
-#define LUMA    0
-#define CHROMA  1
-#define CB      1
-#define CR      2
-#define JCBCR   3
+#define LUMA                    0
+#define CHROMA                  1
+#define CB                      1
+#define CR                      2
+#define JCBCR                   3
 
-#define MAX_CTU_SIZE        128
-#define MAX_CU_SIZE         MAX_CTU_SIZE
-#define MIN_CU_SIZE         4
-#define MIN_CU_LOG2         2
-#define MIN_PU_SIZE         4
-#define MIN_PU_LOG2         2
-#define MIN_TB_LOG2         2                       ///< MinTbLog2SizeY
-#define MIN_TB_SIZE         (1 << MIN_TB_LOG2)
-#define MIN_TB_CHROMA_LOG2  1
-#define MAX_CU_DEPTH        7
-#define MAX_PARTS_IN_CTU ((MAX_CTU_SIZE >> MIN_CU_LOG2) * (MAX_CTU_SIZE >> MIN_CU_LOG2))
+#define MAX_CTU_SIZE            128
 
-#define MAX_INTER_SBS   ((MAX_CU_SIZE >> MIN_PU_LOG2) * (MAX_CU_SIZE >> MIN_PU_LOG2))
+#define MAX_CU_SIZE             MAX_CTU_SIZE
+#define MIN_CU_SIZE             4
+#define MIN_CU_LOG2             2
+#define MAX_CU_DEPTH            7
 
-#define MAX_CONTROL_POINTS   3
+#define MIN_PU_SIZE             4
+#define MIN_PU_LOG2             2
 
+#define MAX_TB_SIZE             64
+#define MIN_TU_LOG2             2                       ///< MinTbLog2SizeY
+#define MIN_TU_SIZE             4
+#define MAX_TUS_IN_CU           64
 
-#define MAX_TB_SIZE 64
-#define MAX_TUS_IN_CU 64
+#define MAX_PARTS_IN_CTU        ((MAX_CTU_SIZE >> MIN_CU_LOG2) * (MAX_CTU_SIZE >> MIN_CU_LOG2))
 
-#define MAX_QP 63
-#define DEFAULT_INTRA_TC_OFFSET 2
+#define MAX_CONTROL_POINTS      3
 
 #define MRG_MAX_NUM_CANDS       6
 #define MAX_NUM_HMVP_CANDS      5
 
-#define L0 0
-#define L1 1
+#define L0                      0
+#define L1                      1
 
-#define CHROMA_EXTRA_BEFORE 1
-#define CHROMA_EXTRA_AFTER  2
-#define CHROMA_EXTRA        3
-#define LUMA_EXTRA_BEFORE 3
-#define LUMA_EXTRA_AFTER  4
-#define LUMA_EXTRA        7
-#define BILINEAR_EXTRA_BEFORE 0
-#define BILINEAR_EXTRA_AFTER  1
-#define BILINEAR_EXTRA        1
+#define CHROMA_EXTRA_BEFORE     1
+#define CHROMA_EXTRA_AFTER      2
+#define CHROMA_EXTRA            3
+#define LUMA_EXTRA_BEFORE       3
+#define LUMA_EXTRA_AFTER        4
+#define LUMA_EXTRA              7
+#define BILINEAR_EXTRA_BEFORE   0
+#define BILINEAR_EXTRA_AFTER    1
+#define BILINEAR_EXTRA          1
 
-#define SAO_PADDING_SIZE      1
+#define MAX_QP                  63
+#define DEFAULT_INTRA_TC_OFFSET 2
 
-#define ALF_PADDING_SIZE      8
-#define ALF_BLOCK_SIZE        4
+#define SAO_PADDING_SIZE        1
 
-#define ALF_BORDER_LUMA       3
-#define ALF_BORDER_CHROMA     2
+#define ALF_PADDING_SIZE        8
+#define ALF_BLOCK_SIZE          4
 
-#define ALF_VB_POS_ABOVE_LUMA       4
-#define ALF_VB_POS_ABOVE_CHROMA     2
+#define ALF_BORDER_LUMA         3
+#define ALF_BORDER_CHROMA       2
 
-#define ALF_GRADIENT_STEP           2
-#define ALF_GRADIENT_BORDER         2
-#define ALF_GRADIENT_SIZE           ((MAX_CU_SIZE + ALF_GRADIENT_BORDER * 2) / ALF_GRADIENT_STEP)
-#define ALF_NUM_DIR                 4
+#define ALF_VB_POS_ABOVE_LUMA   4
+#define ALF_VB_POS_ABOVE_CHROMA 2
 
-#define EDGE_EMU_BUFFER_STRIDE (MAX_PB_SIZE + 32)
+#define ALF_GRADIENT_STEP       2
+#define ALF_GRADIENT_BORDER     2
+#define ALF_GRADIENT_SIZE       ((MAX_CU_SIZE + ALF_GRADIENT_BORDER * 2) / ALF_GRADIENT_STEP)
+#define ALF_NUM_DIR             4
 
-#define AFFINE_MIN_BLOCK_SIZE 4
-#define PROF_BORDER_EXT 1
-#define PROF_BLOCK_SIZE (AFFINE_MIN_BLOCK_SIZE + PROF_BORDER_EXT * 2)
-#define BDOF_BORDER_EXT 1
+#define MAX_PB_SIZE             128
+#define EDGE_EMU_BUFFER_STRIDE  (MAX_PB_SIZE + 32)
 
-#define BDOF_PADDED_SIZE (16 + BDOF_BORDER_EXT * 2)
-#define BDOF_BLOCK_SIZE 4
-#define BDOF_GRADIENT_SIZE (BDOF_BLOCK_SIZE + BDOF_BORDER_EXT * 2)
+#define AFFINE_MIN_BLOCK_SIZE   4
+#define PROF_BORDER_EXT         1
+#define PROF_BLOCK_SIZE         (AFFINE_MIN_BLOCK_SIZE + PROF_BORDER_EXT * 2)
+#define BDOF_BORDER_EXT         1
+
+#define BDOF_PADDED_SIZE        (16 + BDOF_BORDER_EXT * 2)
+#define BDOF_BLOCK_SIZE         4
+#define BDOF_GRADIENT_SIZE      (BDOF_BLOCK_SIZE + BDOF_BORDER_EXT * 2)
 
 /**
  * Value of the luma sample at position (x, y) in the 2D array tab.
@@ -124,25 +123,6 @@
 #define SAMPLE(tab, x, y) ((tab)[(y) * s->sps->width + (x)])
 #define SAMPLE_CTB(tab, x, y) ((tab)[(y) * min_cb_width + (x)])
 #define CTB(tab, x, y) ((tab)[(y) * fc->ps.pps->ctb_width + (x)])
-
-#define IS_VCL(t) ((t) <= VVC_RSV_IRAP_11 && (t) >= VVC_TRAIL_NUT)
-
-#define IS_IDR(s)  ((s)->vcl_unit_type == VVC_IDR_W_RADL || (s)->vcl_unit_type == VVC_IDR_N_LP)
-#define IS_CRA(s)  ((s)->vcl_unit_type == VVC_CRA_NUT)
-#define IS_IRAP(s) (IS_IDR(s) || IS_CRA(s))
-#define IS_GDR(s)  ((s)->vcl_unit_type == VVC_GDR_NUT)
-#define IS_CVSS(s) (IS_IRAP(s)|| IS_GDR(s))
-#define IS_CLVSS(s) (IS_CVSS(s) && s->no_output_before_recovery_flag)
-#define IS_RASL(s) ((s)->vcl_unit_type == VVC_RASL_NUT)
-#define IS_RADL(s) ((s)->vcl_unit_type == VVC_RADL_NUT)
-
-#define IS_I(sh) ((sh)->slice_type == VVC_SLICE_TYPE_I)
-#define IS_P(sh) ((sh)->slice_type == VVC_SLICE_TYPE_P)
-#define IS_B(sh) ((sh)->slice_type == VVC_SLICE_TYPE_B)
-
-#define INV_POC INT_MIN
-#define GDR_IS_RECOVERED(s)  (s->gdr_recovery_point_poc == INV_POC)
-#define GDR_SET_RECOVERED(s) (s->gdr_recovery_point_poc =  INV_POC)
 
 typedef struct VVCLocalContext VVCLocalContext;
 typedef struct SliceContext SliceContext;
@@ -154,6 +134,8 @@ typedef struct Mv Mv;
 typedef struct MvField MvField;
 typedef struct DMVRInfo DMVRInfo;
 typedef struct CTU CTU;
+typedef struct SAOParams SAOParams;
+typedef struct ALFParams ALFParams;
 
 enum SAOType {
     SAO_NOT_APPLIED = 0,
@@ -180,11 +162,6 @@ typedef struct RefPicListTab {
     RefPicList refPicList[2];
 } RefPicListTab;
 
-#define VVC_FRAME_FLAG_OUTPUT    (1 << 0)
-#define VVC_FRAME_FLAG_SHORT_REF (1 << 1)
-#define VVC_FRAME_FLAG_LONG_REF  (1 << 2)
-#define VVC_FRAME_FLAG_BUMPING   (1 << 3)
-
 typedef struct FrameProgress {
     atomic_int progress;
     pthread_mutex_t lock;
@@ -210,10 +187,6 @@ typedef struct VVCFrame {
     AVBufferRef *rpl_buf;
     AVBufferRef *progress_buf;
 
-#if 0
-    AVBufferRef *hwaccel_priv_buf;
-    void *hwaccel_picture_private;
-#endif
     /**
      * A sequence counter, so that old frames are output first
      * after a POC reset
@@ -224,11 +197,6 @@ typedef struct VVCFrame {
      */
     uint8_t flags;
 } VVCFrame;
-
-typedef struct VVCCabacState{
-    uint16_t state[2];
-    uint8_t  shift[2];
-} VVCCabacState;
 
 struct SliceContext {
     int slice_idx;
@@ -339,17 +307,16 @@ struct VVCFrameContext {
 } ;
 
 typedef struct VVCContext {
-    const AVClass *c;  // needed by private avoptions
+    const AVClass *c;       // needed by private avoptions
     AVCodecContext *avctx;
 
     VVCParamSets ps;
 
-    int temporal_id;  ///< temporal_id_plus1 - 1
-    //int poc;
+    int temporal_id;        ///< temporal_id_plus1 - 1
     int pocTid0;
 
-    int eos;       ///< current packet contains an EOS/EOB NAL
-    int last_eos;  ///< last packet contains an EOS/EOB NAL
+    int eos;                ///< current packet contains an EOS/EOB NAL
+    int last_eos;           ///< last packet contains an EOS/EOB NAL
 
 
     enum VVCNALUnitType vcl_unit_type;
@@ -369,39 +336,13 @@ typedef struct VVCContext {
     int apply_defdispwin;
     int nal_length_size;    ///< Number of bytes used for nal length (1, 2 or 4)
 
-    Executor *executor;
+    AVExecutor *executor;
 
     VVCFrameContext *fcs;
     int nb_fcs;
 
-    // processed frames
-    uint64_t nb_frames;
-    // delayed frames
-    int nb_delayed;
+    uint64_t nb_frames;     ///< processed frames
+    int nb_delayed;         ///< delayed frames
 }  VVCContext ;
-
-//dpb
-int ff_vvc_output_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *out, int no_output_of_prior_pics_flag, int flush);
-void ff_vvc_bump_frame(VVCContext *s, VVCFrameContext *fc);
-int ff_vvc_set_new_ref(VVCContext *s, VVCFrameContext *fc, AVFrame **frame);
-const RefPicList *ff_vvc_get_ref_list(const VVCFrameContext *fc, const VVCFrame *ref, int x0, int y0);
-int ff_vvc_frame_rpl(VVCContext *s, VVCFrameContext *fc, const SliceContext *sc);
-int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, const SliceContext *sc);
-void ff_vvc_unref_frame(VVCFrameContext *fc, VVCFrame *frame, int flags);
-void ff_vvc_clear_refs(VVCFrameContext *fc);
-
-int ff_vvc_get_qPy(const VVCFrameContext *fc, int xc, int yc);
-
-int ff_vvc_get_top_available(const VVCLocalContext *lc, int x0, int y0, int target_size, int c_idx);
-int ff_vvc_get_left_available(const VVCLocalContext *lc, int x0, int y0, int target_size, int c_idx);
-
-void ff_vvc_lmcs_filter(const VVCLocalContext *lc, const int x0, const int y0);
-void ff_vvc_deblock_vertical(const VVCLocalContext *lc, int x0, int y0);
-void ff_vvc_deblock_horizontal(const VVCLocalContext *lc, int x0, int y0);
-void ff_vvc_sao_filter(VVCLocalContext *lc, const int x0, const int y0);
-void ff_vvc_alf_copy_ctu_to_hv(VVCLocalContext* lc, int x0, int y0);
-void ff_vvc_alf_filter(VVCLocalContext *lc, const int x0, const int y0);
-
-void ff_vvc_ctu_free_cus(CTU *ctu);
 
 #endif /* AVCODEC_VVCDEC_H */

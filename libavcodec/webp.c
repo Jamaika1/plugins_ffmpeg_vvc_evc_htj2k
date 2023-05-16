@@ -43,15 +43,15 @@
 #include "libavutil/imgutils.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "exif.h"
-#include "get_bits.h"
-#include "thread.h"
-#include "tiff_common.h"
-#include "vp8.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/exif.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/tiff_common.h"
+#include "libavcodec/vp8.h"
 
 #define VP8X_FLAG_ANIMATION             0x02
 #define VP8X_FLAG_XMP_METADATA          0x04
@@ -1186,7 +1186,7 @@ static int vp8_lossless_decode_frame(AVCodecContext *avctx, AVFrame *p,
 
     *got_frame   = 1;
     p->pict_type = AV_PICTURE_TYPE_I;
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     ret          = data_size;
 
 free_and_return:

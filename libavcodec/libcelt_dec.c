@@ -21,9 +21,9 @@
 
 #include "libcelt2/celt.h"
 #include "libcelt2/celt_header.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/intreadwrite.h"
 
 struct libcelt_context {

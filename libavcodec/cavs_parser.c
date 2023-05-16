@@ -25,8 +25,8 @@
  * @author Stefan Gehrer <stefan.gehrer@gmx.de>
  */
 
-#include "parser.h"
-#include "cavs.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/cavs.h"
 
 
 /**

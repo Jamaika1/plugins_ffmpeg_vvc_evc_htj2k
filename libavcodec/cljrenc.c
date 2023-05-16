@@ -26,10 +26,10 @@
 
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/put_bits.h"
 
 typedef struct CLJRContext {
     AVClass        *avclass;

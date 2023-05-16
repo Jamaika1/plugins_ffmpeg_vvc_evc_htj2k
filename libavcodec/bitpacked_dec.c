@@ -26,11 +26,11 @@
  * Bitpacked
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
 #include "libavutil/imgutils.h"
-#include "thread.h"
+#include "libavcodec/thread.h"
 
 struct BitpackedContext {
     int (*decode)(AVCodecContext *avctx, AVFrame *frame,
@@ -134,7 +134,7 @@ static int bitpacked_decode(AVCodecContext *avctx, AVFrame *frame,
         return res;
 
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
 
     *got_frame = 1;
     return buf_size;

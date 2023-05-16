@@ -21,11 +21,11 @@
 
 #include "libavutil/imgutils.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "copy_block.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/copy_block.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 
 static const uint8_t block_sequences[16][8] = {
@@ -296,10 +296,10 @@ static int paf_video_decode(AVCodecContext *avctx, AVFrame *rframe,
     if (code & 0x20) {  // frame is keyframe
         memset(c->pic->data[1], 0, AVPALETTE_SIZE);
         c->current_frame  = 0;
-        c->pic->key_frame = 1;
+        c->pic->flags |= AV_FRAME_FLAG_KEY;
         c->pic->pict_type = AV_PICTURE_TYPE_I;
     } else {
-        c->pic->key_frame = 0;
+        c->pic->flags &= ~AV_FRAME_FLAG_KEY;
         c->pic->pict_type = AV_PICTURE_TYPE_P;
     }
 

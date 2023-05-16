@@ -23,9 +23,9 @@
 
 #include "libavutil/rational.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "canopus.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/canopus.h"
 
 int ff_canopus_parse_info_tag(AVCodecContext *avctx,
                               const uint8_t *src, size_t size)

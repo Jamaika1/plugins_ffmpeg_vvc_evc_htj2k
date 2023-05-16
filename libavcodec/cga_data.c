@@ -25,7 +25,7 @@
  */
 
 #include <stdint.h>
-#include "cga_data.h"
+#include "libavcodec/cga_data.h"
 
 const uint32_t ff_cga_palette[16] = {
     0xFF000000, 0xFF0000AA, 0xFF00AA00, 0xFF00AAAA, 0xFFAA0000, 0xFFAA00AA, 0xFFAA5500, 0xFFAAAAAA,

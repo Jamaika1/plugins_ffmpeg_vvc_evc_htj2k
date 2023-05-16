@@ -22,8 +22,8 @@
 
 #include "libavutil/attributes.h"
 
-#include "cfhd.h"
-#include "vlc.h"
+#include "libavcodec/cfhd.h"
+#include "libavcodec/vlc.h"
 
 #define NB_VLC_TABLE_9   (71 + 3)
 #define NB_VLC_TABLE_18 (263 + 1)

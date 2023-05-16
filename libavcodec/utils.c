@@ -25,7 +25,7 @@
  * utils.
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
@@ -33,16 +33,16 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/pixfmt.h"
-#include "avcodec.h"
-#include "codec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "hwconfig.h"
-#include "thread.h"
-#include "threadframe.h"
-#include "internal.h"
-#include "put_bits.h"
-#include "startcode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/startcode.h"
 #include <stdlib.h>
 #include <limits.h>
 
@@ -317,7 +317,7 @@ void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height,
     }
 
     if (s->codec_id == AV_CODEC_ID_IFF_ILBM) {
-        w_align = FFMAX(w_align, 8);
+        w_align = FFMAX(w_align, 16);
     }
 
     *width  = FFALIGN(*width, w_align);

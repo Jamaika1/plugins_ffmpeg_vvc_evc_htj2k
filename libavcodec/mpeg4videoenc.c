@@ -24,18 +24,18 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
-#include "codec_internal.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "h263.h"
-#include "h263enc.h"
-#include "mpeg4video.h"
-#include "mpeg4videodata.h"
-#include "mpeg4videodefs.h"
-#include "mpeg4videoenc.h"
-#include "mpegvideoenc.h"
-#include "profiles.h"
-#include "version.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263enc.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpeg4videodata.h"
+#include "libavcodec/mpeg4videodefs.h"
+#include "libavcodec/mpeg4videoenc.h"
+#include "libavcodec/mpegvideoenc.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/version.h"
 
 /* The uni_DCtab_* tables below contain unified bits+length tables to encode DC
  * differences in MPEG-4. Unified in the sense that the specification specifies
@@ -1101,7 +1101,7 @@ int ff_mpeg4_encode_picture_header(MpegEncContext *s)
     }
     put_bits(&s->pb, 3, 0);     /* intra dc VLC threshold */
     if (!s->progressive_sequence) {
-        put_bits(&s->pb, 1, s->current_picture_ptr->f->top_field_first);
+        put_bits(&s->pb, 1, !!(s->current_picture_ptr->f->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST));
         put_bits(&s->pb, 1, s->alternate_scan);
     }
     // FIXME sprite stuff

@@ -48,16 +48,16 @@
 #include "libavutil/thread.h"
 #include "libavutil/tx.h"
 
-#include "audiodsp.h"
-#include "avcodec.h"
-#include "get_bits.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "sinewin.h"
-#include "unary.h"
+#include "libavcodec/audiodsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/sinewin.h"
+#include "libavcodec/unary.h"
 
-#include "cookdata.h"
+#include "libavcodec/cookdata.h"
 
 /* the different Cook versions */
 #define MONO            0x1000001

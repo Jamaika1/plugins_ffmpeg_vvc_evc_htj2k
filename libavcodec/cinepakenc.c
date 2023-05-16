@@ -43,10 +43,10 @@
 #include "libavutil/lfg.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "elbg.h"
-#include "encode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/elbg.h"
+#include "libavcodec/encode.h"
 
 #define CVID_HEADER_SIZE 10
 #define STRIP_HEADER_SIZE 12

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "cavs.h"
+#include "libavcodec/cavs.h"
 
 const uint8_t ff_cavs_partition_flags[30] = {
   0,                                 //I_8X8

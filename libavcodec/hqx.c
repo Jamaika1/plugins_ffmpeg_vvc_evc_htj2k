@@ -23,14 +23,14 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 
-#include "avcodec.h"
-#include "canopus.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/canopus.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
 
-#include "hqx.h"
-#include "hqxdsp.h"
+#include "libavcodec/hqx.h"
+#include "libavcodec/hqxdsp.h"
 
 /* HQX has four modes - 422, 444, 422alpha and 444alpha - all 12-bit */
 enum HQXFormat {
@@ -504,7 +504,7 @@ static int hqx_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     avctx->execute2(avctx, decode_slice_thread, NULL, NULL, 16);
 
-    ctx->pic->key_frame = 1;
+    ctx->pic->flags |= AV_FRAME_FLAG_KEY;
     ctx->pic->pict_type = AV_PICTURE_TYPE_I;
 
     *got_picture_ptr = 1;

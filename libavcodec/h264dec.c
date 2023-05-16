@@ -27,7 +27,7 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
@@ -35,22 +35,22 @@
 #include "libavutil/thread.h"
 #include "libavutil/video_enc_params.h"
 
-#include "codec_internal.h"
-#include "internal.h"
-#include "error_resilience.h"
-#include "avcodec.h"
-#include "h264.h"
-#include "h264dec.h"
-#include "h2645_parse.h"
-#include "h264data.h"
-#include "h264_ps.h"
-#include "golomb.h"
-#include "hwconfig.h"
-#include "mpegutils.h"
-#include "profiles.h"
-#include "rectangle.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/h264.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/h2645_parse.h"
+#include "libavcodec/h264data.h"
+#include "libavcodec/h264_ps.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/rectangle.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
 
 const uint16_t ff_h264_mb_sizes[4] = { 256, 384, 512, 768 };
 
@@ -382,7 +382,11 @@ static av_cold int h264_decode_init(AVCodecContext *avctx)
         return AVERROR_UNKNOWN;
     }
 
+#if FF_API_TICKS_PER_FRAME
+FF_DISABLE_DEPRECATION_WARNINGS
     avctx->ticks_per_frame = 2;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
     if (!avctx->internal->is_copy) {
         if (avctx->extradata_size > 0 && avctx->extradata) {
@@ -849,7 +853,7 @@ static int output_frame(H264Context *h, AVFrame *dst, H264Picture *srcp)
     av_dict_set(&dst->metadata, "stereo_mode", ff_h264_sei_stereo_mode(&h->sei.common.frame_packing), 0);
 
     if (srcp->sei_recovery_frame_cnt == 0)
-        dst->key_frame = 1;
+        dst->flags |= AV_FRAME_FLAG_KEY;
 
     if (h->avctx->export_side_data & AV_CODEC_EXPORT_DATA_VIDEO_ENC_PARAMS) {
         ret = h264_export_enc_params(dst, srcp);
@@ -951,7 +955,7 @@ static int send_next_delayed_frame(H264Context *h, AVFrame *dst_frame,
     out_idx = 0;
     for (i = 1;
          h->delayed_pic[i] &&
-         !h->delayed_pic[i]->f->key_frame &&
+         !(h->delayed_pic[i]->f->flags & AV_FRAME_FLAG_KEY) &&
          !h->delayed_pic[i]->mmco_reset;
          i++)
         if (h->delayed_pic[i]->poc < out->poc) {

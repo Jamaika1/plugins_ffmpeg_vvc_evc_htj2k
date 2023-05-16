@@ -1,5 +1,5 @@
 /*
- * VVC CTU decoder
+ * VVC CTU parser
  *
  * Copyright (C) 2022 Nuo Mi
  *
@@ -209,33 +209,32 @@ typedef struct CodingUnit {
 
     uint8_t act_enabled_flag;
 
-    uint8_t intra_luma_ref_idx;             ///< IntraLumaRefLineIdx[][]
-    uint8_t intra_mip_flag;                 ///< intra_mip_flag
-    uint8_t skip_flag;                      ///< cu_skip_flag;
-
-    // Inferred parameters
-    enum IspType isp_split_type;            ///< IntraSubPartitionsSplitType
-
-    enum PredMode pred_mode;                ///< PredMode
+    uint8_t intra_luma_ref_idx;                     ///< IntraLumaRefLineIdx[][]
+    uint8_t intra_mip_flag;                         ///< intra_mip_flag
+    uint8_t skip_flag;                              ///< cu_skip_flag;
 
     //inter
     uint8_t ciip_flag;
 
     // Inferred parameters
+    enum IspType isp_split_type;                    ///< IntraSubPartitionsSplitType
+
+    enum PredMode pred_mode;                        ///< PredMode
+
     int num_intra_subpartitions;
 
-    IntraPredMode intra_pred_mode_y;        ///< IntraPredModeY
-    IntraPredMode intra_pred_mode_c;        ///< IntraPredModeC
-    int mip_chroma_direct_flag;             ///< MipChromaDirectFlag
+    IntraPredMode intra_pred_mode_y;                ///< IntraPredModeY
+    IntraPredMode intra_pred_mode_c;                ///< IntraPredModeC
+    int mip_chroma_direct_flag;                     ///< MipChromaDirectFlag
 
-    int bdpcm_flag[VVC_MAX_SAMPLE_ARRAYS];  ///< BdpcmFlag
+    int bdpcm_flag[VVC_MAX_SAMPLE_ARRAYS];          ///< BdpcmFlag
 
     int apply_lfnst_flag[VVC_MAX_SAMPLE_ARRAYS];    ///< ApplyLfnstFlag[]
 
     TransformUnit tus[MAX_TUS_IN_CU];
     int num_tus;
 
-    int8_t qp[4];                         ///< QpY, Qp′Cb, Qp′Cr, Qp′CbCr
+    int8_t qp[4];                                   ///< QpY, Qp′Cb, Qp′Cr, Qp′CbCr
 
     PredictionUnit pu;
 
@@ -252,6 +251,11 @@ typedef struct ReconstructedArea {
     int w;
     int h;
 } ReconstructedArea;
+
+typedef struct VVCCabacState {
+    uint16_t state[2];
+    uint8_t  shift[2];
+} VVCCabacState;
 
 // VVC_CONTEXTS matched with SYNTAX_ELEMENT_LAST, it's checked by cabac_init_state.
 #define VVC_CONTEXTS 378
@@ -344,15 +348,43 @@ typedef struct VVCAllowedSplit {
     int tth;
 } VVCAllowedSplit;
 
-void ff_vvc_decode_neighbour(VVCLocalContext *lc, int x_ctb, int y_ctb, int rx, int ry, int rs);
-int ff_vvc_coding_tree_unit(VVCLocalContext *lc, int ctb_addr, int rs, int rx, int ry);
-int ff_vvc_reconstruct(VVCLocalContext *lc, const int rs, const int rx, const int ry);
+struct SAOParams {
+    int offset_abs[3][4];   ///< sao_offset_abs
+    int offset_sign[3][4];  ///< sao_offset_sign
 
-int ff_vvc_inter_data(VVCLocalContext *lc);
-int ff_vvc_predict_inter(VVCLocalContext *lc, int rs);
-void ff_vvc_predict_ciip(VVCLocalContext *lc);
-void ff_vvc_set_cb_tab(const VVCLocalContext *lc, uint8_t *tab, uint8_t v);
-int ff_vvc_wide_angle_mode_mapping(const CodingUnit *cu,
-    int tb_width, int tb_height, int c_idx, int pred_mode_intra);
+    uint8_t band_position[3];   ///< sao_band_position
+
+    int eo_class[3];        ///< sao_eo_class
+
+    int16_t offset_val[3][5];   ///<SaoOffsetVal
+
+    uint8_t type_idx[3];    ///< sao_type_idx
+};
+
+struct ALFParams {
+    uint8_t ctb_flag[3];                //< alf_ctb_flag[]
+    uint8_t ctb_filt_set_idx_y;         //< AlfCtbFiltSetIdxY
+    uint8_t alf_ctb_filter_alt_idx[2];  //< alf_ctb_filter_alt_idx[]
+    uint8_t ctb_cc_idc[2];              //< alf_ctb_cc_cb_idc, alf_ctb_cc_cr_idc
+
+    uint8_t applied[3];
+};
+
+/**
+ * parse a CTU (coding tree unit)
+ * @param lc local context for CTU
+ * @param ctb_addr CTB(CTU) address in the current slice
+ * @param rs raster order for the CTU.
+ * @param rx raster order x for the CTU.
+ * @param ry raster order y for the CTU.
+ * @return AVERROR
+ */
+int ff_vvc_coding_tree_unit(VVCLocalContext *lc, int ctb_addr, int rs, int rx, int ry);
+
+//utils
+void ff_vvc_set_neighbour_available(VVCLocalContext *lc, int x0, int y0, int w, int h);
+void ff_vvc_decode_neighbour(VVCLocalContext *lc, int x_ctb, int y_ctb, int rx, int ry, int rs);
+int ff_vvc_get_qPy(const VVCFrameContext *fc, int xc, int yc);
+void ff_vvc_ctu_free_cus(CTU *ctu);
 
 #endif // AVCODEC_VVC_CTU_H

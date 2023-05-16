@@ -20,28 +20,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "vvc.h"
-#include "vvc_ctu.h"
-#include "vvc_data.h"
-#include "vvc_thread.h"
-#include "vvc_mvs.h"
+#include "libavcodec/vvc.h"
+#include "libavcodec/vvc_ctu.h"
+#include "libavcodec/vvc_data.h"
+#include "libavcodec/vvc_refs.h"
+#include "libavcodec/vvc_thread.h"
+#include "libavcodec/vvc_mvs.h"
 
 #define IS_SAME_MV(a, b) (AV_RN64A(a) == AV_RN64A(b))
-
-void ff_vvc_set_neighbour_available(VVCLocalContext *lc, int x0, int y0,
-                                     int nPbW, int nPbH)
-{
-    const int log2_ctb_size = lc->fc->ps.sps->ctb_log2_size_y;
-    int x0b = av_mod_uintp2(x0, log2_ctb_size);
-    int y0b = av_mod_uintp2(y0, log2_ctb_size);
-
-    lc->na.cand_up       = (lc->ctb_up_flag   || y0b);
-    lc->na.cand_left     = (lc->ctb_left_flag || x0b);
-    lc->na.cand_up_left  = (x0b || y0b) ? lc->na.cand_left && lc->na.cand_up : lc->ctb_up_left_flag;
-    lc->na.cand_up_right_sap =
-            (x0b + nPbW == 1 << log2_ctb_size) ? lc->ctb_up_right_flag && !y0b : lc->na.cand_up;
-    lc->na.cand_up_right = lc->na.cand_up_right_sap && (x0 + nPbW) < lc->end_of_tiles_x;
-}
 
 //check if the two luma locations belong to the same motion estimation region
 static av_always_inline int is_same_mer(const VVCFrameContext *fc, const int xN, const int yN, const int xP, const int yP)
@@ -1822,40 +1808,3 @@ MvField* ff_vvc_get_mvf(const VVCFrameContext *fc, const int x0, const int y0)
     return &TAB_MVF(x0, y0);
 }
 
-void ff_vvc_set_dmvr_info(VVCFrameContext *fc, const int x0, const int y0, const int width, const int height, const MvField *mvf)
-{
-    const VVCPPS *pps = fc->ps.pps;
-
-    for (int y = y0; y < y0 + height; y += MIN_PU_SIZE) {
-        for (int x = x0; x < x0 + width; x += MIN_PU_SIZE) {
-            DMVRInfo *di = &fc->tab.dmvr[pps->min_pu_width * (y >> MIN_PU_LOG2) + (x >> MIN_PU_LOG2)];
-            di->dmvr_enabled = 1;
-            if (mvf->pred_flag & PF_L0)
-                di->mv[L0] = mvf->mv[L0];
-            if (mvf->pred_flag & PF_L1)
-                di->mv[L1] = mvf->mv[L1];
-        }
-    }
-}
-
-void ff_vvc_apply_dmvr_info_ctb(VVCFrameContext *fc, const int x0, const int y0)
-{
-    const VVCPPS *pps   = fc->ps.pps;
-    const int ctb_size  = fc->ps.sps->ctb_size_y;
-    const int x_end     = FFMIN(x0 + ctb_size, pps->width);
-    const int y_end     = FFMIN(y0 + ctb_size, pps->height);
-
-    for (int y = y0; y < y_end; y += MIN_PU_SIZE) {
-        for (int x = x0; x < x_end; x += MIN_PU_SIZE) {
-            const int off = pps->min_pu_width * (y >> MIN_PU_LOG2) + (x >> MIN_PU_LOG2);
-            const DMVRInfo *di = &fc->tab.dmvr[off];
-            if (di->dmvr_enabled) {
-                MvField *mvf = &fc->ref->tab_mvf[off];
-                if (mvf->pred_flag & PF_L0)
-                    mvf->mv[L0] = di->mv[L0];
-                if (mvf->pred_flag & PF_L1)
-                    mvf->mv[L1] = di->mv[L1];
-            }
-        }
-    }
-}

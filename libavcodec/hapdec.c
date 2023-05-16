@@ -35,13 +35,13 @@
 
 #include "libavutil/imgutils.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "hap.h"
-#include "snappy.h"
-#include "texturedsp.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/hap.h"
+#include "libavcodec/snappy.h"
+#include "libavcodec/texturedsp.h"
+#include "libavcodec/thread.h"
 
 static int hap_parse_decode_instructions(HapContext *ctx, int size)
 {
@@ -328,7 +328,7 @@ static int hap_decode(AVCodecContext *avctx, AVFrame *frame,
 
     /* Frame is ready to be output */
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     *got_frame = 1;
 
     return avpkt->size;

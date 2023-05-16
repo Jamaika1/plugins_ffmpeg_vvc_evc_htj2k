@@ -22,22 +22,22 @@
 #include <inttypes.h>
 #include <string.h>
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 #include "libavutil/avutil.h"
-#include "get_bits.h"
-#include "audiodsp.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/audiodsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 
-#include "g729.h"
-#include "lsp.h"
-#include "celp_filters.h"
-#include "acelp_filters.h"
-#include "acelp_pitch_delay.h"
-#include "acelp_vectors.h"
-#include "g729data.h"
-#include "g729postfilter.h"
+#include "libavcodec/g729.h"
+#include "libavcodec/lsp.h"
+#include "libavcodec/celp_filters.h"
+#include "libavcodec/acelp_filters.h"
+#include "libavcodec/acelp_pitch_delay.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/g729data.h"
+#include "libavcodec/g729postfilter.h"
 
 /**
  * minimum quantized LSF value (3.2.4)
@@ -760,7 +760,11 @@ const FFCodec ff_g729_decoder = {
     .init           = decoder_init,
     FF_CODEC_DECODE_CB(decode_frame),
     .close          = decode_close,
-    .p.capabilities = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1,
+    .p.capabilities =
+#if FF_API_SUBFRAMES
+                      AV_CODEC_CAP_SUBFRAMES |
+#endif
+                      AV_CODEC_CAP_DR1,
 };
 
 const FFCodec ff_acelp_kelvin_decoder = {
@@ -772,5 +776,9 @@ const FFCodec ff_acelp_kelvin_decoder = {
     .init           = decoder_init,
     FF_CODEC_DECODE_CB(decode_frame),
     .close          = decode_close,
-    .p.capabilities = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1,
+    .p.capabilities =
+#if FF_API_SUBFRAMES
+                      AV_CODEC_CAP_SUBFRAMES |
+#endif
+                      AV_CODEC_CAP_DR1,
 };

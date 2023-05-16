@@ -20,15 +20,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/imgutils.h"
 #include "libavutil/avassert.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "bmp.h"
-#include "codec_internal.h"
-#include "encode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/bmp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
 
 static const uint32_t monoblack_pal[] = { 0x000000, 0xFFFFFF };
 static const uint32_t rgb565_masks[]  = { 0xF800, 0x07E0, 0x001F };

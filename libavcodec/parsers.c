@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 
 extern const AVCodecParser ff_aac_parser;
 extern const AVCodecParser ff_aac_latm_parser;

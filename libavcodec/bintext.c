@@ -28,15 +28,15 @@
  * iCEDraw File decoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/xga_font_data.h"
-#include "avcodec.h"
-#include "cga_data.h"
-#include "bintext.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/cga_data.h"
+#include "libavcodec/bintext.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 #define FONT_WIDTH 8
 

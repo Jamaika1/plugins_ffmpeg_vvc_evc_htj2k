@@ -23,11 +23,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/zlib_wrapper.h"
 
 #include <zlib.h>
 
@@ -200,7 +200,7 @@ inflate_error:
                s->uncomp_buf + s->bpp * j * avctx->width, s->bpp * avctx->width);
     }
 
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     frame->pict_type = AV_PICTURE_TYPE_I;
 
     *got_frame = 1;

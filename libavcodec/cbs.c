@@ -18,16 +18,16 @@
 
 #include <string.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/buffer.h"
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "cbs.h"
-#include "cbs_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
 
 
 static const CodedBitstreamType *const cbs_type_table[] = {

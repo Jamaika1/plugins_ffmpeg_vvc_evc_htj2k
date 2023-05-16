@@ -29,14 +29,14 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "cfhd.h"
-#include "cfhdencdsp.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "put_bits.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/cfhd.h"
+#include "libavcodec/cfhdencdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/thread.h"
 
 /* Derived from existing tables from decoder */
 static const unsigned codebook[256][2] = {

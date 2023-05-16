@@ -21,7 +21,7 @@
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 
-#include "cfhdencdsp.h"
+#include "libavcodec/cfhdencdsp.h"
 
 static av_always_inline void filter(const int16_t *input, ptrdiff_t in_stride,
                           int16_t *low, ptrdiff_t low_stride,

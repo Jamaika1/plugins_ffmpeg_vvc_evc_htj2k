@@ -33,7 +33,7 @@
 // windows.h needs to be included before vfw.h
 #include <vfw.h>
 
-#include "avdevice.h"
+#include "libavdevice/avdevice.h"
 
 /* Some obsolete versions of MinGW32 before 4.0.0 lack this. */
 #ifndef HWND_MESSAGE

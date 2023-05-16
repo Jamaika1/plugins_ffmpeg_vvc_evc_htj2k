@@ -21,7 +21,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/cpu.h"
 #include "libavutil/x86/asm.h"
@@ -137,92 +137,17 @@ static void alf_classify_10_avx2(int *class_idx, int *transpose_idx,
         c->alf.classify = alf_classify_##depth##_avx2;                          \
     } while (0)
 
-#define SAO_BAND_FILTER_FUNCS(bitd, opt)                                                                                            \
-void ff_vvc_sao_band_filter_8_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _stride_dst, ptrdiff_t _stride_src,      \
-                                              const int16_t *sao_offset_val, int sao_left_class, int width, int height);            \
-void ff_vvc_sao_band_filter_16_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _stride_dst, ptrdiff_t _stride_src,     \
-                                               const int16_t *sao_offset_val, int sao_left_class, int width, int height);           \
-void ff_vvc_sao_band_filter_32_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _stride_dst, ptrdiff_t _stride_src,     \
-                                               const int16_t *sao_offset_val, int sao_left_class, int width, int height);           \
-void ff_vvc_sao_band_filter_48_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _stride_dst, ptrdiff_t _stride_src,     \
-                                               const int16_t *sao_offset_val, int sao_left_class, int width, int height);           \
-void ff_vvc_sao_band_filter_64_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t _stride_dst, ptrdiff_t _stride_src,     \
-                                               const int16_t *sao_offset_val, int sao_left_class, int width, int height);           \
-// TODO: Figure out the other widths that need to be declared
-// Filter width 48 seems to be something r.e AVX alignment?
-
-SAO_BAND_FILTER_FUNCS(8,  avx2)
-SAO_BAND_FILTER_FUNCS(10, avx2)
-
-#define SAO_BAND_INIT(bitd, opt) do {                                       \
-    c->sao.band_filter[0]      = ff_vvc_sao_band_filter_8_##bitd##_##opt;   \
-    c->sao.band_filter[1]      = ff_vvc_sao_band_filter_16_##bitd##_##opt;  \
-    c->sao.band_filter[2]      = ff_vvc_sao_band_filter_32_##bitd##_##opt;  \
-    c->sao.band_filter[3]      = ff_vvc_sao_band_filter_48_##bitd##_##opt;  \
-    c->sao.band_filter[4]      = ff_vvc_sao_band_filter_64_##bitd##_##opt;  \
-} while (0)  // To-do: figure out what to fill [5-8] with
-             // Keeping the unaccelerated ones seems like a terrible idea.
-
-#define SAO_EDGE_FILTER_FUNCS(bitd, opt)                                                                        \
-void ff_vvc_sao_edge_filter_8_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t stride_dst,          \
-                                              const int16_t *sao_offset_val, int eo, int width, int height);    \
-void ff_vvc_sao_edge_filter_16_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t stride_dst,         \
-                                               const int16_t *sao_offset_val, int eo, int width, int height);   \
-void ff_vvc_sao_edge_filter_32_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t stride_dst,         \
-                                               const int16_t *sao_offset_val, int eo, int width, int height);   \
-void ff_vvc_sao_edge_filter_48_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t stride_dst,         \
-                                               const int16_t *sao_offset_val, int eo, int width, int height);   \
-void ff_vvc_sao_edge_filter_64_##bitd##_##opt(uint8_t *_dst, const uint8_t *_src, ptrdiff_t stride_dst,         \
-                                               const int16_t *sao_offset_val, int eo, int width, int height);   \
-
-SAO_EDGE_FILTER_FUNCS(8,  avx2)
-SAO_EDGE_FILTER_FUNCS(10, avx2)
-
-#define SAO_EDGE_INIT(bitd, opt) do {                                       \
-    c->sao.edge_filter[0]      = ff_vvc_sao_edge_filter_8_##bitd##_##opt;   \
-    c->sao.edge_filter[1]      = ff_vvc_sao_edge_filter_16_##bitd##_##opt;  \
-    c->sao.edge_filter[2]      = ff_vvc_sao_edge_filter_32_##bitd##_##opt;  \
-    c->sao.edge_filter[3]      = ff_vvc_sao_edge_filter_48_##bitd##_##opt;  \
-    c->sao.edge_filter[4]      = ff_vvc_sao_edge_filter_64_##bitd##_##opt;  \
-} while (0)     // Same as band filter
-
-
 void ff_vvc_dsp_init_x86(VVCDSPContext *const c, const int bit_depth)
 {
     const int cpu_flags = av_get_cpu_flags();
-
 
     if (EXTERNAL_AVX2(cpu_flags)) {
         switch (bit_depth) {
             case 8:
                 ALF_DSP(8);
-                // Init SAO Band filter funcs like in hevcdsp_init
-                // HEVC only sets the first two function pointers
-                c->sao.band_filter[0] = ff_vvc_sao_band_filter_8_8_avx2;
-                c->sao.band_filter[1] = ff_vvc_sao_band_filter_16_8_avx2;
-                // My guess is that non-assigned function pointers
-                // stay as "unaccelerated" version set by vvcdsp.c
                 break;
             case 10:
                 ALF_DSP(10);
-                c->sao.band_filter[0] = ff_vvc_sao_band_filter_8_10_avx2;
-                break;
-            default:
-                break;
-        }
-    }
-
-    if (EXTERNAL_AVX2_FAST(cpu_flags)){
-        switch (bit_depth) {
-            case 8:
-                SAO_BAND_INIT(8, avx2);  // Fully popullate band filter func pointers in avx2_fast
-                // c->sao.edge_filter[2] = ff_vvc_sao_edge_filter_32_8_avx2;
-                // c->sao.edge_filter[3] = ff_vvc_sao_edge_filter_48_8_avx2;
-                // c->sao.edge_filter[4] = ff_vvc_sao_edge_filter_64_8_avx2;
-                break;
-            case 10:
-                SAO_BAND_INIT(10, avx2);
-                // SAO_EDGE_INIT(10, avx2);
                 break;
             default:
                 break;

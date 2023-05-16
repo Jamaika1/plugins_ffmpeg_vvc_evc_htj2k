@@ -25,13 +25,13 @@
  * @author Stefan Gehrer <stefan.gehrer@gmx.de>
  */
 
-#include "avcodec.h"
-#include "golomb.h"
-#include "h264chroma.h"
-#include "idctdsp.h"
-#include "mathops.h"
-#include "qpeldsp.h"
-#include "cavs.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/h264chroma.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/cavs.h"
 
 static const uint8_t alpha_tab[64] = {
      0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  2,  2,  2,  3,  3,

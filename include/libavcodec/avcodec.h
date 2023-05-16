@@ -556,14 +556,22 @@ typedef struct AVCodecContext {
      */
     AVRational time_base;
 
+#if FF_API_TICKS_PER_FRAME
     /**
      * For some codecs, the time base is closer to the field rate than the frame rate.
      * Most notably, H.264 and MPEG-2 specify time_base as half of frame duration
      * if no telecine is used ...
      *
      * Set to time_base ticks per frame. Default 1, e.g., H.264/MPEG-2 set it to 2.
+     *
+     * @deprecated
+     * - decoding: Use AVCodecDescriptor.props & AV_CODEC_PROP_FIELDS
+     * - encoding: Set AVCodecContext.framerate instead
+     *
      */
+    attribute_deprecated
     int ticks_per_frame;
+#endif
 
     /**
      * Codec delay.
@@ -1679,9 +1687,6 @@ typedef struct AVCodecContext {
 #define FF_PROFILE_HEVC_REXT                        4
 #define FF_PROFILE_HEVC_SCC                         9
 
-#define FF_PROFILE_EVC_BASELINE                     0
-#define FF_PROFILE_EVC_MAIN                         1
-
 #define FF_PROFILE_VVC_MAIN_10                      1
 #define FF_PROFILE_VVC_MAIN_10_444                 33
 
@@ -1709,6 +1714,9 @@ typedef struct AVCodecContext {
 
 #define FF_PROFILE_KLVA_SYNC 0
 #define FF_PROFILE_KLVA_ASYNC 1
+
+#define FF_PROFILE_EVC_BASELINE             0
+#define FF_PROFILE_EVC_MAIN                 1
 
     /**
      * level

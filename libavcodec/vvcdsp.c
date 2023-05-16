@@ -20,9 +20,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "vvcdsp.h"
-#include "vvc_ctu.h"
-#include "vvc_itx_1d.h"
+#include "libavcodec/vvcdsp.h"
+#include "libavcodec/vvc_ctu.h"
+#include "libavcodec/vvc_itx_1d.h"
 
 #define VVC_SIGN(v) (v < 0 ? -1 : !!v)
 

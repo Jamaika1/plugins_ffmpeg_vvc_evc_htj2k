@@ -29,11 +29,11 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mathematics.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h"
-#include "libopenh264.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/libopenh264.h"
 
 #if !OPENH264_VER_AT_LEAST(1, 6)
 #define SM_SIZELIMITED_SLICE SM_DYN_SLICE
@@ -139,12 +139,13 @@ static av_cold int svc_encode_init(AVCodecContext *avctx)
     if (avctx->framerate.num > 0 && avctx->framerate.den > 0) {
         param.fMaxFrameRate = av_q2d(avctx->framerate);
     } else {
-        if (avctx->ticks_per_frame > INT_MAX / avctx->time_base.num) {
-            av_log(avctx, AV_LOG_ERROR,
-                   "Could not set framerate for libopenh264enc: integer overflow\n");
-            return AVERROR(EINVAL);
-        }
-        param.fMaxFrameRate = 1.0 / av_q2d(avctx->time_base) / FFMAX(avctx->ticks_per_frame, 1);
+FF_DISABLE_DEPRECATION_WARNINGS
+        param.fMaxFrameRate = 1.0 / av_q2d(avctx->time_base)
+#if FF_API_TICKS_PER_FRAME
+                                  / FFMAX(avctx->ticks_per_frame, 1)
+#endif
+                                  ;
+FF_ENABLE_DEPRECATION_WARNINGS
     }
     param.iPicWidth                  = avctx->width;
     param.iPicHeight                 = avctx->height;

@@ -33,10 +33,8 @@ static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const in
     }
 }
 
-static void FUNC(sao_band_filter)(uint8_t *_dst, const uint8_t *_src,
-                                  ptrdiff_t dst_stride, ptrdiff_t src_stride,
-                                  const int16_t *sao_offset_val, int sao_left_class,
-                                  int width, int height)
+static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
+    int16_t *sao_offset_val, const int sao_left_class, const int width, const int height)
 {
     pixel *dst = (pixel *)_dst;
     pixel *src = (pixel *)_src;
@@ -59,9 +57,9 @@ static void FUNC(sao_band_filter)(uint8_t *_dst, const uint8_t *_src,
 
 #define CMP(a, b) (((a) > (b)) - ((a) < (b)))
 
-static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride, const int16_t *sao_offset_val,
-                                  int eo, int width, int height) {
-
+static void FUNC(sao_edge_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_stride,
+    int16_t *sao_offset_val, const int eo, const int width, const int height)
+{
     static const uint8_t edge_idx[] = { 1, 2, 0, 3, 4 };
     static const int8_t pos[4][2][2] = {
         { { -1,  0 }, {  1, 0 } }, // horizontal
@@ -73,7 +71,7 @@ static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t 
     pixel *src = (pixel *)_src;
     int a_stride, b_stride;
     int x, y;
-    ptrdiff_t src_stride = (2*MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE) / sizeof(pixel);
+    ptrdiff_t src_stride = (2 * MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE) / sizeof(pixel);
     dst_stride /= sizeof(pixel);
 
     a_stride = pos[eo][0][0] + pos[eo][0][1] * src_stride;
@@ -91,10 +89,9 @@ static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t 
 }
 
 static void FUNC(sao_edge_restore_0)(uint8_t *_dst, uint8_t *_src,
-                                    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
-                                    int *borders, int _width, int _height,
-                                    int c_idx, uint8_t *vert_edge,
-                                    uint8_t *horiz_edge, uint8_t *diag_edge)
+    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
+    int *borders, const int _width, const int _height, const int c_idx,
+    uint8_t *vert_edge, uint8_t *horiz_edge, uint8_t *diag_edge)
 {
     int x, y;
     pixel *dst = (pixel *)_dst;
@@ -141,10 +138,9 @@ static void FUNC(sao_edge_restore_0)(uint8_t *_dst, uint8_t *_src,
 }
 
 static void FUNC(sao_edge_restore_1)(uint8_t *_dst, uint8_t *_src,
-                                    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
-                                    int *borders, int _width, int _height,
-                                    int c_idx, uint8_t *vert_edge,
-                                    uint8_t *horiz_edge, uint8_t *diag_edge)
+    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
+    int *borders, int _width, int _height, int c_idx,
+    uint8_t *vert_edge, uint8_t *horiz_edge, uint8_t *diag_edge)
 {
     int x, y;
     pixel *dst = (pixel *)_dst;
@@ -198,30 +194,30 @@ static void FUNC(sao_edge_restore_1)(uint8_t *_dst, uint8_t *_src,
 
         // Restore pixels that can't be modified
         if (vert_edge[0] && sao_eo_class != SAO_EO_VERT) {
-            for(y = init_y+save_upper_left; y< height-save_lower_left; y++)
-                dst[y*dst_stride] = src[y*src_stride];
+            for (y = init_y + save_upper_left; y < height - save_lower_left; y++)
+                dst[y * dst_stride] = src[y * src_stride];
         }
         if (vert_edge[1] && sao_eo_class != SAO_EO_VERT) {
-            for(y = init_y+save_upper_right; y< height-save_lower_right; y++)
-                dst[y*dst_stride+width-1] = src[y*src_stride+width-1];
+            for (y = init_y + save_upper_right; y < height - save_lower_right; y++)
+                dst[y * dst_stride + width - 1] = src[y * src_stride + width - 1];
         }
 
         if (horiz_edge[0] && sao_eo_class != SAO_EO_HORIZ) {
-            for(x = init_x+save_upper_left; x < width-save_upper_right; x++)
+            for (x = init_x + save_upper_left; x < width - save_upper_right; x++)
                 dst[x] = src[x];
         }
         if (horiz_edge[1] && sao_eo_class != SAO_EO_HORIZ) {
-            for(x = init_x+save_lower_left; x < width-save_lower_right; x++)
-                dst[(height-1)*dst_stride+x] = src[(height-1)*src_stride+x];
+            for (x = init_x + save_lower_left; x < width - save_lower_right; x++)
+                dst[(height - 1) * dst_stride + x] = src[(height - 1) * src_stride + x];
         }
         if (diag_edge[0] && sao_eo_class == SAO_EO_135D)
             dst[0] = src[0];
         if (diag_edge[1] && sao_eo_class == SAO_EO_45D)
-            dst[width-1] = src[width-1];
+            dst[width - 1] = src[width - 1];
         if (diag_edge[2] && sao_eo_class == SAO_EO_135D)
-            dst[dst_stride*(height-1)+width-1] = src[src_stride*(height-1)+width-1];
+            dst[dst_stride * (height - 1) + width - 1] = src[src_stride * (height - 1) + width - 1];
         if (diag_edge[3] && sao_eo_class == SAO_EO_45D)
-            dst[dst_stride*(height-1)] = src[src_stride*(height-1)];
+            dst[dst_stride * (height - 1)] = src[src_stride * (height - 1)];
 
     }
 }

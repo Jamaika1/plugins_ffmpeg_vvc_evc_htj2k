@@ -18,7 +18,7 @@
 
 #include <string.h>
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/log.h"
@@ -27,10 +27,10 @@
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 
-#include "bsf.h"
-#include "bsf_internal.h"
-#include "codec_desc.h"
-#include "codec_par.h"
+#include "libavcodec/bsf.h"
+#include "libavcodec/bsf_internal.h"
+#include "libavcodec/codec_desc.h"
+#include "libavcodec/codec_par.h"
 
 #define IS_EMPTY(pkt) (!(pkt)->data && !(pkt)->side_data_elems)
 

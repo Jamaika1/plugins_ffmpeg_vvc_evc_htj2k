@@ -37,11 +37,11 @@
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "mpegutils.h"
-#include "packet_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/packet_internal.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

@@ -22,9 +22,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "idctdsp.h"
-#include "mathops.h"
-#include "cavsdsp.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/cavsdsp.h"
 #include "libavutil/common.h"
 
 /*****************************************************************************

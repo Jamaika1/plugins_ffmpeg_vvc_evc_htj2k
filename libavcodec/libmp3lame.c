@@ -32,12 +32,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "audio_frame_queue.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "mpegaudio.h"
-#include "mpegaudiodecheader.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodecheader.h"
 
 #define BUFFER_SIZE (7200 + 2 * MPA_FRAME_SIZE + MPA_FRAME_SIZE / 4+1000) // FIXME: Buffer size to small? Adding 1000 to make up for it.
 
@@ -55,6 +55,8 @@ typedef struct LAMEContext {
     float *samples_flt[2];
     AudioFrameQueue afq;
     AVFloatDSPContext *fdsp;
+    int copyright;
+    int original;
 } LAMEContext;
 
 
@@ -136,6 +138,12 @@ static av_cold int mp3lame_encode_init(AVCodecContext *avctx)
 
     /* bit reservoir usage */
     lame_set_disable_reservoir(s->gfp, !s->reservoir);
+
+    /* copyright flag */
+    lame_set_copyright(s->gfp, s->copyright);
+
+    /* original flag */
+    lame_set_original(s->gfp, s->original);
 
     /* set specified parameters */
     if (lame_init_params(s->gfp) < 0) {
@@ -303,9 +311,11 @@ static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 #define OFFSET(x) offsetof(LAMEContext, x)
 #define AE AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-    { "reservoir",    "use bit reservoir", OFFSET(reservoir),    AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, AE },
-    { "joint_stereo", "use joint stereo",  OFFSET(joint_stereo), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, AE },
-    { "abr",          "use ABR",           OFFSET(abr),          AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, AE },
+    { "reservoir",    "use bit reservoir",  OFFSET(reservoir),    AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, AE },
+    { "joint_stereo", "use joint stereo",   OFFSET(joint_stereo), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, AE },
+    { "abr",          "use ABR",            OFFSET(abr),          AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, AE },
+    { "copyright",    "set copyright flag", OFFSET(copyright),    AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, AE},
+    { "original",     "set original flag",  OFFSET(original),     AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, AE},
     { NULL },
 };
 

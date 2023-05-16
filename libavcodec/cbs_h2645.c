@@ -19,16 +19,16 @@
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 
-#include "bytestream.h"
-#include "cbs.h"
-#include "cbs_internal.h"
-#include "cbs_h264.h"
-#include "cbs_h265.h"
-#include "cbs_h266.h"
-#include "h264.h"
-#include "h2645_parse.h"
-#include "hevc.h"
-#include "vvc.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_internal.h"
+#include "libavcodec/cbs_h264.h"
+#include "libavcodec/cbs_h265.h"
+#include "libavcodec/cbs_h266.h"
+#include "libavcodec/h264.h"
+#include "libavcodec/h2645_parse.h"
+#include "libavcodec/hevc.h"
+#include "libavcodec/vvc.h"
 
 static av_always_inline unsigned int h266_ceil(unsigned int v, unsigned int align)
 {

@@ -26,12 +26,12 @@
 
 #include <inttypes.h>
 
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
 #define TM2_ESCAPE 0x80000000
 #define TM2_DELTAS 64
@@ -930,11 +930,13 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *rframe,
         }
         offset += t;
     }
-    p->key_frame = tm2_decode_blocks(l, p);
-    if (p->key_frame)
+    if (tm2_decode_blocks(l, p)) {
+        p->flags |= AV_FRAME_FLAG_KEY;
         p->pict_type = AV_PICTURE_TYPE_I;
-    else
+    } else {
+        p->flags &= ~AV_FRAME_FLAG_KEY;
         p->pict_type = AV_PICTURE_TYPE_P;
+    }
 
     l->cur = !l->cur;
     *got_frame      = 1;

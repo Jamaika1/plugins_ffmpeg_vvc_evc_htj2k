@@ -30,11 +30,11 @@
 #include "libavutil/cpu.h"
 #include "libavutil/imgutils.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "libaom.h"
-#include "profiles.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/libaom.h"
+#include "libavcodec/profiles.h"
 
 typedef struct AV1DecodeContext {
     struct aom_codec_ctx decoder;
@@ -185,7 +185,10 @@ static int aom_decode(AVCodecContext *avctx, AVFrame *picture,
             aom_codec_frame_flags_t flags;
             ret = aom_codec_control(&ctx->decoder, AOMD_GET_FRAME_FLAGS, &flags);
             if (ret == AOM_CODEC_OK) {
-                picture->key_frame = !!(flags & AOM_FRAME_IS_KEY);
+                if (flags & AOM_FRAME_IS_KEY)
+                    picture->flags |= AV_FRAME_FLAG_KEY;
+                else
+                    picture->flags &= ~AV_FRAME_FLAG_KEY;
                 if (flags & (AOM_FRAME_IS_KEY | AOM_FRAME_IS_INTRAONLY))
                     picture->pict_type = AV_PICTURE_TYPE_I;
                 else if (flags & AOM_FRAME_IS_SWITCH)

@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/avassert.h"
-#include "avdevice.h"
-#include "version.h"
+#include "libavdevice/avdevice.h"
+#include "libavdevice/version.h"
 
 #include "libavutil/ffversion.h"
 const char av_device_ffversion[] = "FFmpeg version " FFMPEG_VERSION;

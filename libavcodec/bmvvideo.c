@@ -22,10 +22,10 @@
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 enum BMVFlags{
     BMV_NOP = 0,

@@ -36,17 +36,17 @@
 #include "libavutil/avassert.h"
 #include "libavutil/crc.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "bytestream.h"
-#include "golomb.h"
-#include "flac.h"
-#include "flacdata.h"
-#include "flacdsp.h"
-#include "flac_parse.h"
-#include "thread.h"
-#include "unary.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/flac.h"
+#include "libavcodec/flacdata.h"
+#include "libavcodec/flacdsp.h"
+#include "libavcodec/flac_parse.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/unary.h"
 
 
 typedef struct FLACContext {
@@ -513,7 +513,7 @@ static int decode_subframe_lpc_33bps(FLACContext *s, int64_t *decoded,
     for (i = pred_order; i < s->blocksize; i++, decoded++) {
         int64_t sum = 0;
         for (j = 0; j < pred_order; j++)
-            sum += (int64_t)coeffs[j] * decoded[j];
+            sum += (int64_t)coeffs[j] * (uint64_t)decoded[j];
         decoded[j] = residual[i] + (sum >> qlevel);
     }
 

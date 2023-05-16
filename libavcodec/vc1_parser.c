@@ -26,10 +26,10 @@
  */
 
 #include "libavutil/attributes.h"
-#include "parser.h"
-#include "vc1.h"
-#include "get_bits.h"
-#include "vc1dsp.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/vc1.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/vc1dsp.h"
 
 /** The maximum number of bytes of a sequence, entry point or
  *  frame header whose values we pay any attention to */
@@ -89,11 +89,10 @@ static void vc1_extract_header(AVCodecParserContext *s, AVCodecContext *avctx,
         else
             s->pict_type = vpc->v.s.pict_type;
 
-        if (avctx->ticks_per_frame > 1){
+        if (vpc->v.broadcast){
             // process pulldown flags
             s->repeat_pict = 1;
             // Pulldown flags are only valid when 'broadcast' has been set.
-            // So ticks_per_frame will be 2
             if (vpc->v.rff){
                 // repeat field
                 s->repeat_pict = 2;

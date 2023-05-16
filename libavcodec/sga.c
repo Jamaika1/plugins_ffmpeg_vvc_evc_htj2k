@@ -19,11 +19,11 @@
  */
 
 #include "libavutil/common.h"
-#include "avcodec.h"
-#include "get_bits.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 #define PALDATA_FOLLOWS_TILEDATA 4
 #define HAVE_COMPRESSED_TILEMAP 32
@@ -499,7 +499,7 @@ static int sga_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     memcpy(frame->data[1], s->pal, AVPALETTE_SIZE);
     frame->palette_has_changed = 1;
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
 
     *got_frame = 1;
 

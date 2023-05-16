@@ -35,13 +35,13 @@
 
 #define CACHED_BITSTREAM_READER HAVE_FAST_64BIT
 #define UNCHECKED_BITSTREAM_READER 1
-#include "avcodec.h"
-#include "get_bits.h"
-#include "huffman.h"
-#include "bytestream.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/huffman.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/thread.h"
 
 #define FPS_TAG MKTAG('F', 'P', 'S', 'x')
 #define VLC_BITS 11
@@ -216,7 +216,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *f,
     }
 
     f->pict_type = AV_PICTURE_TYPE_I;
-    f->key_frame = 1;
+    f->flags |= AV_FRAME_FLAG_KEY;
 
     avctx->pix_fmt = version & 1 ? is_pal ? AV_PIX_FMT_PAL8 : AV_PIX_FMT_BGR24 : AV_PIX_FMT_YUVJ420P;
     avctx->color_range = version & 1 ? AVCOL_RANGE_UNSPECIFIED

@@ -27,11 +27,11 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
 typedef struct JvContext {
     BlockDSPContext bdsp;
@@ -211,7 +211,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *rframe,
     }
 
     if (video_size) {
-        s->frame->key_frame           = 1;
+        s->frame->flags |= AV_FRAME_FLAG_KEY;
         s->frame->pict_type           = AV_PICTURE_TYPE_I;
         s->frame->palette_has_changed = s->palette_has_changed;
         s->palette_has_changed        = 0;

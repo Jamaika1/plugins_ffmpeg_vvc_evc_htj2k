@@ -31,7 +31,7 @@
  * The simplest mpeg encoder (well, it was the simplest!).
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <stdint.h>
 
@@ -42,41 +42,41 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "dct.h"
-#include "encode.h"
-#include "idctdsp.h"
-#include "mpeg12codecs.h"
-#include "mpeg12data.h"
-#include "mpeg12enc.h"
-#include "mpegvideo.h"
-#include "mpegvideodata.h"
-#include "mpegvideoenc.h"
-#include "h261enc.h"
-#include "h263.h"
-#include "h263data.h"
-#include "h263enc.h"
-#include "mjpegenc_common.h"
-#include "mathops.h"
-#include "mpegutils.h"
-#include "mjpegenc.h"
-#include "speedhqenc.h"
-#include "msmpeg4enc.h"
-#include "pixblockdsp.h"
-#include "qpeldsp.h"
-#include "faandct.h"
-#include "aandcttab.h"
-#include "flvenc.h"
-#include "mpeg4video.h"
-#include "mpeg4videodata.h"
-#include "mpeg4videoenc.h"
-#include "internal.h"
-#include "bytestream.h"
-#include "wmv2enc.h"
-#include "rv10enc.h"
-#include "packet_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/dct.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mpeg12codecs.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/mpeg12enc.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/mpegvideoenc.h"
+#include "libavcodec/h261enc.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/h263enc.h"
+#include "libavcodec/mjpegenc_common.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mjpegenc.h"
+#include "libavcodec/speedhqenc.h"
+#include "libavcodec/msmpeg4enc.h"
+#include "libavcodec/pixblockdsp.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/faandct.h"
+#include "libavcodec/aandcttab.h"
+#include "libavcodec/flvenc.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpeg4videodata.h"
+#include "libavcodec/mpeg4videoenc.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/wmv2enc.h"
+#include "libavcodec/rv10enc.h"
+#include "libavcodec/packet_internal.h"
 #include <limits.h>
-#include "sp5x.h"
+#include "libavcodec/sp5x.h"
 
 #define QUANT_BIAS_SHIFT 8
 
@@ -797,6 +797,11 @@ av_cold int ff_mpv_encode_init(AVCodecContext *avctx)
     s->progressive_sequence = !(avctx->flags & (AV_CODEC_FLAG_INTERLACED_DCT |
                                                 AV_CODEC_FLAG_INTERLACED_ME) ||
                                 s->alternate_scan);
+
+    if (s->lmin > s->lmax) {
+        av_log(avctx, AV_LOG_WARNING, "Clipping lmin value to %d\n", s->lmax);
+        s->lmin = s->lmax;
+    }
 
     /* init */
     ff_mpv_idct_init(s);
@@ -1698,7 +1703,10 @@ static int frame_start(MpegEncContext *s)
     }
 
     s->current_picture_ptr->f->pict_type = s->pict_type;
-    s->current_picture_ptr->f->key_frame = s->pict_type == AV_PICTURE_TYPE_I;
+    if (s->pict_type == AV_PICTURE_TYPE_I)
+        s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
 
     ff_mpeg_unref_picture(s->avctx, &s->current_picture);
     if ((ret = ff_mpeg_ref_picture(s->avctx, &s->current_picture,
@@ -1974,7 +1982,7 @@ vbv_retry:
                 return ret;
         }
 
-        if (s->current_picture.f->key_frame)
+        if (s->current_picture.f->flags & AV_FRAME_FLAG_KEY)
             pkt->flags |= AV_PKT_FLAG_KEY;
         if (s->mb_info)
             av_packet_shrink_side_data(pkt, AV_PKT_DATA_H263_MB_INFO, s->mb_info_size);
@@ -3778,12 +3786,17 @@ static int encode_picture(MpegEncContext *s)
     }
 
     //FIXME var duplication
-    s->current_picture_ptr->f->key_frame =
-    s->current_picture.f->key_frame = s->pict_type == AV_PICTURE_TYPE_I; //FIXME pic_ptr
+    if (s->pict_type == AV_PICTURE_TYPE_I) {
+        s->current_picture_ptr->f->flags |= AV_FRAME_FLAG_KEY; //FIXME pic_ptr
+        s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+    } else {
+        s->current_picture_ptr->f->flags &= ~AV_FRAME_FLAG_KEY; //FIXME pic_ptr
+        s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
+    }
     s->current_picture_ptr->f->pict_type =
     s->current_picture.f->pict_type = s->pict_type;
 
-    if (s->current_picture.f->key_frame)
+    if (s->current_picture.f->flags & AV_FRAME_FLAG_KEY)
         s->picture_in_gop_number=0;
 
     s->mb_x = s->mb_y = 0;

@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/bswap.h"
 #include "libavutil/internal.h"
 
@@ -62,7 +62,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *pic,
     vdst = (uint16_t *)pic->data[2];
     yend = ydst + width;
     pic->pict_type = AV_PICTURE_TYPE_I;
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
 
     for (;;) {
         uint32_t v = av_be2ne32(*src++);

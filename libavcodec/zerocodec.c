@@ -18,10 +18,10 @@
 
 #include <zlib.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/zlib_wrapper.h"
 #include "libavutil/common.h"
 
 typedef struct ZeroCodecContext {
@@ -40,7 +40,7 @@ static int zerocodec_decode_frame(AVCodecContext *avctx, AVFrame *pic,
     int i, j, zret, ret;
 
     if (avpkt->flags & AV_PKT_FLAG_KEY) {
-        pic->key_frame = 1;
+        pic->flags |= AV_FRAME_FLAG_KEY;
         pic->pict_type = AV_PICTURE_TYPE_I;
     } else {
         if (!prev) {
@@ -50,7 +50,7 @@ static int zerocodec_decode_frame(AVCodecContext *avctx, AVFrame *pic,
 
         prev += (avctx->height - 1) * prev_pic->linesize[0];
 
-        pic->key_frame = 0;
+        pic->flags &= ~AV_FRAME_FLAG_KEY;
         pic->pict_type = AV_PICTURE_TYPE_P;
     }
 

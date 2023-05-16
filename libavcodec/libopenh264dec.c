@@ -29,10 +29,10 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "libopenh264.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/libopenh264.h"
 
 typedef struct SVCContext {
     ISVCDecoder *decoder;

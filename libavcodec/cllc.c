@@ -23,12 +23,12 @@
 #include <inttypes.h>
 
 #include "libavutil/intreadwrite.h"
-#include "bswapdsp.h"
-#include "canopus.h"
-#include "get_bits.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "thread.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/canopus.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/thread.h"
 
 #define VLC_BITS 7
 #define VLC_DEPTH 2
@@ -460,7 +460,7 @@ static int cllc_decode_frame(AVCodecContext *avctx, AVFrame *pic,
         return AVERROR_INVALIDDATA;
     }
 
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
     pic->pict_type = AV_PICTURE_TYPE_I;
 
     *got_picture_ptr = 1;

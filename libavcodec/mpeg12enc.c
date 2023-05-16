@@ -27,8 +27,8 @@
 
 #include <stdint.h>
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 #include "libavutil/log.h"
@@ -37,19 +37,19 @@
 #include "libavutil/timecode.h"
 #include "libavutil/stereo3d.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "mathops.h"
-#include "mpeg12.h"
-#include "mpeg12data.h"
-#include "mpeg12enc.h"
-#include "mpeg12vlc.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodata.h"
-#include "mpegvideoenc.h"
-#include "profiles.h"
-#include "rl.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpeg12.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/mpeg12enc.h"
+#include "libavcodec/mpeg12vlc.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/mpegvideoenc.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/rl.h"
 
 #if CONFIG_MPEG1VIDEO_ENCODER || CONFIG_MPEG2VIDEO_ENCODER
 static const uint8_t svcd_scan_offset_placeholder[] = {
@@ -290,7 +290,7 @@ static void mpeg1_encode_sequence_header(MpegEncContext *s)
     AVRational aspect_ratio = s->avctx->sample_aspect_ratio;
     int aspect_ratio_info;
 
-    if (!s->current_picture.f->key_frame)
+    if (!(s->current_picture.f->flags & AV_FRAME_FLAG_KEY))
         return;
 
     if (aspect_ratio.num == 0 || aspect_ratio.den == 0)
@@ -530,7 +530,7 @@ void ff_mpeg1_encode_picture_header(MpegEncContext *s)
         if (s->progressive_sequence)
             put_bits(&s->pb, 1, 0);             /* no repeat */
         else
-            put_bits(&s->pb, 1, s->current_picture_ptr->f->top_field_first);
+            put_bits(&s->pb, 1, !!(s->current_picture_ptr->f->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST));
         /* XXX: optimize the generation of this flag with entropy measures */
         s->frame_pred_frame_dct = s->progressive_sequence;
 

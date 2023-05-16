@@ -25,30 +25,30 @@
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/display.h"
 #include "libavutil/film_grain_params.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/timecode.h"
-#include "internal.h"
-#include "cabac.h"
-#include "cabac_functions.h"
-#include "decode.h"
-#include "error_resilience.h"
-#include "avcodec.h"
-#include "h264.h"
-#include "h264dec.h"
-#include "h264data.h"
-#include "h264chroma.h"
-#include "h264_ps.h"
-#include "golomb.h"
-#include "mathops.h"
-#include "mpegutils.h"
-#include "rectangle.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/cabac.h"
+#include "libavcodec/cabac_functions.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/h264.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/h264data.h"
+#include "libavcodec/h264chroma.h"
+#include "libavcodec/h264_ps.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/rectangle.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
 
 static const uint8_t field_scan[16+1] = {
     0 + 0 * 4, 0 + 1 * 4, 1 + 0 * 4, 0 + 2 * 4,
@@ -501,7 +501,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
      * in later.
      * See decode_nal_units().
      */
-    pic->f->key_frame = 0;
+    pic->f->flags   &= ~AV_FRAME_FLAG_KEY;
     pic->mmco_reset  = 0;
     pic->recovered   = 0;
     pic->invalid_gap = 0;
@@ -957,7 +957,7 @@ static int h264_slice_header_init(H264Context *h)
         if (h->x264_build < 44U)
             den *= 2;
         av_reduce(&h->avctx->framerate.den, &h->avctx->framerate.num,
-                  sps->num_units_in_tick * h->avctx->ticks_per_frame, den, 1 << 30);
+                  sps->num_units_in_tick * 2, den, 1 << 30);
     }
 
     ff_h264_free_tables(h);
@@ -1155,9 +1155,10 @@ static int h264_export_frame_props(H264Context *h)
     const SPS *sps = h->ps.sps;
     H264Picture *cur = h->cur_pic_ptr;
     AVFrame *out = cur->f;
+    int interlaced_frame = 0, top_field_first = 0;
     int ret;
 
-    out->interlaced_frame = 0;
+    out->flags &= ~AV_FRAME_FLAG_INTERLACED;
     out->repeat_pict      = 0;
 
     /* Signal interlacing information externally. */
@@ -1181,15 +1182,15 @@ static int h264_export_frame_props(H264Context *h)
             break;
         case H264_SEI_PIC_STRUCT_TOP_FIELD:
         case H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
-            out->interlaced_frame = 1;
+            interlaced_frame = 1;
             break;
         case H264_SEI_PIC_STRUCT_TOP_BOTTOM:
         case H264_SEI_PIC_STRUCT_BOTTOM_TOP:
             if (FIELD_OR_MBAFF_PICTURE(h))
-                out->interlaced_frame = 1;
+                interlaced_frame = 1;
             else
                 // try to flag soft telecine progressive
-                out->interlaced_frame = h->prev_interlaced_frame;
+                interlaced_frame = !!h->prev_interlaced_frame;
             break;
         case H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
         case H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
@@ -1208,34 +1209,33 @@ static int h264_export_frame_props(H264Context *h)
 
         if ((pt->ct_type & 3) &&
             pt->pic_struct <= H264_SEI_PIC_STRUCT_BOTTOM_TOP)
-            out->interlaced_frame = (pt->ct_type & (1 << 1)) != 0;
+            interlaced_frame = ((pt->ct_type & (1 << 1)) != 0);
     } else {
         /* Derive interlacing flag from used decoding process. */
-        out->interlaced_frame = FIELD_OR_MBAFF_PICTURE(h);
+        interlaced_frame = !!FIELD_OR_MBAFF_PICTURE(h);
     }
-    h->prev_interlaced_frame = out->interlaced_frame;
+    h->prev_interlaced_frame = interlaced_frame;
 
     if (cur->field_poc[0] != cur->field_poc[1]) {
         /* Derive top_field_first from field pocs. */
-        out->top_field_first = cur->field_poc[0] < cur->field_poc[1];
+        top_field_first = (cur->field_poc[0] < cur->field_poc[1]);
     } else {
         if (sps->pic_struct_present_flag && h->sei.picture_timing.present) {
             /* Use picture timing SEI information. Even if it is a
              * information of a past frame, better than nothing. */
             if (h->sei.picture_timing.pic_struct == H264_SEI_PIC_STRUCT_TOP_BOTTOM ||
                 h->sei.picture_timing.pic_struct == H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP)
-                out->top_field_first = 1;
-            else
-                out->top_field_first = 0;
-        } else if (out->interlaced_frame) {
+                top_field_first = 1;
+        } else if (interlaced_frame) {
             /* Default to top field first when pic_struct_present_flag
              * is not set but interlaced frame detected */
-            out->top_field_first = 1;
-        } else {
+            top_field_first = 1;
+        } // else
             /* Most likely progressive */
-            out->top_field_first = 0;
-        }
     }
+
+    out->flags |= (AV_FRAME_FLAG_INTERLACED * interlaced_frame) |
+                  (AV_FRAME_FLAG_TOP_FIELD_FIRST * top_field_first);
 
     ret = ff_h2645_sei_to_frame(out, &h->sei.common, AV_CODEC_ID_H264, h->avctx,
                                 &sps->vui, sps->bit_depth_luma, sps->bit_depth_chroma,
@@ -1326,7 +1326,7 @@ static int h264_select_output_frame(H264Context *h)
     out     = h->delayed_pic[0];
     out_idx = 0;
     for (i = 1; h->delayed_pic[i] &&
-                !h->delayed_pic[i]->f->key_frame &&
+                !(h->delayed_pic[i]->f->flags & AV_FRAME_FLAG_KEY) &&
                 !h->delayed_pic[i]->mmco_reset;
          i++)
         if (h->delayed_pic[i]->poc < out->poc) {
@@ -1334,7 +1334,7 @@ static int h264_select_output_frame(H264Context *h)
             out_idx = i;
         }
     if (h->avctx->has_b_frames == 0 &&
-        (h->delayed_pic[0]->f->key_frame || h->delayed_pic[0]->mmco_reset))
+        ((h->delayed_pic[0]->f->flags & AV_FRAME_FLAG_KEY) || h->delayed_pic[0]->mmco_reset))
         h->next_outputed_poc = INT_MIN;
     out_of_order = out->poc < h->next_outputed_poc;
 
@@ -1345,7 +1345,7 @@ static int h264_select_output_frame(H264Context *h)
     }
     if (!out_of_order && pics > h->avctx->has_b_frames) {
         h->next_output_pic = out;
-        if (out_idx == 0 && h->delayed_pic[0] && (h->delayed_pic[0]->f->key_frame || h->delayed_pic[0]->mmco_reset)) {
+        if (out_idx == 0 && h->delayed_pic[0] && ((h->delayed_pic[0]->f->flags & AV_FRAME_FLAG_KEY) || h->delayed_pic[0]->mmco_reset)) {
             h->next_outputed_poc = INT_MIN;
         } else
             h->next_outputed_poc = out->poc;
@@ -1635,7 +1635,7 @@ static int h264_field_start(H264Context *h, const H264SliceContext *sl,
         }
     }
 
-    h->cur_pic_ptr->f->key_frame |= (nal->type == H264_NAL_IDR_SLICE);
+    h->cur_pic_ptr->f->flags |= AV_FRAME_FLAG_KEY * !!(nal->type == H264_NAL_IDR_SLICE);
 
     if (nal->type == H264_NAL_IDR_SLICE ||
         (h->recovery_frame == h->poc.frame_num && nal->ref_idc)) {

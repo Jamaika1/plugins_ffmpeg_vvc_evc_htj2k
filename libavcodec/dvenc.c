@@ -26,7 +26,7 @@
  * DV encoder
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/internal.h"
@@ -35,18 +35,18 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "dv.h"
-#include "dv_internal.h"
-#include "dv_profile_internal.h"
-#include "dv_tablegen.h"
-#include "encode.h"
-#include "fdctdsp.h"
-#include "mathops.h"
-#include "me_cmp.h"
-#include "pixblockdsp.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/dv.h"
+#include "libavcodec/dv_internal.h"
+#include "libavcodec/dv_profile_internal.h"
+#include "libavcodec/dv_tablegen.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/fdctdsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/me_cmp.h"
+#include "libavcodec/pixblockdsp.h"
+#include "libavcodec/put_bits.h"
 
 typedef struct DVEncContext {
     const AVClass     *class;
@@ -1048,9 +1048,9 @@ static inline int dv_write_pack(enum DVPackType pack_id, DVEncContext *c,
     int fs;
 
     if (c->avctx->height >= 720)
-        fs = c->avctx->height == 720 || c->frame->top_field_first ? 0x40 : 0x00;
+        fs = c->avctx->height == 720 || (c->frame->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST) ? 0x40 : 0x00;
     else
-        fs = c->frame->top_field_first ? 0x00 : 0x40;
+        fs = (c->frame->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST) ? 0x00 : 0x40;
 
     if (DV_PROFILE_IS_HD(c->sys) ||
         (int)(av_q2d(c->avctx->sample_aspect_ratio) *

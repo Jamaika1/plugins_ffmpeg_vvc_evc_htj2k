@@ -31,7 +31,7 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/pixfmt.h"
 #include "avcodec.h"
-#include "libavutil/config.h"
+#include "config.h"
 
 #if CONFIG_LCMS2
 # include "fflcms2.h"
@@ -147,8 +147,6 @@ typedef struct AVCodecInternal {
     AVPacket *buffer_pkt;
     AVFrame *buffer_frame;
     int draining_done;
-
-    int showed_multi_packet_warning;
 
     /* to prevent infinite loop on errors when draining */
     int nb_draining_errors;

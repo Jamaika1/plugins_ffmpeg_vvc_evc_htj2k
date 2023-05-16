@@ -27,14 +27,14 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "mpeg_er.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodec.h"
-#include "h261.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/h261.h"
 
 #define H261_MBA_VLC_BITS 8
 #define H261_MTYPE_VLC_BITS 6
@@ -643,7 +643,10 @@ retry:
 
     // for skipping the frame
     s->current_picture.f->pict_type = s->pict_type;
-    s->current_picture.f->key_frame = s->pict_type == AV_PICTURE_TYPE_I;
+    if (s->pict_type == AV_PICTURE_TYPE_I)
+        s->current_picture.f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        s->current_picture.f->flags &= ~AV_FRAME_FLAG_KEY;
 
     if ((avctx->skip_frame >= AVDISCARD_NONREF && s->pict_type == AV_PICTURE_TYPE_B) ||
         (avctx->skip_frame >= AVDISCARD_NONKEY && s->pict_type != AV_PICTURE_TYPE_I) ||

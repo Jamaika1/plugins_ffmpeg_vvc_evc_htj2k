@@ -30,13 +30,13 @@
 #include "libavutil/opt.h"
 
 #define BITSTREAM_READER_LE
-#include "acelp_vectors.h"
-#include "avcodec.h"
-#include "celp_filters.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "g723_1.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/celp_filters.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/g723_1.h"
 
 #define CNG_RANDOM_SEED 12345
 
@@ -1118,6 +1118,10 @@ const FFCodec ff_g723_1_decoder = {
     .priv_data_size = sizeof(G723_1_Context),
     .init           = g723_1_decode_init,
     FF_CODEC_DECODE_CB(g723_1_decode_frame),
-    .p.capabilities = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1,
+    .p.capabilities =
+#if FF_API_SUBFRAMES
+                      AV_CODEC_CAP_SUBFRAMES |
+#endif
+                      AV_CODEC_CAP_DR1,
     .p.priv_class   = &g723_1dec_class,
 };
