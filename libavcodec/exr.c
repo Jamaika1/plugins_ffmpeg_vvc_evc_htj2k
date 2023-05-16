@@ -44,18 +44,18 @@
 #include "libavutil/half2float.h"
 
 #include "avcodec.h"
-#include "bytestream.h"
+#include "libavcodec/bytestream.h"
 
 #if HAVE_BIGENDIAN
-#include "bswapdsp.h"
+#include "libavcodec/bswapdsp.h"
 #endif
 
-#include "codec_internal.h"
-#include "decode.h"
-#include "exrdsp.h"
-#include "get_bits.h"
-#include "mathops.h"
-#include "thread.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/exrdsp.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/thread.h"
 
 enum ExrCompr {
     EXR_RAW,
@@ -1930,8 +1930,10 @@ static int decode_header(EXRContext *s, AVFrame *frame)
 
             bytestream2_get_buffer(gb, key, FFMIN(sizeof(key) - 1, var_size));
             if (strncmp("scanlineimage", key, var_size) &&
-                strncmp("tiledimage", key, var_size))
-                return AVERROR_PATCHWELCOME;
+                strncmp("tiledimage", key, var_size)) {
+                ret = AVERROR_PATCHWELCOME;
+                goto fail;
+            }
 
             continue;
         } else if ((var_size = check_header_variable(s, "preview",
@@ -1939,12 +1941,16 @@ static int decode_header(EXRContext *s, AVFrame *frame)
             uint32_t pw = bytestream2_get_le32(gb);
             uint32_t ph = bytestream2_get_le32(gb);
             uint64_t psize = pw * ph;
-            if (psize > INT64_MAX / 4)
-                return AVERROR_INVALIDDATA;
+            if (psize > INT64_MAX / 4) {
+                ret = AVERROR_INVALIDDATA;
+                goto fail;
+            }
             psize *= 4;
 
-            if ((int64_t)psize >= bytestream2_get_bytes_left(gb))
-                return AVERROR_INVALIDDATA;
+            if ((int64_t)psize >= bytestream2_get_bytes_left(gb)) {
+                ret = AVERROR_INVALIDDATA;
+                goto fail;
+            }
 
             bytestream2_skip(gb, psize);
 

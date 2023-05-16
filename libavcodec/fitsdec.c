@@ -30,15 +30,15 @@
  * Also to interpret data, values are linearly scaled using min-max scaling but not RGB images.
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include <float.h>
 #include "libavutil/intreadwrite.h"
 #include "libavutil/intfloat.h"
 #include "libavutil/dict.h"
 #include "libavutil/opt.h"
-#include "fits.h"
+#include "libavcodec/fits.h"
 
 typedef struct FITSContext {
     const AVClass *class;
@@ -301,7 +301,7 @@ static int fits_decode_frame(AVCodecContext *avctx, AVFrame *p,
         }
     }
 
-    p->key_frame = 1;
+    p->flags |= AV_FRAME_FLAG_KEY;
     p->pict_type = AV_PICTURE_TYPE_I;
 
     *got_frame = 1;

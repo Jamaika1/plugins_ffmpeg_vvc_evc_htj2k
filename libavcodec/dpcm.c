@@ -37,11 +37,11 @@
  * the fourcc 'Axan' in the 'auds' chunk of the AVI header.
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "mathops.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mathops.h"
 
 typedef struct DPCMContext {
     int16_t array[256];
@@ -444,7 +444,7 @@ static int dpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
             if (n & 0x80)
                 s->sample[idx] = sign_extend((n & 0x7f) << 9, 16);
             else
-                s->sample[idx] += s->scale * wady_table[n & 0x7f];
+                s->sample[idx] += s->scale * (unsigned)wady_table[n & 0x7f];
             *output_samples++ = av_clip_int16(s->sample[idx]);
             idx ^= stereo;
         }

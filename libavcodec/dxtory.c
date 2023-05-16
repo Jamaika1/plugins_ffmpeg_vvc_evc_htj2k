@@ -26,12 +26,12 @@
 #include "libavutil/intreadwrite.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "unary.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/unary.h"
+#include "libavcodec/thread.h"
 
 static int64_t get_raw_size(enum AVPixelFormat fmt, int width, int height)
 {
@@ -864,7 +864,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *pic,
         return ret;
 
     pic->pict_type = AV_PICTURE_TYPE_I;
-    pic->key_frame = 1;
+    pic->flags |= AV_FRAME_FLAG_KEY;
     *got_frame = 1;
 
     return avpkt->size;

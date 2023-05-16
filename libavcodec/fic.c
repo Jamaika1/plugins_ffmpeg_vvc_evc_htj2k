@@ -24,11 +24,11 @@
 #include "libavutil/common.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "golomb.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/golomb.h"
 
 typedef struct FICThreadContext {
     DECLARE_ALIGNED(16, int16_t, block)[64];
@@ -406,11 +406,11 @@ static int fic_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
                               NULL, nslices, sizeof(ctx->slice_data[0]))) < 0)
         return ret;
 
-    ctx->frame->key_frame = 1;
+    ctx->frame->flags |= AV_FRAME_FLAG_KEY;
     ctx->frame->pict_type = AV_PICTURE_TYPE_I;
     for (slice = 0; slice < nslices; slice++) {
         if (ctx->slice_data[slice].p_frame) {
-            ctx->frame->key_frame = 0;
+            ctx->frame->flags &= ~AV_FRAME_FLAG_KEY;
             ctx->frame->pict_type = AV_PICTURE_TYPE_P;
             break;
         }

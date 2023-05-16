@@ -40,18 +40,18 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "dv.h"
-#include "dv_internal.h"
-#include "dv_profile_internal.h"
-#include "dvdata.h"
-#include "get_bits.h"
-#include "idctdsp.h"
-#include "put_bits.h"
-#include "simple_idct.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/dv.h"
+#include "libavcodec/dv_internal.h"
+#include "libavcodec/dv_profile_internal.h"
+#include "libavcodec/dvdata.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/simple_idct.h"
+#include "libavcodec/thread.h"
 
 typedef struct BlockInfo {
     const uint32_t *factor_table;
@@ -646,7 +646,7 @@ static int dvvideo_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     }
 
     s->frame            = frame;
-    frame->key_frame    = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     frame->pict_type    = AV_PICTURE_TYPE_I;
     avctx->pix_fmt      = s->sys->pix_fmt;
     avctx->framerate    = av_inv_q(s->sys->time_base);
@@ -670,14 +670,14 @@ static int dvvideo_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     /* Determine the codec's field order from the packet */
     if ( *vsc_pack == DV_VIDEO_CONTROL ) {
         if (avctx->height == 720) {
-            frame->interlaced_frame = 0;
-            frame->top_field_first = 0;
+            frame->flags &= ~AV_FRAME_FLAG_INTERLACED;
+            frame->flags &= ~AV_FRAME_FLAG_TOP_FIELD_FIRST;
         } else if (avctx->height == 1080) {
-            frame->interlaced_frame = 1;
-            frame->top_field_first = (vsc_pack[3] & 0x40) == 0x40;
+            frame->flags |= AV_FRAME_FLAG_INTERLACED;
+            frame->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST * ((vsc_pack[3] & 0x40) == 0x40);
         } else {
-            frame->interlaced_frame = (vsc_pack[3] & 0x10) == 0x10;
-            frame->top_field_first = !(vsc_pack[3] & 0x40);
+            frame->flags |= AV_FRAME_FLAG_INTERLACED * ((vsc_pack[3] & 0x10) == 0x10);
+            frame->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST * !(vsc_pack[3] & 0x40);
         }
     }
 

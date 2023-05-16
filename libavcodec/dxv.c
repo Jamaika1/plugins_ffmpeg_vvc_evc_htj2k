@@ -24,13 +24,13 @@
 
 #include "libavutil/imgutils.h"
 
-#include "mathops.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "lzf.h"
-#include "texturedsp.h"
-#include "thread.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/lzf.h"
+#include "libavcodec/texturedsp.h"
+#include "libavcodec/thread.h"
 
 typedef struct DXVContext {
     TextureDSPContext texdsp;
@@ -1220,7 +1220,7 @@ static int dxv_decode(AVCodecContext *avctx, AVFrame *frame,
 
     /* Frame is ready to be output. */
     frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     *got_frame = 1;
 
     return avpkt->size;

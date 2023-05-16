@@ -32,13 +32,13 @@
 
 #include "libavutil/mem_internal.h"
 
-#include "aandcttab.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "eaidct.h"
-#include "get_bits.h"
+#include "libavcodec/aandcttab.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/eaidct.h"
+#include "libavcodec/get_bits.h"
 
 typedef struct TgqContext {
     AVCodecContext *avctx;
@@ -237,7 +237,7 @@ static int tgq_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
-    frame->key_frame = 1;
+    frame->flags |= AV_FRAME_FLAG_KEY;
     frame->pict_type = AV_PICTURE_TYPE_I;
 
     for (y = 0; y < FFALIGN(avctx->height, 16) >> 4; y++)

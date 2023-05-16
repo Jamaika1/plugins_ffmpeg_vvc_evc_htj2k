@@ -31,10 +31,10 @@
 #include "libavutil/mem.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "get_bits.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 #define EA_PREAMBLE_SIZE    8
 #define kVGT_TAG MKTAG('k', 'V', 'G', 'T')
@@ -310,7 +310,7 @@ static int tgv_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     if (chunk_type == kVGT_TAG) {
         int y;
-        frame->key_frame = 1;
+        frame->flags |= AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_I;
 
         if (!s->frame_buffer &&
@@ -330,7 +330,7 @@ static int tgv_decode_frame(AVCodecContext *avctx, AVFrame *frame,
             av_log(avctx, AV_LOG_WARNING, "inter frame without corresponding intra frame\n");
             return buf_size;
         }
-        frame->key_frame = 0;
+        frame->flags &= ~AV_FRAME_FLAG_KEY;
         frame->pict_type = AV_PICTURE_TYPE_P;
         if (tgv_decode_inter(s, frame, buf, buf_end) < 0) {
             av_log(avctx, AV_LOG_WARNING, "truncated inter frame\n");

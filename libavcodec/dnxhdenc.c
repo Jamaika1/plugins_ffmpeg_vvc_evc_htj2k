@@ -28,18 +28,18 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "fdctdsp.h"
-#include "mathops.h"
-#include "mpegvideo.h"
-#include "mpegvideoenc.h"
-#include "pixblockdsp.h"
-#include "packet_internal.h"
-#include "profiles.h"
-#include "dnxhdenc.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/fdctdsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideoenc.h"
+#include "libavcodec/pixblockdsp.h"
+#include "libavcodec/packet_internal.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/dnxhdenc.h"
 
 // The largest value that will not lead to overflow for 10-bit samples.
 #define DNX10BIT_QMAT_SHIFT 18
@@ -1251,7 +1251,8 @@ static void dnxhd_load_picture(DNXHDEncContext *ctx, const AVFrame *frame)
         ctx->thread[i]->dct_uv_offset = ctx->m.uvlinesize*8;
     }
 
-    ctx->cur_field = frame->interlaced_frame && !frame->top_field_first;
+    ctx->cur_field = (frame->flags & AV_FRAME_FLAG_INTERLACED) &&
+                     !(frame->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST);
 }
 
 static int dnxhd_encode_picture(AVCodecContext *avctx, AVPacket *pkt,
