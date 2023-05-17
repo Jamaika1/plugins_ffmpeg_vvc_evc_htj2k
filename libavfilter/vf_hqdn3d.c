@@ -28,7 +28,7 @@
 
 #include <float.h>
 
-#include "libavcodec/config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 #include "libavutil/pixdesc.h"
