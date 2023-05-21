@@ -12,17 +12,18 @@
 #define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
 #define GLIB_VAR _GLIB_EXTERN
 #define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_76
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_78
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_76
+#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_78
 #define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_76
+#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_78
 #define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_76
+#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_78
 #define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
 #define GLIB_COMPILATION
 #define GIO_COMPILATION
 #define GOBJECT_COMPILATION
+#define USE_SYSTEM_PRINTF
 
 #define ALIGNOF_GUINT32 4
 #define ALIGNOF_GUINT64 8
@@ -43,6 +44,7 @@
 //#define GDK_PIXBUF_RELOCATABLE 1
 #define GDK_PIXBUF_ENABLE_BACKEND 1
 #define USE_GMODULE 1
+#define ENABLE_VALGRIND 1
 
 #include "glibconfig.h"
 
@@ -54,7 +56,7 @@
 /* Whether to enable GC friendliness */
 /* #undef ENABLE_GC_FRIENDLY */
 /* always defined to indicate that i18n is enabled */
-#define ENABLE_NLS 1
+//#define ENABLE_NLS 1
 /* Define the gettext package to be used */
 #define GETTEXT_PACKAGE "gtk4"
 /* Define to the GLIB binary age */
@@ -70,7 +72,7 @@
 /* Define to the GLIB micro version */
 #define GLIB_MICRO_VERSION 0
 /* Define to the GLIB minor version */
-#define GLIB_MINOR_VERSION 76
+#define GLIB_MINOR_VERSION 77
 /* The size of gmutex, as computed by sizeof. */
 /* #undef GLIB_SIZEOF_GMUTEX */
 /* The size of system_thread, as computed by sizeof. */
@@ -79,7 +81,7 @@
 /* #undef G_ATOMIC_ALPHA */
 /* i486 atomic implementation */
 #ifndef _MSC_VER
-#define G_ATOMIC_I486 1
+//#define G_ATOMIC_I486 1
 #endif /* _MSC_VER */
 /* ia64 atomic implementation */
 /* #undef G_ATOMIC_IA64 */
@@ -88,7 +90,7 @@
 /* sparcv9 atomic implementation */
 /* #undef G_ATOMIC_SPARCV9 */
 /* x86_64 atomic implementation */
-/* #undef G_ATOMIC_X86_64 */
+#define G_ATOMIC_X86_64 1
 /* Whether glib was compiled with debugging enabled */
 #define G_COMPILED_WITH_DEBUGGING "yes"
 /* Have inline keyword */
@@ -323,7 +325,7 @@
 /* #undef HAVE_VALUES_H */
 #endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the `vasprintf' function. */
-#define HAVE_VASPRINTF 1
+#undef HAVE_VASPRINTF
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
 /* Define to 1 if you have the `vsnprintf' function. */
@@ -388,7 +390,7 @@
 /* The size of a `short', as computed by sizeof. */
 #define SIZEOF_SHORT 2
 /* The size of a `size_t', as computed by sizeof. */
-#define SIZEOF_SIZE_T 4
+#define SIZEOF_SIZE_T 8
 /* The size of a `void *', as computed by sizeof. */
 #define GLIB_SIZEOF_VOID_P 8
 /* The size of a `__int64', as computed by sizeof. */

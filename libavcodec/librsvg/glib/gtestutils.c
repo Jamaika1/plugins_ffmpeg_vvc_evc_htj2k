@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <inttypes.h>
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
@@ -89,10 +90,14 @@
  * The API is designed to handle creation and registration of test suites
  * and test cases implicitly. A simple call like
  * |[<!-- language="C" -->
+ *   g_test_init (&argc, &argv, G_TEST_OPTION_ISOLATE_DIRS, NULL);
+ *
  *   g_test_add_func ("/misc/assertions", test_assertions);
  * ]|
  * creates a test suite called "misc" with a single test case named
  * "assertions", which consists of running the test_assertions function.
+ *
+ * g_test_init() should be called before calling any other test functions.
  *
  * In addition to the traditional g_assert_true(), the test framework provides
  * an extended set of assertions for comparisons: g_assert_cmpfloat(),
@@ -170,7 +175,7 @@
  * }
  * ]|
  *
- * ### Integrating GTest in your project
+ * ## Integrating GTest in your project
  *
  * If you are using the [Meson](http://mesonbuild.com) build system, you will
  * typically use the provided `test()` primitive to call the test binaries,
@@ -1683,6 +1688,8 @@ test_rm_isolate_dirs (void)
  * Initialize the GLib testing framework, e.g. by seeding the
  * test random number generator, the name for g_get_prgname()
  * and parsing test related command line args.
+ *
+ * This should be called before calling any other `g_test_*()` functions.
  *
  * So far, the following arguments are understood:
  *
@@ -3481,6 +3488,43 @@ g_assertion_message_expr (const char     *domain,
 }
 
 void
+g_assertion_message_cmpint (const char     *domain,
+                            const char     *file,
+                            int             line,
+                            const char     *func,
+                            const char     *expr,
+                            guint64         arg1,
+                            const char     *cmp,
+                            guint64         arg2,
+                            char            numtype)
+{
+  char *s = NULL;
+
+  switch (numtype)
+    {
+    case 'i':
+      s = g_strdup_printf ("assertion failed (%s): "
+                           "(%" PRIi64 " %s %" PRIi64 ")",
+                           expr, (int64_t) arg1, cmp, (int64_t) arg2);
+      break;
+    case 'u':
+      s = g_strdup_printf ("assertion failed (%s): "
+                           "(%" PRIu64 " %s %" PRIu64 ")",
+                           expr, (uint64_t) arg1, cmp, (uint64_t) arg2);
+      break;
+    case 'x':
+      s = g_strdup_printf ("assertion failed (%s): "
+                           "(0x%08" PRIx64 " %s 0x%08" PRIx64 ")",
+                           expr, (uint64_t) arg1, cmp, (uint64_t) arg2);
+      break;
+    default:
+      g_assert_not_reached ();
+    }
+  g_assertion_message (domain, file, line, func, s);
+  g_free (s);
+}
+
+void
 g_assertion_message_cmpnum (const char     *domain,
                             const char     *file,
                             int             line,
@@ -3495,10 +3539,16 @@ g_assertion_message_cmpnum (const char     *domain,
 
   switch (numtype)
     {
-    case 'i':   s = g_strdup_printf ("assertion failed (%s): (%" G_GINT64_MODIFIER "i %s %" G_GINT64_MODIFIER "i)", expr, (gint64) arg1, cmp, (gint64) arg2); break;
-    case 'x':   s = g_strdup_printf ("assertion failed (%s): (0x%08" G_GINT64_MODIFIER "x %s 0x%08" G_GINT64_MODIFIER "x)", expr, (guint64) arg1, cmp, (guint64) arg2); break;
     case 'f':   s = g_strdup_printf ("assertion failed (%s): (%.9g %s %.9g)", expr, (double) arg1, cmp, (double) arg2); break;
       /* ideally use: floats=%.7g double=%.17g */
+    case 'i':
+    case 'x':
+      /* Backwards compatibility to apps compiled before 2.78 */
+      g_assertion_message_cmpint (domain, file, line, func, expr,
+                                  (guint64) arg1, cmp, (guint64) arg2, numtype);
+      break;
+    default:
+      g_assert_not_reached ();
     }
   g_assertion_message (domain, file, line, func, s);
   g_free (s);
