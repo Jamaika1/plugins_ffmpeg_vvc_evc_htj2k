@@ -123,8 +123,8 @@ g_win32_getlocale (void)
   const gchar *script = NULL;
 
   /* Let the user override the system settings through environment
-   * variables, as on POSIX systems. Note that in GTK+ applications
-   * since GTK+ 2.10.7 setting either LC_ALL or LANG also sets the
+   * variables, as on POSIX systems. Note that in GTK applications
+   * since GTK 2.10.7 setting either LC_ALL or LANG also sets the
    * Win32 locale and C library locale through code in gtkmain.c.
    */
   if (((ev = g_getenv ("LC_ALL")) != NULL && ev[0] != '\0')
@@ -578,7 +578,9 @@ g_win32_check_windows_version (const gint major,
 
   /* Check for Service Pack Version >= 0 */
   g_return_val_if_fail (spver >= 0, FALSE);
-  g_return_val_if_fail (_g_win32_call_rtl_version (&osverinfo), FALSE);
+
+  if (!_g_win32_call_rtl_version (&osverinfo))
+    return FALSE;
 
   /* check the OS and Service Pack Versions */
   if (osverinfo.dwMajorVersion > (DWORD) major)

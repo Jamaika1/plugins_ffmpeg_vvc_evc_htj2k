@@ -42,15 +42,15 @@
 /* Define this to get some logging all the time */
 /* #define G_SPAWN_WIN32_DEBUG */
 
-#include "config.h"
+#include "../config.h"
 
-#include "glib-init.h"
-#include "glib-private.h"
-#include "glib.h"
-#include "glibintl.h"
-#include "gprintfint.h"
-#include "gspawn-private.h"
-#include "gthread.h"
+#include "../glib-init.h"
+#include "../glib-private.h"
+#include "../glib.h"
+#include "../glibintl.h"
+#include "../gprintfint.h"
+#include "../gspawn-private.h"
+#include "../gthread.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -65,7 +65,9 @@
 #include <wchar.h>
 
 #ifdef _MSC_VER
+#ifdef HAVE_VCRUNTIME_H
 #include <vcruntime.h> /* for _UCRT */
+#endif
 #endif
 
 #ifndef GSPAWN_HELPER
@@ -163,8 +165,85 @@ safe_wspawnvpe (int _Mode,
 
 #else
 
-#define safe_wspawnve _wspawnve
-#define safe_wspawnvpe _wspawnvpe
+/**< private >
+ * ensure_cmd_environment:
+ *
+ * Workaround for an issue in the universal C Runtime library (UCRT). This adds
+ * a custom environment variable to this process's environment block that looks
+ * like the cmd.exe's shell-related environment variables, i.e the name starts
+ * with an equal sign character: '='. This is needed because the UCRT may crash
+ * if those environment variables are missing from the calling process's block.
+ *
+ * Reference:
+ *
+ * https://developercommunity.visualstudio.com/t/UCRT-Crash-in-_wspawne-functions/10262748
+ */
+static void
+ensure_cmd_environment (void)
+{
+  static gsize initialization_value = 0;
+
+  if (g_once_init_enter (&initialization_value))
+    {
+      wchar_t *block = GetEnvironmentStringsW ();
+      gboolean have_cmd_environment = FALSE;
+
+      if (block)
+        {
+          const wchar_t *p = block;
+
+          while (*p != L'\0')
+            {
+              if (*p == L'=')
+                {
+                  have_cmd_environment = TRUE;
+                  break;
+                }
+
+              p += wcslen (p) + 1;
+            }
+
+          if (!FreeEnvironmentStringsW (block))
+            g_warning ("%s failed with error code %u",
+                       "FreeEnvironmentStrings",
+                       (guint) GetLastError ());
+        }
+
+      if (!have_cmd_environment)
+        {
+          if (!SetEnvironmentVariableW (L"=GLIB", L"GLIB"))
+            {
+              g_critical ("%s failed with error code %u",
+                          "SetEnvironmentVariable",
+                          (guint) GetLastError ());
+            }
+        }
+
+      g_once_init_leave (&initialization_value, 1);
+    }
+}
+
+static intptr_t
+safe_wspawnve (int                   _mode,
+               const wchar_t *       _filename,
+               const wchar_t *const *_args,
+               const wchar_t *const *_env)
+{
+  ensure_cmd_environment ();
+
+  return _wspawnve (_mode, _filename, _args, _env);;
+}
+
+static intptr_t
+safe_wspawnvpe (int                   _mode,
+                const wchar_t *       _filename,
+                const wchar_t *const *_args,
+                const wchar_t *const *_env)
+{
+  ensure_cmd_environment ();
+
+  return _wspawnvpe (_mode, _filename, _args, _env);
+}
 
 #endif /* _UCRT */
 
@@ -188,7 +267,7 @@ protect_argv_string (const gchar *string)
 	len += 1;
       p++;
     }
-  
+
   q = retval = g_malloc (len + need_dblquotes*2 + 1);
   p = string;
 
@@ -218,7 +297,7 @@ protect_argv_string (const gchar *string)
       *q++ = *p;
       p++;
     }
-  
+
   if (need_dblquotes)
     {
       /* Add backslash for every preceding backslash for escaping it,
@@ -239,7 +318,7 @@ protect_argv (const gchar * const   *argv,
 {
   gint i;
   gint argc = 0;
-  
+
   while (argv[argc])
     ++argc;
   *new_argv = g_new (gchar *, argc+1);
@@ -277,7 +356,7 @@ g_spawn_async (const gchar          *working_directory,
                GError              **error)
 {
   g_return_val_if_fail (argv != NULL && argv[0] != NULL, FALSE);
-  
+
   return g_spawn_async_with_pipes (working_directory,
                                    argv, envp,
                                    flags,
@@ -319,7 +398,7 @@ read_data (GString     *str,
   gchar buf[4096];
 
  again:
-  
+
   giostatus = g_io_channel_read_chars (iochannel, buf, sizeof (buf), &bytes, NULL);
 
   if (bytes == 0)
@@ -335,7 +414,7 @@ read_data (GString     *str,
     {
       g_set_error_literal (error, G_SPAWN_ERROR, G_SPAWN_ERROR_READ,
                            _("Failed to read data from child process"));
-      
+
       return READ_FAILED;
     }
   else
@@ -368,7 +447,7 @@ read_helper_report (int      fd,
 		    GError **error)
 {
   gsize bytes = 0;
-  
+
   while (bytes < sizeof(gintptr)*2)
     {
       gint chunk;
@@ -385,7 +464,7 @@ read_helper_report (int      fd,
 
       if (debug)
 	g_print ("...got %d bytes\n", chunk);
-          
+
       if (chunk < 0)
         {
           /* Some weird shit happened, bail out */
@@ -475,7 +554,7 @@ utf8_charv_to_wcharv (const gchar * const   *utf8_charv,
 	      return FALSE;
 	    }
 	}
-	    
+
       retval[n] = NULL;
     }
   *wcharv = retval;
@@ -503,7 +582,7 @@ do_spawn_directly (gint                 *exit_status,
   g_assert (argv != NULL && argv[0] != NULL);
 
   new_argv = (flags & G_SPAWN_FILE_AND_ARGV_ZERO) ? protected_argv + 1 : protected_argv;
-      
+
   wargv0 = g_utf8_to_utf16 (argv[0], -1, NULL, NULL, &conv_error);
   if (wargv0 == NULL)
     {
@@ -511,10 +590,10 @@ do_spawn_directly (gint                 *exit_status,
 		   _("Invalid program name: %s"),
 		   conv_error->message);
       g_error_free (conv_error);
-      
+
       return FALSE;
     }
-  
+
   if (!utf8_charv_to_wcharv (new_argv, &wargv, &conv_error_index, &conv_error))
     {
       g_set_error (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
@@ -686,13 +765,6 @@ fork_exec (gint                  *exit_status,
 
   argc = protect_argv (argv, &protected_argv);
 
-  /*
-   * FIXME: Workaround broken spawnvpe functions that SEGV when "=X:="
-   * environment variables are missing. Calling chdir() will set the magic
-   * environment variable again.
-   */
-  _chdir (".");
-
   if (stdin_fd == -1 && stdout_fd == -1 && stderr_fd == -1 &&
       (flags & G_SPAWN_CHILD_INHERITS_STDIN) &&
       !(flags & G_SPAWN_STDOUT_TO_DEV_NULL) &&
@@ -715,13 +787,13 @@ fork_exec (gint                  *exit_status,
   if (_g_spawn_invalid_source_fd (child_err_report_pipe[0], source_fds, n_fds, error) ||
       _g_spawn_invalid_source_fd (child_err_report_pipe[1], source_fds, n_fds, error))
     goto cleanup_and_fail;
-  
+
   if (!make_pipe (helper_sync_pipe, error))
     goto cleanup_and_fail;
   if (_g_spawn_invalid_source_fd (helper_sync_pipe[0], source_fds, n_fds, error) ||
       _g_spawn_invalid_source_fd (helper_sync_pipe[1], source_fds, n_fds, error))
     goto cleanup_and_fail;
-  
+
   new_argv = g_new (char *, argc + 1 + ARG_COUNT);
   if (might_be_console_process ())
     helper_process = HELPER_PROCESS "-console.exe";
@@ -733,7 +805,7 @@ fork_exec (gint                  *exit_status,
 
   _g_sprintf (args[ARG_CHILD_ERR_REPORT], "%d", child_err_report_pipe[1]);
   new_argv[ARG_CHILD_ERR_REPORT] = args[ARG_CHILD_ERR_REPORT];
-  
+
   /* Make the read end of the child error report pipe
    * noninherited. Otherwise it will needlessly be inherited by the
    * helper process, and the started actual user process. As such that
@@ -751,10 +823,10 @@ fork_exec (gint                  *exit_status,
        */
       strcat (args[ARG_CHILD_ERR_REPORT], "#");
     }
-  
+
   _g_sprintf (args[ARG_HELPER_SYNC], "%d", helper_sync_pipe[0]);
   new_argv[ARG_HELPER_SYNC] = args[ARG_HELPER_SYNC];
-  
+
   /* Make the write end of the sync pipe noninherited. Otherwise the
    * helper process will inherit it, and thus if this process happens
    * to crash before writing the sync byte to the pipe, the helper
@@ -781,7 +853,7 @@ fork_exec (gint                  *exit_status,
       /* Keep process from blocking on a read of stdin */
       new_argv[ARG_STDIN] = "z";
     }
-  
+
   if (stdout_fd != -1)
     {
       _g_sprintf (args[ARG_STDOUT], "%d", stdout_fd);
@@ -795,7 +867,7 @@ fork_exec (gint                  *exit_status,
     {
       new_argv[ARG_STDOUT] = "-";
     }
-  
+
   if (stderr_fd != -1)
     {
       _g_sprintf (args[ARG_STDERR], "%d", stderr_fd);
@@ -809,12 +881,12 @@ fork_exec (gint                  *exit_status,
     {
       new_argv[ARG_STDERR] = "-";
     }
-  
+
   if (working_directory && *working_directory)
     new_argv[ARG_WORKING_DIRECTORY] = protect_argv_string (working_directory);
   else
     new_argv[ARG_WORKING_DIRECTORY] = g_strdup ("-");
-  
+
   if (!(flags & G_SPAWN_LEAVE_DESCRIPTORS_OPEN))
     new_argv[ARG_CLOSE_DESCRIPTORS] = "y";
   else
@@ -891,7 +963,7 @@ fork_exec (gint                  *exit_status,
       g_free (new_argv);
       g_free (helper_process);
       g_strfreev ((gchar **) wargv);
- 
+
       goto cleanup_and_fail;
     }
 
@@ -947,7 +1019,7 @@ fork_exec (gint                  *exit_status,
       /* Asynchronous case. We read the helper's report right away. */
       if (!read_helper_report (child_err_report_pipe[0], helper_report, error))
 	goto cleanup_and_fail;
-        
+
       close_and_invalidate (&child_err_report_pipe[0]);
 
       switch (helper_report[0])
@@ -974,7 +1046,7 @@ fork_exec (gint                  *exit_status,
 	  write (helper_sync_pipe[1], " ", 1);
 	  close_and_invalidate (&helper_sync_pipe[1]);
 	  break;
-	  
+
 	default:
 	  write (helper_sync_pipe[1], " ", 1);
 	  close_and_invalidate (&helper_sync_pipe[1]);
@@ -984,7 +1056,7 @@ fork_exec (gint                  *exit_status,
     }
 
   /* Success against all odds! return the information */
-      
+
   if (rc != -1)
     CloseHandle ((HANDLE) rc);
 
@@ -1060,14 +1132,14 @@ g_spawn_sync (const gchar          *working_directory,
   GString *errstr = NULL;
   gboolean failed;
   gint status;
-  
+
   g_return_val_if_fail (argv != NULL && argv[0] != NULL, FALSE);
   g_return_val_if_fail (!(flags & G_SPAWN_DO_NOT_REAP_CHILD), FALSE);
   g_return_val_if_fail (standard_output == NULL ||
                         !(flags & G_SPAWN_STDOUT_TO_DEV_NULL), FALSE);
   g_return_val_if_fail (standard_error == NULL ||
                         !(flags & G_SPAWN_STDERR_TO_DEV_NULL), FALSE);
-  
+
   /* Just to ensure segfaults if callers try to use
    * these when an error is reported.
    */
@@ -1098,7 +1170,7 @@ g_spawn_sync (const gchar          *working_directory,
     return FALSE;
 
   /* Read data from child. */
-  
+
   failed = FALSE;
 
   if (outpipe >= 0)
@@ -1113,7 +1185,7 @@ g_spawn_sync (const gchar          *working_directory,
       if (debug)
 	g_print ("outfd=%p\n", (HANDLE) outfd.fd);
     }
-      
+
   if (errpipe >= 0)
     {
       errstr = g_string_new (NULL);
@@ -1156,7 +1228,7 @@ g_spawn_sync (const gchar          *working_directory,
 
           g_set_error_literal (error, G_SPAWN_ERROR, G_SPAWN_ERROR_READ,
                                _("Unexpected error in g_io_channel_win32_poll() reading data from a child process"));
-	  
+
           break;
         }
 
@@ -1249,7 +1321,7 @@ g_spawn_sync (const gchar          *working_directory,
 
 
   /* These should only be open still if we had an error.  */
-  
+
   if (outchannel != NULL)
     g_io_channel_unref (outchannel);
   if (errchannel != NULL)
@@ -1258,7 +1330,7 @@ g_spawn_sync (const gchar          *working_directory,
     close_and_invalidate (&outpipe);
   if (errpipe >= 0)
     close_and_invalidate (&errpipe);
-  
+
   if (failed)
     {
       if (outstr)
@@ -1270,7 +1342,7 @@ g_spawn_sync (const gchar          *working_directory,
     }
   else
     {
-      if (standard_output)        
+      if (standard_output)
         *standard_output = g_string_free (outstr, FALSE);
 
       if (standard_error)
@@ -1430,13 +1502,13 @@ g_spawn_command_line_sync (const gchar  *command_line,
   gchar **argv = 0;
 
   g_return_val_if_fail (command_line != NULL, FALSE);
-  
+
   /* This will return a runtime error if @command_line is the empty string. */
   if (!g_shell_parse_argv (command_line,
                            NULL, &argv,
                            error))
     return FALSE;
-  
+
   retval = g_spawn_sync (NULL,
                          argv,
                          NULL,
@@ -1466,7 +1538,7 @@ g_spawn_command_line_async (const gchar *command_line,
                            NULL, &argv,
                            error))
     return FALSE;
-  
+
   retval = g_spawn_async (NULL,
                           argv,
                           NULL,

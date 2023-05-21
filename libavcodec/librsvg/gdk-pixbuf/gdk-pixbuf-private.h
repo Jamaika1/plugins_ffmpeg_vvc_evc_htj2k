@@ -28,8 +28,9 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "../glib/gversionmacros.h"
 #include "../glib/glib-object.h"
-#include "../glib/gi18n-lib.h"
+#include "../glib/glibintl.h"
 
 #include "gdk-pixbuf-core.h"
 #include "gdk-pixbuf-loader.h"

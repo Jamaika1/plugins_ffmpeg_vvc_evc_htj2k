@@ -21,7 +21,7 @@
 
 #include "config.h"
 #include <string.h>
-#ifdef HAVE_BIND_TEXTDOMAIN_CODESET
+#if ENABLE_NLS
 #include "../libintl/libgnuintl.h"
 #endif
 

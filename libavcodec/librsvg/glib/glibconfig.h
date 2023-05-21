@@ -162,36 +162,29 @@ typedef unsigned __int64 guintptr;
 #endif
 
 #define GLIB_MAJOR_VERSION 2
-#define GLIB_MINOR_VERSION 76
+#define GLIB_MINOR_VERSION 77
 #define GLIB_MICRO_VERSION 0
 
-#define G_OS_WIN32
-#define G_PLATFORM_WIN32
+#define G_OS_WIN32 1
+#define G_PLATFORM_WIN32 1
 
 /* #undef G_VA_COPY */
 
-
-#ifndef __cplusplus
-# define G_HAVE_ISO_VARARGS 1
-#endif
-
-#ifdef __cplusplus
-# define G_HAVE_ISO_VARARGS 1
-#endif
+#define G_HAVE_ISO_VARARGS 1
 
 /* gcc-2.95.x supports both gnu style and ISO varargs, but if -ansi
  * is passed ISO vararg support is turned off, and there is no work
  * around to turn it on, so we unconditionally turn it off.
  */
 #if __GNUC__ == 2 && __GNUC_MINOR__ == 95
-#  undef G_HAVE_ISO_VARARGS
+#undef G_HAVE_ISO_VARARGS
 #endif
 
 #define G_HAVE_GROWING_STACK 0
 /* #undef G_HAVE_GNUC_VISIBILITY */
 
 #ifndef _MSC_VER
-# define G_HAVE_GNUC_VARARGS 1
+#define G_HAVE_GNUC_VARARGS 1
 #endif
 
 #if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)

@@ -42,7 +42,9 @@
 
 #include <string.h>
 #include <locale.h>
+#if ENABLE_NLS
 #include "../libintl/libgnuintl.h"
+#endif
 
 #ifdef G_OS_WIN32
 
@@ -362,12 +364,12 @@ _g_dgettext_should_translate (void)
  * translations for the current locale.
  *
  * The advantage of using this function over dgettext() proper is that
- * libraries using this function (like GTK+) will not use translations
+ * libraries using this function (like GTK) will not use translations
  * if the application using the library does not have translations for
  * the current locale.  This results in a consistent English-only
  * interface instead of one having partial translations.  For this
  * feature to work, the call to textdomain() and setlocale() should
- * precede any g_dgettext() invocations.  For GTK+, it means calling
+ * precede any g_dgettext() invocations.  For GTK, it means calling
  * textdomain() before gtk_init or its variants.
  *
  * This function disables translations if and only if upon its first
@@ -385,7 +387,7 @@ _g_dgettext_should_translate (void)
  *
  * Note that this behavior may not be desired for example if an application
  * has its untranslated messages in a language other than English. In those
- * cases the application should call textdomain() after initializing GTK+.
+ * cases the application should call textdomain() after initializing GTK.
  *
  * Applications should normally not use this function directly,
  * but use the _() macro for translations.
