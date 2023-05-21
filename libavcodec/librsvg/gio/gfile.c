@@ -77,6 +77,13 @@
 #include "gioerror.h"
 #include "../glib/glibintl.h"
 
+/* Linux defines loff_t as a way to simplify the offset types for calls like
+ * splice() and copy_file_range(). BSD has copy_file_range() but doesn’t define
+ * loff_t. Abstract that. */
+#ifndef HAVE_LOFF_T
+typedef off_t loff_t;
+#endif
+
 
 /**
  * SECTION:gfile
@@ -2807,6 +2814,11 @@ g_file_build_attribute_list_for_copy (GFile                  *file,
   first = TRUE;
   s = g_string_new ("");
 
+  /* Always query the source file size, even though we can’t set that on the
+   * destination. This is useful for the copy functions. */
+  first = FALSE;
+  g_string_append (s, G_FILE_ATTRIBUTE_STANDARD_SIZE);
+
   if (attributes)
     {
       for (i = 0; i < attributes->n_infos; i++)
@@ -3002,6 +3014,122 @@ copy_stream_with_progress (GInputStream           *in,
   return res;
 }
 
+#ifdef HAVE_COPY_FILE_RANGE
+static gboolean
+do_copy_file_range (int      fd_in,
+                    loff_t  *off_in,
+                    int      fd_out,
+                    loff_t  *off_out,
+                    size_t   len,
+                    size_t  *bytes_transferred,
+                    GError **error)
+{
+  ssize_t result;
+
+  do
+    {
+      result = copy_file_range (fd_in, off_in, fd_out, off_out, len, 0);
+
+      if (result == -1)
+        {
+          int errsv = errno;
+
+          if (errsv == EINTR)
+            {
+              continue;
+            }
+          else if (errsv == ENOSYS || errsv == EINVAL || errsv == EOPNOTSUPP || errsv == EXDEV)
+            {
+              g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                                   _("Copy file range not supported"));
+            }
+          else
+            {
+              g_set_error (error, G_IO_ERROR,
+                           g_io_error_from_errno (errsv),
+                           _("Error splicing file: %s"),
+                           g_strerror (errsv));
+            }
+
+          return FALSE;
+        }
+    } while (result == -1);
+
+  g_assert (result >= 0);
+  *bytes_transferred = result;
+
+  return TRUE;
+}
+
+static gboolean
+copy_file_range_with_progress (GInputStream           *in,
+                               GFileInfo              *in_info,
+                               GOutputStream          *out,
+                               GCancellable           *cancellable,
+                               GFileProgressCallback   progress_callback,
+                               gpointer                progress_callback_data,
+                               GError                **error)
+{
+  goffset total_size, last_notified_size;
+  size_t copy_len;
+  loff_t offset_in;
+  loff_t offset_out;
+  int fd_in, fd_out;
+
+  fd_in = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (in));
+  fd_out = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (out));
+
+  g_assert (g_file_info_has_attribute (in_info, G_FILE_ATTRIBUTE_STANDARD_SIZE));
+  total_size = g_file_info_get_size (in_info);
+
+  /* Bail out if the reported size of the file is zero. It might be zero, but it
+   * might also just be a kernel file in /proc. They report their file size as
+   * zero, but then have data when you start reading. Go to the fallback code
+   * path for those. */
+  if (total_size == 0)
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                   _("Copy file range not supported"));
+      return FALSE;
+    }
+
+  offset_in = offset_out = 0;
+  copy_len = total_size;
+  last_notified_size = 0;
+
+  /* Call copy_file_range() in a loop until the whole contents are copied. For
+   * smaller files, this loop will iterate only once. For larger files, the
+   * kernel (at least, kernel 6.1.6) will return after 2GB anyway, so that gives
+   * us more loop iterations and more progress reporting. */
+  while (copy_len > 0)
+    {
+      size_t n_copied;
+
+      if (g_cancellable_set_error_if_cancelled (cancellable, error) ||
+          !do_copy_file_range (fd_in, &offset_in, fd_out, &offset_out, copy_len, &n_copied, error))
+        return FALSE;
+
+      if (n_copied == 0)
+        break;
+
+      g_assert (n_copied <= copy_len);
+      copy_len -= n_copied;
+
+      if (progress_callback)
+        {
+          progress_callback (offset_in, total_size, progress_callback_data);
+          last_notified_size = total_size;
+        }
+    }
+
+  /* Make sure we send full copied size */
+  if (progress_callback && last_notified_size != total_size)
+    progress_callback (offset_in, total_size, progress_callback_data);
+
+  return TRUE;
+}
+#endif  /* HAVE_COPY_FILE_RANGE */
+
 #ifdef HAVE_SPLICE
 
 static gboolean
@@ -3042,6 +3170,7 @@ retry:
 
 static gboolean
 splice_stream_with_progress (GInputStream           *in,
+                             GFileInfo              *in_info,
                              GOutputStream          *out,
                              GCancellable           *cancellable,
                              GFileProgressCallback   progress_callback,
@@ -3085,10 +3214,8 @@ splice_stream_with_progress (GInputStream           *in,
   /* avoid performance impact of querying total size when it's not needed */
   if (progress_callback)
     {
-      struct stat sbuf;
-
-      if (fstat (fd_in, &sbuf) == 0)
-        total_size = sbuf.st_size;
+      g_assert (g_file_info_has_attribute (in_info, G_FILE_ATTRIBUTE_STANDARD_SIZE));
+      total_size = g_file_info_get_size (in_info);
     }
 
   if (total_size == -1)
@@ -3151,6 +3278,7 @@ splice_stream_with_progress (GInputStream           *in,
 #ifdef __linux__
 static gboolean
 btrfs_reflink_with_progress (GInputStream           *in,
+                             GFileInfo              *in_info,
                              GOutputStream          *out,
                              GFileInfo              *info,
                              GCancellable           *cancellable,
@@ -3158,15 +3286,23 @@ btrfs_reflink_with_progress (GInputStream           *in,
                              gpointer                progress_callback_data,
                              GError                **error)
 {
-  goffset source_size;
+  goffset total_size;
   int fd_in, fd_out;
   int ret, errsv;
 
   fd_in = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (in));
   fd_out = g_file_descriptor_based_get_fd (G_FILE_DESCRIPTOR_BASED (out));
 
+  total_size = -1;
+  /* avoid performance impact of querying total size when it's not needed */
   if (progress_callback)
-    source_size = g_file_info_get_size (info);
+    {
+      g_assert (g_file_info_has_attribute (in_info, G_FILE_ATTRIBUTE_STANDARD_SIZE));
+      total_size = g_file_info_get_size (in_info);
+    }
+
+  if (total_size == -1)
+    total_size = 0;
 
   /* Btrfs clone ioctl properties:
    *  - Works at the inode level
@@ -3201,7 +3337,7 @@ btrfs_reflink_with_progress (GInputStream           *in,
 
   /* Make sure we send full copied size */
   if (progress_callback)
-    progress_callback (source_size, source_size, progress_callback_data);
+    progress_callback (total_size, total_size, progress_callback_data);
 
   return TRUE;
 }
@@ -3366,7 +3502,7 @@ file_copy_fallback (GFile                  *source,
     {
       GError *reflink_err = NULL;
 
-      if (!btrfs_reflink_with_progress (in, out, info, cancellable,
+      if (!btrfs_reflink_with_progress (in, info, out, info, cancellable,
                                         progress_callback, progress_callback_data,
                                         &reflink_err))
         {
@@ -3388,12 +3524,36 @@ file_copy_fallback (GFile                  *source,
     }
 #endif
 
+#ifdef HAVE_COPY_FILE_RANGE
+  if (G_IS_FILE_DESCRIPTOR_BASED (in) && G_IS_FILE_DESCRIPTOR_BASED (out))
+    {
+      GError *copy_file_range_error = NULL;
+
+      if (copy_file_range_with_progress (in, info, out, cancellable,
+                                         progress_callback, progress_callback_data,
+                                         &copy_file_range_error))
+        {
+          ret = TRUE;
+          goto out;
+        }
+      else if (!g_error_matches (copy_file_range_error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED))
+        {
+          g_propagate_error (error, g_steal_pointer (&copy_file_range_error));
+          goto out;
+        }
+      else
+        {
+          g_clear_error (&copy_file_range_error);
+        }
+    }
+#endif  /* HAVE_COPY_FILE_RANGE */
+
 #ifdef HAVE_SPLICE
   if (G_IS_FILE_DESCRIPTOR_BASED (in) && G_IS_FILE_DESCRIPTOR_BASED (out))
     {
       GError *splice_err = NULL;
 
-      if (!splice_stream_with_progress (in, out, cancellable,
+      if (!splice_stream_with_progress (in, info, out, cancellable,
                                         progress_callback, progress_callback_data,
                                         &splice_err))
         {
@@ -7773,7 +7933,7 @@ g_file_load_contents (GFile         *file,
                                              NULL);
       if (info)
         {
-          *etag_out = g_strdup (g_file_info_get_etag (info));
+          *etag_out = g_file_info_has_attribute (info, G_FILE_ATTRIBUTE_ETAG_VALUE) ? g_strdup (g_file_info_get_etag (info)) : NULL;
           g_object_unref (info);
         }
     }
@@ -7847,7 +8007,7 @@ load_contents_fstat_callback (GObject      *obj,
                                                 stat_res, NULL);
   if (info)
     {
-      data->etag = g_strdup (g_file_info_get_etag (info));
+      data->etag = g_file_info_has_attribute (info, G_FILE_ATTRIBUTE_ETAG_VALUE) ? g_strdup (g_file_info_get_etag (info)) : NULL;
       g_object_unref (info);
     }
 

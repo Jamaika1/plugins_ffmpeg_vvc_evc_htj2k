@@ -3071,7 +3071,7 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
           GVariant *platform_data;
 
           g_variant_builder_init (&builder, G_VARIANT_TYPE_ARRAY);
-          g_variant_builder_add (&builder, "{sv}", "pid", g_variant_new_int32 (pid));
+          g_variant_builder_add (&builder, "{sv}", "pid", g_variant_new_int32 ((gint64)pid));
           if (sn_id)
             g_variant_builder_add (&builder, "{sv}", "startup-notification-id", g_variant_new_string (sn_id));
           platform_data = g_variant_ref_sink (g_variant_builder_end (&builder));
@@ -3081,7 +3081,7 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
 
       notify_desktop_launch (session_bus,
                              info,
-                             pid,
+                             (gint64)pid,
                              NULL,
                              sn_id,
                              launched_uris);
