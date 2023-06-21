@@ -420,7 +420,7 @@ ffi_closure_free (void *ptr)
 #include <fcntl.h>
 #include <errno.h>
 #ifndef _MSC_VER
-#include <unistd.h>
+//#include <unistd.h>
 #endif
 #include <string.h>
 #include <stdio.h>
@@ -569,7 +569,7 @@ static int dlmunmap(void *, size_t);
 #define mmap dlmmap
 #define munmap dlmunmap
 
-#include "dlmalloc.c"
+#include "extra/dlmalloc.c"
 
 #undef mmap
 #undef munmap

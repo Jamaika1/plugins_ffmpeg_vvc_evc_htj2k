@@ -13,7 +13,7 @@
 /* #undef C_ALLOCA */
 
 /* Define to the flags needed for the .section .eh_frame directive. */
-#define EH_FRAME_FLAGS "a"
+//#define EH_FRAME_FLAGS "a"
 
 /* Define this if you want extra debugging. */
 /* #undef FFI_DEBUG */
@@ -69,16 +69,16 @@
 //#define HAVE_INTTYPES_H 1
 
 /* Define if you have the long double type and it is bigger than a double */
-#define HAVE_LONG_DOUBLE 1
+//#define HAVE_LONG_DOUBLE 1
 
 /* Define if you support more than one size of the long double type */
 /* #undef HAVE_LONG_DOUBLE_VARIANT */
 
 /* Define to 1 if you have the `memcpy' function. */
-#define HAVE_MEMCPY 1
+/* #undef HAVE_MEMCPY */
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+//#define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the `mkostemp' function. */
 #define HAVE_MKOSTEMP 1
@@ -87,23 +87,23 @@
 #define HAVE_MMAP 1
 
 /* Define if mmap with MAP_ANON(YMOUS) works. */
-#define HAVE_MMAP_ANON 1
+//#define HAVE_MMAP_ANON 1
 
 /* Define if mmap of /dev/zero works. */
-#define HAVE_MMAP_DEV_ZERO 1
+//#define HAVE_MMAP_DEV_ZERO 1
 
 /* Define if read-only mmap of a plain file works. */
-#define HAVE_MMAP_FILE 1
+//#define HAVE_MMAP_FILE 1
 
 /* Define if .eh_frame sections should be read-only. */
-#define HAVE_RO_EH_FRAME 1
+//#define HAVE_RO_EH_FRAME 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-//#define HAVE_STDLIB_H 0
-#define LACKS_STDLIB_H 1
+#define HAVE_STDLIB_H 1
+
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
 
@@ -123,7 +123,7 @@
 //#define HAVE_UNISTD_H 1
 
 /* Define to 1 if GNU symbol versioning is used for libatomic. */
-#define LIBFFI_GNU_SYMBOL_VERSIONING 1
+//#define LIBFFI_GNU_SYMBOL_VERSIONING 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -154,13 +154,16 @@
 #define PACKAGE_VERSION "3.4.4"
 
 /* The size of `double', as computed by sizeof. */
-#define SIZEOF_DOUBLE 8
+#define SIZEOF_DOUBLE (sizeof(double))
 
 /* The size of `long double', as computed by sizeof. */
-#define SIZEOF_LONG_DOUBLE 8
+#define SIZEOF_LONG_DOUBLE (sizeof(long double))
 
 /* The size of `size_t', as computed by sizeof. */
-#define SIZEOF_SIZE_T 8
+#define SIZEOF_SIZE_T (sizeof(size_t))
+
+#define HAVE_MORECORE 0
+#define USE_LOCKS 1
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be

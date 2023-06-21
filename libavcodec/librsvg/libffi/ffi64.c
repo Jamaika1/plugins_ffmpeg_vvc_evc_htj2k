@@ -596,7 +596,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   /* If the return value is passed in memory, add the pointer as the
      first integer argument.  */
   if (flags & UNIX64_FLAG_RET_IN_MEM)
-    reg_args->gpr[gprcount++] = (unsigned long) rvalue;
+    reg_args->gpr[gprcount++] = (unsigned long long) rvalue;
 
   for (i = 0; i < avn; ++i)
     {
