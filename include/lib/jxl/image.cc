@@ -12,7 +12,6 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/sanitizers.h"
@@ -77,9 +76,6 @@ PlaneBase::PlaneBase(const size_t xsize, const size_t ysize,
       ysize_(static_cast<uint32_t>(ysize)),
       orig_xsize_(static_cast<uint32_t>(xsize)),
       orig_ysize_(static_cast<uint32_t>(ysize)) {
-  // (Can't profile CacheAligned itself because it is used by profiler.h)
-  PROFILER_FUNC;
-
   JXL_CHECK(xsize == xsize_);
   JXL_CHECK(ysize == ysize_);
 
@@ -111,7 +107,10 @@ void PlaneBase::InitializePadding(const size_t sizeof_t, Padding padding) {
 
   for (size_t y = 0; y < ysize_; ++y) {
     uint8_t* JXL_RESTRICT row = static_cast<uint8_t*>(VoidRow(y));
-#if defined(__clang__) && (__clang_major__ <= 6)
+#if defined(__clang__) &&                                           \
+    ((!defined(__apple_build_version__) && __clang_major__ <= 6) || \
+     (defined(__apple_build_version__) &&                           \
+      __apple_build_version__ <= 10001145))
     // There's a bug in msan in clang-6 when handling AVX2 operations. This
     // workaround allows tests to pass on msan, although it is slower and
     // prevents msan warnings from uninitialized images.
@@ -177,7 +176,6 @@ Image3F PadImageMirror(const Image3F& in, const size_t xborder,
 
 void PadImageToBlockMultipleInPlace(Image3F* JXL_RESTRICT in,
                                     size_t block_dim) {
-  PROFILER_FUNC;
   const size_t xsize_orig = in->xsize();
   const size_t ysize_orig = in->ysize();
   const size_t xsize = RoundUpTo(xsize_orig, block_dim);
