@@ -299,24 +299,6 @@ find_text_transform (const PangoAnalysis *analysis)
   return transform;
 }
 
-static inline gboolean
-face_has_layers (hb_face_t *face)
-{
-#ifdef HAVE_HB_OT_COLOR_HAS_LAYERS
-  return hb_ot_color_has_layers (face);
-#else
-  hb_blob_t *blob;
-  gboolean ret;
-
-  blob = hb_face_reference_table (face, HB_TAG ('C','O','L','R'));
-  ret = blob != hb_blob_get_empty ();
-
-  hb_blob_destroy (blob);
-
-  return ret;
-#endif
-}
-
 static gboolean
 font_has_color (hb_font_t *font)
 {
@@ -324,7 +306,14 @@ font_has_color (hb_font_t *font)
 
   face = hb_font_get_face (font);
 
-  return face_has_layers (face) || hb_ot_color_has_png (face) || hb_ot_color_has_svg (face);
+#if HB_VERSION_ATLEAST (7, 0, 0)
+  if (hb_ot_color_has_paint (face))
+    return TRUE;
+#endif
+
+  return hb_ot_color_has_layers (face) ||
+         hb_ot_color_has_png (face) ||
+         hb_ot_color_has_svg (face);
 }
 
 static gboolean
@@ -335,6 +324,11 @@ glyph_has_color (hb_font_t      *font,
   hb_blob_t *blob;
 
   face = hb_font_get_face (font);
+
+#if HB_VERSION_ATLEAST (7, 0, 0)
+  if (hb_ot_color_glyph_has_paint (face, glyph))
+    return TRUE;
+#endif
 
   if (hb_ot_color_glyph_get_layers (face, glyph, 0, NULL, NULL) > 0)
     return TRUE;
