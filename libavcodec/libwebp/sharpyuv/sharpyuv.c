@@ -25,6 +25,12 @@
 #include "sharpyuv_gamma.h"
 
 //------------------------------------------------------------------------------
+
+int SharpYuvGetVersion(void) {
+  return SHARPYUV_VERSION;
+}
+
+//------------------------------------------------------------------------------
 // Sharp RGB->YUV conversion
 
 static const int kNumIterations = 4;
@@ -434,12 +440,17 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
 // By default SharpYuvConvert calls it with SharpYuvGetCPUInfo. If needed,
 // users can declare it as extern and call it with an alternate VP8CPUInfo
 // function.
+extern VP8CPUInfo SharpYuvGetCPUInfo;
 SHARPYUV_EXTERN void SharpYuvInit(VP8CPUInfo cpu_info_func);
 void SharpYuvInit(VP8CPUInfo cpu_info_func) {
   static volatile VP8CPUInfo sharpyuv_last_cpuinfo_used =
       (VP8CPUInfo)&sharpyuv_last_cpuinfo_used;
   LOCK_ACCESS;
-  SharpYuvGetCPUInfo = cpu_info_func;
+  // Only update SharpYuvGetCPUInfo when called from external code to avoid a
+  // race on reading the value in SharpYuvConvert().
+  if (cpu_info_func != (VP8CPUInfo)&SharpYuvGetCPUInfo) {
+    SharpYuvGetCPUInfo = cpu_info_func;
+  }
   if (sharpyuv_last_cpuinfo_used == SharpYuvGetCPUInfo) {
     UNLOCK_ACCESS_AND_RETURN;
   }
@@ -484,7 +495,8 @@ int SharpYuvConvert(const void* r_ptr, const void* g_ptr,
     // Stride should be even for uint16_t buffers.
     return 0;
   }
-  SharpYuvInit(SharpYuvGetCPUInfo);
+  // The address of the function pointer is used to avoid a read race.
+  SharpYuvInit((VP8CPUInfo)&SharpYuvGetCPUInfo);
 
   // Add scaling factor to go from rgb_bit_depth to yuv_bit_depth, to the
   // rgb->yuv conversion matrix.
