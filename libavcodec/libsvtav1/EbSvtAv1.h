@@ -79,7 +79,7 @@ typedef enum EbAv1PictureType {
 
 /** The Bool type is intended to be used to represent a true or a false
 value when passing parameters to and from the eBrisk API.  The
-Bool is a 32 bit quantity and is aligned on a 32 bit word boundary.
+Bool is an 8 bit quantity.
 */
 typedef uint8_t Bool;
 #define FALSE 0
@@ -299,6 +299,9 @@ typedef enum {
     PRIVATE_DATA, // data to be passed through and written to the bitstream
     //FILM_GRAIN_PARAM,        // passing film grain parameters per picture
     REF_FRAME_SCALING_EVENT, // reference frame scaling data per picture
+#if FTR_ROI
+    ROI_MAP_EVENT, // ROI map data per picture
+#endif
     PRIVATE_DATA_TYPES // end of private data types
 } PrivDataType;
 typedef struct EbPrivDataNode {
@@ -312,7 +315,22 @@ typedef struct EbRefFrameScale {
     uint32_t scale_denom; // scaling denominator for non-key frame, from 8~16
     uint32_t scale_kf_denom; // scaling denominator for key frame, from 8~16
 } EbRefFrameScale;
-
+#if FTR_ROI
+typedef struct SvtAv1RoiMapEvt {
+    uint64_t                start_picture_number;
+    uint8_t                *b64_seg_map;
+    int16_t                 seg_qp[8]; // 8: MAX_SEGMENTS
+    int8_t                  max_seg_id;
+    struct SvtAv1RoiMapEvt *next;
+} SvtAv1RoiMapEvt;
+typedef struct SvtAv1RoiMap {
+    uint32_t         evt_num;
+    SvtAv1RoiMapEvt *evt_list;
+    SvtAv1RoiMapEvt *cur_evt;
+    int16_t         *qp_map;
+    char            *buf;
+} SvtAv1RoiMap;
+#endif
 /**
 CPU FLAGS
 */

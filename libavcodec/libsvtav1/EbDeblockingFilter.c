@@ -21,7 +21,16 @@
 #include "EbReferenceObject.h"
 #include "EbCommonUtils.h"
 //#include "EbLog.h"
-
+#if OPT_LD_DLF
+#define DLF_MAX_LVL 4
+const int32_t inter_frame_multiplier[INPUT_SIZE_COUNT] = {
+    6017, 6017, 6017, 12034, 12034, 12034, 12034};
+const uint32_t disable_dlf_th[DLF_MAX_LVL][INPUT_SIZE_COUNT] = {
+    {0, 0, 0, 0, 0, 0, 0},
+    {100, 200, 500, 800, 1000, 1300, 1600},
+    {900, 1000, 2000, 3000, 4000, 6000, 7000},
+    {6000, 7000, 8000, 9000, 10000, 20000, 30000}};
+#endif
 void svt_aom_get_recon_pic(PictureControlSet *pcs, EbPictureBufferDesc **recon_ptr, Bool is_highbd);
 /*************************************************************************************************
  * svt_av1_loop_filter_init
@@ -145,11 +154,11 @@ static INLINE TxSize get_transform_size(const MbModeInfo *const mbmi, const Edge
     assert(mbmi != NULL);
 
     TxSize tx_size = (plane == COMPONENT_LUMA)
-        ? (is_skip ? tx_depth_to_tx_size[0][mbmi->block_mi.sb_type]
+        ? (is_skip ? tx_depth_to_tx_size[0][mbmi->block_mi.bsize]
                    : tx_depth_to_tx_size[mbmi->block_mi.tx_depth]
-                                        [mbmi->block_mi.sb_type]) // use max_tx_size
+                                        [mbmi->block_mi.bsize]) // use max_tx_size
         : av1_get_max_uv_txsize(
-              mbmi->block_mi.sb_type, plane_ptr->subsampling_x, plane_ptr->subsampling_y);
+              mbmi->block_mi.bsize, plane_ptr->subsampling_x, plane_ptr->subsampling_y);
     assert(tx_size < TX_SIZES_ALL);
 
     // since in case of chrominance or non-square transorm need to convert
@@ -199,6 +208,11 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
     // it not set up.
     if (mbmi == NULL)
         return TX_INVALID;
+#if FTR_ROI
+    const uint8_t segment_id = mbmi->block_mi.segment_id;
+#else
+    const uint8_t segment_id = 0;
+#endif
     const int32_t curr_skipped = mbmi->block_mi.skip &&
         is_inter_block_no_intrabc(mbmi->block_mi.ref_frame[0]);
     const TxSize ts = get_transform_size(mbmi, edge_dir, plane, plane_ptr, curr_skipped);
@@ -215,21 +229,25 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
 
         // prepare outer edge parameters. deblock the edge if it's an edge of a TU
         {
-            uint32_t       curr_level; // Added to address 4x4 problem
+            uint32_t curr_level; // Added to address 4x4 problem
+#if CLN_MISC_CLEANUPS
+            PredictionMode mode = mbmi->block_mi.mode;
+#else
             PredictionMode mode = (mbmi->block_mi.mode == INTRA_MODE_4x4) ? DC_PRED
                                                                           : mbmi->block_mi.mode;
+#endif
             if (frm_hdr->delta_lf_params.delta_lf_present) {
                 curr_level = svt_aom_get_filter_level_delta_lf(frm_hdr,
                                                                edge_dir,
                                                                plane,
                                                                pcs->ppcs->curr_delta_lf,
-                                                               0 /*segment_id*/,
+                                                               segment_id,
                                                                mode,
                                                                mbmi->block_mi.ref_frame[0]);
             } else {
                 assert(mode < 25);
-                curr_level = lfi_n->lvl[plane][0 /*segment_id*/][edge_dir]
-                                       [mbmi->block_mi.ref_frame[0]][mode_lf_lut[mode]];
+                curr_level = lfi_n->lvl[plane][segment_id][edge_dir][mbmi->block_mi.ref_frame[0]]
+                                       [mode_lf_lut[mode]];
             }
 
             uint32_t level = curr_level;
@@ -245,24 +263,43 @@ static TxSize set_lpf_parameters(Av1DeblockingParameters *const params, const ui
                 const TxSize pv_ts = get_transform_size(
                     mi_prev, edge_dir, plane, plane_ptr, pv_skip);
                 uint32_t pv_lvl;
+#if CLN_MISC_CLEANUPS
+                mode = mi_prev->block_mi.mode;
+#else
                 mode = (mi_prev->block_mi.mode == INTRA_MODE_4x4) ? DC_PRED
                                                                   : mi_prev->block_mi.mode;
+#endif
                 if (frm_hdr->delta_lf_params.delta_lf_present) {
+#if FTR_ROI
                     pv_lvl = svt_aom_get_filter_level_delta_lf(frm_hdr,
                                                                edge_dir,
                                                                plane,
                                                                pcs->ppcs->curr_delta_lf,
-                                                               0 /*segment_id*/,
+                                                               mi_prev->block_mi.segment_id,
                                                                mi_prev->block_mi.mode,
                                                                mi_prev->block_mi.ref_frame[0]);
+#else
+                    pv_lvl = svt_aom_get_filter_level_delta_lf(frm_hdr,
+                                                               edge_dir,
+                                                               plane,
+                                                               pcs->ppcs->curr_delta_lf,
+                                                               segment_id,
+                                                               mi_prev->block_mi.mode,
+                                                               mi_prev->block_mi.ref_frame[0]);
+#endif
                 } else {
                     assert(mode < 25);
-                    pv_lvl = lfi_n->lvl[plane][0 /*segment_id*/][edge_dir]
+#if FTR_ROI
+                    pv_lvl = lfi_n->lvl[plane][mi_prev->block_mi.segment_id][edge_dir]
                                        [mi_prev->block_mi.ref_frame[0]][mode_lf_lut[mode]];
+#else
+                    pv_lvl = lfi_n->lvl[plane][segment_id][edge_dir][mi_prev->block_mi.ref_frame[0]]
+                                       [mode_lf_lut[mode]];
+#endif
                 }
 
                 const BlockSize bsize = get_plane_block_size(
-                    mbmi->block_mi.sb_type, plane_ptr->subsampling_x, plane_ptr->subsampling_y);
+                    mbmi->block_mi.bsize, plane_ptr->subsampling_x, plane_ptr->subsampling_y);
                 assert(bsize < BlockSizeS_ALL);
                 const int32_t prediction_masks = (edge_dir == VERT_EDGE)
                     ? block_size_wide[bsize] - 1
@@ -1113,6 +1150,138 @@ EbErrorType qp_based_dlf_param(PictureControlSet *pcs, int32_t *filter_level_y,
 
     return EB_ErrorNone;
 }
+#if FTR_ROI
+/*************************************************************************************************
+* svt_av1_pick_filter_level_by_q
+* Choose the optimal loop filter levels by qindex
+*************************************************************************************************/
+void svt_av1_pick_filter_level_by_q(PictureControlSet *pcs, uint8_t qindex, int32_t *filter_level) {
+    SequenceControlSet *scs     = pcs->scs;
+    FrameHeader        *frm_hdr = &pcs->ppcs->frm_hdr;
+
+#if OPT_LD_DLF
+#if ENABLE_LD_DLF_RA
+    const uint8_t in_res           = pcs->ppcs->input_resolution;
+    const int32_t inter_frame_mult = inter_frame_multiplier[in_res];
+#else
+    const bool    rtc_tune         = pcs->rtc_tune ? true : false;
+    const uint8_t in_res           = pcs->ppcs->input_resolution;
+    const int32_t inter_frame_mult = rtc_tune ? inter_frame_multiplier[in_res] : 6017;
+#endif
+#endif
+
+    int32_t min_ref_filter_level[2] = {MAX_LOOP_FILTER, MAX_LOOP_FILTER};
+    int32_t min_ref_filter_level_u  = MAX_LOOP_FILTER;
+    int32_t min_ref_filter_level_v  = MAX_LOOP_FILTER;
+
+    for (uint32_t ref_it = 0; ref_it < pcs->ppcs->tot_ref_frame_types; ++ref_it) {
+        MvReferenceFrame ref_pair = pcs->ppcs->ref_frame_type_arr[ref_it];
+        MvReferenceFrame rf[2];
+        av1_set_ref_frame(rf, ref_pair);
+
+        if (rf[1] == NONE_FRAME) {
+            uint8_t            list_idx = get_list_idx(rf[0]);
+            uint8_t            ref_idx  = get_ref_frame_idx(rf[0]);
+            EbReferenceObject *ref_obj  = pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+
+            min_ref_filter_level[0] = MIN(min_ref_filter_level[0], ref_obj->filter_level[0]);
+            min_ref_filter_level[1] = MIN(min_ref_filter_level[1], ref_obj->filter_level[1]);
+            min_ref_filter_level_u  = MIN(min_ref_filter_level_u, ref_obj->filter_level_u);
+            min_ref_filter_level_v  = MIN(min_ref_filter_level_v, ref_obj->filter_level_v);
+        }
+    }
+
+    const int32_t min_filter_level = 0;
+    const int32_t max_filter_level = MAX_LOOP_FILTER; // av1_get_max_filter_level(cpi);
+    const int32_t q                = svt_aom_ac_quant_qtx(
+        qindex, 0, (EbBitDepth)scs->static_config.encoder_bit_depth);
+    // These values were determined by linear fitting the result of the
+    // searched level for 8 bit depth:
+    // Keyframes: filt_guess = q * 0.06699 - 1.60817
+    // Other frames: filt_guess = q * 0.02295 + 2.48225
+    //
+    // And high bit depth separately:
+    // filt_guess = q * 0.316206 + 3.87252
+    int32_t filt_guess;
+    switch (scs->static_config.encoder_bit_depth) {
+    case EB_EIGHT_BIT:
+        filt_guess = (frm_hdr->frame_type == KEY_FRAME)
+            ? ROUND_POWER_OF_TWO(q * 17563 - 421574, 18)
+#if OPT_LD_DLF
+            : ROUND_POWER_OF_TWO(q * inter_frame_mult + 650707, 18);
+#else
+            : ROUND_POWER_OF_TWO(q * 6017 + 650707, 18);
+#endif
+        break;
+    case EB_TEN_BIT: filt_guess = ROUND_POWER_OF_TWO(q * 20723 + 4060632, 20); break;
+    case EB_TWELVE_BIT: filt_guess = ROUND_POWER_OF_TWO(q * 20723 + 16242526, 22); break;
+    default:
+        assert(0 &&
+               "bit_depth should be EB_EIGHT_BIT, EB_TEN_BIT "
+               "or EB_TWELVE_BIT");
+        return;
+    }
+    if (scs->static_config.encoder_bit_depth != EB_EIGHT_BIT && frm_hdr->frame_type == KEY_FRAME)
+        filt_guess -= 4;
+
+#if OPT_LD_DLF
+    int32_t filt_guess_chroma = filt_guess / 2;
+#if !ENABLE_LD_DLF_RA
+    if (pcs->rtc_tune) {
+#endif
+        if (pcs->slice_type != I_SLICE) {
+#if ENABLE_LD_DLF_RA
+            const uint32_t use_zero_strength_th =
+                disable_dlf_th[pcs->ppcs->dlf_ctrls.zero_filter_strength_lvl][in_res] *
+                (pcs->temporal_layer_index + 1);
+#else
+        const uint32_t use_zero_strength_th =
+            disable_dlf_th[pcs->ppcs->dlf_ctrls.ld_zero_filter_strength_lvl][in_res] *
+            (pcs->temporal_layer_index + 1);
+#endif
+            if (use_zero_strength_th) {
+                uint32_t total_me_sad = 0;
+                for (uint16_t b64_index = 0; b64_index < pcs->b64_total_count; ++b64_index) {
+                    total_me_sad += pcs->ppcs->rc_me_distortion[b64_index];
+                }
+                uint32_t average_me_sad = total_me_sad / pcs->b64_total_count;
+
+                if (average_me_sad < use_zero_strength_th)
+                    filt_guess = 0;
+                if (average_me_sad < (use_zero_strength_th * 2))
+                    filt_guess_chroma = 0;
+            }
+        }
+#if !ENABLE_LD_DLF_RA
+    } else {
+        filt_guess = filt_guess > 2 ? filt_guess - 2 : filt_guess > 1 ? filt_guess - 1 : filt_guess;
+        filt_guess = filt_guess > pcs->ppcs->dlf_ctrls.min_filter_level ? filt_guess : 0;
+        filt_guess_chroma = filt_guess > 1 ? filt_guess / 2 : filt_guess;
+    }
+#endif
+#else
+    filt_guess = filt_guess > 2 ? filt_guess - 2 : filt_guess > 1 ? filt_guess - 1 : filt_guess;
+    filt_guess = filt_guess > pcs->ppcs->dlf_ctrls.min_filter_level ? filt_guess : 0;
+    int32_t filt_guess_chroma = filt_guess > 1 ? filt_guess / 2 : filt_guess;
+#endif
+    // Force filter_level to 0 if loop-filter is shut for 1 (or many) of the sub-layer reference frame(s)
+    filter_level[0] = min_ref_filter_level[0] || !pcs->ppcs->temporal_layer_index
+        ? clamp(filt_guess, min_filter_level, max_filter_level)
+        : 0;
+
+    filter_level[1] = min_ref_filter_level[1] || !pcs->ppcs->temporal_layer_index
+        ? clamp(filt_guess, min_filter_level, max_filter_level)
+        : 0;
+
+    filter_level[2] = min_ref_filter_level_u || !pcs->ppcs->temporal_layer_index
+        ? clamp(filt_guess_chroma, min_filter_level, max_filter_level)
+        : 0;
+
+    filter_level[3] = min_ref_filter_level_v || !pcs->ppcs->temporal_layer_index
+        ? clamp(filt_guess_chroma, min_filter_level, max_filter_level)
+        : 0;
+}
+#endif
 /*************************************************************************************************
 * svt_av1_pick_filter_level
 * Choose the optimal loop filter levels
@@ -1121,7 +1290,6 @@ EbErrorType svt_av1_pick_filter_level(EbPictureBufferDesc *srcBuffer, // source 
                                       PictureControlSet *pcs, LpfPickMethod method) {
     SequenceControlSet *scs     = pcs->scs;
     FrameHeader        *frm_hdr = &pcs->ppcs->frm_hdr;
-
     (void)srcBuffer;
     struct LoopFilter *const lf = &frm_hdr->loop_filter_params;
     lf->sharpness_level         = 0;
@@ -1129,6 +1297,14 @@ EbErrorType svt_av1_pick_filter_level(EbPictureBufferDesc *srcBuffer, // source 
     if (method == LPF_PICK_MINIMAL_LPF)
         lf->filter_level[0] = lf->filter_level[1] = 0;
     else if (method >= LPF_PICK_FROM_Q) {
+#if FTR_ROI
+        int32_t filter_level[4];
+        svt_av1_pick_filter_level_by_q(pcs, frm_hdr->quantization_params.base_q_idx, filter_level);
+        lf->filter_level[0] = filter_level[0];
+        lf->filter_level[1] = filter_level[1];
+        lf->filter_level_u  = filter_level[2];
+        lf->filter_level_v  = filter_level[3];
+#else
         int32_t min_ref_filter_level[2] = {MAX_LOOP_FILTER, MAX_LOOP_FILTER};
         int32_t min_ref_filter_level_u  = MAX_LOOP_FILTER;
         int32_t min_ref_filter_level_v  = MAX_LOOP_FILTER;
@@ -1201,6 +1377,7 @@ EbErrorType svt_av1_pick_filter_level(EbPictureBufferDesc *srcBuffer, // source 
         lf->filter_level_v = min_ref_filter_level_v || !pcs->ppcs->temporal_layer_index
             ? clamp(filt_guess_chroma, min_filter_level, max_filter_level)
             : 0;
+#endif
     } else {
         uint16_t padding = scs->super_block_size + 32;
         if (scs->static_config.superres_mode > SUPERRES_NONE ||
