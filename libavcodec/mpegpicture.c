@@ -25,12 +25,14 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/imgutils.h"
 
-#include "avcodec.h"
-#include "encode.h"
-#include "motion_est.h"
-#include "mpegpicture.h"
-#include "mpegutils.h"
-#include "threadframe.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/motion_est.h"
+#include "libavcodec/mpegpicture.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/threadframe.h"
 
 static void av_noinline free_picture_tables(Picture *pic)
 {
@@ -172,7 +174,7 @@ static int alloc_frame_buffer(AVCodecContext *avctx,  Picture *pic,
     if (avctx->hwaccel) {
         assert(!pic->hwaccel_picture_private);
         if (avctx->hwaccel->frame_priv_data_size) {
-            pic->hwaccel_priv_buf = av_buffer_allocz(avctx->hwaccel->frame_priv_data_size);
+            pic->hwaccel_priv_buf = ff_hwaccel_frame_priv_alloc(avctx, avctx->hwaccel);
             if (!pic->hwaccel_priv_buf) {
                 av_log(avctx, AV_LOG_ERROR, "alloc_frame_buffer() failed (hwaccel private data allocation)\n");
                 return -1;

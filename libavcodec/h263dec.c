@@ -27,26 +27,26 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "error_resilience.h"
-#include "flvdec.h"
-#include "h263.h"
-#include "h263dec.h"
-#include "hwconfig.h"
-#include "mpeg_er.h"
-#include "mpeg4video.h"
-#include "mpeg4videodec.h"
-#include "mpeg4videodefs.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodec.h"
-#include "msmpeg4dec.h"
-#include "thread.h"
-#include "wmv2dec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/flvdec.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpeg4videodec.h"
+#include "libavcodec/mpeg4videodefs.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/msmpeg4dec.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/wmv2dec.h"
 
 static enum AVPixelFormat h263_get_format(AVCodecContext *avctx)
 {
@@ -281,7 +281,7 @@ static int decode_slice(MpegEncContext *s)
                 ff_er_add_slice(&s->er, s->resync_mb_x, s->resync_mb_y,
                                 s->mb_x, s->mb_y, ER_MB_ERROR & part_mask);
 
-                if (s->avctx->err_recognition & AV_EF_IGNORE_ERR)
+                if ((s->avctx->err_recognition & AV_EF_IGNORE_ERR) && get_bits_left(&s->gb) > 0)
                     continue;
                 return AVERROR_INVALIDDATA;
             }

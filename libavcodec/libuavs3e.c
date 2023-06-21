@@ -288,6 +288,7 @@ const FFCodec ff_libuavs3e_encoder = {
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY |
                       AV_CODEC_CAP_OTHER_THREADS,
     .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE |
+                      FF_CODEC_CAP_INIT_CLEANUP |
                       FF_CODEC_CAP_AUTO_THREADS,
     .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,
                                                      //AV_PIX_FMT_YUV420P10LE,
@@ -295,4 +296,4 @@ const FFCodec ff_libuavs3e_encoder = {
     .p.priv_class   = &uavs3e_class,
     .defaults       = uavs3e_defaults,
     .p.wrapper_name = "libuavs3",
-} ;
+};

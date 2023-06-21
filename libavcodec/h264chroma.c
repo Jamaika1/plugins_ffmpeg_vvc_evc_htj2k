@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "h264chroma.h"
+#include "libavcodec/h264chroma.h"
 
 #define BIT_DEPTH 8
 #include "extra/h264chroma_template.c"
@@ -58,5 +58,7 @@ av_cold void ff_h264chroma_init(H264ChromaContext *c, int bit_depth)
     ff_h264chroma_init_mips(c, bit_depth);
 #elif ARCH_LOONGARCH64
     ff_h264chroma_init_loongarch(c, bit_depth);
+#elif ARCH_RISCV
+    ff_h264chroma_init_riscv(c, bit_depth);
 #endif
 }

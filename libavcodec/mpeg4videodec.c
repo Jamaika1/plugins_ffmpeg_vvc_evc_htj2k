@@ -22,31 +22,31 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/thread.h"
-#include "codec_internal.h"
-#include "error_resilience.h"
-#include "hwconfig.h"
-#include "idctdsp.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodata.h"
-#include "mpegvideodec.h"
-#include "mpeg4video.h"
-#include "mpeg4videodata.h"
-#include "mpeg4videodec.h"
-#include "mpeg4videodefs.h"
-#include "h263.h"
-#include "h263data.h"
-#include "h263dec.h"
-#include "profiles.h"
-#include "qpeldsp.h"
-#include "threadframe.h"
-#include "xvididct.h"
-#include "unary.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpeg4videodata.h"
+#include "libavcodec/mpeg4videodec.h"
+#include "libavcodec/mpeg4videodefs.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/xvididct.h"
+#include "libavcodec/unary.h"
 
 /* The defines below define the number of bits that are read at once for
  * reading vlc values. Changing these may improve speed and data cache needs
@@ -1437,7 +1437,7 @@ static inline int mpeg4_decode_block(Mpeg4DecContext *ctx, int16_t *block,
                                 if (SHOW_UBITS(re, &s->gb, 1) == 0) {
                                     av_log(s->avctx, AV_LOG_ERROR,
                                            "1. marker bit missing in 3. esc\n");
-                                    if (!(s->avctx->err_recognition & AV_EF_IGNORE_ERR))
+                                    if (!(s->avctx->err_recognition & AV_EF_IGNORE_ERR) || get_bits_left(&s->gb) <= 0)
                                         return AVERROR_INVALIDDATA;
                                 }
                                 SKIP_CACHE(re, &s->gb, 1);
@@ -1448,7 +1448,7 @@ static inline int mpeg4_decode_block(Mpeg4DecContext *ctx, int16_t *block,
                                 if (SHOW_UBITS(re, &s->gb, 1) == 0) {
                                     av_log(s->avctx, AV_LOG_ERROR,
                                            "2. marker bit missing in 3. esc\n");
-                                    if (!(s->avctx->err_recognition & AV_EF_IGNORE_ERR))
+                                    if (!(s->avctx->err_recognition & AV_EF_IGNORE_ERR) || get_bits_left(&s->gb) <= 0)
                                         return AVERROR_INVALIDDATA;
                                 }
 

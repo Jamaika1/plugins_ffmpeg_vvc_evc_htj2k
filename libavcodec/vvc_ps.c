@@ -1,7 +1,7 @@
 /*
- * VVC Parameter Set decoding
+ * VVC parameter set parser
  *
- * Copyright (C) 2021 Nuo Mi
+ * Copyright (C) 2023 Nuo Mi
  * Copyright (C) 2022 Xu Mu
  *
  * This file is part of FFmpeg.
@@ -20,12 +20,15 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavcodec/avcodec.h"
+#include "libavcodec/golomb.h"
+
 #include "libavutil/imgutils.h"
-#include "libavutil/internal.h"
-#include "golomb.h"
-#include "vvc_data.h"
-#include "vvc_ps.h"
-#include "vvcdec.h"
+
+#include "libavcodec/vvc_data.h"
+#include "libavcodec/vvc_ps.h"
+#include "libavcodec/vvcdec.h"
 
 #define u(b, f, min, max) do { \
     f = get_bits(gb, b); \
@@ -256,9 +259,15 @@ static int map_pixel_format(VVCSPS *sps, void *log_ctx)
         if (sps->chroma_format_idc == 2) sps->pix_fmt = AV_PIX_FMT_YUV422P10;
         if (sps->chroma_format_idc == 3) sps->pix_fmt = AV_PIX_FMT_YUV444P10;
         break;
+    case 12:
+        if (sps->chroma_format_idc == 0) sps->pix_fmt = AV_PIX_FMT_GRAY12;
+        if (sps->chroma_format_idc == 1) sps->pix_fmt = AV_PIX_FMT_YUV420P12;
+        if (sps->chroma_format_idc == 2) sps->pix_fmt = AV_PIX_FMT_YUV422P12;
+        if (sps->chroma_format_idc == 3) sps->pix_fmt = AV_PIX_FMT_YUV444P12;
+        break;
     default:
         av_log(log_ctx, AV_LOG_ERROR,
-               "The following bit-depths are currently specified: 8, 10 bits, "
+               "The following bit-depths are currently specified: 8, 10, 12 bits, "
                "chroma_format_idc is %d, depth is %d\n",
                sps->chroma_format_idc, sps->bit_depth);
         return AVERROR_INVALIDDATA;
@@ -468,7 +477,7 @@ static int sps_parse_subpic(VVCSPS *sps, GetBitContext *gb, void *log_ctx)
 static int sps_parse_bit_depth(VVCSPS *sps, GetBitContext *gb, void *log_ctx)
 {
     sps->bit_depth = get_ue_golomb_long(gb) + 8;
-    if (sps->bit_depth > 10) {
+    if (sps->bit_depth > 12) {
         avpriv_report_missing_feature(log_ctx, "%d bits", sps->bit_depth);
         return AVERROR_PATCHWELCOME;
     }
@@ -2575,7 +2584,7 @@ int ff_vvc_decode_ph(VVCParamSets *ps, const int poc_tid0, const int is_clvss, G
 static int aps_alf_parse_luma(VVCALF *alf, GetBitContext *gb, void *log_ctx)
 {
     int     alf_luma_coeff_delta_idx[ALF_NUM_FILTERS_LUMA] = { 0 };
-    int8_t  luma_coeff   [ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
+    int16_t luma_coeff   [ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
     uint8_t luma_clip_idx[ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
 
     const int alf_luma_clip_flag = get_bits1(gb);

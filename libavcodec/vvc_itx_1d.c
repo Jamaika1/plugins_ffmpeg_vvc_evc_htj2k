@@ -1,5 +1,7 @@
 /*
- * VVC shared tables
+ * VVC 1D transform
+ *
+ * Copyright (C) 2023 Nuo Mi
  *
  * This file is part of FFmpeg.
  *
@@ -55,8 +57,8 @@
    Compact inverse discrete cosine transform circuit for MPEG video decoding.
  */
 
-#include "vvc_data.h"
-#include "vvc_itx_1d.h"
+#include "libavcodec/vvc_data.h"
+#include "libavcodec/vvc_itx_1d.h"
 #include "libavutil/avutil.h"
 
 /*

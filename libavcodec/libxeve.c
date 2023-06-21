@@ -612,5 +612,7 @@ const FFCodec ff_libxeve_encoder = {
     .p.profiles         = NULL_IF_CONFIG_SMALL(ff_evc_profiles),
     .p.wrapper_name     = "libxeve",
     .p.pix_fmts         = supported_pixel_formats,
-    .caps_internal      = FF_CODEC_CAP_INIT_CLEANUP | FF_CODEC_CAP_NOT_INIT_THREADSAFE,
+    .caps_internal      = FF_CODEC_CAP_NOT_INIT_THREADSAFE |
+                          FF_CODEC_CAP_INIT_CLEANUP |
+                          FF_CODEC_CAP_AUTO_THREADS,
 };

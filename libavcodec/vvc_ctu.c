@@ -1,5 +1,5 @@
 /*
- * VVC CTU decoder
+ * VVC CTU(Coding Tree Unit) parser
  *
  * Copyright (C) 2022 Nuo Mi
  *
@@ -22,7 +22,6 @@
 
 #include "libavcodec/vvc_cabac.h"
 #include "libavcodec/vvc_ctu.h"
-#include "libavcodec/vvc_data.h"
 #include "libavcodec/vvc_inter.h"
 #include "libavcodec/vvc_mvs.h"
 
@@ -1201,16 +1200,17 @@ static void set_cu_tabs(const VVCLocalContext *lc, const CodingUnit *cu)
 }
 
 //8.5.2.7 Derivation process for merge motion vector difference
-static void derive_mmvd(MvField *mvf, const VVCFrameContext *fc, const Mv *mmvd_offset)
+static void derive_mmvd(const VVCLocalContext *lc, MvField *mvf, const Mv *mmvd_offset)
 {
+    const SliceContext *sc  = lc->sc;
     Mv mmvd[2];
 
     if (mvf->pred_flag == PF_BI) {
-        const RefPicList *refPicList = fc->ref->refPicList;
-        const int poc = fc->ps.ph->poc;
+        const RefPicList *rpl = sc->rpl;
+        const int poc = lc->fc->ps.ph->poc;
         const int diff[] = {
-            poc - refPicList[0].list[mvf->ref_idx[0]],
-            poc - refPicList[1].list[mvf->ref_idx[1]]
+            poc - rpl[0].list[mvf->ref_idx[0]],
+            poc - rpl[1].list[mvf->ref_idx[1]]
         };
         const int sign = FFSIGN(diff[0]) != FFSIGN(diff[1]);
 
@@ -1221,7 +1221,7 @@ static void derive_mmvd(MvField *mvf, const VVCFrameContext *fc, const Mv *mmvd_
             const int i = FFABS(diff[0]) < FFABS(diff[1]);
             const int o = !i;
             mmvd[i] = *mmvd_offset;
-            if (!refPicList[0].isLongTerm[mvf->ref_idx[0]] && !refPicList[1].isLongTerm[mvf->ref_idx[1]]) {
+            if (!rpl[0].isLongTerm[mvf->ref_idx[0]] && !rpl[1].isLongTerm[mvf->ref_idx[1]]) {
                 ff_vvc_mv_scale(&mmvd[o], mmvd_offset, diff[i], diff[o]);
             }
             else {
@@ -1233,8 +1233,7 @@ static void derive_mmvd(MvField *mvf, const VVCFrameContext *fc, const Mv *mmvd_
         mvf->mv[0].y += mmvd[0].y;
         mvf->mv[1].x += mmvd[1].x;
         mvf->mv[1].y += mmvd[1].y;
-    }
-    else {
+    } else {
         const int idx = mvf->pred_flag - PF_L0;
         mvf->mv[idx].x += mmvd_offset->x;
         mvf->mv[idx].y += mmvd_offset->y;
@@ -1264,102 +1263,152 @@ static void mv_merge_refine_pred_flag(MvField *mvf, const int width, const int h
     }
 }
 
+// subblock-based inter prediction data
+static void merge_data_subblock(VVCLocalContext *lc)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCPH  *ph            = fc->ps.ph;
+    CodingUnit* cu              = lc->cu;
+    PredictionUnit *pu          = &cu->pu;
+    int merge_subblock_idx      = 0;
+
+    set_cb_tab(lc, fc->tab.msf, pu->merge_subblock_flag);
+    if (ph->max_num_subblock_merge_cand > 1) {
+        merge_subblock_idx = ff_vvc_merge_subblock_idx(lc, ph->max_num_subblock_merge_cand);
+    }
+    ff_vvc_sb_mv_merge_mode(lc, merge_subblock_idx, pu);
+}
+
+static void merge_data_regular(VVCLocalContext *lc)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSPS *sps           = fc->ps.sps;
+    const VVCPH  *ph            = fc->ps.ph;
+    const CodingUnit* cu        = lc->cu;
+    PredictionUnit *pu          = &lc->cu->pu;
+    int merge_idx               = 0;
+    Mv mmvd_offset;
+    MvField mvf;
+
+    if (sps->mmvd_enabled_flag)
+        pu->mmvd_merge_flag = ff_vvc_mmvd_merge_flag(lc);
+    if (pu->mmvd_merge_flag) {
+        int mmvd_cand_flag = 0;
+        if (sps->max_num_merge_cand > 1)
+            mmvd_cand_flag = ff_vvc_mmvd_cand_flag(lc);
+        ff_vvc_mmvd_offset_coding(lc, &mmvd_offset, ph->mmvd_fullpel_only_flag);
+        merge_idx = mmvd_cand_flag;
+    } else if (sps->max_num_merge_cand > 1) {
+        merge_idx = ff_vvc_merge_idx(lc);
+    }
+    ff_vvc_luma_mv_merge_mode(lc, merge_idx, 0, &mvf);
+    if (pu->mmvd_merge_flag)
+        derive_mmvd(lc, &mvf, &mmvd_offset);
+    mv_merge_refine_pred_flag(&mvf, cu->cb_width, cu->cb_height);
+    ff_vvc_store_mvf(lc, &mvf);
+    mvf_to_mi(&mvf, &pu->mi);
+}
+
+static int ciip_flag_decode(VVCLocalContext *lc, const int ciip_avaiable, const int gpm_avaiable, const int is_128)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSPS *sps           = fc->ps.sps;
+    const CodingUnit *cu        = lc->cu;
+
+    if (ciip_avaiable && gpm_avaiable)
+        return ff_vvc_ciip_flag(lc);
+    return sps->ciip_enabled_flag && !cu->skip_flag &&
+            !is_128 && (cu->cb_width * cu->cb_height >= 64);
+}
+
+static void merge_data_gpm(VVCLocalContext *lc)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSPS *sps           = fc->ps.sps;
+    PredictionUnit *pu          = &lc->cu->pu;
+    int merge_gpm_idx[2];
+
+    pu->merge_gpm_flag = 1;
+    pu->gpm_partition_idx = ff_vvc_merge_gpm_partition_idx(lc);
+    merge_gpm_idx[0] = ff_vvc_merge_gpm_idx(lc, 0);
+    merge_gpm_idx[1] = 0;
+    if (sps->max_num_gpm_merge_cand > 2)
+        merge_gpm_idx[1] = ff_vvc_merge_gpm_idx(lc, 1);
+
+    ff_vvc_luma_mv_merge_gpm(lc, merge_gpm_idx, pu->gpm_mv);
+    ff_vvc_store_gpm_mvf(lc, pu);
+}
+
+static void merge_data_ciip(VVCLocalContext *lc)
+{
+    const VVCFrameContext* fc   = lc->fc;
+    const VVCSPS* sps           = fc->ps.sps;
+    CodingUnit *cu              = lc->cu;
+    MotionInfo *mi              = &cu->pu.mi;
+    int merge_idx               = 0;
+    MvField mvf;
+
+    if (sps->max_num_merge_cand > 1)
+        merge_idx = ff_vvc_merge_idx(lc);
+    ff_vvc_luma_mv_merge_mode(lc, merge_idx, 1, &mvf);
+    mv_merge_refine_pred_flag(&mvf, cu->cb_width, cu->cb_height);
+    ff_vvc_store_mvf(lc, &mvf);
+    mvf_to_mi(&mvf, mi);
+    cu->intra_pred_mode_y   = cu->intra_pred_mode_c = INTRA_PLANAR;
+    cu->intra_luma_ref_idx  = 0;
+    cu->intra_mip_flag      = 0;
+}
+
+// block-based inter prediction data
+static void merge_data_block(VVCLocalContext *lc)
+{
+    const VVCFrameContext* fc   = lc->fc;
+    const VVCSPS* sps           = fc->ps.sps;
+    const VVCSH* sh             = &lc->sc->sh;
+    CodingUnit *cu              = lc->cu;
+    const int cb_width          = cu->cb_width;
+    const int cb_height         = cu->cb_height;
+    const int is_128 = cb_width == 128 || cb_height == 128;
+    const int ciip_avaiable = sps->ciip_enabled_flag &&
+        !cu->skip_flag && (cb_width * cb_height >= 64);
+    const int gpm_avaiable  = sps->gpm_enabled_flag && IS_B(sh) &&
+        (cb_width >= 8) && (cb_height >=8) &&
+        (cb_width < 8 * cb_height) && (cb_height < 8 *cb_width);
+
+    int regular_merge_flag = 1;
+
+    if (!is_128 && (ciip_avaiable || gpm_avaiable))
+        regular_merge_flag = ff_vvc_regular_merge_flag(lc, cu->skip_flag);
+    if (regular_merge_flag) {
+        merge_data_regular(lc);
+    } else {
+        cu->ciip_flag = ciip_flag_decode(lc, ciip_avaiable, gpm_avaiable, is_128);
+        if (cu->ciip_flag)
+            merge_data_ciip(lc);
+        else
+            merge_data_gpm(lc);
+    }
+}
+
 static int hls_merge_data(VVCLocalContext *lc)
 {
     const VVCFrameContext *fc   = lc->fc;
     const VVCPH  *ph            = fc->ps.ph;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    CodingUnit *cu              = lc->cu;
-    PredictionUnit *pu          = &cu->pu;
-    MotionInfo *mi              = &pu->mi;
-    const int cb_width          = cu->cb_width;
-    const int cb_height         = cu->cb_height;
-    MvField mvf;
-    int merge_idx = 0;
+    const CodingUnit *cu        = lc->cu;
+    PredictionUnit *pu          = &lc->cu->pu;
 
     pu->merge_gpm_flag = 0;
-    mi->num_sb_x = mi->num_sb_y = 1;
+    pu->mi.num_sb_x = pu->mi.num_sb_y = 1;
     if (cu->pred_mode == MODE_IBC) {
         avpriv_report_missing_feature(lc->fc->avctx, "Intra Block Copy");
         return AVERROR_PATCHWELCOME;
     } else {
-        if (ph->max_num_subblock_merge_cand > 0 && cb_width >= 8 && cb_height >= 8) {
+        if (ph->max_num_subblock_merge_cand > 0 && cu->cb_width >= 8 && cu->cb_height >= 8)
             pu->merge_subblock_flag = ff_vvc_merge_subblock_flag(lc);
-        }
-        if (pu->merge_subblock_flag) {
-            int merge_subblock_idx = 0;
-            set_cb_tab(lc, fc->tab.msf, pu->merge_subblock_flag);
-            if (ph->max_num_subblock_merge_cand > 1) {
-                merge_subblock_idx = ff_vvc_merge_subblock_idx(lc, ph->max_num_subblock_merge_cand);
-            }
-            ff_vvc_sb_mv_merge_mode(lc, merge_subblock_idx, pu);
-        } else {
-            int regular_merge_flag = 1;
-            const int is_128 = cb_width == 128 || cb_height == 128;
-            const int ciip_avaiable = sps->ciip_enabled_flag &&
-                !cu->skip_flag && (cb_width * cb_height >= 64);
-            const int gpm_avaiable  = sps->gpm_enabled_flag && IS_B(sh) &&
-                (cb_width >= 8) && (cb_height >=8) &&
-                (cb_width < 8 * cb_height) && (cb_height < 8 *cb_width);
-            if (!is_128 &&  (ciip_avaiable || gpm_avaiable)) {
-                regular_merge_flag = ff_vvc_regular_merge_flag(lc, cu->skip_flag);
-            }
-            if (regular_merge_flag) {
-                Mv mmvd_offset;
-                if (sps->mmvd_enabled_flag) {
-                    pu->mmvd_merge_flag = ff_vvc_mmvd_merge_flag(lc);
-                }
-                if (pu->mmvd_merge_flag) {
-                    int mmvd_cand_flag = 0;
-                    if (sps->max_num_merge_cand > 1) {
-                        mmvd_cand_flag = ff_vvc_mmvd_cand_flag(lc);
-                    }
-                    ff_vvc_mmvd_offset_coding(lc, &mmvd_offset, ph->mmvd_fullpel_only_flag);
-                    merge_idx = mmvd_cand_flag;
-                } else if (sps->max_num_merge_cand > 1){
-                    merge_idx = ff_vvc_merge_idx(lc);
-                }
-                ff_vvc_luma_mv_merge_mode(lc, merge_idx, 0, &mvf);
-                if (pu->mmvd_merge_flag)
-                    derive_mmvd(&mvf, fc, &mmvd_offset);
-                mv_merge_refine_pred_flag(&mvf, cb_width, cb_height);
-                ff_vvc_store_mvf(lc, &mvf);
-                mvf_to_mi(&mvf, mi);
-            } else {
-
-                if (ciip_avaiable && gpm_avaiable) {
-                    cu->ciip_flag = ff_vvc_ciip_flag(lc);
-                } else {
-                    cu->ciip_flag = sps->ciip_enabled_flag && !cu->skip_flag &&
-                        !is_128 && (cb_width * cb_height >= 64);
-                }
-                if (cu->ciip_flag && sps->max_num_merge_cand > 1) {
-                    merge_idx = ff_vvc_merge_idx(lc);
-                }
-                if (!cu->ciip_flag) {
-                    int merge_gpm_idx[2];
-
-                    pu->merge_gpm_flag = 1;
-                    pu->gpm_partition_idx = ff_vvc_merge_gpm_partition_idx(lc);
-                    merge_gpm_idx[0] = ff_vvc_merge_gpm_idx(lc, 0);
-                    merge_gpm_idx[1] = 0;
-                    if (sps->max_num_gpm_merge_cand > 2)
-                        merge_gpm_idx[1] = ff_vvc_merge_gpm_idx(lc, 1);
-
-                    ff_vvc_luma_mv_merge_gpm(lc, merge_gpm_idx, pu->gpm_mv);
-                    ff_vvc_store_gpm_mvf(lc, pu);
-                } else {
-                    ff_vvc_luma_mv_merge_mode(lc, merge_idx, 1, &mvf);
-                    mv_merge_refine_pred_flag(&mvf, cb_width, cb_height);
-                    ff_vvc_store_mvf(lc, &mvf);
-                    mvf_to_mi(&mvf, mi);
-                    cu->intra_pred_mode_y   = cu->intra_pred_mode_c = INTRA_PLANAR;
-                    cu->intra_luma_ref_idx  = 0;
-                    cu->intra_mip_flag      = 0;
-                }
-            }
-        }
+        if (pu->merge_subblock_flag)
+            merge_data_subblock(lc);
+        else
+            merge_data_block(lc);
     }
     return 0;
 }
@@ -1403,7 +1452,7 @@ static int bcw_idx_decode(VVCLocalContext *lc, const MotionInfo *mi, const int c
         !w->weight_flag[L0][CHROMA][mi->ref_idx[0]] &&
         !w->weight_flag[L1][CHROMA][mi->ref_idx[1]] &&
         cb_width * cb_height >= 256) {
-        bcw_idx = ff_vvc_bcw_idx(lc, ff_vvc_no_backward_pred_flag(fc));
+        bcw_idx = ff_vvc_bcw_idx(lc, ff_vvc_no_backward_pred_flag(lc));
     }
     return bcw_idx;
 }
@@ -1512,6 +1561,60 @@ static int mvp_data(VVCLocalContext *lc)
     return 0;
 }
 
+// derive bdofFlag from 8.5.6 Decoding process for inter blocks
+// derive dmvr from 8.5.1 General decoding process for coding units coded in inter prediction mode
+static void derive_dmvr_bdof_flag(const VVCLocalContext *lc, PredictionUnit *pu)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCPPS *pps           = fc->ps.pps;
+    const VVCPH *ph             = fc->ps.ph;
+    const VVCSH *sh             = &lc->sc->sh;
+    const int poc               = ph->poc;
+    const RefPicList *rpl0      = lc->sc->rpl + L0;
+    const RefPicList *rpl1      = lc->sc->rpl + L1;
+    const int8_t *ref_idx       = pu->mi.ref_idx;
+    const MotionInfo *mi        = &pu->mi;
+    const CodingUnit *cu        = lc->cu;
+    const PredWeightTable *w    = pps->wp_info_in_ph_flag ? &fc->ps.ph->pwt : &sh->pwt;
+
+    pu->dmvr_flag = 0;
+    pu->bdof_flag = 0;
+
+    if (mi->pred_flag == PF_BI &&
+        (poc - rpl0->list[ref_idx[L0]] == rpl1->list[ref_idx[L1]] - poc) &&
+        !rpl0->isLongTerm[ref_idx[L0]] && !rpl1->isLongTerm[ref_idx[L1]] &&
+        !cu->ciip_flag &&
+        !mi->bcw_idx &&
+        !w->weight_flag[L0][LUMA][mi->ref_idx[L0]] && !w->weight_flag[L1][LUMA][mi->ref_idx[L1]] &&
+        !w->weight_flag[L0][CHROMA][mi->ref_idx[L0]] && !w->weight_flag[L1][CHROMA][mi->ref_idx[L1]] &&
+        cu->cb_width >= 8 && cu->cb_height >= 8 &&
+        (cu->cb_width * cu->cb_height >= 128)) {
+        // fixme: for RprConstraintsActiveFlag
+        if (!ph->bdof_disabled_flag &&
+            mi->motion_model_idc == MOTION_TRANSLATION &&
+            !pu->merge_subblock_flag &&
+            !pu->sym_mvd_flag)
+            pu->bdof_flag = 1;
+        if (!ph->dmvr_disabled_flag &&
+            pu->general_merge_flag &&
+            !pu->mmvd_merge_flag)
+            pu->dmvr_flag = 1;
+    }
+}
+
+// part of 8.5.1 General decoding process for coding units coded in inter prediction mode
+static void refine_regular_subblock(const VVCLocalContext *lc)
+{
+    const CodingUnit *cu    = lc->cu;
+    PredictionUnit *pu      = &lc->cu->pu;
+
+    derive_dmvr_bdof_flag(lc, pu);
+    if (pu->dmvr_flag || pu->bdof_flag) {
+        pu->mi.num_sb_x = (cu->cb_width > 16) ? (cu->cb_width >> 4) : 1;
+        pu->mi.num_sb_y = (cu->cb_height > 16) ? (cu->cb_height >> 4) : 1;
+    }
+}
+
 static int vvc_inter_data(VVCLocalContext *lc)
 {
     const CodingUnit *cu    = lc->cu;
@@ -1531,8 +1634,10 @@ static int vvc_inter_data(VVCLocalContext *lc)
     } else {
         ret = mvp_data(lc);
     }
-    if (!pu->merge_gpm_flag && !pu->inter_affine_flag && !pu->merge_subblock_flag)
+    if (!pu->merge_gpm_flag && !pu->inter_affine_flag && !pu->merge_subblock_flag) {
+        refine_regular_subblock(lc);
         ff_vvc_update_hmvp(lc, mi);
+    }
     return ret;
 }
 
@@ -2090,50 +2195,6 @@ static int hls_coding_tree_unit(VVCLocalContext *lc,  int x0, int y0)
     return 0;
 }
 
-void ff_vvc_decode_neighbour(VVCLocalContext *lc, const int x_ctb, const int y_ctb,
-    const int rx, const int ry, const int rs)
-{
-    VVCFrameContext *fc = lc->fc;
-    const int ctb_size         = fc->ps.sps->ctb_size_y;
-
-    lc->end_of_tiles_x = fc->ps.sps->width;
-    lc->end_of_tiles_y = fc->ps.sps->height;
-    if (fc->ps.pps->ctb_to_col_bd[rx] != fc->ps.pps->ctb_to_col_bd[rx + 1])
-        lc->end_of_tiles_x = FFMIN(x_ctb + ctb_size, lc->end_of_tiles_x);
-    if (fc->ps.pps->ctb_to_row_bd[ry] != fc->ps.pps->ctb_to_row_bd[ry + 1])
-        lc->end_of_tiles_y = FFMIN(y_ctb + ctb_size, lc->end_of_tiles_y);
-
-    lc->boundary_flags = 0;
-    if (rx > 0 && fc->ps.pps->ctb_to_col_bd[rx] != fc->ps.pps->ctb_to_col_bd[rx - 1])
-        lc->boundary_flags |= BOUNDARY_LEFT_TILE;
-    if (rx > 0 && fc->tab.slice_idx[rs] != fc->tab.slice_idx[rs - 1])
-        lc->boundary_flags |= BOUNDARY_LEFT_SLICE;
-    if (ry > 0 && fc->ps.pps->ctb_to_row_bd[ry] != fc->ps.pps->ctb_to_row_bd[ry - 1])
-        lc->boundary_flags |= BOUNDARY_UPPER_TILE;
-    if (ry > 0 && fc->tab.slice_idx[rs] != fc->tab.slice_idx[rs - fc->ps.pps->ctb_width])
-        lc->boundary_flags |= BOUNDARY_UPPER_SLICE;
-    lc->ctb_left_flag = rx > 0 && !(lc->boundary_flags & BOUNDARY_LEFT_TILE);
-    lc->ctb_up_flag   = ry > 0 && !(lc->boundary_flags & BOUNDARY_UPPER_TILE) && !(lc->boundary_flags & BOUNDARY_UPPER_SLICE);
-    lc->ctb_up_right_flag = lc->ctb_up_flag && (fc->ps.pps->ctb_to_col_bd[rx] == fc->ps.pps->ctb_to_col_bd[rx + 1]) &&
-        (fc->ps.pps->ctb_to_row_bd[ry] == fc->ps.pps->ctb_to_row_bd[ry - 1]);
-    lc->ctb_up_left_flag = lc->ctb_left_flag && lc->ctb_up_flag;
-}
-
-void ff_vvc_set_neighbour_available(VVCLocalContext *lc,
-    const int x0, const int y0, const int w, const int h)
-{
-    const int log2_ctb_size = lc->fc->ps.sps->ctb_log2_size_y;
-    const int x0b = av_mod_uintp2(x0, log2_ctb_size);
-    const int y0b = av_mod_uintp2(y0, log2_ctb_size);
-
-    lc->na.cand_up       = (lc->ctb_up_flag   || y0b);
-    lc->na.cand_left     = (lc->ctb_left_flag || x0b);
-    lc->na.cand_up_left  = (x0b || y0b) ? lc->na.cand_left && lc->na.cand_up : lc->ctb_up_left_flag;
-    lc->na.cand_up_right_sap =
-            (x0b + w == 1 << log2_ctb_size) ? lc->ctb_up_right_flag && !y0b : lc->na.cand_up;
-    lc->na.cand_up_right = lc->na.cand_up_right_sap && (x0 + w) < lc->end_of_tiles_x;
-}
-
 int ff_vvc_coding_tree_unit(VVCLocalContext *lc, const int ctb_addr, const int rs, const int rx, const int ry)
 {
     const VVCFrameContext *fc   = lc->fc;
@@ -2182,3 +2243,67 @@ int ff_vvc_coding_tree_unit(VVCLocalContext *lc, const int ctb_addr, const int r
     }
     return 0;
 }
+
+void ff_vvc_decode_neighbour(VVCLocalContext *lc, const int x_ctb, const int y_ctb,
+    const int rx, const int ry, const int rs)
+{
+    VVCFrameContext *fc = lc->fc;
+    const int ctb_size         = fc->ps.sps->ctb_size_y;
+
+    lc->end_of_tiles_x = fc->ps.sps->width;
+    lc->end_of_tiles_y = fc->ps.sps->height;
+    if (fc->ps.pps->ctb_to_col_bd[rx] != fc->ps.pps->ctb_to_col_bd[rx + 1])
+        lc->end_of_tiles_x = FFMIN(x_ctb + ctb_size, lc->end_of_tiles_x);
+    if (fc->ps.pps->ctb_to_row_bd[ry] != fc->ps.pps->ctb_to_row_bd[ry + 1])
+        lc->end_of_tiles_y = FFMIN(y_ctb + ctb_size, lc->end_of_tiles_y);
+
+    lc->boundary_flags = 0;
+    if (rx > 0 && fc->ps.pps->ctb_to_col_bd[rx] != fc->ps.pps->ctb_to_col_bd[rx - 1])
+        lc->boundary_flags |= BOUNDARY_LEFT_TILE;
+    if (rx > 0 && fc->tab.slice_idx[rs] != fc->tab.slice_idx[rs - 1])
+        lc->boundary_flags |= BOUNDARY_LEFT_SLICE;
+    if (ry > 0 && fc->ps.pps->ctb_to_row_bd[ry] != fc->ps.pps->ctb_to_row_bd[ry - 1])
+        lc->boundary_flags |= BOUNDARY_UPPER_TILE;
+    if (ry > 0 && fc->tab.slice_idx[rs] != fc->tab.slice_idx[rs - fc->ps.pps->ctb_width])
+        lc->boundary_flags |= BOUNDARY_UPPER_SLICE;
+    lc->ctb_left_flag = rx > 0 && !(lc->boundary_flags & BOUNDARY_LEFT_TILE);
+    lc->ctb_up_flag   = ry > 0 && !(lc->boundary_flags & BOUNDARY_UPPER_TILE) && !(lc->boundary_flags & BOUNDARY_UPPER_SLICE);
+    lc->ctb_up_right_flag = lc->ctb_up_flag && (fc->ps.pps->ctb_to_col_bd[rx] == fc->ps.pps->ctb_to_col_bd[rx + 1]) &&
+        (fc->ps.pps->ctb_to_row_bd[ry] == fc->ps.pps->ctb_to_row_bd[ry - 1]);
+    lc->ctb_up_left_flag = lc->ctb_left_flag && lc->ctb_up_flag;
+}
+
+void ff_vvc_set_neighbour_available(VVCLocalContext *lc,
+    const int x0, const int y0, const int w, const int h)
+{
+    const int log2_ctb_size = lc->fc->ps.sps->ctb_log2_size_y;
+    const int x0b = av_mod_uintp2(x0, log2_ctb_size);
+    const int y0b = av_mod_uintp2(y0, log2_ctb_size);
+
+    lc->na.cand_up       = (lc->ctb_up_flag   || y0b);
+    lc->na.cand_left     = (lc->ctb_left_flag || x0b);
+    lc->na.cand_up_left  = (x0b || y0b) ? lc->na.cand_left && lc->na.cand_up : lc->ctb_up_left_flag;
+    lc->na.cand_up_right_sap =
+            (x0b + w == 1 << log2_ctb_size) ? lc->ctb_up_right_flag && !y0b : lc->na.cand_up;
+    lc->na.cand_up_right = lc->na.cand_up_right_sap && (x0 + w) < lc->end_of_tiles_x;
+}
+
+void ff_vvc_ctu_free_cus(CTU *ctu)
+{
+    while (ctu->cus) {
+        CodingUnit *cu      = ctu->cus;
+        AVBufferRef *buf    = cu->buf;
+
+        ctu->cus = ctu->cus->next;
+        av_buffer_unref(&buf);
+    }
+}
+
+int ff_vvc_get_qPy(const VVCFrameContext *fc, const int xc, const int yc)
+{
+    const int min_cb_log2_size_y = fc->ps.sps->min_cb_log2_size_y;
+    const int x                  = xc >> min_cb_log2_size_y;
+    const int y                  = yc >> min_cb_log2_size_y;
+    return fc->tab.qp[LUMA][x + y * fc->ps.pps->min_cb_width];
+}
+

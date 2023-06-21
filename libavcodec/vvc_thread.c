@@ -1,7 +1,7 @@
 /*
  * VVC thread logic
  *
- * Copyright (C) 2022 Nuo Mi
+ * Copyright (C) 2023 Nuo Mi
  *
  * This file is part of FFmpeg.
  *
@@ -20,11 +20,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <stdatomic.h>
+
+#include "libavutil/thread.h"
+
 #include "libavcodec/vvc_thread.h"
 #include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_filter.h"
 #include "libavcodec/vvc_inter.h"
 #include "libavcodec/vvc_intra.h"
+#include "libavcodec/vvc_refs.h"
 
 typedef struct VVCRowThread {
     VVCTask reconstruct_task;
@@ -174,7 +179,7 @@ static int is_alf_ready(const VVCFrameContext *fc, const VVCTask *t)
 
 typedef int (*is_ready_func)(const VVCFrameContext *fc, const VVCTask *t);
 
-int ff_vvc_task_ready(const AVTask *_t, void *user_data)
+int ff_vvc_task_ready(const Tasklet *_t, void *user_data)
 {
     const VVCTask *t            = (const VVCTask*)_t;
     const VVCFrameThread *ft    = t->fc->frame_thread;
@@ -197,7 +202,7 @@ int ff_vvc_task_ready(const AVTask *_t, void *user_data)
     return ready;
 }
 
-int ff_vvc_task_priority_higher(const AVTask *_a, const AVTask *_b)
+int ff_vvc_task_priority_higher(const Tasklet *_a, const Tasklet *_b)
 {
     const VVCTask *a = (const VVCTask*)_a;
     const VVCTask *b = (const VVCTask*)_b;
@@ -513,6 +518,7 @@ static int run_alf(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
 
 static void finished_one_task(VVCFrameThread *ft, const VVCTaskType type)
 {
+    int parse_done = 0;
     pthread_mutex_lock(&ft->lock);
 
     av_assert0(ft->nb_scheduled_tasks);
@@ -521,8 +527,11 @@ static void finished_one_task(VVCFrameThread *ft, const VVCTaskType type)
     if (type == VVC_TASK_TYPE_PARSE) {
         av_assert0(ft->nb_parse_tasks);
         ft->nb_parse_tasks--;
+        if (!ft->nb_parse_tasks)
+            parse_done = 1;
     }
-    pthread_cond_broadcast(&ft->cond);
+    if (parse_done || !ft->nb_scheduled_tasks)
+        pthread_cond_broadcast(&ft->cond);
 
     pthread_mutex_unlock(&ft->lock);
 }
@@ -544,7 +553,7 @@ const static char* task_name[] = {
 
 typedef int (*run_func)(VVCContext *s, VVCLocalContext *lc, VVCTask *t);
 
-int ff_vvc_task_run(AVTask *_t, void *local_context, void *user_data)
+int ff_vvc_task_run(Tasklet *_t, void *local_context, void *user_data)
 {
     VVCTask *t              = (VVCTask*)_t;
     VVCContext *s           = (VVCContext *)user_data;
@@ -719,7 +728,7 @@ void ff_vvc_frame_add_task(VVCContext *s, VVCTask *t)
 
     pthread_mutex_unlock(&ft->lock);
 
-    avpriv_executor_execute(s->executor, &t->task);
+    ff_executor_execute(s->executor, &t->task);
 }
 
 int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
@@ -737,7 +746,7 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
                 if (!(atomic_load(ft->avails + rs) & mask)) {
                     atomic_store(&ft->ret, AVERROR_INVALIDDATA);
                     // maybe all thread are waiting, let us wake up them
-                    avpriv_executor_wakeup(s->executor);
+                    ff_executor_wakeup(s->executor);
                     break;
                 }
             }
@@ -753,30 +762,4 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
     av_log(s->avctx, AV_LOG_DEBUG, "frame %5d done\r\n", (int)fc->decode_order);
 #endif
     return ft->ret;
-}
-
-void ff_vvc_report_progress(VVCFrame *frame, int n)
-{
-    FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
-
-    pthread_mutex_lock(&p->lock);
-
-    av_assert0(p->progress < n || p->progress == INT_MAX);
-    p->progress = n;
-
-    pthread_cond_broadcast(&p->cond);
-    pthread_mutex_unlock(&p->lock);
-}
-
-void ff_vvc_await_progress(VVCFrame *frame, int n)
-{
-    FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
-
-    pthread_mutex_lock(&p->lock);
-
-    // +1 for progress default value 0
-    while (p->progress < n + 1)
-        pthread_cond_wait(&p->cond, &p->lock);
-
-    pthread_mutex_unlock(&p->lock);
 }

@@ -93,6 +93,7 @@ const AVProfile ff_evc_profiles[] = {
 };
 
 const AVProfile ff_vvc_profiles[] = {
+    { FF_PROFILE_VVC_MAIN,                  "Main"          },
     { FF_PROFILE_VVC_MAIN_10,               "Main 10"       },
     { FF_PROFILE_VVC_MAIN_10_444,           "Main 10 4:4:4" },
     { FF_PROFILE_UNKNOWN },

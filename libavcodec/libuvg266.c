@@ -94,9 +94,48 @@ FF_DISABLE_DEPRECATION_WARNINGS
             ;
 FF_ENABLE_DEPRECATION_WARNINGS
     }
-    cfg->target_bitrate = avctx->bit_rate;
-    cfg->vui.sar_width  = avctx->sample_aspect_ratio.num;
-    cfg->vui.sar_height = avctx->sample_aspect_ratio.den;
+    cfg->target_bitrate = (int32_t)avctx->bit_rate;
+    if (avctx->pix_fmt == AV_PIX_FMT_GRAY8) {
+        cfg->input_bitdepth = 8;
+        cfg->input_format   = UVG_FORMAT_P400;
+    /*} else if (avctx->pix_fmt == AV_PIX_FMT_GRAY10LE) {
+        cfg->input_bitdepth = 10;
+        cfg->input_format   = UVG_FORMAT_P400;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_GRAY12LE) {
+        cfg->input_bitdepth = 12;
+        cfg->input_format   = UVG_FORMAT_P400;*/
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P) {
+        cfg->input_bitdepth = 8;
+        cfg->input_format   = UVG_FORMAT_P420;
+/*    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P10LE) {
+        cfg->input_bitdepth = 10;
+        cfg->input_format   = UVG_FORMAT_P420;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P12LE) {
+        cfg->input_bitdepth = 12;
+        cfg->input_format   = UVG_FORMAT_P420;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P) {
+        cfg->input_bitdepth = 8;
+        cfg->input_format   = UVG_FORMAT_P422;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P10LE) {
+        cfg->input_bitdepth = 10;
+        cfg->input_format   = UVG_FORMAT_P422;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P12LE) {
+        cfg->input_bitdepth = 12;
+        cfg->input_format   = UVG_FORMAT_P422;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P) {
+        cfg->input_bitdepth = 8;
+        cfg->input_format   = UVG_FORMAT_P444;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P10LE) {
+        cfg->input_bitdepth = 10;
+        cfg->input_format   = UVG_FORMAT_P444;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P12LE) {
+        cfg->input_bitdepth = 12;
+        cfg->input_format   = UVG_FORMAT_P444;*/
+    } else {
+        return -1;
+    }
+    cfg->vui.sar_width  = (int32_t)avctx->sample_aspect_ratio.num;
+    cfg->vui.sar_height = (int32_t)avctx->sample_aspect_ratio.den;
     if (avctx->bit_rate) {
         cfg->rc_algorithm = UVG_LAMBDA;
     }
@@ -295,7 +334,11 @@ done:
 }
 
 static const enum AVPixelFormat pix_fmts[] = {
+    AV_PIX_FMT_GRAY8,
     AV_PIX_FMT_YUV420P,
+    //AV_PIX_FMT_YUV422P,
+    //AV_PIX_FMT_YUV444P,
+    //AV_PIX_FMT_YUV420P10,
     AV_PIX_FMT_NONE
 };
 

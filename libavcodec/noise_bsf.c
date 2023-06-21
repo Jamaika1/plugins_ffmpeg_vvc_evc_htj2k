@@ -20,8 +20,8 @@
 
 #include <stdlib.h>
 
-#include "bsf.h"
-#include "bsf_internal.h"
+#include "libavcodec/bsf.h"
+#include "libavcodec/bsf_internal.h"
 
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
@@ -84,6 +84,12 @@ static int noise_init(AVBSFContext *ctx)
         s->amount_str = (!s->drop_str && !s->dropamount) ? av_strdup("-1") : av_strdup("0");
         if (!s->amount_str)
             return AVERROR(ENOMEM);
+    }
+
+    if (ctx->par_in->codec_id == AV_CODEC_ID_WRAPPED_AVFRAME &&
+        strcmp(s->amount_str, "0")) {
+        av_log(ctx, AV_LOG_ERROR, "Wrapped AVFrame noising is unsupported\n");
+        return AVERROR_PATCHWELCOME;
     }
 
     ret = av_expr_parse(&s->amount_pexpr, s->amount_str,
