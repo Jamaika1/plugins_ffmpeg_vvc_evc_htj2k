@@ -34,6 +34,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "../libcelt/entenc.h"
 #include "../libcelt/entdec.h"
 
+#ifdef NEURAL_PLC
+#include "lpcnet.h"
+#include "lpcnet/src/lpcnet_private.h"
+#endif
+
+#ifdef ENABLE_NEURAL_FEC
+#include "dred_encoder.h"
+#include "dred_decoder.h"
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

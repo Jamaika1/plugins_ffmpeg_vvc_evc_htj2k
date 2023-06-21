@@ -41,6 +41,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "float/main_FLP.h"
 #endif
 
+#ifdef ENABLE_NEURAL_FEC
+#include "dred_encoder.h"
+#endif
+
 /***************************************/
 /* Read control structure from encoder */
 /***************************************/
