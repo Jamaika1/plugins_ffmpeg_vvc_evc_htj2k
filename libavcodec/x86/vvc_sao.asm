@@ -1,8 +1,9 @@
 ;******************************************************************************
-;* SIMD optimized SAO functions for HEVC 8bit decoding
+;* SIMD optimized SAO functions for VVC 8bit decoding
 ;*
 ;* Copyright (c) 2013 Pierre-Edouard LEPERE
 ;* Copyright (c) 2014 James Almer
+;* Copyright (c) 2023 Shaun Loo
 ;*
 ;* This file is part of FFmpeg.
 ;*
@@ -166,31 +167,21 @@ INIT_YMM cpuname
     add             srcq, srcstrideq             ; src += srcstride
     dec          heightd                         ; cmp height
     jnz               .loop                      ; height loop
-    RET
+    REP_RET
 %endmacro
-
-
-%macro VVC_SAO_BAND_FILTER_FUNCS 0
-VVC_SAO_BAND_FILTER  8, 0
-VVC_SAO_BAND_FILTER 16, 1
-VVC_SAO_BAND_FILTER 32, 2
-VVC_SAO_BAND_FILTER 48, 2
-VVC_SAO_BAND_FILTER 64, 4
-%endmacro
-
-INIT_XMM sse2
-VVC_SAO_BAND_FILTER_FUNCS
-INIT_XMM avx
-VVC_SAO_BAND_FILTER_FUNCS
 
 %if HAVE_AVX2_EXTERNAL
 INIT_XMM avx2
 VVC_SAO_BAND_FILTER  8, 0
 VVC_SAO_BAND_FILTER 16, 1
 INIT_YMM avx2
-VVC_SAO_BAND_FILTER 32, 1
-VVC_SAO_BAND_FILTER 48, 1
-VVC_SAO_BAND_FILTER 64, 2
+VVC_SAO_BAND_FILTER 32,  1
+VVC_SAO_BAND_FILTER 48,  1
+VVC_SAO_BAND_FILTER 64,  2
+VVC_SAO_BAND_FILTER 80,  3
+VVC_SAO_BAND_FILTER 96,  3
+VVC_SAO_BAND_FILTER 112, 4
+VVC_SAO_BAND_FILTER 128, 4
 %endif
 
 ;******************************************************************************
@@ -199,7 +190,7 @@ VVC_SAO_BAND_FILTER 64, 2
 
 %define MAX_PB_SIZE  64
 %define PADDING_SIZE 64 ; AV_INPUT_BUFFER_PADDING_SIZE
-%define EDGE_SRCSTRIDE 2 * MAX_PB_SIZE + PADDING_SIZE
+%define EDGE_SRCSTRIDE 4 * MAX_PB_SIZE + PADDING_SIZE
 
 %macro VVC_SAO_EDGE_FILTER_INIT 0
 %if WIN64
@@ -325,16 +316,16 @@ INIT_YMM cpuname
     RET
 %endmacro
 
-INIT_XMM ssse3
-VVC_SAO_EDGE_FILTER  8, 0
-VVC_SAO_EDGE_FILTER 16, 1, a
-VVC_SAO_EDGE_FILTER 32, 2, a
-VVC_SAO_EDGE_FILTER 48, 2, a
-VVC_SAO_EDGE_FILTER 64, 4, a
-
 %if HAVE_AVX2_EXTERNAL
+INIT_XMM avx2
+VVC_SAO_EDGE_FILTER  8, 0
 INIT_YMM avx2
+VVC_SAO_EDGE_FILTER 16, 1, u
 VVC_SAO_EDGE_FILTER 32, 1, a
 VVC_SAO_EDGE_FILTER 48, 1, u
 VVC_SAO_EDGE_FILTER 64, 2, a
+VVC_SAO_EDGE_FILTER 80, 3, u
+VVC_SAO_EDGE_FILTER 96, 3, u
+VVC_SAO_EDGE_FILTER 112, 4, u
+VVC_SAO_EDGE_FILTER 128, 4, a
 %endif
