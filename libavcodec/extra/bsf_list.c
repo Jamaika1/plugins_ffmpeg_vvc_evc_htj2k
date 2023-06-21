@@ -9,6 +9,7 @@ static const FFBitStreamFilter * const bitstream_filters[] = {
 &ff_dts2pts_bsf,
 &ff_dv_error_marker_bsf,
 &ff_eac3_core_bsf,
+&ff_evc_frame_merge_bsf,
 &ff_extract_extradata_bsf,
 &ff_filter_units_bsf,
 &ff_h264_metadata_bsf,

@@ -1,5 +1,5 @@
 /*
- * VVC video decoder
+ * VVC transform and residual DSP
  *
  * Copyright (C) 2021 Nuo Mi
  *
@@ -20,11 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavcodec/get_bits.h"
+#include "bit_depth_template.c"
+
 #include "libavcodec/vvcdec.h"
 
-#include "bit_depth_template.c"
-#include "libavcodec/vvcdsp.h"
 #include "vvc_inter_template.c"
 #include "vvc_intra_template.c"
 #include "vvc_filter_template.c"
