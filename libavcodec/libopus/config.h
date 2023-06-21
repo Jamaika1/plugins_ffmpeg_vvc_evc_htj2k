@@ -35,6 +35,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define OPUS_BUILD            1
 
+#define FEATURES              1
+
 #if defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
 /* Can always compile SSE intrinsics (no special compiler flags necessary) */
 #define OPUS_X86_MAY_HAVE_SSE

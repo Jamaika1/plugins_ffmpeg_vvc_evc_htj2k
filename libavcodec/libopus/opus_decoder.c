@@ -37,6 +37,10 @@
 # pragma message "You appear to be compiling without optimization, if so opus will be very slow."
 #endif
 
+#ifdef FEATURES
+#include <stdlib.h>
+#include <stdio.h>
+#endif
 #include <stdarg.h>
 #include "..\libcelt\celt.h"
 #include "opus.h"
@@ -269,6 +273,9 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       data = NULL;
       /* In that case, don't conceal more than what the ToC says */
       frame_size = IMIN(frame_size, st->frame_size);
+#ifdef FEATURES
+      printf("data len <= 1\n"); exit(1);
+#endif
    }
    if (data != NULL)
    {
@@ -276,7 +283,17 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       mode = st->mode;
       bandwidth = st->bandwidth;
       ec_dec_init(&dec,(unsigned char*)data,len);
+#ifdef FEATURES
+      if (mode != MODE_SILK_ONLY)
+      {
+         printf("mode is %d\n", mode);
+         return -9999;
+      }
+#endif
    } else {
+#ifdef FEATURES
+      printf("data is NULL\n"); exit(1);
+#endif
       audiosize = frame_size;
       /* Run PLC using last used mode (CELT if we ended with CELT redundancy) */
       mode = st->prev_redundancy ? MODE_CELT_ONLY : st->prev_mode;
