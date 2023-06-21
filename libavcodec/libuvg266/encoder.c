@@ -3,21 +3,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -222,8 +222,8 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
         uvg_config_process_lp_gop(&encoder->cfg);
       }
     }
-  } 
-  
+  }
+
   if( encoder->cfg.intra_qp_offset_auto ) {
     // Limit offset to -3 since HM/VTM seems to use it even for 32 frame gop
     encoder->cfg.intra_qp_offset = encoder->cfg.gop_len > 1 ? MAX(-(int8_t)uvg_math_ceil_log2( encoder->cfg.gop_len ) + 1, -3) : 0;
@@ -292,7 +292,7 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
     goto init_failed;
   }
 
-  encoder->bitdepth = UVG_BIT_DEPTH;
+  encoder->bitdepth = (int8_t)encoder->cfg.input_bitdepth;
 
   encoder->chroma_format = UVG_FORMAT2CSP(encoder->cfg.input_format);
 
@@ -843,8 +843,8 @@ static int encoder_control_init_gop_layer_weights(encoder_control_t * const enco
         encoder->gop_layer_weights[1] = 7.3654107392 * pow(encoder->target_avg_bpp, -0.0854329266);
         encoder->gop_layer_weights[2] = 3.6563990701 * pow(encoder->target_avg_bpp, -0.0576990493);
         encoder->gop_layer_weights[3] = 2.1486937288 * pow(encoder->target_avg_bpp, -0.0155389471);
-        encoder->gop_layer_weights[4] = 1;        
-      } 
+        encoder->gop_layer_weights[4] = 1;
+      }
       else {
         fprintf(stderr, "Unsupported amount of layers (%d) for lowdelay GOP\n", num_layers);
         return 0;
@@ -852,7 +852,7 @@ static int encoder_control_init_gop_layer_weights(encoder_control_t * const enco
       break;
     default:
       if (!encoder->cfg.gop_lowdelay && encoder->cfg.gop_len == 16) {
-        fprintf(stdout, 
+        fprintf(stdout,
                 "Rate control: Using experimental weights for GOP layers (%d)\n",
                 num_layers);
         for (int i = 0; i < MAX_GOP_LAYERS; ++i) {
