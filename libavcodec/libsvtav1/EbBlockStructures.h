@@ -117,7 +117,7 @@ typedef struct BlockModeInfoEnc {
     uint32_t interp_filters;
 
     MvReferenceFrame ref_frame[2]; // Only for INTER blocks
-    BlockSize        sb_type;
+    BlockSize        bsize;
     PredictionMode   mode;
     PartitionType    partition;
     UvPredictionMode uv_mode; // Only for INTRA blocks
@@ -136,6 +136,10 @@ typedef struct BlockModeInfoEnc {
     uint8_t skip_mode : 1;
     uint8_t use_intrabc : 1; // possible values: 0,1
 
+#if FTR_ROI
+    uint8_t segment_id;
+#endif
+
 #if MODE_INFO_DBG
     int32_t mi_row;
     int32_t mi_col;
@@ -144,7 +148,7 @@ typedef struct BlockModeInfoEnc {
 
 typedef struct BlockModeInfo {
     // Common for both INTER and INTRA blocks
-    BlockSize      sb_type;
+    BlockSize      bsize;
     PredictionMode mode;
     int8_t         skip;
 
