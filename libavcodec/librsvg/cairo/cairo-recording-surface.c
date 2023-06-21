@@ -103,6 +103,7 @@ typedef struct _cairo_recording_surface_replay_params {
     unsigned int regions_id;
     const cairo_color_t *foreground_color;
     cairo_bool_t foreground_used;
+    cairo_bool_t replay_all;
 } cairo_recording_surface_replay_params_t;
 
 static const cairo_surface_backend_t cairo_recording_surface_backend;
@@ -436,6 +437,7 @@ cairo_recording_surface_create (cairo_content_t		 content,
     surface->optimize_clears = TRUE;
     surface->has_bilevel_alpha = FALSE;
     surface->has_only_op_over = FALSE;
+    surface->has_tags = FALSE;
 
     CAIRO_MUTEX_INIT (surface->mutex);
 
@@ -1190,6 +1192,8 @@ _cairo_recording_surface_tag (void			 *abstract_surface,
 
     TRACE ((stderr, "%s: surface=%d\n", __FUNCTION__, surface->base.unique_id));
 
+    surface->has_tags = TRUE;
+
     command = calloc (1, sizeof (cairo_command_tag_t));
     if (unlikely (command == NULL)) {
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1635,6 +1639,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->unbounded = other->unbounded;
     surface->has_bilevel_alpha = other->has_bilevel_alpha;
     surface->has_only_op_over = other->has_only_op_over;
+    surface->has_tags = other->has_tags;
 
     surface->base.is_clear = other->base.is_clear;
 
@@ -1644,8 +1649,6 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     surface->indices = NULL;
     surface->num_indices = 0;
     surface->optimize_clears = TRUE;
-    surface->has_bilevel_alpha = other->has_bilevel_alpha;
-    surface->has_only_op_over = other->has_only_op_over;
 
     CAIRO_MUTEX_INIT (surface->mutex);
 
@@ -1715,6 +1718,8 @@ static const cairo_surface_backend_t cairo_recording_surface_backend = {
     NULL, /* get_supported_mime_types */
     _cairo_recording_surface_tag,
     _cairo_recording_surface_supports_color_glyph,
+    NULL, /* analyze_recording_surface */
+    NULL, /* command_id */
 };
 
 static unsigned int
@@ -1918,7 +1923,7 @@ _cairo_recording_surface_get_visible_commands (cairo_recording_surface_t *surfac
     cairo_box_t box;
 
     if (surface->commands.num_elements == 0)
-	    return 0;
+	return 0;
 
     _cairo_box_from_rectangle (&box, extents);
 
@@ -2078,7 +2083,7 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
     if (regions_array)
 	region_elements = _cairo_array_index (&regions_array->regions, 0);
 
-    if (extents.width < r->width || extents.height < r->height) {
+    if (!params->replay_all && (extents.width < r->width || extents.height < r->height)) {
 	num_elements =
 	    _cairo_recording_surface_get_visible_commands (surface, &extents);
 	use_indices = num_elements != surface->commands.num_elements;
@@ -2104,6 +2109,13 @@ _cairo_recording_surface_replay_internal (cairo_recording_surface_t	*surface,
 	if (! _cairo_rectangle_intersects (&extents, &command->header.extents)) {
 	    if (command->header.type != CAIRO_COMMAND_TAG)
 		continue;
+	}
+
+
+	if (params->target->backend->command_id) {
+	    status = params->target->backend->command_id (params->target, params->regions_id, i);
+	    if (unlikely (status))
+		return status;
 	}
 
 	switch (command->header.type) {
@@ -2457,6 +2469,7 @@ _cairo_recording_surface_replay (cairo_surface_t *surface,
     params.region = CAIRO_RECORDING_REGION_ALL;
     params.regions_id = 0;
     params.foreground_color = NULL;
+    params.replay_all = FALSE;
 
     return _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
 }
@@ -2480,6 +2493,7 @@ _cairo_recording_surface_replay_with_foreground_color (cairo_surface_t     *surf
     params.regions_id = 0;
     params.foreground_color = foreground_color;
     params.foreground_used = FALSE;
+    params.replay_all = FALSE;
 
     status = _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
     *foreground_used = params.foreground_used;
@@ -2488,11 +2502,33 @@ _cairo_recording_surface_replay_with_foreground_color (cairo_surface_t     *surf
 }
 
 cairo_status_t
+_cairo_recording_surface_replay_with_transform (cairo_surface_t *surface,
+						const cairo_matrix_t *surface_transform,
+						cairo_surface_t *target,
+						cairo_bool_t surface_is_unbounded,
+						cairo_bool_t replay_all)
+{
+    cairo_recording_surface_replay_params_t params;
+
+    params.surface_extents = NULL;
+    params.surface_transform = surface_transform;
+    params.target = target;
+    params.target_clip = NULL;
+    params.surface_is_unbounded = surface_is_unbounded;
+    params.type = CAIRO_RECORDING_REPLAY;
+    params.region = CAIRO_RECORDING_REGION_ALL;
+    params.regions_id = 0;
+    params.foreground_color = NULL;
+    params.replay_all = replay_all;
+
+    return _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
+}
+
+cairo_status_t
 _cairo_recording_surface_replay_with_clip (cairo_surface_t *surface,
 					   const cairo_matrix_t *surface_transform,
 					   cairo_surface_t *target,
-					   const cairo_clip_t *target_clip,
-                                           cairo_bool_t surface_is_unbounded)
+					   const cairo_clip_t *target_clip)
 {
     cairo_recording_surface_replay_params_t params;
 
@@ -2500,11 +2536,12 @@ _cairo_recording_surface_replay_with_clip (cairo_surface_t *surface,
     params.surface_transform = surface_transform;
     params.target = target;
     params.target_clip = target_clip;
-    params.surface_is_unbounded = surface_is_unbounded;
+    params.surface_is_unbounded = FALSE;
     params.type = CAIRO_RECORDING_REPLAY;
     params.region = CAIRO_RECORDING_REGION_ALL;
     params.regions_id = 0;
     params.foreground_color = NULL;
+    params.replay_all = FALSE;
 
     return _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
 }
@@ -2520,7 +2557,8 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    unsigned int regions_id,
 						    const cairo_matrix_t *surface_transform,
 						    cairo_surface_t *target,
-						    cairo_bool_t surface_is_unbounded)
+						    cairo_bool_t surface_is_unbounded,
+						    cairo_bool_t replay_all)
 {
     cairo_recording_surface_replay_params_t params;
 
@@ -2533,6 +2571,7 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
     params.region = CAIRO_RECORDING_REGION_ALL;
     params.regions_id = regions_id;
     params.foreground_color = NULL;
+    params.replay_all = replay_all;
 
     return _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
 }
@@ -2555,6 +2594,7 @@ _cairo_recording_surface_replay_region (cairo_surface_t          *surface,
     params.region = region;
     params.regions_id = regions_id;
     params.foreground_color = NULL;
+    params.replay_all = FALSE;
 
     return _cairo_recording_surface_replay_internal ((cairo_recording_surface_t *) surface, &params);
 }
@@ -2700,6 +2740,21 @@ cairo_bool_t
 _cairo_recording_surface_has_only_op_over (cairo_recording_surface_t *surface)
 {
     return surface->has_only_op_over;
+}
+
+cairo_bool_t
+_cairo_recording_surface_has_tags (cairo_surface_t *surface)
+{
+    cairo_recording_surface_t *record;
+
+    if (surface->status || ! _cairo_surface_is_recording (surface)) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return FALSE;
+    }
+
+    record = (cairo_recording_surface_t *)surface;
+
+    return record->has_tags;
 }
 
 static void
@@ -2875,7 +2930,10 @@ _cairo_debug_print_recording_surface (FILE            *file,
 
 	    case CAIRO_COMMAND_TAG:
 		print_indent (file, indent);
-		fprintf(file, "%d TAG\n", i);
+		fprintf(file, "%d %s %s '%s'\n",
+			i,
+			command->tag.begin ? "BEGIN TAG" : "END TAG",
+			command->tag.tag_name, command->tag.attributes);
 		break;
 
 	    default:

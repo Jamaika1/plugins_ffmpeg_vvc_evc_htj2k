@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -40,6 +41,7 @@
 
 #include "cairo-compiler-private.h"
 #include "cairo-error-private.h"
+#include "cairo-pattern-private.h"
 
 CAIRO_BEGIN_DECLS
 
@@ -211,6 +213,29 @@ struct _cairo_surface_backend {
     (*supports_color_glyph) (void                       *surface,
                              cairo_scaled_font_t        *scaled_font,
                              unsigned long               glyph_index);
+
+    /* Paginated surfaces only. During the analysis stage, if any
+     * recording surfaces used as a source are to be replayed, this
+     * function will be called at the begining and end of the replay.
+     *
+     * @recording_surface - the recording surface used as a source
+     * @source_type - a type indicating the combination of drawing
+     * operation and source type
+     * @begin - TRUE when called before the replay, FALSE when called
+     * after the replay has finished.
+     */
+    cairo_warn cairo_int_status_t
+    (*analyze_recording_surface)(void	                       *surface,
+				 const cairo_surface_pattern_t *recording_surface_pattern,
+				 unsigned int                   region_id,
+                                 cairo_analysis_source_t        source_type,
+                                 cairo_bool_t                   begin);
+
+    cairo_warn cairo_int_status_t
+    (*command_id)		(void			*surface,
+				 unsigned int            recording_id,
+				 unsigned int            command_id);
+
 };
 
 cairo_private cairo_status_t

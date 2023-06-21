@@ -2239,8 +2239,7 @@ _cairo_script_surface_finish (void *abstract_surface)
 		    cairo_list_del (&surface->operand.link);
 		} else {
 		    link->operand.type = DEFERRED;
-		    cairo_list_swap (&link->operand.link,
-				     &surface->operand.link);
+		    cairo_list_move_list (&surface->operand.link, &link->operand.link);
 		    cairo_list_add (&link->link, &ctx->deferred);
 		}
 	    }

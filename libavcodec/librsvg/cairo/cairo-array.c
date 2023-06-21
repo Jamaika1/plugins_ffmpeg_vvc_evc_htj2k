@@ -542,3 +542,39 @@ _cairo_array_sort (const cairo_array_t *array, int (*compar)(const void *, const
 {
     qsort (array->elements, array->num_elements, array->element_size, compar);
 }
+
+/**
+ * _cairo_array_pop_element:
+ * @array: a #cairo_array_t
+ * Returns: A TRUE if element successfully popped, FALSE if the array is empty.
+ *
+ * Copy the last element out of the array from index @index into the
+ * location pointed to by @dst and remove the element from the array.
+ **/
+cairo_bool_t
+_cairo_array_pop_element (cairo_array_t *array, void *dst)
+{
+    if (array->num_elements > 0) {
+	_cairo_array_copy_element (array, array->num_elements - 1, dst);
+	array->num_elements--;
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * _cairo_array_top_element:
+ * @array: a #cairo_array_t
+ * Returns: A pointer to the last of object or NULL if array is empty.
+ *
+ * Get the pointer to the last element of of the array.
+ **/
+void *
+_cairo_array_last_element (cairo_array_t *array)
+{
+    if (array->num_elements > 0)
+	return _cairo_array_index (array, array->num_elements - 1);
+
+    return NULL;
+}

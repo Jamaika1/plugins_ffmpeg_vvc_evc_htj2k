@@ -403,6 +403,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     cairo_int_status_t status;
     cairo_bool_t has_supported, has_page_fallback, has_finegrained_fallback;
     unsigned int regions_id = 0;
+    cairo_bool_t replay_all;
 
     if (unlikely (surface->target->status))
 	return surface->target->status;
@@ -416,13 +417,20 @@ _paint_page (cairo_paginated_surface_t *surface)
     if (unlikely (status))
 	goto FAIL;
 
+    replay_all = FALSE;
+    if (surface->target->backend->analyze_recording_surface &&
+        _cairo_recording_surface_has_tags (surface->recording_surface))
+    {
+        replay_all = TRUE;
+    }
+
     status = _cairo_recording_surface_region_array_attach (surface->recording_surface, &regions_id);
     if (status)
 	goto FAIL;
 
     status = _cairo_recording_surface_replay_and_create_regions (surface->recording_surface,
                                                                  regions_id,
-								 NULL, analysis, FALSE);
+								 NULL, analysis, FALSE, replay_all);
     if (status)
 	goto FAIL;
 
@@ -467,12 +475,12 @@ _paint_page (cairo_paginated_surface_t *surface)
 	has_finegrained_fallback = FALSE;
     }
 
-    if (has_supported) {
-	status = surface->backend->set_paginated_mode (surface->target,
-						       CAIRO_PAGINATED_MODE_RENDER);
-	if (unlikely (status))
-	    goto FAIL;
+    status = surface->backend->set_paginated_mode (surface->target,
+						   CAIRO_PAGINATED_MODE_RENDER);
+    if (unlikely (status))
+	goto FAIL;
 
+    if (has_supported) {
 	status = _cairo_recording_surface_replay_region (surface->recording_surface,
                                                          regions_id,
 							 NULL,

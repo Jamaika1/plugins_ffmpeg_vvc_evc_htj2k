@@ -72,7 +72,7 @@ CAIRO_BEGIN_DECLS
 
 
 #define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
-	#major"."#minor"."#micro
+	#major"."#minor"."#micro"-9831eba"
 #define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
 	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
 
@@ -1017,7 +1017,7 @@ typedef struct _cairo_rectangle {
  * @status: Error status of the rectangle list
  * @rectangles: Array containing the rectangles
  * @num_rectangles: Number of rectangles in this list
- * 
+ *
  * A data structure for holding a dynamically allocated
  * array of rectangles.
  *
@@ -1039,6 +1039,8 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
 
 #define CAIRO_TAG_DEST "cairo.dest"
 #define CAIRO_TAG_LINK "Link"
+#define CAIRO_TAG_CONTENT "cairo.content"
+#define CAIRO_TAG_CONTENT_REF "cairo.content_ref"
 
 cairo_public void
 cairo_tag_begin (cairo_t *cr, const char *tag_name, const char *attributes);

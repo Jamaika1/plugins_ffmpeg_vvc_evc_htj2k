@@ -2518,19 +2518,17 @@ _cairo_ft_glyph_fini (cairo_scaled_glyph_private_t *glyph_private,
 }
 
 
-#ifdef HAVE_FT_PALETTE_SELECT
 static void
 _cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
 				    FT_Face                  face,
 				    unsigned int            *num_entries_ret,
 				    FT_Color               **entries_ret)
 {
-    FT_Palette_Data palette_data;
-    unsigned int num_entries;
-    FT_Color *entries;
+    unsigned int num_entries = 0;
+    FT_Color *entries = NULL;
 
-    num_entries = 0;
-    entries = NULL;
+#ifdef HAVE_FT_PALETTE_SELECT
+    FT_Palette_Data palette_data;
 
     if (FT_Palette_Data_Get (face, &palette_data) == 0 && palette_data.num_palettes > 0) {
 	FT_UShort palette_index = CAIRO_COLOR_PALETTE_DEFAULT;
@@ -2552,13 +2550,14 @@ _cairo_ft_scaled_glyph_set_palette (cairo_ft_scaled_font_t  *scaled_font,
             }
         }
     }
+#endif
+
     if (num_entries_ret)
 	*num_entries_ret = num_entries;
 
     if (entries_ret)
 	*entries_ret = entries;
 }
-#endif
 
 /* returns TRUE if foreground color used */
 static cairo_bool_t
@@ -2601,6 +2600,7 @@ _cairo_ft_scaled_glyph_set_foreground_color (cairo_ft_scaled_font_t *scaled_font
 static cairo_int_status_t
 _cairo_ft_scaled_glyph_init_surface (cairo_ft_scaled_font_t     *scaled_font,
 				     cairo_scaled_glyph_t	*scaled_glyph,
+				     cairo_ft_glyph_private_t   *glyph_priv,
 				     cairo_scaled_glyph_info_t	 info,
 				     FT_Face face,
 				     const cairo_color_t        *foreground_color,
@@ -2612,7 +2612,6 @@ _cairo_ft_scaled_glyph_init_surface (cairo_ft_scaled_font_t     *scaled_font,
     cairo_status_t status;
     cairo_image_surface_t	*surface;
     cairo_bool_t uses_foreground_color = FALSE;
-    cairo_ft_glyph_private_t *glyph_priv = scaled_glyph->dev_private;
 
     /* Only one info type at a time handled in this function */
     assert (info == CAIRO_SCALED_GLYPH_INFO_COLOR_SURFACE || info == CAIRO_SCALED_GLYPH_INFO_SURFACE);
@@ -2628,9 +2627,7 @@ _cairo_ft_scaled_glyph_init_surface (cairo_ft_scaled_font_t     *scaled_font,
 									     scaled_glyph,
 									     face,
 									     foreground_color);
-#ifdef HAVE_FT_PALETTE_SELECT
 	_cairo_ft_scaled_glyph_set_palette (scaled_font, face, NULL, NULL);
-#endif
 
         load_flags &= ~FT_LOAD_MONOCHROME;
 	/* clear load target mode */
@@ -2656,8 +2653,7 @@ _cairo_ft_scaled_glyph_init_surface (cairo_ft_scaled_font_t     *scaled_font,
 
     glyph = face->glyph;
 
-    if (glyph_priv->format == CAIRO_FT_GLYPH_TYPE_COLR_V0 ||
-	glyph_priv->format == CAIRO_FT_GLYPH_TYPE_OUTLINE) {
+    if (glyph_priv->format == CAIRO_FT_GLYPH_TYPE_OUTLINE) {
 
 	status = _render_glyph_outline (face, &scaled_font->ft_options.base,
 					    &surface);
@@ -3305,7 +3301,6 @@ _cairo_ft_scaled_glyph_init_metrics (cairo_ft_scaled_font_t  *scaled_font,
     _cairo_scaled_glyph_attach_private (scaled_glyph, &glyph_priv->base,
 					&ft_glyph_private_key,
 					_cairo_ft_glyph_fini);
-    scaled_glyph->dev_private = glyph_priv;
 
     /* We need to load color to determine if this is a color format. */
     int color_flag = 0;
@@ -3464,8 +3459,8 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    goto FAIL;
     }
 
-    /* scaled_glyph->dev_private is intialized by _cairo_ft_scaled_glyph_init_metrics() */
-    glyph_priv = scaled_glyph->dev_private;
+    glyph_priv = (cairo_ft_glyph_private_t *) _cairo_scaled_glyph_find_private (scaled_glyph,
+										&ft_glyph_private_key);
     assert (glyph_priv != NULL);
 
     if (info & CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE) {
@@ -3507,7 +3502,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    goto FAIL;
     }
 
-    if (info & CAIRO_SCALED_GLYPH_INFO_COLOR_SURFACE) {
+    if ((info & CAIRO_SCALED_GLYPH_INFO_COLOR_SURFACE) && scaled_font->base.options.color_mode != CAIRO_COLOR_MODE_NO_COLOR) {
 	if (glyph_priv->format == CAIRO_FT_GLYPH_TYPE_SVG ||
 	    glyph_priv->format == CAIRO_FT_GLYPH_TYPE_COLR_V1)
 	{
@@ -3517,6 +3512,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	} else {
 	    status = _cairo_ft_scaled_glyph_init_surface (scaled_font,
 							  scaled_glyph,
+							  glyph_priv,
 							  CAIRO_SCALED_GLYPH_INFO_COLOR_SURFACE,
 							  face,
 							  foreground_color,
@@ -3530,6 +3526,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
 	status = _cairo_ft_scaled_glyph_init_surface (scaled_font,
 						      scaled_glyph,
+						      glyph_priv,
 						      CAIRO_SCALED_GLYPH_INFO_SURFACE,
 						      face,
 						      NULL, /* foreground color */
