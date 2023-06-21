@@ -24,7 +24,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/padded_bytes.h"
-#include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/coeff_order.h"
@@ -594,7 +593,6 @@ class LossyFrameEncoder {
                              const JxlCmsInterface& cms, ThreadPool* pool,
                              ModularFrameEncoder* modular_frame_encoder,
                              FrameHeader* frame_header) {
-    PROFILER_ZONE("ComputeEncodingData uninstrumented");
     JXL_ASSERT((opsin->xsize() % kBlockDim) == 0 &&
                (opsin->ysize() % kBlockDim) == 0);
     PassesSharedState& shared = enc_state_->shared;
@@ -602,10 +600,11 @@ class LossyFrameEncoder {
     if (!enc_state_->cparams.max_error_mode) {
       // Compute chromacity adjustments using two approaches.
       // 1) Distance based approach for chromacity adjustment:
-      float x_qm_scale_steps[2] = {1.25f, 9.0f};
+      float x_qm_scale_steps[4] = {1.25f, 7.0f, 15.0f, 24.0f};
       shared.frame_header.x_qm_scale = 2;
       for (float x_qm_scale_step : x_qm_scale_steps) {
-        if (enc_state_->cparams.butteraugli_distance > x_qm_scale_step) {
+        if (enc_state_->cparams.original_butteraugli_distance >
+            x_qm_scale_step) {
           shared.frame_header.x_qm_scale++;
         }
       }
@@ -683,7 +682,6 @@ class LossyFrameEncoder {
   Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
                                     ModularFrameEncoder* modular_frame_encoder,
                                     FrameHeader* frame_header) {
-    PROFILER_ZONE("ComputeJPEGTranscodingData uninstrumented");
     PassesSharedState& shared = enc_state_->shared;
 
     frame_header->x_qm_scale = 2;
@@ -701,9 +699,16 @@ class LossyFrameEncoder {
     shared.ac_strategy.FillDCT8();
     FillImage(uint8_t(0), &shared.epf_sharpness);
 
+    enc_state_->passes.resize(enc_state_->progressive_splitter.GetNumPasses());
+    for (PassesEncoderState::PassData& pass : enc_state_->passes) {
+      pass.ac_tokens.resize(shared.frame_dim.num_groups);
+    }
+
     enc_state_->coeffs.clear();
-    enc_state_->coeffs.emplace_back(make_unique<ACImageT<int32_t>>(
-        kGroupDim * kGroupDim, frame_dim.num_groups));
+    while (enc_state_->coeffs.size() < enc_state_->passes.size()) {
+      enc_state_->coeffs.emplace_back(make_unique<ACImageT<int32_t>>(
+          kGroupDim * kGroupDim, frame_dim.num_groups));
+    }
 
     // convert JPEG quantization table to a Quantizer object
     float dcquantization[3];
@@ -847,9 +852,12 @@ class LossyFrameEncoder {
                                       "FindCorrelation"));
       }
     }
+
     if (!frame_header->chroma_subsampling.Is444()) {
       ZeroFillImage(&dc);
-      enc_state_->coeffs[0]->ZeroFill();
+      for (auto& coeff : enc_state_->coeffs) {
+        coeff->ZeroFill();
+      }
     }
     // JPEG DC is from -1024 to 1023.
     std::vector<size_t> dc_counts[3] = {};
@@ -859,7 +867,9 @@ class LossyFrameEncoder {
     size_t total_dc[3] = {};
     for (size_t c : {1, 0, 2}) {
       if (jpeg_data.components.size() == 1 && c != 1) {
-        enc_state_->coeffs[0]->ZeroFillPlane(c);
+        for (auto& coeff : enc_state_->coeffs) {
+          coeff->ZeroFillPlane(c);
+        }
         ZeroFillImage(&dc.Plane(c));
         // Ensure no division by 0.
         dc_counts[c][1024] = 1;
@@ -873,9 +883,11 @@ class LossyFrameEncoder {
            group_index++) {
         const size_t gx = group_index % frame_dim.xsize_groups;
         const size_t gy = group_index / frame_dim.xsize_groups;
-        size_t offset = 0;
-        int32_t* JXL_RESTRICT ac =
-            enc_state_->coeffs[0]->PlaneRow(c, group_index, 0).ptr32;
+        int32_t* coeffs[kMaxNumPasses];
+        for (size_t i = 0; i < enc_state_->coeffs.size(); i++) {
+          coeffs[i] = enc_state_->coeffs[i]->PlaneRow(c, group_index, 0).ptr32;
+        }
+        int32_t block[64];
         for (size_t by = gy * kGroupDimInBlocks;
              by < ysize_blocks && by < (gy + 1) * kGroupDimInBlocks; ++by) {
           if ((by >> vshift) << vshift != by) continue;
@@ -902,7 +914,7 @@ class LossyFrameEncoder {
                 !frame_header->chroma_subsampling.Is444()) {
               for (size_t y = 0; y < 8; y++) {
                 for (size_t x = 0; x < 8; x++) {
-                  ac[offset + y * 8 + x] = inputjpeg[base + x * 8 + y];
+                  block[y * 8 + x] = inputjpeg[base + x * 8 + y];
                 }
               }
             } else {
@@ -922,11 +934,16 @@ class LossyFrameEncoder {
                                     (1 << (kCFLFixedPointPrecision - 1))) >>
                                    kCFLFixedPointPrecision;
                   int QCR = QChroma - cfl_factor;
-                  ac[offset + y * 8 + x] = QCR;
+                  block[y * 8 + x] = QCR;
                 }
               }
             }
-            offset += 64;
+            enc_state_->progressive_splitter.SplitACCoefficients(
+                block, AcStrategy::FromRawStrategy(AcStrategy::Type::DCT), bx,
+                by, coeffs);
+            for (size_t i = 0; i < enc_state_->coeffs.size(); i++) {
+              coeffs[i] += kDCTBlockSize;
+            }
           }
         }
       }
@@ -986,14 +1003,6 @@ class LossyFrameEncoder {
 
     // Must happen before WriteFrameHeader!
     shared.frame_header.UpdateFlag(true, FrameHeader::kSkipAdaptiveDCSmoothing);
-
-    enc_state_->passes.resize(enc_state_->progressive_splitter.GetNumPasses());
-    for (PassesEncoderState::PassData& pass : enc_state_->passes) {
-      pass.ac_tokens.resize(shared.frame_dim.num_groups);
-    }
-
-    JXL_CHECK(enc_state_->passes.size() ==
-              1);  // skipping coeff splitting so need to have only one pass
 
     ComputeAllCoeffOrders(frame_dim);
     shared.num_histograms = 1;
@@ -1108,7 +1117,6 @@ class LossyFrameEncoder {
 
  private:
   void ComputeAllCoeffOrders(const FrameDimensions& frame_dim) {
-    PROFILER_FUNC;
     // No coefficient reordering in Falcon or faster.
     auto used_orders_info = ComputeUsedOrders(
         enc_state_->cparams.speed_tier, enc_state_->shared.ac_strategy,
