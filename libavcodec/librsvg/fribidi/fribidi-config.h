@@ -3,16 +3,16 @@
 #ifndef FRIBIDI_CONFIG_H
 #define FRIBIDI_CONFIG_H
 
-#define FRIBIDI ""
-#define FRIBIDI_NAME ""
-#define FRIBIDI_BUGREPORT ""
+#define FRIBIDI "fribidi"
+#define FRIBIDI_NAME "GNU fribidi"
+#define FRIBIDI_BUGREPORT "https://github.com/fribidi/fribidi/issues/new"
 
-#define FRIBIDI_VERSION "1.0.7"
+#define FRIBIDI_VERSION "1.0.13-b54871c"
 #define FRIBIDI_MAJOR_VERSION 1
 #define FRIBIDI_MINOR_VERSION 0
-#define FRIBIDI_MICRO_VERSION 7
-#define FRIBIDI_INTERFACE_VERSION 0.0.0
-#define FRIBIDI_INTERFACE_VERSION_STRING "0.0.0"
+#define FRIBIDI_MICRO_VERSION 13
+#define FRIBIDI_INTERFACE_VERSION 4
+#define FRIBIDI_INTERFACE_VERSION_STRING "4"
 
 /* The size of a `int', as computed by sizeof. */
 #define FRIBIDI_SIZEOF_INT 4
