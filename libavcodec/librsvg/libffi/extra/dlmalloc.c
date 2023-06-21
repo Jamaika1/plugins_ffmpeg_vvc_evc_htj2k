@@ -363,9 +363,9 @@ MALLINFO_FIELD_TYPE        default: size_t
   size_t. The value is used only if  HAVE_USR_INCLUDE_MALLOC_H is not set
 
 REALLOC_ZERO_BYTES_FREES    default: not defined
-  This should be set if a call to realloc with zero bytes should 
-  be the same as a call to free. Some people think it should. Otherwise, 
-  since this malloc returns a unique pointer for malloc(0), so does 
+  This should be set if a call to realloc with zero bytes should
+  be the same as a call to free. Some people think it should. Otherwise,
+  since this malloc returns a unique pointer for malloc(0), so does
   realloc(p, 0).
 
 LACKS_UNISTD_H, LACKS_FCNTL_H, LACKS_SYS_PARAM_H, LACKS_SYS_MMAN_H
@@ -1444,9 +1444,9 @@ static int win32munmap(void* ptr, size_t size) {
     unique mparams values are initialized only once.
 */
 
-#if !defined(WIN32) && !defined(__OS2__)
+//#if !defined(WIN32) && !defined(__OS2__)
 /* By default use posix locks */
-#include <pthread.h>
+#include "../../../libpthread_win32/pthread.h"
 #define MLOCK_T pthread_mutex_t
 #define INITIAL_LOCK(l)      pthread_mutex_init(l, NULL)
 #define ACQUIRE_LOCK(l)      pthread_mutex_lock(l)
@@ -1457,49 +1457,6 @@ static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_MORECORE */
 
 static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#elif defined(__OS2__)
-#define MLOCK_T HMTX
-#define INITIAL_LOCK(l)      DosCreateMutexSem(0, l, 0, FALSE)
-#define ACQUIRE_LOCK(l)      DosRequestMutexSem(*l, SEM_INDEFINITE_WAIT)
-#define RELEASE_LOCK(l)      DosReleaseMutexSem(*l)
-#if HAVE_MORECORE
-static MLOCK_T morecore_mutex;
-#endif /* HAVE_MORECORE */
-static MLOCK_T magic_init_mutex;
-
-#else /* WIN32 */
-/*
-   Because lock-protected regions have bounded times, and there
-   are no recursive lock calls, we can use simple spinlocks.
-*/
-
-#define MLOCK_T long
-static int win32_acquire_lock (MLOCK_T *sl) {
-  for (;;) {
-#ifdef InterlockedCompareExchangePointer
-    if (!InterlockedCompareExchange(sl, 1, 0))
-      return 0;
-#else  /* Use older void* version */
-    if (!InterlockedCompareExchange((void**)sl, (void*)1, (void*)0))
-      return 0;
-#endif /* InterlockedCompareExchangePointer */
-    Sleep (0);
-  }
-}
-
-static void win32_release_lock (MLOCK_T *sl) {
-  InterlockedExchange (sl, 0);
-}
-
-#define INITIAL_LOCK(l)      *(l)=0
-#define ACQUIRE_LOCK(l)      win32_acquire_lock(l)
-#define RELEASE_LOCK(l)      win32_release_lock(l)
-#if HAVE_MORECORE
-static MLOCK_T morecore_mutex;
-#endif /* HAVE_MORECORE */
-static MLOCK_T magic_init_mutex;
-#endif /* WIN32 */
 
 #define USE_LOCK_BIT               (2U)
 #else  /* USE_LOCKS */
@@ -3561,7 +3518,7 @@ static void* sys_alloc(mstate m, size_t nb) {
       (void)set_segment_flags(&m->seg, mmap_flag);
       m->magic = mparams.magic;
       init_bins(m);
-      if (is_global(m)) 
+      if (is_global(m))
         init_top(m, (mchunkptr)tbase, tsize - TOP_FOOT_SIZE);
       else {
         /* Offset top by embedded malloc_state */
@@ -3714,7 +3671,7 @@ static int sys_trim(mstate m, size_t pad) {
     }
 
     /* Unmap any unused mmapped segments */
-    if (HAVE_MMAP) 
+    if (HAVE_MMAP)
       released += release_unused_segments(m);
 
     /* On failure, disable autotrim to avoid repeated failed future calls */
@@ -3922,7 +3879,7 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
     while (a < alignment) a <<= 1;
     alignment = a;
   }
-  
+
   if (bytes >= MAX_REQUEST - alignment) {
     if (m != 0)  { /* Test isn't needed but avoids compiler warning */
       MALLOC_FAILURE_ACTION;
@@ -5167,5 +5124,5 @@ History:
     Trial version Fri Aug 28 13:14:29 1992  Doug Lea  (dl at g.oswego.edu)
       * Based loosely on libg++-1.2X malloc. (It retains some of the overall
          structure of old version,  but most details differ.)
- 
+
 */
