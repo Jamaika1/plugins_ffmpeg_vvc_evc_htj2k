@@ -13,17 +13,20 @@
 #define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
 #define GLIB_VAR _GLIB_EXTERN
 #define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_76
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_78
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_76
+#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_78
 #define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_76
+#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_78
 #define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_76
+#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_78
 #define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
 #define GLIB_COMPILATION
 #define GIO_COMPILATION
 #define GOBJECT_COMPILATION
+//#define G_DISABLE_ASSERT
+//#define G_DISABLE_CHECKS
+#define USE_SYSTEM_PRINTF
 
 #define ALIGNOF_GUINT32 4
 #define ALIGNOF_GUINT64 8
@@ -33,6 +36,7 @@
 #define XDG_PREFIX _gio_xdg
 #define GLIB_RUNSTATEDIR "/run/glib"
 #define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
+#define SRCDIR "/usr/local/src"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1
@@ -61,7 +65,7 @@
 #define HAVE_MEMORY_H 1
 
 /* Have the pangoft2 library */
-/* #define HAVE_PANGOFT2 1 */
+#define HAVE_PANGOFT2 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #if !defined (_MSC_VER) || (_MSC_VER >= 1600)
@@ -116,13 +120,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.40.20"
+#define PACKAGE_VERSION "2.40.21"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "2.40.20"
+#define VERSION "2.40.21"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

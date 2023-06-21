@@ -32,7 +32,7 @@
 #include "cairo/cairo.h"
 
 #ifdef HAVE_PANGOFT2
-#include "pangofc-fontmap.h"
+#include "pango/pangofc-fontmap.h"
 #endif
 
 G_BEGIN_DECLS typedef struct _RsvgCairoRender RsvgCairoRender;
