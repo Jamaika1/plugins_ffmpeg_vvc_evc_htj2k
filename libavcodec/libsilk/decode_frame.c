@@ -29,6 +29,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "config.h"
 #endif
 
+#ifdef FEATURES
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
 #include "main.h"
 #include "../libcelt/stack_alloc.h"
 #include "PLC.h"
@@ -48,7 +53,18 @@ opus_int silk_decode_frame(
 {
     VARDECL( silk_decoder_control, psDecCtrl );
     opus_int         L, mv_len, ret = 0;
+#ifdef FEATURES
+    opus_int32 num_bits;
+    static float num_bits_smooth = -1;
+    static FILE* f_numbits = NULL;
+    static FILE* f_numbits_smooth = NULL;
+#endif
     SAVE_STACK;
+
+#ifdef FEATURES
+    if(f_numbits == NULL) {f_numbits = fopen("features_num_bits.s32", "wb");}
+    if (f_numbits_smooth == NULL) {f_numbits_smooth = fopen("features_num_bits_smooth.f32", "wb");}
+#endif
 
     L = psDec->frame_length;
     ALLOC( psDecCtrl, 1, silk_decoder_control );
@@ -63,6 +79,9 @@ opus_int silk_decode_frame(
         VARDECL( opus_int16, pulses );
         ALLOC( pulses, (L + SHELL_CODEC_FRAME_LENGTH - 1) &
                        ~(SHELL_CODEC_FRAME_LENGTH - 1), opus_int16 );
+#ifdef FEATURES
+        num_bits = ec_tell(psRangeDec);
+#endif
         /*********************************************/
         /* Decode quantization indices of side info  */
         /*********************************************/
@@ -73,6 +92,12 @@ opus_int silk_decode_frame(
         /*********************************************/
         silk_decode_pulses( psRangeDec, pulses, psDec->indices.signalType,
                 psDec->indices.quantOffsetType, psDec->frame_length );
+#ifdef FEATURES
+        num_bits = ec_tell(psRangeDec) - num_bits;
+        num_bits_smooth = 0.9 * num_bits_smooth + 0.1 * num_bits;
+        fwrite(&num_bits, sizeof(num_bits), 1, f_numbits);
+        fwrite(&num_bits_smooth, sizeof(num_bits_smooth), 1, f_numbits_smooth);
+#endif
 
         /********************************************/
         /* Decode parameters and pulse signal       */
@@ -97,6 +122,10 @@ opus_int silk_decode_frame(
         psDec->first_frame_after_reset = 0;
     } else {
         /* Handle packet loss by extrapolation */
+#ifdef FEATURES
+        printf("packet lost!");
+        exit(1);
+#endif
         silk_PLC( psDec, psDecCtrl, pOut, 1, arch );
     }
 

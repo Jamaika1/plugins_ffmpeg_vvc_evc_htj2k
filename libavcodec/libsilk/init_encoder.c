@@ -36,6 +36,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "tuning_parameters.h"
 #include "../libcelt/cpu_support.h"
 
+#ifdef ENABLE_NEURAL_FEC
+#include "dred_encoder.h"
+#endif
+
 /*********************************/
 /* Initialize Silk Encoder state */
 /*********************************/
