@@ -5,21 +5,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -67,16 +67,16 @@
  *
  * \defgroup CABAC
  * Context Adaptive Binary Arithmetic Encoder implementation
- * 
+ *
  * \defgroup Compression
  * Prediction parameter decisions and ratedistortion optimization
  *
  * \defgroup Control
  * Initialization and control flow of the encoder
- * 
+ *
  * \defgroup DataStructures
  * Containers for images, predictions parameters and such
- * 
+ *
  * \defgroup Extras
  * 3rd party modules not considered part of the encoder.
  *
@@ -215,7 +215,7 @@ typedef int16_t coeff_t;
 #define QUOTE(x) #x
 #define QUOTE_EXPAND(x) QUOTE(x)
 
-// NOTE: When making a release, check to see if incrementing libversion in 
+// NOTE: When making a release, check to see if incrementing libversion in
 // configure.ac is necessary.
 #ifndef KVZ_VERSION
 #define KVZ_VERSION 2.2.0
