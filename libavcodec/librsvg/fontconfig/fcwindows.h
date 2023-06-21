@@ -51,7 +51,7 @@
 typedef SSIZE_T ssize_t;
 #endif
 
-#define FC_UINT64_FORMAT	"I64u"
+#define FC_UINT64_FORMAT	"llu"
 
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 
