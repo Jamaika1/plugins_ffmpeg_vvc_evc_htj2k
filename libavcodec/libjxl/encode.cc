@@ -528,6 +528,12 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
 
       size_t save_as_reference =
           input_frame->option_values.header.layer_info.save_as_reference;
+      if (save_as_reference >= 3) {
+        return JXL_API_ERROR(
+            this, JXL_ENC_ERR_API_USAGE,
+            "Cannot use save_as_reference values >=3 (found: %d)",
+            (int)save_as_reference);
+      }
       ib.use_for_next_frame = !!save_as_reference;
 
       jxl::FrameInfo frame_info;
@@ -989,12 +995,6 @@ JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
   return ret;
 }
 
-JxlEncoderFrameSettings* JxlEncoderOptionsCreate(
-    JxlEncoder* enc, const JxlEncoderFrameSettings* source) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderFrameSettingsCreate(enc, source);
-}
-
 JxlEncoderStatus JxlEncoderSetFrameLossless(
     JxlEncoderFrameSettings* frame_settings, const JXL_BOOL lossless) {
   if (lossless && frame_settings->enc->basic_info_set &&
@@ -1005,18 +1005,6 @@ JxlEncoderStatus JxlEncoderSetFrameLossless(
   }
   frame_settings->values.lossless = lossless;
   return JXL_ENC_SUCCESS;
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetLossless(
-    JxlEncoderFrameSettings* frame_settings, JXL_BOOL lossless) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderSetFrameLossless(frame_settings, lossless);
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetEffort(
-    JxlEncoderFrameSettings* frame_settings, const int effort) {
-  return JxlEncoderFrameSettingsSetOption(frame_settings,
-                                          JXL_ENC_FRAME_SETTING_EFFORT, effort);
 }
 
 JxlEncoderStatus JxlEncoderSetFrameDistance(
@@ -1058,18 +1046,6 @@ JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
 
   frame_settings->values.cparams.ec_distance[index] = distance;
   return JXL_ENC_SUCCESS;
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetDistance(
-    JxlEncoderFrameSettings* frame_settings, float distance) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderSetFrameDistance(frame_settings, distance);
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(
-    JxlEncoderFrameSettings* frame_settings, int tier) {
-  return JxlEncoderFrameSettingsSetOption(
-      frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier);
 }
 
 JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
@@ -1949,8 +1925,9 @@ JxlEncoderStatus JxlEncoderAddBox(JxlEncoder* enc, const JxlBoxType type,
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
-    const JxlEncoderOptions* frame_settings, const JxlPixelFormat* pixel_format,
-    const void* buffer, size_t size, uint32_t index) {
+    const JxlEncoderFrameSettings* frame_settings,
+    const JxlPixelFormat* pixel_format, const void* buffer, size_t size,
+    uint32_t index) {
   if (index >= frame_settings->enc->metadata.m.num_extra_channels) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                          "Invalid value for the index of extra channel");
@@ -2039,8 +2016,9 @@ JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
   return JXL_ENC_SUCCESS;
 }
 
-JxlEncoderStatus JxlEncoderSetFrameHeader(JxlEncoderOptions* frame_settings,
-                                          const JxlFrameHeader* frame_header) {
+JxlEncoderStatus JxlEncoderSetFrameHeader(
+    JxlEncoderFrameSettings* frame_settings,
+    const JxlFrameHeader* frame_header) {
   if (frame_header->layer_info.blend_info.source > 3) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                          "invalid blending source index");
@@ -2062,7 +2040,7 @@ JxlEncoderStatus JxlEncoderSetFrameHeader(JxlEncoderOptions* frame_settings,
 }
 
 JxlEncoderStatus JxlEncoderSetExtraChannelBlendInfo(
-    JxlEncoderOptions* frame_settings, size_t index,
+    JxlEncoderFrameSettings* frame_settings, size_t index,
     const JxlBlendInfo* blend_info) {
   if (index >= frame_settings->enc->metadata.m.num_extra_channels) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
