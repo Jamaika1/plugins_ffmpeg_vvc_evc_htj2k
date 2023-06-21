@@ -51,7 +51,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * extra version information, used to show a git commit description
  */
-#define LIBXML_VERSION_EXTRA "-687a2b7"
+#define LIBXML_VERSION_EXTRA "-b236b7a"
 
 /**
  * LIBXML_TEST_VERSION:
