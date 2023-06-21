@@ -19,11 +19,8 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
-#include "libavutil/attributes.h"
-#include "libavutil/common.h"
 #include "libavcodec/cabac_functions.h"
-#include "libavcodec/vvc.h"
+
 #include "libavcodec/vvc_cabac.h"
 #include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_data.h"

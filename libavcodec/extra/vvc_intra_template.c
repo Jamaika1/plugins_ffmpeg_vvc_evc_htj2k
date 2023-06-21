@@ -1,7 +1,7 @@
 /*
- * VVC video decoder
+ * VVC intra prediction DSP
  *
- * Copyright (C) 2021-2022 Nuomi
+ * Copyright (C) 2021-2023 Nuomi
  *
  * This file is part of FFmpeg.
  *
@@ -20,9 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/pixdesc.h"
-
 #include "bit_depth_template.c"
+
 #include "libavcodec/vvc_data.h"
 #include "libavcodec/vvc_intra.h"
 

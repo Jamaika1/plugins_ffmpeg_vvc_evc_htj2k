@@ -20,13 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "cbs.h"
-#include "cbs_h266.h"
-#include "decode.h"
-#include "internal.h"
-#include "parser.h"
-#include "vvc_parse.h"
-#include "vvcdec.h"
+#include "libavcodec/cbs.h"
+#include "libavcodec/cbs_h266.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/parser.h"
 
 #define START_CODE 0x000001 ///< start_code_prefix_one_3bytes
 
@@ -56,7 +54,6 @@ typedef struct AuDetector {
 
 typedef struct VVCParserContext {
     ParseContext pc;
-    VVCParamSets ps;
     CodedBitstreamContext *cbc;
 
     CodedBitstreamFragment picture_unit;
@@ -67,12 +64,7 @@ typedef struct VVCParserContext {
 
     AuDetector au_detector;
 
-    int is_avc;
-    int nal_length_size;
     int parsed_extradata;
-
-    int poc;
-    int pocTid0;
 } VVCParserContext;
 
 static const enum AVPixelFormat pix_fmts_8bit[] = {
@@ -85,6 +77,11 @@ static const enum AVPixelFormat pix_fmts_10bit[] = {
     AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV444P10
 };
 
+static const enum AVPixelFormat pix_fmts_12bit[] = {
+    AV_PIX_FMT_GRAY12, AV_PIX_FMT_YUV420P12,
+    AV_PIX_FMT_YUV422P12, AV_PIX_FMT_YUV444P12
+};
+
 static int get_format(const H266RawSPS *sps)
 {
     switch (sps->sps_bitdepth_minus8) {
@@ -92,6 +89,8 @@ static int get_format(const H266RawSPS *sps)
             return pix_fmts_8bit[sps->sps_chroma_format_idc];
         case 2:
             return pix_fmts_10bit[sps->sps_chroma_format_idc];
+        case 4:
+            return pix_fmts_12bit[sps->sps_chroma_format_idc];
     }
     return AV_PIX_FMT_NONE;
 }
@@ -503,14 +502,11 @@ static int vvc_parser_parse(AVCodecParserContext *ctx, AVCodecContext *avctx,
 {
     int next;
     VVCParserContext *s = ctx->priv_data;
-    VVCContext *s1 = avctx->priv_data;
     ParseContext *pc = &s->pc;
 
     if (avctx->extradata && !s->parsed_extradata) {
-        ff_vvc_decode_extradata(avctx->extradata, avctx->extradata_size, &s->ps, s1,
-                                 &s->is_avc, &s->nal_length_size, avctx->err_recognition,
-                                 1, avctx);
-        s->parsed_extradata = 1;
+        av_log(avctx, AV_LOG_INFO, "extra data is not supported yet.\n");
+        return AVERROR_PATCHWELCOME;
     }
 
     if (ctx->flags & PARSER_FLAG_COMPLETE_FRAMES) {
@@ -584,7 +580,7 @@ static void vvc_parser_close(AVCodecParserContext *ctx)
     av_freep(&s->pc.buffer);
 }
 
-AVCodecParser ff_vvc_parser = {
+const AVCodecParser ff_vvc_parser = {
     .codec_ids      = { AV_CODEC_ID_VVC },
     .priv_data_size = sizeof(VVCParserContext),
     .parser_init    = vvc_parser_init,

@@ -24,21 +24,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "hwconfig.h"
-#include "mathops.h"
-#include "thread.h"
-#include "threadframe.h"
-#include "vp8.h"
-#include "vp89_rac.h"
-#include "vp8data.h"
-#include "vpx_rac.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/vp8.h"
+#include "libavcodec/vp89_rac.h"
+#include "libavcodec/vp8data.h"
+#include "libavcodec/vpx_rac.h"
 
 #if ARCH_ARM
 #   include "arm/vp8.h"
@@ -109,7 +109,7 @@ static int vp8_alloc_frame(VP8Context *s, VP8Frame *f, int ref)
     if (s->avctx->hwaccel) {
         const AVHWAccel *hwaccel = s->avctx->hwaccel;
         if (hwaccel->frame_priv_data_size) {
-            f->hwaccel_priv_buf = av_buffer_allocz(hwaccel->frame_priv_data_size);
+            f->hwaccel_priv_buf = ff_hwaccel_frame_priv_alloc(s->avctx, hwaccel);
             if (!f->hwaccel_priv_buf)
                 goto fail;
             f->hwaccel_picture_private = f->hwaccel_priv_buf->data;
@@ -167,6 +167,9 @@ static void vp8_decode_flush_impl(AVCodecContext *avctx, int free_mem)
 
     if (free_mem)
         free_buffers(s);
+
+    if (avctx->hwaccel && avctx->hwaccel->flush)
+        avctx->hwaccel->flush(avctx);
 }
 
 static void vp8_decode_flush(AVCodecContext *avctx)

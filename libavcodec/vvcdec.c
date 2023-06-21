@@ -1,5 +1,5 @@
 /*
- * VVC video Decoder
+ * VVC video decoder
  *
  * Copyright (C) 2021 Nuo Mi
  * Copyright (C) 2022 Xu Mu
@@ -22,90 +22,19 @@
  */
 #include "libavcodec/config_components.h"
 
-#include "libavutil/attributes.h"
-#include "libavutil/common.h"
-#include "libavutil/cpu.h"
-#include "libavutil/display.h"
-#include "libavutil/internal.h"
-#include "libavutil/mastering_display_metadata.h"
-#include "libavutil/md5.h"
-#include "libavutil/opt.h"
-#include "libavutil/pixdesc.h"
-#include "libavutil/stereo3d.h"
-#include "libavutil/timecode.h"
-
-#include "libavcodec/bswapdsp.h"
-#include "libavcodec/bytestream.h"
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/decode.h"
-#include "libavcodec/golomb.h"
+#include "libavcodec/profiles.h"
 #include "libavcodec/vvc.h"
+
+#include "libavutil/cpu.h"
+#include "libavutil/thread.h"
+
 #include "libavcodec/vvcdec.h"
 #include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_data.h"
-#include "libavcodec/vvc_parse.h"
 #include "libavcodec/vvc_refs.h"
 #include "libavcodec/vvc_thread.h"
-#include "libavcodec/profiles.h"
-#include "libavcodec/thread.h"
-#include "libavcodec/threadframe.h"
-
-static void export_stream_params(VVCContext *s, const VVCSPS *sps)
-{
-    AVCodecContext *avctx = s->avctx;
-    const VVCParamSets *ps = &s->ps;
-    const VVCVPS *vps = (const VVCVPS*)ps->vps_list[sps->video_parameter_set_id]->data;
-    const VVCWindow *ow = &sps->output_window;
-    unsigned int num = 0, den = 0;
-
-    avctx->pix_fmt             = sps->pix_fmt;
-    avctx->coded_width         = sps->width;
-    avctx->coded_height        = sps->height;
-    avctx->width               = sps->width  - ow->left_offset - ow->right_offset;
-    avctx->height              = sps->height - ow->top_offset  - ow->bottom_offset;
-    avctx->has_b_frames        = sps->dpb.max_num_reorder_pics[sps->max_sublayers - 1];
-    avctx->profile             = sps->ptl.general_profile_idc;
-    avctx->level               = sps->ptl.general_level_idc;
-
-    //ff_set_sar(avctx, vui.common.sar);
-
-    //if (sps->vui.common.video_signal_type_present_flag)
-        //avctx->color_range = sps->vui.full_range_flag ? AVCOL_RANGE_JPEG
-                                                      //: AVCOL_RANGE_MPEG;
-    //else
-        avctx->color_range = AVCOL_RANGE_MPEG;
-
-    if (sps->vui.colour_description_present_flag) {
-        avctx->color_primaries = sps->vui.colour_primaries;
-        avctx->color_trc       = sps->vui.transfer_characteristics;
-        avctx->colorspace      = sps->vui.matrix_coeffs;
-    } else {
-        avctx->color_primaries = AVCOL_PRI_UNSPECIFIED;
-        avctx->color_trc       = AVCOL_TRC_UNSPECIFIED;
-        avctx->colorspace      = AVCOL_SPC_UNSPECIFIED;
-    }
-
-    avctx->chroma_sample_location = AVCHROMA_LOC_UNSPECIFIED;
-    if (sps->chroma_format_idc == 1) {
-        if (sps->vui.chroma_loc_info_present_flag) {
-            if (sps->vui.chroma_sample_loc_type_top_field <= 5)
-                avctx->chroma_sample_location = sps->vui.chroma_sample_loc_type_top_field + 1;
-        } else
-            avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
-    }
-
-    /*if (vps->vps_timing_info_present_flag) {
-        num = vps->vps_num_units_in_tick;
-        den = vps->vps_time_scale;
-    } else if (sps->vui.vui_timing_info_present_flag) {
-        num = sps->vui.vui_num_units_in_tick;
-        den = sps->vui.vui_time_scale;
-    }*/
-
-    if (num != 0 && den != 0)
-        av_reduce(&avctx->framerate.den, &avctx->framerate.num,
-                  num, den, 1 << 30);
-}
 
 static int vvc_frame_start(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
 {
@@ -145,17 +74,6 @@ fail:
         ff_vvc_unref_frame(fc, fc->ref, ~0);
     fc->ref = NULL;
     return ret;
-}
-
-void ff_vvc_ctu_free_cus(CTU *ctu)
-{
-    while (ctu->cus) {
-        CodingUnit *cu      = ctu->cus;
-        AVBufferRef *buf    = cu->buf;
-
-        ctu->cus = ctu->cus->next;
-        av_buffer_unref(&buf);
-    }
 }
 
 static void ctb_arrays_free(VVCFrameContext *fc)
@@ -571,9 +489,10 @@ static int max_negtive(const int idx, const int diff, const int max_diff)
 
 typedef int (*smvd_find_fxn)(const int idx, const int diff, const int old_diff);
 
-static int8_t smvd_find(const VVCFrameContext *fc, const VVCSH *sh, int lx, smvd_find_fxn find)
+static int8_t smvd_find(const VVCFrameContext *fc, const SliceContext *sc, int lx, smvd_find_fxn find)
 {
-    const RefPicList *rpl   = fc->ref->refPicList + lx;
+    const VVCSH *sh         = &sc->sh;
+    const RefPicList *rpl   = sc->rpl + lx;
     const int poc           = fc->ref->poc;
     int8_t idx              = -1;
     int old_diff            = -1;
@@ -589,14 +508,15 @@ static int8_t smvd_find(const VVCFrameContext *fc, const VVCSH *sh, int lx, smvd
     return idx;
 }
 
-static void vvc_smvd_ref_idx(const VVCFrameContext *fc, VVCSH *sh)
+static void vvc_smvd_ref_idx(const VVCFrameContext *fc, SliceContext *sc)
 {
+    VVCSH *sh = &sc->sh;
     if (IS_B(sh)) {
-        sh->ref_idx_sym[0] = smvd_find(fc, sh, 0, min_positive);
-        sh->ref_idx_sym[1] = smvd_find(fc, sh, 1, max_negtive);
+        sh->ref_idx_sym[0] = smvd_find(fc, sc, 0, min_positive);
+        sh->ref_idx_sym[1] = smvd_find(fc, sc, 1, max_negtive);
         if (sh->ref_idx_sym[0] == -1 || sh->ref_idx_sym[1] == -1) {
-            sh->ref_idx_sym[0] = smvd_find(fc, sh, 0, max_negtive);
-            sh->ref_idx_sym[1] = smvd_find(fc, sh, 1, min_positive);
+            sh->ref_idx_sym[0] = smvd_find(fc, sc, 0, max_negtive);
+            sh->ref_idx_sym[1] = smvd_find(fc, sc, 1, min_positive);
         }
     }
 }
@@ -866,7 +786,7 @@ static int decode_slice(VVCContext *s, VVCFrameContext *fc, const H2645NAL *nal,
 
 
     if (!IS_I(sh))
-        vvc_smvd_ref_idx(fc, sh);
+        vvc_smvd_ref_idx(fc, sc);
 
     ret = init_slice_context(sc, fc, nal, gb);
     if (ret < 0)
@@ -1056,41 +976,12 @@ static int submit_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *output, int
     return 0;
 }
 
-static int vvc_decode_extradata(VVCContext *s, uint8_t *buf, int length, int first)
-{
-    int ret, i;
-
-    ret = ff_vvc_decode_extradata(buf, length, &s->ps, s, &s->is_nalff,
-                                   &s->nal_length_size, s->avctx->err_recognition,
-                                   s->apply_defdispwin, s->avctx);
-    if (ret < 0)
-        return ret;
-
-    /* export stream parameters from the first SPS */
-    for (i = 0; i < FF_ARRAY_ELEMS(s->ps.sps_list); i++) {
-        if (first && s->ps.sps_list[i]) {
-            const VVCSPS *sps = (const VVCSPS*)s->ps.sps_list[i]->data;
-            export_stream_params(s, sps);
-            break;
-        }
-    }
-
-    /* export stream parameters from SEI */
-    /*ret = export_stream_params_from_sei(s);
-    if (ret < 0)
-        return ret;*/
-
-    return 0;
-}
-
 static int vvc_decode_frame(AVCodecContext *avctx, AVFrame *output,
     int *got_output, AVPacket *avpkt)
 {
     VVCContext *s = avctx->priv_data;
     VVCFrameContext *fc;
     int ret;
-    uint8_t *sd;
-    size_t sd_size;
 
     if (!avpkt->size) {
         while (s->nb_delayed) {
@@ -1113,13 +1004,6 @@ static int vvc_decode_frame(AVCodecContext *avctx, AVFrame *output,
             }
         }
         return 0;
-    }
-
-    sd = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA, &sd_size);
-    if (sd && sd_size > 0) {
-        ret = vvc_decode_extradata(s, sd, sd_size, 0);
-        if (ret < 0)
-            return ret;
     }
 
     fc = get_frame_context(s, s->fcs, s->nb_frames);
@@ -1224,7 +1108,7 @@ static av_cold int vvc_decode_free(AVCodecContext *avctx)
     int i;
 
     vvc_decode_flush(avctx);
-    avpriv_executor_free(&s->executor);
+    ff_executor_free(&s->executor);
     if (s->fcs) {
         for (i = 0; i < s->nb_fcs; i++)
             frame_context_free(s->fcs + i);
@@ -1247,7 +1131,7 @@ static av_cold int vvc_decode_init(AVCodecContext *avctx)
 {
     VVCContext *s       = avctx->priv_data;
     int ret;
-    AVTaskCallbacks callbacks = {
+    TaskCallbacks callbacks = {
         s,
         sizeof(VVCLocalContext),
         ff_vvc_task_priority_higher,
@@ -1269,19 +1153,10 @@ static av_cold int vvc_decode_init(AVCodecContext *avctx)
             goto fail;
     }
 
-    s->executor = avpriv_executor_alloc(&callbacks, s->nb_fcs * 3 / 2);
+    s->executor = ff_executor_alloc(&callbacks, s->nb_fcs * 3 / 2);
     s->eos = 1;
     GDR_SET_RECOVERED(s);
     pthread_once(&once_control, vvc_one_time_init);
-
-    if (!avctx->internal->is_copy) {
-        if (avctx->extradata_size > 0 && avctx->extradata) {
-            ret = vvc_decode_extradata(s, avctx->extradata, avctx->extradata_size, 1);
-            if (ret < 0) {
-                return ret;
-            }
-        }
-    }
 
     return 0;
 
@@ -1298,7 +1173,7 @@ static const AVOption options[] = {
 };
 
 static const AVClass vvc_decoder_class = {
-    .class_name = "VVC decoder",
+    .class_name = "vvc decoder",
     .item_name  = av_default_item_name,
     .option     = options,
     .version    = LIBAVUTIL_VERSION_INT,
@@ -1306,7 +1181,7 @@ static const AVClass vvc_decoder_class = {
 
 const FFCodec ff_vvc_decoder = {
     .p.name                  = "vvc",
-    CODEC_LONG_NAME("VVC (Versatile Video Coding)"),
+    .p.long_name             = NULL_IF_CONFIG_SMALL("VVC (Versatile Video Coding)"),
     .p.type                  = AVMEDIA_TYPE_VIDEO,
     .p.id                    = AV_CODEC_ID_VVC,
     .priv_data_size          = sizeof(VVCContext),
@@ -1317,6 +1192,6 @@ const FFCodec ff_vvc_decoder = {
     .flush                   = vvc_decode_flush,
     .p.capabilities          = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
     .caps_internal           = FF_CODEC_CAP_EXPORTS_CROPPING | FF_CODEC_CAP_INIT_CLEANUP |
-                               FF_CODEC_CAP_ALLOCATE_PROGRESS,
+                               FF_CODEC_CAP_AUTO_THREADS,
     .p.profiles              = NULL_IF_CONFIG_SMALL(ff_vvc_profiles),
 };

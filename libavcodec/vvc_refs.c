@@ -1,7 +1,7 @@
 /*
- * VVC video decoder
+ * VVC reference management
  *
- * Copyright (C) 2021 Nuo Mi
+ * Copyright (C) 2023 Nuo Mi
  *
  * This file is part of FFmpeg.
  *
@@ -20,20 +20,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/avassert.h"
-#include "libavutil/pixdesc.h"
+#include <stdatomic.h>
 
-#include "libavcodec/internal.h"
-#include "libavcodec/thread.h"
-#include "libavcodec/vvc_thread.h"
+#include "libavutil/thread.h"
+
 #include "libavcodec/vvc_refs.h"
-#include "libavcodec/vvc.h"
-#include "libavcodec/vvcdec.h"
 
 #define VVC_FRAME_FLAG_OUTPUT    (1 << 0)
 #define VVC_FRAME_FLAG_SHORT_REF (1 << 1)
 #define VVC_FRAME_FLAG_LONG_REF  (1 << 2)
 #define VVC_FRAME_FLAG_BUMPING   (1 << 3)
+
+typedef struct FrameProgress {
+    atomic_int progress;
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+} FrameProgress;
 
 void ff_vvc_unref_frame(VVCFrameContext *fc, VVCFrame *frame, int flags)
 {
@@ -53,10 +55,8 @@ void ff_vvc_unref_frame(VVCFrameContext *fc, VVCFrame *frame, int flags)
         av_buffer_unref(&frame->rpl_buf);
         av_buffer_unref(&frame->rpl_tab_buf);
         frame->rpl_tab    = NULL;
-        frame->refPicList = NULL;
 
         frame->collocated_ref = NULL;
-
     }
 }
 
@@ -75,8 +75,7 @@ void ff_vvc_clear_refs(VVCFrameContext *fc)
     int i;
     for (i = 0; i < FF_ARRAY_ELEMS(fc->DPB); i++)
         ff_vvc_unref_frame(fc, &fc->DPB[i],
-                            VVC_FRAME_FLAG_SHORT_REF |
-                            VVC_FRAME_FLAG_LONG_REF);
+            VVC_FRAME_FLAG_SHORT_REF | VVC_FRAME_FLAG_LONG_REF);
 }
 
 static void free_progress(void *opaque, uint8_t *data)
@@ -384,7 +383,7 @@ static int add_candidate_ref(VVCContext *s, VVCFrameContext *fc, RefPicList *lis
     return 0;
 }
 
-static int init_slice_rpl(const VVCFrameContext *fc, const SliceContext *sc)
+static int init_slice_rpl(const VVCFrameContext *fc, SliceContext *sc)
 {
     VVCFrame *frame = fc->ref;
     const VVCSH *sh = &sc->sh;
@@ -397,12 +396,12 @@ static int init_slice_rpl(const VVCFrameContext *fc, const SliceContext *sc)
         frame->rpl_tab[rs] = (RefPicListTab *)frame->rpl_buf->data + sc->slice_idx;
     }
 
-    frame->refPicList = (RefPicList *)frame->rpl_tab[sh->ctb_addr_in_curr_slice[0]];
+    sc->rpl = (RefPicList *)frame->rpl_tab[sh->ctb_addr_in_curr_slice[0]];
 
     return 0;
 }
 
-int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, const SliceContext *sc)
+int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
 {
     const VVCSH *sh = &sc->sh;
     int i, ret = 0;
@@ -411,7 +410,7 @@ int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, const SliceContext *sc)
 
     for (i = 0; i < 2; i++) {
         const VVCRefPicListStruct *rpls = sh->rpls + i;
-        RefPicList *rpl = fc->ref->refPicList + i;
+        RefPicList *rpl = sc->rpl + i;
         int poc_base = fc->ps.ph->poc;
         rpl->nb_refs = 0;
         for (int j = 0; j < rpls->num_ref_entries; j++) {
@@ -446,7 +445,7 @@ fail:
     return ret;
 }
 
-int ff_vvc_frame_rpl(VVCContext *s, VVCFrameContext *fc, const SliceContext *sc)
+int ff_vvc_frame_rpl(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
 {
     int i, ret = 0;
 
@@ -468,4 +467,31 @@ fail:
     for (i = 0; i < FF_ARRAY_ELEMS(fc->DPB); i++)
         ff_vvc_unref_frame(fc, &fc->DPB[i], 0);
     return ret;
+}
+
+
+void ff_vvc_report_progress(VVCFrame *frame, int n)
+{
+    FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
+
+    pthread_mutex_lock(&p->lock);
+
+    av_assert0(p->progress < n || p->progress == INT_MAX);
+    p->progress = n;
+
+    pthread_cond_broadcast(&p->cond);
+    pthread_mutex_unlock(&p->lock);
+}
+
+void ff_vvc_await_progress(VVCFrame *frame, int n)
+{
+    FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
+
+    pthread_mutex_lock(&p->lock);
+
+    // +1 for progress default value 0
+    while (p->progress < n + 1)
+        pthread_cond_wait(&p->cond, &p->lock);
+
+    pthread_mutex_unlock(&p->lock);
 }

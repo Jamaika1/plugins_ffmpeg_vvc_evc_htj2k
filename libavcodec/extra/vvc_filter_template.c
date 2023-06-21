@@ -1,5 +1,5 @@
 /*
- * VVC filter dsp
+ * VVC filters DSP
  *
  * Copyright (C) 2022 Nuo Mi
  *
@@ -33,11 +33,11 @@ static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const in
     }
 }
 
-static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-    int16_t *sao_offset_val, const int sao_left_class, const int width, const int height)
+static void FUNC(sao_band_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
+    const int16_t *sao_offset_val, const int sao_left_class, const int width, const int height)
 {
-    pixel *dst = (pixel *)_dst;
-    pixel *src = (pixel *)_src;
+    pixel *dst       = (pixel *)_dst;
+    const pixel *src = (pixel *)_src;
     int offset_table[32] = { 0 };
     int k, y, x;
     int shift  = BIT_DEPTH - 5;
@@ -57,8 +57,8 @@ static void FUNC(sao_band_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_st
 
 #define CMP(a, b) (((a) > (b)) - ((a) < (b)))
 
-static void FUNC(sao_edge_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_stride,
-    int16_t *sao_offset_val, const int eo, const int width, const int height)
+static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride,
+    const int16_t *sao_offset_val, const int eo, const int width, const int height)
 {
     static const uint8_t edge_idx[] = { 1, 2, 0, 3, 4 };
     static const int8_t pos[4][2][2] = {
@@ -67,8 +67,8 @@ static void FUNC(sao_edge_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_st
         { { -1, -1 }, {  1, 1 } }, // 45 degree
         { {  1, -1 }, { -1, 1 } }, // 135 degree
     };
-    pixel *dst = (pixel *)_dst;
-    pixel *src = (pixel *)_src;
+    pixel *dst          = (pixel *)_dst;
+    const pixel *src    = (pixel *)_src;
     int a_stride, b_stride;
     int x, y;
     ptrdiff_t src_stride = (2 * MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE) / sizeof(pixel);
@@ -88,16 +88,16 @@ static void FUNC(sao_edge_filter)(uint8_t *_dst, uint8_t *_src, ptrdiff_t dst_st
     }
 }
 
-static void FUNC(sao_edge_restore_0)(uint8_t *_dst, uint8_t *_src,
-    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
-    int *borders, const int _width, const int _height, const int c_idx,
-    uint8_t *vert_edge, uint8_t *horiz_edge, uint8_t *diag_edge)
+static void FUNC(sao_edge_restore_0)(uint8_t *_dst, const uint8_t *_src,
+    ptrdiff_t dst_stride, ptrdiff_t src_stride, const SAOParams *sao,
+    const int *borders, const int _width, const int _height, const int c_idx,
+    const uint8_t *vert_edge, const uint8_t *horiz_edge, const uint8_t *diag_edge)
 {
     int x, y;
-    pixel *dst = (pixel *)_dst;
-    pixel *src = (pixel *)_src;
-    int16_t *sao_offset_val = sao->offset_val[c_idx];
-    int sao_eo_class    = sao->eo_class[c_idx];
+    pixel *dst                      = (pixel *)_dst;
+    const pixel *src                = (pixel *)_src;
+    const int16_t *sao_offset_val   = sao->offset_val[c_idx];
+    const int sao_eo_class          = sao->eo_class[c_idx];
     int init_x = 0, width = _width, height = _height;
 
     dst_stride /= sizeof(pixel);
@@ -137,16 +137,16 @@ static void FUNC(sao_edge_restore_0)(uint8_t *_dst, uint8_t *_src,
     }
 }
 
-static void FUNC(sao_edge_restore_1)(uint8_t *_dst, uint8_t *_src,
-    ptrdiff_t dst_stride, ptrdiff_t src_stride, SAOParams *sao,
-    int *borders, int _width, int _height, int c_idx,
-    uint8_t *vert_edge, uint8_t *horiz_edge, uint8_t *diag_edge)
+static void FUNC(sao_edge_restore_1)(uint8_t *_dst, const uint8_t *_src,
+    ptrdiff_t dst_stride, ptrdiff_t src_stride, const SAOParams *sao,
+    const int *borders, const int _width, const int _height, const int c_idx,
+    const uint8_t *vert_edge, const uint8_t *horiz_edge, const uint8_t *diag_edge)
 {
     int x, y;
-    pixel *dst = (pixel *)_dst;
-    pixel *src = (pixel *)_src;
-    int16_t *sao_offset_val = sao->offset_val[c_idx];
-    int sao_eo_class    = sao->eo_class[c_idx];
+    pixel *dst                      = (pixel *)_dst;
+    const pixel *src                = (pixel *)_src;
+    const int16_t *sao_offset_val   = sao->offset_val[c_idx];
+    const int sao_eo_class          = sao->eo_class[c_idx];
     int init_x = 0, init_y = 0, width = _width, height = _height;
 
     dst_stride /= sizeof(pixel);
@@ -230,74 +230,7 @@ static av_always_inline int16_t FUNC(alf_clip)(pixel curr, pixel v0, pixel v1, i
 }
 
 static void FUNC(alf_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const uint8_t *_src, ptrdiff_t src_stride,
-    const int width, const int height, const int8_t *filter, const int16_t *clip)
-{
-    const pixel *src    = (pixel *)_src;
-    const int shift     = 7;
-    const int offset    = 1 << ( shift - 1 );
-
-    dst_stride /= sizeof(pixel);
-    src_stride /= sizeof(pixel);
-
-    for (int y = 0; y < height; y += ALF_BLOCK_SIZE) {
-        for (int x = 0; x < width; x += ALF_BLOCK_SIZE) {
-            const pixel *s0 = src + y * src_stride + x;
-            const pixel *s1 = s0 + src_stride;
-            const pixel *s2 = s0 - src_stride;
-            const pixel *s3 = s1 + src_stride;
-            const pixel *s4 = s2 - src_stride;
-            const pixel *s5 = s3 + src_stride;
-            const pixel *s6 = s4 - src_stride;
-
-            for (int i = 0; i < ALF_BLOCK_SIZE; i++) {
-                pixel *dst = (pixel *)_dst + (y + i) * dst_stride + x;
-
-                const pixel *p0 = s0 + i * src_stride;
-                const pixel *p1 = s1 + i * src_stride;
-                const pixel *p2 = s2 + i * src_stride;
-                const pixel *p3 = s3 + i * src_stride;
-                const pixel *p4 = s4 + i * src_stride;
-                const pixel *p5 = s5 + i * src_stride;
-                const pixel *p6 = s6 + i * src_stride;
-
-                for (int j = 0; j < ALF_BLOCK_SIZE; j++) {
-                    int sum = 0;
-                    const pixel curr = *p0;
-
-                    sum += filter[0]  * FUNC(alf_clip)(curr, p5[+0], p6[+0], clip[0]);
-                    sum += filter[1]  * FUNC(alf_clip)(curr, p3[+1], p4[-1], clip[1]);
-                    sum += filter[2]  * FUNC(alf_clip)(curr, p3[+0], p4[+0], clip[2]);
-                    sum += filter[3]  * FUNC(alf_clip)(curr, p3[-1], p4[+1], clip[3]);
-                    sum += filter[4]  * FUNC(alf_clip)(curr, p1[+2], p2[-2], clip[4]);
-                    sum += filter[5]  * FUNC(alf_clip)(curr, p1[+1], p2[-1], clip[5]);
-                    sum += filter[6]  * FUNC(alf_clip)(curr, p1[+0], p2[+0], clip[6]);
-                    sum += filter[7]  * FUNC(alf_clip)(curr, p1[-1], p2[+1], clip[7]);
-                    sum += filter[8]  * FUNC(alf_clip)(curr, p1[-2], p2[+2], clip[8]);
-                    sum += filter[9]  * FUNC(alf_clip)(curr, p0[+3], p0[-3], clip[9]);
-                    sum += filter[10] * FUNC(alf_clip)(curr, p0[+2], p0[-2], clip[10]);
-                    sum += filter[11] * FUNC(alf_clip)(curr, p0[+1], p0[-1], clip[11]);
-
-                    sum = (sum + offset) >> shift;
-                    sum += curr;
-                    dst[j] = CLIP(sum);
-
-                    p0++;
-                    p1++;
-                    p2++;
-                    p3++;
-                    p4++;
-                    p5++;
-                    p6++;
-                }
-            }
-            filter += ALF_NUM_COEFF_LUMA;
-            clip += ALF_NUM_COEFF_LUMA;
-        }
-    }
-}
-
-static void FUNC(alf_filter_luma_vb)(uint8_t *_dst, ptrdiff_t dst_stride, const uint8_t *_src, ptrdiff_t src_stride,
-    const int width, const int height, const int8_t *filter, const int16_t *clip, const int vb_pos)
+    const int width, const int height, const int16_t *filter, const int16_t *clip, const int vb_pos)
 {
     const pixel *src    = (pixel *)_src;
     const int shift     = 7;
@@ -391,66 +324,7 @@ static void FUNC(alf_filter_luma_vb)(uint8_t *_dst, ptrdiff_t dst_stride, const 
 }
 
 static void FUNC(alf_filter_chroma)(uint8_t* _dst, ptrdiff_t dst_stride, const uint8_t* _src, ptrdiff_t src_stride,
-    const int width, const int height, const int8_t* filter, const int16_t* clip)
-{
-    const pixel *src = (pixel *)_src;
-    const int shift  = 7;
-    const int offset = 1 << ( shift - 1 );
-
-    dst_stride /= sizeof(pixel);
-    src_stride /= sizeof(pixel);
-
-    for (int y = 0; y < height; y += ALF_BLOCK_SIZE) {
-        for (int x = 0; x < width; x += ALF_BLOCK_SIZE) {
-            const pixel *s0 = src + y * src_stride + x;
-            const pixel *s1 = s0 + src_stride;
-            const pixel *s2 = s0 - src_stride;
-            const pixel *s3 = s1 + src_stride;
-            const pixel *s4 = s2 - src_stride;
-            const pixel *s5 = s3 + src_stride;
-            const pixel *s6 = s4 - src_stride;
-
-            for (int i = 0; i < ALF_BLOCK_SIZE; i++) {
-                pixel *dst = (pixel *)_dst + (y + i) * dst_stride + x;
-
-                const pixel *p0 = s0 + i * src_stride;
-                const pixel *p1 = s1 + i * src_stride;
-                const pixel *p2 = s2 + i * src_stride;
-                const pixel *p3 = s3 + i * src_stride;
-                const pixel *p4 = s4 + i * src_stride;
-                const pixel *p5 = s5 + i * src_stride;
-                const pixel *p6 = s6 + i * src_stride;
-
-                for (int j = 0; j < ALF_BLOCK_SIZE; j++) {
-                    int sum = 0;
-                    const pixel curr = *p0;
-
-                    sum += filter[0]  * FUNC(alf_clip)(curr, p3[+0], p4[+0], clip[0]);
-                    sum += filter[1]  * FUNC(alf_clip)(curr, p1[+1], p2[-1], clip[1]);
-                    sum += filter[2]  * FUNC(alf_clip)(curr, p1[+0], p2[+0], clip[2]);
-                    sum += filter[3]  * FUNC(alf_clip)(curr, p1[-1], p2[+1], clip[3]);
-                    sum += filter[4]  * FUNC(alf_clip)(curr, p0[+2], p0[-2], clip[4]);
-                    sum += filter[5]  * FUNC(alf_clip)(curr, p0[+1], p0[-1], clip[5]);
-
-                    sum = (sum + offset) >> shift;
-                    sum += curr;
-                    dst[j] = CLIP(sum);
-
-                    p0++;
-                    p1++;
-                    p2++;
-                    p3++;
-                    p4++;
-                    p5++;
-                    p6++;
-                }
-            }
-        }
-    }
-}
-
-static void FUNC(alf_filter_chroma_vb)(uint8_t* _dst, ptrdiff_t dst_stride, const uint8_t* _src, ptrdiff_t src_stride,
-    const int width, const int height, const int8_t* filter, const int16_t* clip, const int vb_pos)
+    const int width, const int height, const int16_t* filter, const int16_t* clip, const int vb_pos)
 {
     const pixel *src = (pixel *)_src;
     const int shift  = 7;
@@ -536,7 +410,7 @@ static void FUNC(alf_filter_chroma_vb)(uint8_t* _dst, ptrdiff_t dst_stride, cons
 }
 
 static void FUNC(alf_filter_cc)(uint8_t *_dst, ptrdiff_t dst_stride, const uint8_t *_luma, const ptrdiff_t luma_stride,
-    const int width, const int height, const int hs, const int vs, const int8_t *filter, const int vb_pos)
+    const int width, const int height, const int hs, const int vs, const int16_t *filter, const int vb_pos)
 {
     const ptrdiff_t stride = luma_stride / sizeof(pixel);
 
@@ -695,9 +569,9 @@ static void FUNC(alf_classify)(int *class_idx, int *transpose_idx,
 
 }
 
-static void FUNC(alf_recon_coeff_and_clip)(int8_t *coeff, int16_t *clip,
+static void FUNC(alf_recon_coeff_and_clip)(int16_t *coeff, int16_t *clip,
     const int *class_idx, const int *transpose_idx, const int size,
-    const int8_t *coeff_set, const uint8_t *clip_idx_set, const uint8_t *class_to_filt)
+    const int16_t *coeff_set, const uint8_t *clip_idx_set, const uint8_t *class_to_filt)
 {
     const static int index[][ALF_NUM_COEFF_LUMA] = {
         { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
@@ -711,7 +585,7 @@ static void FUNC(alf_recon_coeff_and_clip)(int8_t *coeff, int16_t *clip,
     };
 
     for (int i = 0; i < size; i++) {
-        const int8_t  *src_coeff = coeff_set + class_to_filt[class_idx[i]] * ALF_NUM_COEFF_LUMA;
+        const int16_t  *src_coeff = coeff_set + class_to_filt[class_idx[i]] * ALF_NUM_COEFF_LUMA;
         const uint8_t *clip_idx  = clip_idx_set + class_idx[i] * ALF_NUM_COEFF_LUMA;
 
         for (int j = 0; j < ALF_NUM_COEFF_LUMA; j++) {
@@ -1206,11 +1080,9 @@ static void FUNC(ff_vvc_sao_dsp_init)(VVCSAODSPContext *const sao)
 
 static void FUNC(ff_vvc_alf_dsp_init)(VVCALFDSPContext *const alf)
 {
-    alf->filter[LUMA]       = FUNC(alf_filter_luma);
-    alf->filter[CHROMA]     = FUNC(alf_filter_chroma);
-    alf->filter_vb[LUMA]    = FUNC(alf_filter_luma_vb);
-    alf->filter_vb[CHROMA]  = FUNC(alf_filter_chroma_vb);
-    alf->filter_cc          = FUNC(alf_filter_cc);
-    alf->classify           = FUNC(alf_classify);
+    alf->filter[LUMA]    = FUNC(alf_filter_luma);
+    alf->filter[CHROMA]  = FUNC(alf_filter_chroma);
+    alf->filter_cc       = FUNC(alf_filter_cc);
+    alf->classify        = FUNC(alf_classify);
     alf->recon_coeff_and_clip = FUNC(alf_recon_coeff_and_clip);
 }

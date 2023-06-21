@@ -21,24 +21,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "hwconfig.h"
-#include "profiles.h"
-#include "thread.h"
-#include "threadframe.h"
-#include "pthread_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/hwconfig.h"
+#include "libavcodec/profiles.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/pthread_internal.h"
 
-#include "videodsp.h"
-#include "vp89_rac.h"
-#include "vp9.h"
-#include "vp9data.h"
-#include "vp9dec.h"
-#include "vpx_rac.h"
+#include "libavcodec/videodsp.h"
+#include "libavcodec/vp89_rac.h"
+#include "libavcodec/vp9.h"
+#include "libavcodec/vp9data.h"
+#include "libavcodec/vp9dec.h"
+#include "libavcodec/vpx_rac.h"
 #include "libavutil/avassert.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/video_enc_params.h"
@@ -136,7 +136,7 @@ static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
         const AVHWAccel *hwaccel = avctx->hwaccel;
         av_assert0(!f->hwaccel_picture_private);
         if (hwaccel->frame_priv_data_size) {
-            f->hwaccel_priv_buf = av_buffer_allocz(hwaccel->frame_priv_data_size);
+            f->hwaccel_priv_buf = ff_hwaccel_frame_priv_alloc(avctx, hwaccel);
             if (!f->hwaccel_priv_buf)
                 goto fail;
             f->hwaccel_picture_private = f->hwaccel_priv_buf->data;
@@ -1801,6 +1801,9 @@ static void vp9_decode_flush(AVCodecContext *avctx)
         vp9_frame_unref(avctx, &s->s.frames[i]);
     for (i = 0; i < 8; i++)
         ff_thread_release_ext_buffer(avctx, &s->s.refs[i]);
+
+    if (avctx->hwaccel && avctx->hwaccel->flush)
+        avctx->hwaccel->flush(avctx);
 }
 
 static av_cold int vp9_decode_init(AVCodecContext *avctx)

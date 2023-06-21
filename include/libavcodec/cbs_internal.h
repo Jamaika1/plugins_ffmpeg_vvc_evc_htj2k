@@ -41,9 +41,9 @@ enum CBSContentType {
 };
 
 enum {
-      // Maximum number of unit types described by the same non-range
-      // unit type descriptor.
-      CBS_MAX_LIST_UNIT_TYPES = 3,
+      // Maximum number of unit types described by the same unit type
+      // descriptor.
+      CBS_MAX_UNIT_TYPES  = 8,
       // Maximum number of reference buffer offsets in any one unit.
       CBS_MAX_REF_OFFSETS = 2,
       // Special value used in a unit type descriptor to indicate that it
@@ -60,7 +60,7 @@ typedef const struct CodedBitstreamUnitTypeDescriptor {
 
     union {
         // Array of unit types that this entry describes.
-        CodedBitstreamUnitType list[CBS_MAX_LIST_UNIT_TYPES];
+        CodedBitstreamUnitType list[CBS_MAX_UNIT_TYPES];
         // Start and end of unit type range, used if nb_unit_types is
         // CBS_UNIT_TYPE_RANGE.
         struct {
@@ -132,6 +132,12 @@ typedef struct CodedBitstreamType {
     int (*write_unit)(CodedBitstreamContext *ctx,
                       CodedBitstreamUnit *unit,
                       PutBitContext *pbc);
+
+    // Return 1 when the unit should be dropped according to 'skip',
+    // 0 otherwise.
+    int (*discarded_unit)(CodedBitstreamContext *ctx,
+                          const CodedBitstreamUnit *unit,
+                          enum AVDiscard skip);
 
     // Read the data from all of frag->units and assemble it into
     // a bitstream for the whole fragment.

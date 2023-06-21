@@ -27,8 +27,8 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "msrledec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/msrledec.h"
 
 static int msrle_decode_pal4(AVCodecContext *avctx, AVFrame *pic,
                              GetByteContext *gb)

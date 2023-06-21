@@ -1,6 +1,8 @@
 /*
  * VVC parameter set parser
  *
+ * Copyright (C) 2023 Nuo Mi
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -21,15 +23,7 @@
 #ifndef AVCODEC_VVC_PS_H
 #define AVCODEC_VVC_PS_H
 
-#include <stdint.h>
-
-#include "libavutil/buffer.h"
-#include "libavutil/pixfmt.h"
-#include "libavutil/rational.h"
-
-#include "avcodec.h"
-#include "get_bits.h"
-#include "vvc.h"
+#include "libavcodec/vvc.h"
 
 #define IS_VCL(t) ((t) <= VVC_RSV_IRAP_11 && (t) >= VVC_TRAIL_NUT)
 
@@ -214,13 +208,12 @@ typedef struct VVCVPS {
     uint8_t  num_ptls_minus1;
     uint8_t  pt_present_flag[VVC_MAX_PTLS];
     uint8_t  ptl_max_tid[VVC_MAX_PTLS];
-    //H266RawProfileTierLevel profile_tier_level[VVC_MAX_PTLS];
+
     uint8_t  ols_ptl_idx[VVC_MAX_TOTAL_NUM_OLSS];
 
     uint16_t num_dpb_params_minus1;
     uint8_t  sublayer_dpb_params_present_flag;
     uint8_t  dpb_max_tid[VVC_MAX_TOTAL_NUM_OLSS];
-    //H266DpbParameters dpb_params[VVC_MAX_TOTAL_NUM_OLSS];
     uint16_t ols_dpb_pic_width[VVC_MAX_TOTAL_NUM_OLSS];
     uint16_t ols_dpb_pic_height[VVC_MAX_TOTAL_NUM_OLSS];
     uint8_t  ols_dpb_chroma_format[VVC_MAX_TOTAL_NUM_OLSS];
@@ -228,11 +221,9 @@ typedef struct VVCVPS {
     uint16_t ols_dpb_params_idx[VVC_MAX_TOTAL_NUM_OLSS];
 
     uint8_t  timing_hrd_params_present_flag;
-    //H266RawGeneralTimingHrdParameters general_timing_hrd_parameters;
     uint8_t  sublayer_cpb_params_present_flag;
     uint16_t num_ols_timing_hrd_params_minus1;
     uint8_t  hrd_max_tid[VVC_MAX_TOTAL_NUM_OLSS];
-    //H266RawOlsTimingHrdParameters ols_timing_hrd_parameters;
     uint8_t  ols_timing_hrd_idx[VVC_MAX_TOTAL_NUM_OLSS];
 
     uint8_t data[4096];
@@ -310,8 +301,6 @@ typedef struct VirtualBoundaries {
 
 typedef struct VVCSPS {
     unsigned video_parameter_set_id;
-
-    //uint8_t separate_colour_plane_flag;
 
     VVCWindow output_window;
 
@@ -451,8 +440,8 @@ typedef struct VVCSPS {
 
     PTL ptl;
 
-    int hshift[3];
-    int vshift[3];
+    int hshift[VVC_MAX_SAMPLE_ARRAYS];
+    int vshift[VVC_MAX_SAMPLE_ARRAYS];
 
     //derived values
     unsigned int max_pic_order_cnt_lsb;                             ///< MaxPicOrderCntLsb
@@ -481,7 +470,6 @@ typedef struct DBParams {
 } DBParams;
 
 typedef struct VVCPPS {
-
     uint8_t  pic_parameter_set_id;
     uint8_t  seq_parameter_set_id;
     uint8_t  mixed_nalu_types_in_pic_flag;
@@ -702,15 +690,15 @@ typedef struct VVCPH {
 } VVCPH;
 
 typedef struct VVCALF {
-    int8_t  luma_coeff     [ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
+    int16_t luma_coeff     [ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
     uint8_t luma_clip_idx  [ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA];
 
     uint8_t num_chroma_filters;
-    int8_t  chroma_coeff   [ALF_NUM_FILTERS_CHROMA * ALF_NUM_COEFF_CHROMA];
+    int16_t chroma_coeff   [ALF_NUM_FILTERS_CHROMA * ALF_NUM_COEFF_CHROMA];
     uint8_t chroma_clip_idx[ALF_NUM_FILTERS_CHROMA * ALF_NUM_COEFF_CHROMA];
 
     uint8_t cc_filters_signalled[2];        //< alf_cc_cb_filters_signalled + 1, alf_cc_cr_filters_signalled + 1
-    int8_t  cc_coeff[2][ALF_NUM_FILTERS_CC * ALF_NUM_COEFF_CC];
+    int16_t cc_coeff[2][ALF_NUM_FILTERS_CC * ALF_NUM_COEFF_CC];
 } VVCALF;
 
 #define SL_MAX_ID          28

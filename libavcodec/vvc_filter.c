@@ -20,10 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/common.h"
-#include "libavutil/internal.h"
-
-#include "libavcodec/cabac_functions.h"
 #include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_data.h"
 #include "libavcodec/vvc_filter.h"
@@ -53,13 +49,6 @@ static const uint8_t betatable[64] = {
      58,  60,  62,  64,  66,  68,  70,  72,  74,  76,  78,  80,  82,  84,  86,  88,
 };
 
-int ff_vvc_get_qPy(const VVCFrameContext *fc, const int xc, const int yc)
-{
-    const int min_cb_log2_size_y = fc->ps.sps->min_cb_log2_size_y;
-    const int x                  = xc >> min_cb_log2_size_y;
-    const int y                  = yc >> min_cb_log2_size_y;
-    return fc->tab.qp[LUMA][x + y * fc->ps.pps->min_cb_width];
-}
 
 static int get_qPc(const VVCFrameContext *fc, const int x0, const int y0, const int chroma)
 {
@@ -333,14 +322,15 @@ void ff_vvc_sao_filter(VVCLocalContext *lc, int x, int y)
 #define LUMA_GRID               4
 #define CHROMA_GRID             8
 
-static int boundary_strength(const VVCFrameContext *fc, MvField *curr, MvField *neigh,
-                             const RefPicList *neigh_refPicList)
+static int boundary_strength(const VVCLocalContext *lc, MvField *curr, MvField *neigh,
+    const RefPicList *neigh_rpl)
 {
+    RefPicList *rpl = lc->sc->rpl;
     if (curr->pred_flag == PF_BI &&  neigh->pred_flag == PF_BI) {
         // same L0 and L1
-        if (fc->ref->refPicList[0].list[curr->ref_idx[0]] == neigh_refPicList[0].list[neigh->ref_idx[0]]  &&
-            fc->ref->refPicList[0].list[curr->ref_idx[0]] == fc->ref->refPicList[1].list[curr->ref_idx[1]] &&
-            neigh_refPicList[0].list[neigh->ref_idx[0]] == neigh_refPicList[1].list[neigh->ref_idx[1]]) {
+        if (rpl[0].list[curr->ref_idx[0]] == neigh_rpl[0].list[neigh->ref_idx[0]]  &&
+            rpl[0].list[curr->ref_idx[0]] == rpl[1].list[curr->ref_idx[1]] &&
+            neigh_rpl[0].list[neigh->ref_idx[0]] == neigh_rpl[1].list[neigh->ref_idx[1]]) {
             if ((FFABS(neigh->mv[0].x - curr->mv[0].x) >= 8 || FFABS(neigh->mv[0].y - curr->mv[0].y) >= 8 ||
                  FFABS(neigh->mv[1].x - curr->mv[1].x) >= 8 || FFABS(neigh->mv[1].y - curr->mv[1].y) >= 8) &&
                 (FFABS(neigh->mv[1].x - curr->mv[0].x) >= 8 || FFABS(neigh->mv[1].y - curr->mv[0].y) >= 8 ||
@@ -348,15 +338,15 @@ static int boundary_strength(const VVCFrameContext *fc, MvField *curr, MvField *
                 return 1;
             else
                 return 0;
-        } else if (neigh_refPicList[0].list[neigh->ref_idx[0]] == fc->ref->refPicList[0].list[curr->ref_idx[0]] &&
-                   neigh_refPicList[1].list[neigh->ref_idx[1]] == fc->ref->refPicList[1].list[curr->ref_idx[1]]) {
+        } else if (neigh_rpl[0].list[neigh->ref_idx[0]] == rpl[0].list[curr->ref_idx[0]] &&
+                   neigh_rpl[1].list[neigh->ref_idx[1]] == rpl[1].list[curr->ref_idx[1]]) {
             if (FFABS(neigh->mv[0].x - curr->mv[0].x) >= 8 || FFABS(neigh->mv[0].y - curr->mv[0].y) >= 8 ||
                 FFABS(neigh->mv[1].x - curr->mv[1].x) >= 8 || FFABS(neigh->mv[1].y - curr->mv[1].y) >= 8)
                 return 1;
             else
                 return 0;
-        } else if (neigh_refPicList[1].list[neigh->ref_idx[1]] == fc->ref->refPicList[0].list[curr->ref_idx[0]] &&
-                   neigh_refPicList[0].list[neigh->ref_idx[0]] == fc->ref->refPicList[1].list[curr->ref_idx[1]]) {
+        } else if (neigh_rpl[1].list[neigh->ref_idx[1]] == rpl[0].list[curr->ref_idx[0]] &&
+                   neigh_rpl[0].list[neigh->ref_idx[0]] == rpl[1].list[curr->ref_idx[1]]) {
             if (FFABS(neigh->mv[1].x - curr->mv[0].x) >= 8 || FFABS(neigh->mv[1].y - curr->mv[0].y) >= 8 ||
                 FFABS(neigh->mv[0].x - curr->mv[1].x) >= 8 || FFABS(neigh->mv[0].y - curr->mv[1].y) >= 8)
                 return 1;
@@ -371,18 +361,18 @@ static int boundary_strength(const VVCFrameContext *fc, MvField *curr, MvField *
 
         if (curr->pred_flag & 1) {
             A     = curr->mv[0];
-            ref_A = fc->ref->refPicList[0].list[curr->ref_idx[0]];
+            ref_A = rpl[0].list[curr->ref_idx[0]];
         } else {
             A     = curr->mv[1];
-            ref_A = fc->ref->refPicList[1].list[curr->ref_idx[1]];
+            ref_A = rpl[1].list[curr->ref_idx[1]];
         }
 
         if (neigh->pred_flag & 1) {
             B     = neigh->mv[0];
-            ref_B = neigh_refPicList[0].list[neigh->ref_idx[0]];
+            ref_B = neigh_rpl[0].list[neigh->ref_idx[0]];
         } else {
             B     = neigh->mv[1];
-            ref_B = neigh_refPicList[1].list[neigh->ref_idx[1]];
+            ref_B = neigh_rpl[1].list[neigh->ref_idx[1]];
         }
 
         if (ref_A == ref_B) {
@@ -423,11 +413,12 @@ static void derive_max_filter_length_luma(const VVCFrameContext *fc, const int q
         *max_len_p = FFMIN(5, *max_len_p);
 }
 
-static void vvc_deblock_subblock_bs_vertical(const VVCFrameContext  *fc,
+static void vvc_deblock_subblock_bs_vertical(const VVCLocalContext *lc,
     const int cb_x, const int cb_y, const int x0, const int y0, const int width, const int height)
 {
-    MvField* tab_mvf            = fc->ref->tab_mvf;
-    RefPicList* rpl             = fc->ref->refPicList;
+    const VVCFrameContext  *fc  = lc->fc;
+    MvField *tab_mvf            = fc->ref->tab_mvf;
+    RefPicList *rpl             = lc->sc->rpl;
     const int min_pu_width      = fc->ps.pps->min_pu_width;
     const int log2_min_pu_size  = MIN_PU_LOG2;
     uint8_t max_len_p, max_len_q;
@@ -445,7 +436,7 @@ static void vvc_deblock_subblock_bs_vertical(const VVCFrameContext  *fc,
             const int x = x0 + i;
             const int y = y0 + j;
 
-            bs = boundary_strength(fc, curr, left, rpl);
+            bs = boundary_strength(lc, curr, left, rpl);
             TAB_BS(fc->tab.vertical_bs[LUMA], x, y) = bs;
 
 
@@ -463,11 +454,12 @@ static void vvc_deblock_subblock_bs_vertical(const VVCFrameContext  *fc,
     }
 }
 
-static void vvc_deblock_subblock_bs_horizontal(const VVCFrameContext  *fc,
+static void vvc_deblock_subblock_bs_horizontal(const VVCLocalContext *lc,
     const int cb_x, const int cb_y, const int x0, const int y0, const int width, const int height)
 {
+    const VVCFrameContext  *fc  = lc->fc;
     MvField* tab_mvf            = fc->ref->tab_mvf;
-    RefPicList* rpl             = fc->ref->refPicList;
+    RefPicList* rpl             = lc->sc->rpl;
     const int min_pu_width      = fc->ps.pps->min_pu_width;
     const int log2_min_pu_size  = MIN_PU_LOG2;
     uint8_t max_len_p, max_len_q;
@@ -485,7 +477,7 @@ static void vvc_deblock_subblock_bs_horizontal(const VVCFrameContext  *fc,
             const int x = x0 + i;
             const int y = y0 + j;
 
-            bs = boundary_strength(fc, curr, top, rpl);
+            bs = boundary_strength(lc, curr, top, rpl);
             TAB_BS(fc->tab.horizontal_bs[LUMA], x, y) = bs;
 
             //fixme:
@@ -508,7 +500,7 @@ static void vvc_deblock_subblock_bs_horizontal(const VVCFrameContext  *fc,
 static void vvc_deblock_bs_luma_vertical(const VVCLocalContext *lc,
     const int x0, const int y0, const int width, const int height)
 {
-    const VVCFrameContext *fc        = lc->fc;
+    const VVCFrameContext *fc  = lc->fc;
     MvField *tab_mvf           = fc->ref->tab_mvf;
     const int log2_min_pu_size = MIN_PU_LOG2;
     const int log2_min_tu_size = MIN_TU_LOG2;
@@ -544,9 +536,8 @@ static void vvc_deblock_bs_luma_vertical(const VVCLocalContext *lc,
         boundary_left = 0;
 
     if (boundary_left) {
-        const RefPicList *rpl_left = (lc->boundary_flags & BOUNDARY_LEFT_SLICE) ?
-                                ff_vvc_get_ref_list(fc, fc->ref, x0 - 1, y0) :
-                                fc->ref->refPicList;
+        const RefPicList *rpl_left =
+            (lc->boundary_flags & BOUNDARY_LEFT_SLICE) ? ff_vvc_get_ref_list(fc, fc->ref, x0 - 1, y0) : lc->sc->rpl;
         int xp_pu = (x0 - 1) >> log2_min_pu_size;
         int xq_pu =  x0      >> log2_min_pu_size;
         int xp_tu = (x0 - 1) >> log2_min_tu_size;
@@ -572,7 +563,7 @@ static void vvc_deblock_bs_luma_vertical(const VVCLocalContext *lc,
             else if (off_x && ((off_x % 8) || !has_vertical_sb))
                 bs = 0;                                     ////inside a cu, not aligned to 8 or with no subblocks
             else
-                bs = boundary_strength(fc, curr, left, rpl_left);
+                bs = boundary_strength(lc, curr, left, rpl_left);
 
             TAB_BS(fc->tab.vertical_bs[LUMA], x0, (y0 + i)) = bs;
 
@@ -584,7 +575,7 @@ static void vvc_deblock_bs_luma_vertical(const VVCLocalContext *lc,
 
     if (!is_intra) {
         if (fc->tab.msf[off_q] || fc->tab.iaf[off_q])
-            vvc_deblock_subblock_bs_vertical(fc, cb_x, cb_y, x0, y0, width, height);
+            vvc_deblock_subblock_bs_vertical(lc, cb_x, cb_y, x0, y0, width, height);
     }
 
 }
@@ -626,9 +617,8 @@ static void vvc_deblock_bs_luma_horizontal(const VVCLocalContext *lc,
         boundary_upper = 0;
 
     if (boundary_upper) {
-        const RefPicList *rpl_top = (lc->boundary_flags & BOUNDARY_UPPER_SLICE) ?
-                                ff_vvc_get_ref_list(fc, fc->ref, x0, y0 - 1) :
-                                fc->ref->refPicList;
+        const RefPicList *rpl_top =
+            (lc->boundary_flags & BOUNDARY_UPPER_SLICE) ? ff_vvc_get_ref_list(fc, fc->ref, x0, y0 - 1) : lc->sc->rpl;
         int yp_pu = (y0 - 1) >> log2_min_pu_size;
         int yq_pu =  y0      >> log2_min_pu_size;
         int yp_tu = (y0 - 1) >> log2_min_tu_size;
@@ -654,7 +644,7 @@ static void vvc_deblock_bs_luma_horizontal(const VVCLocalContext *lc,
             else if (off_y && ((off_y % 8) || !has_horizontal_sb))
                 bs = 0;                                     //inside a cu, not aligned to 8 or with no subblocks
             else
-                bs = boundary_strength(fc, curr, top, rpl_top);
+                bs = boundary_strength(lc, curr, top, rpl_top);
 
             TAB_BS(fc->tab.horizontal_bs[LUMA], x0 + i, y0) = bs;
 
@@ -666,7 +656,7 @@ static void vvc_deblock_bs_luma_horizontal(const VVCLocalContext *lc,
 
     if (!is_intra) {
         if (fc->tab.msf[off_q] || fc->tab.iaf[off_q])
-            vvc_deblock_subblock_bs_horizontal(fc, cb_x, cb_y, x0, y0, width, height);
+            vvc_deblock_subblock_bs_horizontal(lc, cb_x, cb_y, x0, y0, width, height);
     }
 }
 
@@ -1157,13 +1147,13 @@ static void alf_prepare_buffer(VVCFrameContext *fc, uint8_t *_dst, const uint8_t
 #define ALF_MAX_BLOCKS_IN_CTU   (MAX_CTU_SIZE * MAX_CTU_SIZE / ALF_BLOCK_SIZE / ALF_BLOCK_SIZE)
 #define ALF_MAX_FILTER_SIZE     (ALF_MAX_BLOCKS_IN_CTU * ALF_NUM_COEFF_LUMA)
 
-static void alf_get_coeff_and_clip(VVCLocalContext *lc, int8_t *coeff, int16_t *clip,
+static void alf_get_coeff_and_clip(VVCLocalContext *lc, int16_t *coeff, int16_t *clip,
     const uint8_t *src, ptrdiff_t src_stride, int width, int height, int vb_pos, ALFParams *alf)
 {
     const VVCFrameContext *fc   = lc->fc;
     const VVCSH *sh             = &lc->sc->sh;
     uint8_t fixed_clip_set[ALF_NUM_FILTERS_LUMA * ALF_NUM_COEFF_LUMA] = { 0 };
-    const int8_t  *coeff_set;
+    const int16_t *coeff_set;
     const uint8_t *clip_idx_set;
     const uint8_t *class_to_filt;
     const int size = width * height / ALF_BLOCK_SIZE / ALF_BLOCK_SIZE;
@@ -1193,24 +1183,14 @@ static void alf_filter_luma(VVCLocalContext *lc, uint8_t *dst, const uint8_t *sr
 {
     const VVCFrameContext *fc   = lc->fc;
     int vb_pos                  = _vb_pos - y0;
-    const int no_vb_height      = height > vb_pos ? vb_pos - ALF_VB_POS_ABOVE_LUMA : height;
-    const int h                 = height - no_vb_height;
-    int8_t *coeff               = (int8_t*)lc->tmp;
+    int16_t *coeff               = (int16_t*)lc->tmp;
     int16_t *clip               = (int16_t *)lc->tmp1;
 
     av_assert0(ALF_MAX_FILTER_SIZE <= sizeof(lc->tmp));
     av_assert0(ALF_MAX_FILTER_SIZE * sizeof(int16_t) <= sizeof(lc->tmp1));
 
-    alf_get_coeff_and_clip(lc, coeff, clip, src, src_stride, width, no_vb_height, vb_pos, alf);
-    fc->vvcdsp.alf.filter[LUMA](dst, dst_stride, src, src_stride, width, no_vb_height, coeff, clip);
-
-    if (h > 0) {
-        vb_pos -= no_vb_height;
-        dst += dst_stride * no_vb_height;
-        src += src_stride * no_vb_height;
-        alf_get_coeff_and_clip(lc, coeff, clip, src, src_stride, width, h, vb_pos, alf);
-        fc->vvcdsp.alf.filter_vb[LUMA](dst, dst_stride, src, src_stride, width, h, coeff, clip, vb_pos);
-    }
+    alf_get_coeff_and_clip(lc, coeff, clip, src, src_stride, width, height, vb_pos, alf);
+    fc->vvcdsp.alf.filter[LUMA](dst, dst_stride, src, src_stride, width, height, coeff, clip, vb_pos);
 }
 
 static int alf_clip_from_idx(const VVCFrameContext *fc, const int idx)
@@ -1229,19 +1209,13 @@ static void alf_filter_chroma(VVCLocalContext *lc, uint8_t *dst, const uint8_t *
     const VVCSH *sh         = &lc->sc->sh;
     const VVCALF *aps       = (VVCALF *)fc->ps.alf_list[sh->alf.aps_id_chroma]->data;
     const int off           = alf->alf_ctb_filter_alt_idx[c_idx - 1] * ALF_NUM_COEFF_CHROMA;
-    const int8_t *coeff     = aps->chroma_coeff + off;
-    const int no_vb_height  = height > vb_pos ? vb_pos - ALF_VB_POS_ABOVE_CHROMA : height;
+    const int16_t *coeff     = aps->chroma_coeff + off;
     int16_t clip[ALF_NUM_COEFF_CHROMA];
 
     for (int i = 0; i < ALF_NUM_COEFF_CHROMA; i++)
         clip[i] = alf_clip_from_idx(fc, aps->chroma_clip_idx[off + i]);
 
-    fc->vvcdsp.alf.filter[CHROMA](dst, dst_stride, src, src_stride, width, no_vb_height, coeff, clip);
-    if (no_vb_height < height) {
-        dst += dst_stride * no_vb_height;
-        src += src_stride * no_vb_height;
-        fc->vvcdsp.alf.filter_vb[CHROMA](dst, dst_stride, src, src_stride, width, height - no_vb_height, coeff, clip, vb_pos - no_vb_height);
-    }
+    fc->vvcdsp.alf.filter[CHROMA](dst, dst_stride, src, src_stride, width, height, coeff, clip, vb_pos);
 }
 
 static void alf_filter_cc(VVCLocalContext *lc, uint8_t *dst, const uint8_t *luma,
@@ -1256,7 +1230,7 @@ static void alf_filter_cc(VVCLocalContext *lc, uint8_t *dst, const uint8_t *luma
     if (aps_buf) {
         const VVCALF *aps   = (VVCALF *)aps_buf->data;
         const int off       = (alf->ctb_cc_idc[idx] - 1)* ALF_NUM_COEFF_CC;
-        const int8_t *coeff = aps->cc_coeff[idx] + off;
+        const int16_t *coeff = aps->cc_coeff[idx] + off;
 
         fc->vvcdsp.alf.filter_cc(dst, dst_stride, luma, luma_stride, width, height, hs, vs, coeff, vb_pos);
     }

@@ -31,7 +31,7 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/pixfmt.h"
 #include "avcodec.h"
-#include "config.h"
+#include "libavutil/config.h"
 
 #if CONFIG_LCMS2
 # include "fflcms2.h"

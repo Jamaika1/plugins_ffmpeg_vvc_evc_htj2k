@@ -1,5 +1,5 @@
 /*
- * VVC inter predict
+ * VVC inter prediction
  *
  * Copyright (C) 2022 Nuo Mi
  *
@@ -20,11 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavcodec/vvc_cabac.h"
-#include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_data.h"
+#include "libavcodec/vvc_inter.h"
 #include "libavcodec/vvc_mvs.h"
-#include "libavcodec/vvc_thread.h"
+#include "libavcodec/vvc_refs.h"
 
 static const int bcw_w_lut[] = {4, 5, 3, 10, -2};
 
@@ -265,9 +264,10 @@ static void luma_bdof(VVCLocalContext *lc, uint8_t *dst, const ptrdiff_t dst_str
  static void luma_mc_bi(VVCLocalContext *lc, uint8_t *dst, const ptrdiff_t dst_stride,
     const AVFrame *ref0, const Mv *mv0, const int x_off, const int y_off, const int block_w, const int block_h,
     const AVFrame *ref1, const Mv *mv1, const MvField *mvf, const int hf_idx, const int vf_idx,
-    const MvField *orig_mv, const int dmvr_flag, const int sb_bdof_flag)
+    const MvField *orig_mv, const int sb_bdof_flag)
 {
     const VVCFrameContext *fc   = lc->fc;
+    const PredictionUnit *pu    = &lc->cu->pu;
     ptrdiff_t src0_stride       = ref0->linesize[0];
     ptrdiff_t src1_stride       = ref1->linesize[0];
     const int mx0               = mv0->x & 0xf;
@@ -283,7 +283,7 @@ static void luma_bdof(VVCLocalContext *lc, uint8_t *dst, const ptrdiff_t dst_str
     const uint8_t *src0         = ref0->data[0] + y_off0 * src0_stride + (int)((unsigned)x_off0 << fc->ps.sps->pixel_shift);
     const uint8_t *src1         = ref1->data[0] + y_off1 * src1_stride + (int)((unsigned)x_off1 << fc->ps.sps->pixel_shift);
 
-    if (dmvr_flag) {
+    if (pu->dmvr_flag) {
         const int x_sb0 = x_off + (orig_mv->mv[L0].x >> 4);
         const int y_sb0 = y_off + (orig_mv->mv[L0].y >> 4);
         const int x_sb1 = x_off + (orig_mv->mv[L1].x >> 4);
@@ -301,7 +301,7 @@ static void luma_bdof(VVCLocalContext *lc, uint8_t *dst, const ptrdiff_t dst_str
         int denom, w0, w1, o0, o1;
         fc->vvcdsp.inter.put[LUMA][!!my0][!!mx0](lc->tmp, src0, src0_stride,
             block_h, mx0, my0, block_w, hf_idx, vf_idx);
-        if (derive_weight(&denom, &w0, &w1, &o0, &o1, lc, mvf, LUMA, dmvr_flag)) {
+        if (derive_weight(&denom, &w0, &w1, &o0, &o1, lc, mvf, LUMA, pu->dmvr_flag)) {
             fc->vvcdsp.inter.put_bi_w[LUMA][!!my1][!!mx1](dst, dst_stride, src1, src1_stride, lc->tmp,
                 block_h, denom, w0, w1, o0, o1, mx1, my1, block_w, hf_idx, vf_idx);
         } else {
@@ -490,25 +490,16 @@ static void luma_prof_bi(VVCLocalContext *lc, uint8_t *dst, const ptrdiff_t dst_
 
 }
 
-static void vvc_await_progress(const VVCFrameContext *fc, VVCFrame *ref,
-    const Mv *mv, const int y0, const int height)
+static int pred_get_refs(const VVCLocalContext *lc, VVCFrame *ref[2],  const MvField *mv)
 {
-    //todo: check why we need magic number 9
-    const int y = FFMAX(0, (mv->y >> 4) + y0 + height + 9);
+    const RefPicList *rpl = lc->sc->rpl;
 
-    ff_vvc_await_progress(ref, y);
-}
-
-static int pred_await_progress(const VVCFrameContext *fc, VVCFrame *ref[2],
-    const MvField *mv, const int y0, const int height)
-{
     for (int mask = PF_L0; mask <= PF_L1; mask++) {
         if (mv->pred_flag & mask) {
             const int lx = mask - PF_L0;
-            ref[lx] = fc->ref->refPicList[lx].ref[mv->ref_idx[lx]];
+            ref[lx] = rpl[lx].ref[mv->ref_idx[lx]];
             if (!ref[lx])
                 return AVERROR_INVALIDDATA;
-            vvc_await_progress(fc, ref[lx], mv->mv + lx, y0, height);
         }
     }
     return 0;
@@ -563,15 +554,13 @@ static void pred_gpm_blk(VVCLocalContext *lc)
         for (int i = 0; i < 2; i++) {
             const MvField *mv = pu->gpm_mv + i;
             const int lx = mv->pred_flag - PF_L0;
-            VVCFrame *ref = fc->ref->refPicList[lx].ref[mv->ref_idx[lx]];
+            VVCFrame *ref = lc->sc->rpl[lx].ref[mv->ref_idx[lx]];
             if (!ref)
                 return;
-            if (c_idx) {
+            if (c_idx)
                 chroma_mc(lc, tmp[i], ref->frame, mv->mv + lx, x, y, width, height, c_idx);
-            } else {
-                vvc_await_progress(fc, ref, mv->mv + lx, y, height);
+            else
                 luma_mc(lc, tmp[i], ref->frame, mv->mv + lx, x, y, width, height);
-            }
         }
         fc->vvcdsp.inter.put_gpm(dst, dst_stride, width, height, tmp[0], tmp[1], tmp_stride, weights, step_x, step_y);
     }
@@ -601,7 +590,7 @@ static int ciip_derive_intra_weight(const VVCLocalContext *lc, const int x0, con
 }
 
 static void pred_regular_luma(VVCLocalContext *lc, const int hf_idx, const int vf_idx, const MvField *mv,
-    const int x0, const int y0, const int sbw, const int sbh, const MvField *orig_mv, const int dmvr_flag, const int sb_bdof_flag)
+    const int x0, const int y0, const int sbw, const int sbh, const MvField *orig_mv, const int sb_bdof_flag)
 {
     const SliceContext *sc          = lc->sc;
     const VVCFrameContext *fc       = lc->fc;
@@ -612,7 +601,7 @@ static void pred_regular_luma(VVCLocalContext *lc, const int hf_idx, const int v
     const ptrdiff_t inter_stride    = ciip_flag ? (MAX_PB_SIZE * sizeof(uint16_t)) : dst_stride;
     VVCFrame *ref[2];
 
-    if (pred_await_progress(fc, ref, mv, y0, sbh) < 0)
+    if (pred_get_refs(lc, ref, mv) < 0)
         return;
 
     if (mv->pred_flag != PF_BI) {
@@ -622,8 +611,7 @@ static void pred_regular_luma(VVCLocalContext *lc, const int hf_idx, const int v
     } else {
         luma_mc_bi(lc, inter, inter_stride, ref[0]->frame,
             &mv->mv[0], x0, y0, sbw, sbh, ref[1]->frame, &mv->mv[1], mv,
-            hf_idx, vf_idx, orig_mv, dmvr_flag, sb_bdof_flag);
-
+            hf_idx, vf_idx, orig_mv, sb_bdof_flag);
     }
 
     if (ciip_flag) {
@@ -662,24 +650,28 @@ static void pred_regular_chroma(VVCLocalContext *lc, const MvField *mv,
     //fix me
     const int hf_idx = 0;
     const int vf_idx = 0;
+    VVCFrame *ref[2];
+
+    if (pred_get_refs(lc, ref, mv) < 0)
+        return;
+
     if (mv->pred_flag != PF_BI) {
         const int lx = mv->pred_flag - PF_L0;
-        VVCFrame* ref = fc->ref->refPicList[lx].ref[mv->ref_idx[lx]];
-        if (!ref)
+        if (!ref[lx])
             return;
-        chroma_mc_uni(lc, inter1, inter1_stride, ref->frame->data[1], ref->frame->linesize[1],
+
+        chroma_mc_uni(lc, inter1, inter1_stride, ref[lx]->frame->data[1], ref[lx]->frame->linesize[1],
             x0_c, y0_c, w_c, h_c, mv, CB, hf_idx, vf_idx);
-        chroma_mc_uni(lc, inter2, inter2_stride, ref->frame->data[2], ref->frame->linesize[2],
+        chroma_mc_uni(lc, inter2, inter2_stride, ref[lx]->frame->data[2], ref[lx]->frame->linesize[2],
             x0_c, y0_c, w_c, h_c, mv, CR, hf_idx, vf_idx);
     } else {
-        VVCFrame* ref0 = fc->ref->refPicList[0].ref[mv->ref_idx[0]];
-        VVCFrame* ref1 = fc->ref->refPicList[1].ref[mv->ref_idx[1]];
-        if (!ref0 || !ref1)
+        if (!ref[0] || !ref[1])
             return;
-        chroma_mc_bi(lc, inter1, inter1_stride, ref0->frame, ref1->frame,
+
+        chroma_mc_bi(lc, inter1, inter1_stride, ref[0]->frame, ref[1]->frame,
             x0_c, y0_c, w_c, h_c, mv, CB, hf_idx, vf_idx, orig_mv, dmvr_flag, lc->cu->ciip_flag);
 
-        chroma_mc_bi(lc, inter2, inter2_stride, ref0->frame, ref1->frame,
+        chroma_mc_bi(lc, inter2, inter2_stride, ref[0]->frame, ref[1]->frame,
             x0_c, y0_c, w_c, h_c, mv, CR, hf_idx, vf_idx, orig_mv, dmvr_flag, lc->cu->ciip_flag);
 
     }
@@ -689,48 +681,6 @@ static void pred_regular_chroma(VVCLocalContext *lc, const MvField *mv,
         fc->vvcdsp.intra.intra_pred(lc, x0, y0, sbw, sbh, 2);
         fc->vvcdsp.inter.put_ciip(dst1, dst1_stride, w_c, h_c, inter1, inter1_stride, intra_weight);
         fc->vvcdsp.inter.put_ciip(dst2, dst2_stride, w_c, h_c, inter2, inter2_stride, intra_weight);
-
-    }
-}
-
-// derive bdofFlag from 8.5.6 Decoding process for inter blocks
-// derive dmvr from 8.5.1 General decoding process for coding units coded in inter prediction mode
-static void derive_dmvr_bdof_flag(VVCLocalContext *lc, int *dmvr_flag, int *bdof_flag, const PredictionUnit* pu)
-{
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCPPS *pps           = fc->ps.pps;
-    const VVCPH *ph             = fc->ps.ph;
-    const VVCSH *sh             = &lc->sc->sh;
-    const int poc               = ph->poc;
-    const RefPicList *rpl0      = fc->ref->refPicList + L0;
-    const RefPicList *rpl1      = fc->ref->refPicList + L1;
-    const int8_t *ref_idx       = pu->mi.ref_idx;
-    const MotionInfo *mi        = &pu->mi;
-    const CodingUnit *cu        = lc->cu;
-    const PredWeightTable *w    = pps->wp_info_in_ph_flag ? &fc->ps.ph->pwt : &sh->pwt;
-
-    *dmvr_flag = 0;
-    *bdof_flag = 0;
-
-    if (mi->pred_flag == PF_BI &&
-        (poc - rpl0->list[ref_idx[L0]] == rpl1->list[ref_idx[L1]] - poc) &&
-        !rpl0->isLongTerm[ref_idx[L0]] && !rpl1->isLongTerm[ref_idx[L1]] &&
-        !cu->ciip_flag &&
-        !mi->bcw_idx &&
-        !w->weight_flag[L0][LUMA][mi->ref_idx[L0]] && !w->weight_flag[L1][LUMA][mi->ref_idx[L1]] &&
-        !w->weight_flag[L0][CHROMA][mi->ref_idx[L0]] && !w->weight_flag[L1][CHROMA][mi->ref_idx[L1]] &&
-        cu->cb_width >= 8 && cu->cb_height >= 8 &&
-        (cu->cb_width * cu->cb_height >= 128)) {
-        // fixme: for RprConstraintsActiveFlag
-        if (!ph->bdof_disabled_flag &&
-            mi->motion_model_idc == MOTION_TRANSLATION &&
-            !pu->merge_subblock_flag &&
-            !pu->sym_mvd_flag)
-            *bdof_flag = 1;
-        if (!ph->dmvr_disabled_flag &&
-            pu->general_merge_flag &&
-            !pu->mmvd_merge_flag)
-            *dmvr_flag = 1;
 
     }
 }
@@ -890,16 +840,17 @@ static void set_dmvr_info(VVCFrameContext *fc, const int x0, const int y0,
 }
 
 static void derive_sb_mv(VVCLocalContext *lc, MvField *mv, MvField *orig_mv, int *sb_bdof_flag,
-    const int x0, const int y0, const int sbw, const int sbh, const int dmvr_flag, const int bdof_flag)
+    const int x0, const int y0, const int sbw, const int sbh)
 {
-    VVCFrameContext *fc = lc->fc;
+    VVCFrameContext *fc      = lc->fc;
+    const PredictionUnit *pu = &lc->cu->pu;
 
     *orig_mv = *mv = *ff_vvc_get_mvf(fc, x0, y0);
-    if (bdof_flag)
+    if (pu->bdof_flag)
         *sb_bdof_flag = 1;
-    if (dmvr_flag) {
+    if (pu->dmvr_flag) {
         VVCFrame* ref[2];
-        if (pred_await_progress(fc, ref, mv, y0, sbh) < 0)
+        if (pred_get_refs(lc, ref, mv) < 0)
             return;
         dmvr_mv_refine(lc, mv, orig_mv, sb_bdof_flag, ref[0]->frame, ref[1]->frame, x0, y0, sbw, sbh);
         set_dmvr_info(fc, x0, y0, sbw, sbh, mv);
@@ -910,37 +861,29 @@ static void pred_regular_blk(VVCLocalContext *lc, const int skip_ciip)
 {
     const VVCFrameContext *fc   = lc->fc;
     const CodingUnit *cu        = lc->cu;
-    const PredictionUnit *pu    = &cu->pu;
+    PredictionUnit *pu          = &lc->cu->pu;
     const MotionInfo *mi        = &pu->mi;
     MvField mv, orig_mv;
-    int sbw, sbh, num_sb_x, num_sb_y, sb_bdof_flag = 0;
-    int dmvr_flag, bdof_flag;
+    int sbw, sbh, sb_bdof_flag = 0;
 
     if (cu->ciip_flag && skip_ciip)
         return;
 
-    derive_dmvr_bdof_flag(lc, &dmvr_flag, &bdof_flag, pu);
-    num_sb_x = mi->num_sb_x;
-    num_sb_y = mi->num_sb_y;
-    if (dmvr_flag || bdof_flag) {
-        num_sb_x = (cu->cb_width > 16) ? (cu->cb_width >> 4) : 1;
-        num_sb_y = (cu->cb_height > 16) ? (cu->cb_height >> 4) : 1;
-    }
-    sbw = cu->cb_width / num_sb_x;
-    sbh = cu->cb_height / num_sb_y;
+    sbw = cu->cb_width / mi->num_sb_x;
+    sbh = cu->cb_height / mi->num_sb_y;
 
-    for (int sby = 0; sby < num_sb_y; sby++) {
-        for (int sbx = 0; sbx < num_sb_x; sbx++) {
+    for (int sby = 0; sby < mi->num_sb_y; sby++) {
+        for (int sbx = 0; sbx < mi->num_sb_x; sbx++) {
             const int x0 = cu->x0 + sbx * sbw;
             const int y0 = cu->y0 + sby * sbh;
 
             if (cu->ciip_flag)
                 ff_vvc_set_neighbour_available(lc, x0, y0, sbw, sbh);
 
-            derive_sb_mv(lc, &mv, &orig_mv, &sb_bdof_flag, x0, y0, sbw, sbh, dmvr_flag, bdof_flag);
-            pred_regular_luma(lc, mi->hpel_if_idx, mi->hpel_if_idx, &mv, x0, y0, sbw, sbh, &orig_mv, dmvr_flag, sb_bdof_flag);
+            derive_sb_mv(lc, &mv, &orig_mv, &sb_bdof_flag, x0, y0, sbw, sbh);
+            pred_regular_luma(lc, mi->hpel_if_idx, mi->hpel_if_idx, &mv, x0, y0, sbw, sbh, &orig_mv, sb_bdof_flag);
             if (fc->ps.sps->chroma_format_idc)
-                pred_regular_chroma(lc, &mv, x0, y0, sbw, sbh, &orig_mv, dmvr_flag);
+                pred_regular_chroma(lc, &mv, x0, y0, sbw, sbh, &orig_mv, pu->dmvr_flag);
         }
     }
 }
@@ -982,7 +925,7 @@ static void pred_affine_blk(VVCLocalContext *lc)
             const MvField *mv = ff_vvc_get_mvf(fc, x, y);
             VVCFrame *ref[2];
 
-            if (pred_await_progress(fc, ref, mv, y, sbh) < 0)
+            if (pred_get_refs(lc, ref, mv) < 0)
                 return;
 
             if (mi->pred_flag != PF_BI) {
@@ -1025,15 +968,89 @@ static void predict_inter(VVCLocalContext *lc)
     }
 }
 
+static int has_inter_luma(const CodingUnit *cu)
+{
+    return cu->pred_mode != MODE_INTRA && cu->pred_mode != MODE_PLT && cu->tree_type != DUAL_TREE_CHROMA;
+}
+
+static int pred_get_y(const int y0, const Mv *mv, const int height)
+{
+    return FFMAX(0, y0 + (mv->y >> 4) + height);
+}
+
+static void cu_get_max_y(const CodingUnit *cu, int max_y[2][VVC_MAX_REF_ENTRIES], const VVCFrameContext *fc)
+{
+    const PredictionUnit *pu    = &cu->pu;
+
+    if (pu->merge_gpm_flag) {
+        for (int i = 0; i < FF_ARRAY_ELEMS(pu->gpm_mv); i++) {
+            const MvField *mvf  = pu->gpm_mv + i;
+            const int lx        = mvf->pred_flag - PF_L0;
+            const int idx       = mvf->ref_idx[lx];
+            const int y         = pred_get_y(cu->y0, mvf->mv + lx, cu->cb_height);
+
+            max_y[lx][idx]      = FFMAX(max_y[lx][idx], y);
+        }
+    } else {
+        const MotionInfo *mi    = &pu->mi;
+        const int max_dmvr_off  = (!pu->inter_affine_flag && pu->dmvr_flag) ? 2 : 0;
+        const int sbw           = cu->cb_width / mi->num_sb_x;
+        const int sbh           = cu->cb_height / mi->num_sb_y;
+        for (int sby = 0; sby < mi->num_sb_y; sby++) {
+            for (int sbx = 0; sbx < mi->num_sb_x; sbx++) {
+                const int x0        = cu->x0 + sbx * sbw;
+                const int y0        = cu->y0 + sby * sbh;
+                const MvField *mvf  = ff_vvc_get_mvf(fc, x0, y0);
+                for (int lx = 0; lx < 2; lx++) {
+                    const PredFlag mask = 1 << lx;
+                    if (mvf->pred_flag & mask) {
+                        const int idx   = mvf->ref_idx[lx];
+                        const int y     = pred_get_y(y0, mvf->mv + lx, sbh);
+
+                        max_y[lx][idx]  = FFMAX(max_y[lx][idx], y + max_dmvr_off);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void ctu_wait_refs(VVCLocalContext *lc, const CTU *ctu)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSH *sh             = &lc->sc->sh;
+    CodingUnit *cu = ctu->cus;
+    int max_y[2][VVC_MAX_REF_ENTRIES];
+
+    for (int lx = 0; lx < 2; lx++)
+        memset(max_y[lx], -1, sizeof(max_y[0][0]) * sh->nb_refs[lx]);
+
+    while (cu) {
+        if (has_inter_luma(cu))
+            cu_get_max_y(cu, max_y, fc);
+        cu = cu->next;
+    }
+
+    for (int lx = 0; lx < 2; lx++) {
+        for (int i = 0; i < sh->nb_refs[lx]; i++) {
+            const int y = max_y[lx][i];
+            VVCFrame *ref = lc->sc->rpl[lx].ref[i];
+            if (ref && y >= 0)
+                ff_vvc_await_progress(ref, y + LUMA_EXTRA_AFTER);
+        }
+    }
+}
+
 int ff_vvc_predict_inter(VVCLocalContext *lc, const int rs)
 {
     const VVCFrameContext *fc   = lc->fc;
     const CTU *ctu              = fc->tab.ctus + rs;
     CodingUnit *cu              = ctu->cus;
 
+    ctu_wait_refs(lc, ctu);
     while (cu) {
         lc->cu = cu;
-        if (cu->pred_mode != MODE_INTRA && cu->pred_mode != MODE_PLT && cu->tree_type != DUAL_TREE_CHROMA)
+        if (has_inter_luma(cu))
             predict_inter(lc);
         cu = cu->next;
     }
