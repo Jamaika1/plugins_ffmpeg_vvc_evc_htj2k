@@ -99,7 +99,7 @@ typedef struct dh_nc {
 } DhNc;
 
 typedef struct {
-    long long int     m_autoCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF];          // auto-correlation matrix
+    int64_t     m_autoCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF];          // auto-correlation matrix
     double      m_crossCorr[NO_VAR_BINS][ALF_MAX_NUM_COEF];          // cross-correlation
     double      pixAcc[NO_VAR_BINS];
 } AlfCorrData;
@@ -233,7 +233,7 @@ void copyALFparam(ALFParam *dst, ALFParam *src, int componentID)
 static
 void calcCorrOneCompRegionLuma(xavs2_t *h, alf_ctx_t *Enc_ALF, pel_t *org, int i_org, pel_t *rec, int i_rec,
                                int yPos, int xPos, int height, int width,
-                               long long int m_autoCorr[][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
+                               int64_t m_autoCorr[][ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
                                double m_crossCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF],
                                double *pixAcc,
                                int isLeftAvail, int isRightAvail, int isAboveAvail, int isBelowAvail)
@@ -334,7 +334,7 @@ void calcCorrOneCompRegionLuma(xavs2_t *h, alf_ctx_t *Enc_ALF, pel_t *org, int i
  */
 static
 void calcCorrOneCompRegionChma(xavs2_t *h, pel_t *org, int i_org, pel_t *rec, int i_rec, int yPos, int xPos, int height, int width,
-                               long long int m_autoCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF], double *m_crossCorr,
+                               int64_t m_autoCorr[ALF_MAX_NUM_COEF][ALF_MAX_NUM_COEF], double *m_crossCorr,
                                int isLeftAvail, int isRightAvail, int isAboveAvail, int isBelowAvail)
 {
     int xPosEnd = xPos + width;
@@ -518,7 +518,7 @@ void alf_get_statistics_lcu(xavs2_t *h, int lcu_x, int lcu_y,
                               p_rec->planes[compIdx], p_rec->i_stride[compIdx],
                               ctuYPos >> formatShift, ctuXPos >> formatShift,
                               ctuHeight >> formatShift, ctuWidth >> formatShift,
-                              alfCorr->m_autoCorr[0], alfCorr->m_crossCorr[0],
+                              (int64_t (*)[9])alfCorr->m_autoCorr[0], alfCorr->m_crossCorr[0],
                               isLeftAvail, isRightAvail, isAboveAvail, isBelowAvail);
 
     compIdx = IMG_V;
@@ -529,7 +529,7 @@ void alf_get_statistics_lcu(xavs2_t *h, int lcu_x, int lcu_y,
                               p_rec->planes[compIdx], p_rec->i_stride[compIdx],
                               ctuYPos >> formatShift, ctuXPos >> formatShift,
                               ctuHeight >> formatShift, ctuWidth >> formatShift,
-                              alfCorr->m_autoCorr[0], alfCorr->m_crossCorr[0],
+                              (int64_t (*)[9])alfCorr->m_autoCorr[0], alfCorr->m_crossCorr[0],
                               isLeftAvail, isRightAvail, isAboveAvail, isBelowAvail);
 
     compIdx = IMG_Y;
