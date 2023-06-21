@@ -1,6 +1,8 @@
 /*
  * VVC 1D transform
  *
+ * Copyright (C) 2023 Nuo Mi
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -46,4 +48,4 @@ vvc_itx_1d_fn(ff_vvc_inv_dct8_32);
 
 void ff_vvc_inv_lfnst_1d(int *v, const int *u, int no_zero_size, int n_tr_s, int pred_mode_intra, int lfnst_idx);
 
-#endif /* AVCODEC_VVC_TRANSFORM_H */
+#endif // AVCODEC_VVC_ITX_1D_H

@@ -24,26 +24,14 @@
 #ifndef AVCODEC_VVCDEC_H
 #define AVCODEC_VVCDEC_H
 
-#include <stdatomic.h>
+#include "libavcodec/executor.h"
+#include "libavcodec/h2645_parse.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/videodsp.h"
+#include "libavcodec/vvc.h"
 
-#include "libavutil/buffer.h"
-#include "libavutil/executor.h"
-#include "libavutil/md5.h"
-#include "libavutil/mem_internal.h"
-#include "libavutil/thread.h"
-
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "cabac.h"
-#include "cbs_h266.h"
-#include "get_bits.h"
-#include "h2645_parse.h"
-#include "vvc.h"
 #include "vvc_ps.h"
 #include "vvcdsp.h"
-#include "internal.h"
-#include "threadframe.h"
-#include "videodsp.h"
 
 #define LUMA                    0
 #define CHROMA                  1
@@ -137,20 +125,6 @@ typedef struct CTU CTU;
 typedef struct SAOParams SAOParams;
 typedef struct ALFParams ALFParams;
 
-enum SAOType {
-    SAO_NOT_APPLIED = 0,
-    SAO_BAND,
-    SAO_EDGE,
-    SAO_APPLIED
-};
-
-enum SAOEOClass {
-    SAO_EO_HORIZ = 0,
-    SAO_EO_VERT,
-    SAO_EO_135D,
-    SAO_EO_45D,
-};
-
 typedef struct RefPicList {
     struct VVCFrame *ref[VVC_MAX_REF_ENTRIES];
     int list[VVC_MAX_REF_ENTRIES];
@@ -162,18 +136,11 @@ typedef struct RefPicListTab {
     RefPicList refPicList[2];
 } RefPicListTab;
 
-typedef struct FrameProgress {
-    atomic_int progress;
-    pthread_mutex_t lock;
-    pthread_cond_t cond;
-} FrameProgress;
-
 typedef struct VVCFrame {
     AVFrame *frame;
     ThreadFrame tf;
 
     MvField  *tab_mvf;
-    RefPicList *refPicList;
     RefPicListTab **rpl_tab;
 
     int ctb_count;
@@ -200,11 +167,10 @@ typedef struct VVCFrame {
 
 struct SliceContext {
     int slice_idx;
-
     VVCSH sh;
-
     EntryPoint *eps;
     int nb_eps;
+    RefPicList *rpl;
 };
 
 struct VVCFrameContext {
@@ -336,7 +302,7 @@ typedef struct VVCContext {
     int apply_defdispwin;
     int nal_length_size;    ///< Number of bytes used for nal length (1, 2 or 4)
 
-    AVExecutor *executor;
+    Executor *executor;
 
     VVCFrameContext *fcs;
     int nb_fcs;

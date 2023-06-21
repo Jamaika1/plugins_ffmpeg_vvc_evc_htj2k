@@ -1,5 +1,5 @@
 /*
- * VVC CTU parser
+ * VVC CTU(Coding Tree Unit) parser
  *
  * Copyright (C) 2022 Nuo Mi
  *
@@ -23,7 +23,23 @@
 #ifndef AVCODEC_VVC_CTU_H
 #define AVCODEC_VVC_CTU_H
 
+#include "libavcodec/cabac.h"
+
 #include "vvcdec.h"
+
+enum SAOType {
+    SAO_NOT_APPLIED = 0,
+    SAO_BAND,
+    SAO_EDGE,
+    SAO_APPLIED
+};
+
+enum SAOEOClass {
+    SAO_EO_HORIZ = 0,
+    SAO_EO_VERT,
+    SAO_EO_135D,
+    SAO_EO_45D,
+};
 
 typedef struct NeighbourAvailable {
     int cand_left;
@@ -180,6 +196,10 @@ typedef struct PredictionUnit {
     int sym_mvd_flag;
 
     MotionInfo mi;
+
+    // for regular prediction only
+    uint8_t dmvr_flag;
+    uint8_t bdof_flag;
 
     int16_t diff_mv_x[2][AFFINE_MIN_BLOCK_SIZE * AFFINE_MIN_BLOCK_SIZE];   ///< diffMvLX
     int16_t diff_mv_y[2][AFFINE_MIN_BLOCK_SIZE * AFFINE_MIN_BLOCK_SIZE];   ///< diffMvLX
@@ -349,29 +369,29 @@ typedef struct VVCAllowedSplit {
 } VVCAllowedSplit;
 
 struct SAOParams {
-    int offset_abs[3][4];   ///< sao_offset_abs
-    int offset_sign[3][4];  ///< sao_offset_sign
+    int offset_abs[3][4];               ///< sao_offset_abs
+    int offset_sign[3][4];              ///< sao_offset_sign
 
-    uint8_t band_position[3];   ///< sao_band_position
+    uint8_t band_position[3];           ///< sao_band_position
 
-    int eo_class[3];        ///< sao_eo_class
+    int eo_class[3];                    ///< sao_eo_class
 
-    int16_t offset_val[3][5];   ///<SaoOffsetVal
+    int16_t offset_val[3][5];           ///<SaoOffsetVal
 
-    uint8_t type_idx[3];    ///< sao_type_idx
+    uint8_t type_idx[3];                ///< sao_type_idx
 };
 
 struct ALFParams {
-    uint8_t ctb_flag[3];                //< alf_ctb_flag[]
-    uint8_t ctb_filt_set_idx_y;         //< AlfCtbFiltSetIdxY
-    uint8_t alf_ctb_filter_alt_idx[2];  //< alf_ctb_filter_alt_idx[]
-    uint8_t ctb_cc_idc[2];              //< alf_ctb_cc_cb_idc, alf_ctb_cc_cr_idc
+    uint8_t ctb_flag[3];                ///< alf_ctb_flag[]
+    uint8_t ctb_filt_set_idx_y;         ///< AlfCtbFiltSetIdxY
+    uint8_t alf_ctb_filter_alt_idx[2];  ///< alf_ctb_filter_alt_idx[]
+    uint8_t ctb_cc_idc[2];              ///< alf_ctb_cc_cb_idc, alf_ctb_cc_cr_idc
 
     uint8_t applied[3];
 };
 
 /**
- * parse a CTU (coding tree unit)
+ * parse a CTU
  * @param lc local context for CTU
  * @param ctb_addr CTB(CTU) address in the current slice
  * @param rs raster order for the CTU.
@@ -384,7 +404,7 @@ int ff_vvc_coding_tree_unit(VVCLocalContext *lc, int ctb_addr, int rs, int rx, i
 //utils
 void ff_vvc_set_neighbour_available(VVCLocalContext *lc, int x0, int y0, int w, int h);
 void ff_vvc_decode_neighbour(VVCLocalContext *lc, int x_ctb, int y_ctb, int rx, int ry, int rs);
-int ff_vvc_get_qPy(const VVCFrameContext *fc, int xc, int yc);
 void ff_vvc_ctu_free_cus(CTU *ctu);
+int ff_vvc_get_qPy(const VVCFrameContext *fc, int xc, int yc);
 
 #endif // AVCODEC_VVC_CTU_H
