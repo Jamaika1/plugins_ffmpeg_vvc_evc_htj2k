@@ -1521,6 +1521,10 @@ static void mov_metadata_creation_time(MOVContext *c, AVIOContext *pb, AVDiction
     if (version == 1) {
         time = avio_rb64(pb);
         avio_rb64(pb);
+        if (time < 0) {
+            av_log(c->fc, AV_LOG_DEBUG, "creation_time is negative\n");
+            return;
+        }
     } else {
         time = avio_rb32(pb);
         avio_rb32(pb); /* modification time */
@@ -2123,6 +2127,7 @@ static int mov_read_glbl(MOVContext *c, AVIOContext *pb, MOVAtom atom)
         return 0;
     }
     ret = ff_get_extradata(c->fc, st->codecpar, pb, atom.size);
+	av_log(c->fc, AV_LOG_ERROR, "mov_read_glbl %d\n", atom.size);
     if (ret < 0)
         return ret;
     if (atom.type == MKTAG('h','v','c','C') && st->codecpar->codec_tag == MKTAG('d','v','h','1'))

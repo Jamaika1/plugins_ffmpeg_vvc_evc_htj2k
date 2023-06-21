@@ -502,14 +502,16 @@ const AVCodecTag ff_codec_bmp_tags[] = {
     { AV_CODEC_ID_NOTCHLC,      MKTAG('n', 'l', 'c', '1') },
     { AV_CODEC_ID_VQC,          MKTAG('V', 'Q', 'C', '1') },
     { AV_CODEC_ID_VQC,          MKTAG('V', 'Q', 'C', '2') },
+    { AV_CODEC_ID_RTV1,         MKTAG('R', 'T', 'V', '1') },
+    { AV_CODEC_ID_VMIX,         MKTAG('V', 'M', 'X', '1') },
     { AV_CODEC_ID_NONE,         0 }
 };
 
 const AVCodecTag ff_codec_bmp_tags_unofficial[] = {
     { AV_CODEC_ID_HEVC,         MKTAG('H', 'E', 'V', 'C') },
     { AV_CODEC_ID_HEVC,         MKTAG('H', '2', '6', '5') },
-    { AV_CODEC_ID_HEVC,         MKTAG('V', 'V', 'C', ' ') },
-    { AV_CODEC_ID_HEVC,         MKTAG('H', '2', '6', '6') },
+    { AV_CODEC_ID_VVC,          MKTAG('V', 'V', 'C', ' ') },
+    { AV_CODEC_ID_VVC,          MKTAG('H', '2', '6', '6') },
     { AV_CODEC_ID_NONE,         0 }
 };
 

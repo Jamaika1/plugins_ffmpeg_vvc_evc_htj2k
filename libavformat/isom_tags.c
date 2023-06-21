@@ -215,7 +215,9 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_PNG,   MKTAG('M', 'N', 'G', ' ') },
 
     { AV_CODEC_ID_VC1, MKTAG('v', 'c', '-', '1') }, /* SMPTE RP 2025 */
-    { AV_CODEC_ID_CAVS, MKTAG('a', 'v', 's', '2') },
+    { AV_CODEC_ID_CAVS, MKTAG('c', 'a', 'v', 's') },
+    { AV_CODEC_ID_AVS2, MKTAG('a', 'v', 's', '2') },
+    { AV_CODEC_ID_AVS3, MKTAG('a', 'v', 's', '3') },
 
     { AV_CODEC_ID_DIRAC,     MKTAG('d', 'r', 'a', 'c') },
     { AV_CODEC_ID_DNXHD,     MKTAG('A', 'V', 'd', 'n') }, /* AVID DNxHD */
@@ -292,6 +294,7 @@ const AVCodecTag ff_codec_movaudio_tags[] = {
     { AV_CODEC_ID_AAC,             MKTAG('m', 'p', '4', 'a') },
     { AV_CODEC_ID_AC3,             MKTAG('a', 'c', '-', '3') }, /* ETSI TS 102 366 Annex F */
     { AV_CODEC_ID_AC3,             MKTAG('s', 'a', 'c', '3') }, /* Nero Recode */
+    { AV_CODEC_ID_AC4,             MKTAG('a', 'c', '-', '4') },
     { AV_CODEC_ID_ADPCM_IMA_QT,    MKTAG('i', 'm', 'a', '4') },
     { AV_CODEC_ID_ALAC,            MKTAG('a', 'l', 'a', 'c') },
     { AV_CODEC_ID_AMR_NB,          MKTAG('s', 'a', 'm', 'r') }, /* AMR-NB 3gp */

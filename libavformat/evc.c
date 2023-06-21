@@ -23,6 +23,7 @@
 #include "libavcodec/get_bits.h"
 #include "libavcodec/golomb.h"
 #include "libavcodec/evc.h"
+#include "libavcodec/evc_parse.h"
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
 #include "libavformat/evc.h"
@@ -40,17 +41,6 @@ enum {
     SEI_INDEX,
     NB_ARRAYS
 };
-
-// rpl structure
-typedef struct RefPicListStruct {
-    int poc;
-    int tid;
-    int ref_pic_num;
-    int ref_pic_active_num;
-    int ref_pics[EVC_MAX_NUM_REF_PICS];
-    char pic_type;
-
-} RefPicListStruct;
 
 // The sturcture reflects SPS RBSP(raw byte sequence payload) layout
 // @see ISO_IEC_23094-1 section 7.3.2.1
@@ -123,54 +113,21 @@ typedef struct NALUList {
     unsigned nb_nalus;          ///< valid entries in nalus
 } NALUList;
 
-static int get_nalu_type(const uint8_t *bits, int bits_size)
-{
-    int unit_type_plus1 = 0;
-
-    if (bits_size >= EVC_NALU_HEADER_SIZE) {
-        unsigned char *p = (unsigned char *)bits;
-        // forbidden_zero_bit
-        if ((p[0] & 0x80) != 0)
-            return -1;
-
-        // nal_unit_type
-        unit_type_plus1 = (p[0] >> 1) & 0x3F;
-    }
-
-    return unit_type_plus1 - 1;
-}
-
-static uint32_t read_nal_unit_length(const uint8_t *bits, int bits_size)
-{
-    uint32_t nalu_len = 0;
-
-    if (bits_size >= EVC_NALU_LENGTH_PREFIX_SIZE) {
-
-        int t = 0;
-        for (int i = 0; i < EVC_NALU_LENGTH_PREFIX_SIZE; i++)
-            t = (t << 8) | bits[i];
-
-        nalu_len = t;
-        if (nalu_len == 0)
-            return 0;
-    }
-
-    return nalu_len;
-}
-
 // @see ISO_IEC_23094-1 (7.3.2.1 SPS RBSP syntax)
 static int evcc_parse_sps(const uint8_t *bs, int bs_size, EVCDecoderConfigurationRecord *evcc)
 {
     GetBitContext gb;
-    int sps_seq_parameter_set_id;
     EVCSPS sps;
+
+    bs += EVC_NALU_HEADER_SIZE;
+    bs_size -= EVC_NALU_HEADER_SIZE;
 
     if (init_get_bits8(&gb, bs, bs_size) < 0)
         return 0;
 
-    sps.sps_seq_parameter_set_id = get_ue_golomb(&gb);
+    sps.sps_seq_parameter_set_id = get_ue_golomb_long(&gb);
 
-    if (sps_seq_parameter_set_id >= EVC_MAX_SPS_COUNT)
+    if (sps.sps_seq_parameter_set_id >= EVC_MAX_SPS_COUNT)
         return 0;
 
     // the Baseline profile is indicated by profile_idc eqal to 0
@@ -179,20 +136,20 @@ static int evcc_parse_sps(const uint8_t *bs, int bs_size, EVCDecoderConfiguratio
 
     sps.level_idc = get_bits(&gb, 8);
 
-    sps.toolset_idc_h = get_bits(&gb, 32);
-    sps.toolset_idc_l = get_bits(&gb, 32);
+    sps.toolset_idc_h = get_bits_long(&gb, 32);
+    sps.toolset_idc_l = get_bits_long(&gb, 32);
 
     // 0 - monochrome
     // 1 - 4:2:0
     // 2 - 4:2:2
     // 3 - 4:4:4
-    sps.chroma_format_idc = get_ue_golomb(&gb);
+    sps.chroma_format_idc = get_ue_golomb_long(&gb);
 
-    sps.pic_width_in_luma_samples = get_ue_golomb(&gb);
-    sps.pic_height_in_luma_samples = get_ue_golomb(&gb);
+    sps.pic_width_in_luma_samples = get_ue_golomb_long(&gb);
+    sps.pic_height_in_luma_samples = get_ue_golomb_long(&gb);
 
-    sps.bit_depth_luma_minus8 = get_ue_golomb(&gb);
-    sps.bit_depth_chroma_minus8 = get_ue_golomb(&gb);
+    sps.bit_depth_luma_minus8 = get_ue_golomb_long(&gb);
+    sps.bit_depth_chroma_minus8 = get_ue_golomb_long(&gb);
 
     evcc->profile_idc = sps.profile_idc;
     evcc->level_idc = sps.level_idc;
@@ -404,7 +361,7 @@ int ff_isom_write_evcc(AVIOContext *pb, const uint8_t *data,
     evcc_init(&evcc);
 
     while (bytes_to_read > EVC_NALU_LENGTH_PREFIX_SIZE) {
-        nalu_size = read_nal_unit_length(data, EVC_NALU_LENGTH_PREFIX_SIZE);
+        nalu_size = evc_read_nal_unit_length(data, EVC_NALU_LENGTH_PREFIX_SIZE, pb);
         if (nalu_size == 0) break;
 
         data += EVC_NALU_LENGTH_PREFIX_SIZE;
@@ -412,7 +369,11 @@ int ff_isom_write_evcc(AVIOContext *pb, const uint8_t *data,
 
         if (bytes_to_read < nalu_size) break;
 
-        nalu_type = get_nalu_type(data, bytes_to_read);
+        nalu_type = evc_get_nalu_type(data, bytes_to_read, pb);
+        if (nalu_type < EVC_NOIDR_NUT || nalu_type > EVC_UNSPEC_NUT62) {
+            ret = AVERROR_INVALIDDATA;
+            goto end;
+        }
 
         // @see ISO/IEC 14496-15:2021 Coding of audio-visual objects - Part 15: section 12.3.3.3
         // NAL_unit_type indicates the type of the NAL units in the following array (which shall be all of that type);

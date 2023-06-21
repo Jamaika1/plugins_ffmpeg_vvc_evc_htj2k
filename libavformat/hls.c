@@ -1849,6 +1849,8 @@ static int set_stream_info_from_input_stream(AVStream *st, struct playlist *pls,
     // copy disposition
     st->disposition = ist->disposition;
 
+    av_dict_copy(&st->metadata, ist->metadata, 0);
+
     // copy side data
     for (int i = 0; i < ist->nb_side_data; i++) {
         const AVPacketSideData *sd_src = &ist->side_data[i];
@@ -2536,17 +2538,23 @@ static int hls_probe(const AVProbeData *p)
 
         int mime_ok = p->mime_type && !(
             av_strcasecmp(p->mime_type, "application/vnd.apple.mpegurl") &&
-            av_strcasecmp(p->mime_type, "audio/mpegurl") &&
+            av_strcasecmp(p->mime_type, "audio/mpegurl")
+            );
+
+        int mime_x = p->mime_type && !(
             av_strcasecmp(p->mime_type, "audio/x-mpegurl") &&
             av_strcasecmp(p->mime_type, "application/x-mpegurl")
             );
 
-        if (!av_match_ext    (p->filename, "m3u8,hls,m3u") &&
-             ff_match_url_ext(p->filename, "m3u8,hls,m3u") <= 0 &&
-            !mime_ok) {
-            av_log(NULL, AV_LOG_ERROR, "Not detecting m3u8/hls with non standard extension\n");
+        if (!mime_ok &&
+            !mime_x &&
+            !av_match_ext    (p->filename, "m3u8,m3u") &&
+             ff_match_url_ext(p->filename, "m3u8,m3u") <= 0) {
+            av_log(NULL, AV_LOG_ERROR, "Not detecting m3u8/hls with non standard extension and non standard mime type\n");
             return 0;
         }
+        if (mime_x)
+            av_log(NULL, AV_LOG_WARNING, "mime type is not rfc8216 compliant\n");
 
         return AVPROBE_SCORE_MAX;
     }

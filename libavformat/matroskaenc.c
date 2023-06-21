@@ -2701,8 +2701,8 @@ static int mkv_write_block(void *logctx, MatroskaMuxContext *mkv,
     if (side_data && side_data_size) {
         uint8_t *payload;
         size_t payload_size, buf_size;
-        int ret = av_dynamic_hdr_plus_to_t35((AVDynamicHDRPlus *)side_data, NULL,
-                                             &payload_size);
+        ret = av_dynamic_hdr_plus_to_t35((AVDynamicHDRPlus *)side_data, NULL,
+                                         &payload_size);
         if (ret < 0)
             return ret;
 
@@ -3284,6 +3284,7 @@ static int mkv_init(struct AVFormatContext *s)
             break;
         case AV_CODEC_ID_H264:
         case AV_CODEC_ID_HEVC:
+        case AV_CODEC_ID_VVC:
             if ((par->codec_id == AV_CODEC_ID_H264 && par->extradata_size > 0 ||
                  par->codec_id == AV_CODEC_ID_HEVC && par->extradata_size > 6 ||
                  par->codec_id == AV_CODEC_ID_VVC && par->extradata_size > 6) &&
