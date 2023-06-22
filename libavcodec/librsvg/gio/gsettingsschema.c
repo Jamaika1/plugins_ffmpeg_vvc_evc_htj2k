@@ -25,7 +25,7 @@
 #include "gsettings.h"
 
 #include "../gvdb/gvdb-reader.h"
-#include "strinfo.c"
+#include "extra/strinfo.c"
 
 #include "../glib/glibintl.h"
 #include <locale.h>
