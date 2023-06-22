@@ -34,7 +34,7 @@
 #include "gaction.h"
 #include "gmarshal-internal.h"
 
-#include "strinfo.c"
+#include "extra/strinfo.c"
 
 /**
  * SECTION:gsettings
