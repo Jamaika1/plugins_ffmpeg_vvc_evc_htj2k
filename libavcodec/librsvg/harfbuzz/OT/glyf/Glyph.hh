@@ -112,12 +112,10 @@ struct Glyph
     if (!plan->new_gid_for_old_gid (gid, &new_gid))
       return;
 
-    uint32_t hash = hb_hash (new_gid);
-
     if (type != EMPTY)
     {
-      plan->bounds_width_map.set_with_hash (new_gid, hash, xMax - xMin);
-      plan->bounds_height_map.set_with_hash (new_gid, hash, yMax - yMin);
+      plan->bounds_width_vec[new_gid] = xMax - xMin;
+      plan->bounds_height_vec[new_gid] = yMax - yMin;
     }
 
     unsigned len = all_points.length;
@@ -125,6 +123,8 @@ struct Glyph
     float rightSideX = all_points[len - 3].x;
     float topSideY = all_points[len - 2].y;
     float bottomSideY = all_points[len - 1].y;
+
+    uint32_t hash = hb_hash (new_gid);
 
     signed hori_aw = roundf (rightSideX - leftSideX);
     if (hori_aw < 0) hori_aw = 0;
@@ -381,7 +381,7 @@ struct Glyph
     if (points_with_deltas != nullptr && depth == 0 && type == COMPOSITE)
     {
       if (unlikely (!points_with_deltas->resize (points.length))) return false;
-      points_with_deltas->copy_vector (points);
+      *points_with_deltas = points;
     }
 
     switch (type) {
@@ -468,7 +468,10 @@ struct Glyph
 	assert (record_points.length == item_num_points);
 
 	auto component_coords = coords;
-	if (item.is_reset_unspecified_axes ())
+	/* Copying coords is expensive; so we have put an arbitrary
+	 * limit on the max number of coords for now. */
+	if (item.is_reset_unspecified_axes () ||
+	    coords.length > HB_GLYF_VAR_COMPOSITE_MAX_AXES)
 	  component_coords = hb_array<int> ();
 
 	coord_setter_t coord_setter (component_coords);
