@@ -114,6 +114,10 @@ struct hb_subset_plan_t
   bool pinned_at_default;
   bool has_seac;
 
+  // whether to insert a catch-all FeatureVariationRecord
+  bool gsub_insert_catch_all_feature_variation_rec;
+  bool gpos_insert_catch_all_feature_variation_rec;
+
 #define HB_SUBSET_PLAN_MEMBER(Type, Name) Type Name;
 #include "hb-subset-plan-member-list.hh"
 #undef HB_SUBSET_PLAN_MEMBER
@@ -182,15 +186,6 @@ struct hb_subset_plan_t
   num_output_glyphs () const
   {
     return _num_output_glyphs;
-  }
-
-  /*
-   * Given an output gid , returns true if that glyph id is an empty
-   * glyph (ie. it's a gid that we are dropping all data for).
-   */
-  inline bool is_empty_glyph (hb_codepoint_t gid) const
-  {
-    return !_glyphset.has (gid);
   }
 
   inline bool new_gid_for_codepoint (hb_codepoint_t codepoint,
