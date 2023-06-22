@@ -21,10 +21,10 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-/* 
+/*
  * MT safe
  */
 
@@ -34,6 +34,10 @@
 
 #if defined(HAVE_POSIX_MEMALIGN) && !defined(_XOPEN_SOURCE)
 # define _XOPEN_SOURCE 600
+#endif
+
+#ifndef SIZE_MAX
+# define SIZE_MAX ((size_t) -1)
 #endif
 
 #if defined(HAVE_MEMALIGN) || defined(HAVE__ALIGNED_MALLOC)
@@ -54,6 +58,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <assert.h>
 
 #include "gslice.h"
 #include "gbacktrace.h"
@@ -81,9 +86,9 @@ static GMemVTable glib_mem_vtable = {
  * SECTION:memory
  * @Short_Description: general memory-handling
  * @Title: Memory Allocation
- * 
+ *
  * These functions provide support for allocating and freeing memory.
- * 
+ *
  * If any call to allocate memory using functions g_new(), g_new0(), g_renew(),
  * g_malloc(), g_malloc0(), g_malloc0_n(), g_realloc(), and g_realloc_n()
  * fails, the application is terminated. This also means that there is no
@@ -217,17 +222,23 @@ g_realloc (gpointer mem,
 /**
  * g_free:
  * @mem: (nullable): the memory to free
- * 
+ *
  * Frees the memory pointed to by @mem.
  *
  * If you know the allocated size of @mem, calling g_free_sized() may be faster,
  * depending on the libc implementation in use.
  *
+ * Starting from GLib 2.78, this may happen automatically in case a GCC
+ * compatible compiler is used with some optimization level and the allocated
+ * size is known at compile time (see [documentation of
+ * `__builtin_object_size()`](https://gcc.gnu.org/onlinedocs/gcc/Object-Size-Checking.html)
+ * to understand its caveats).
+ *
  * If @mem is %NULL it simply returns, so there is no need to check @mem
  * against %NULL before calling this function.
  */
 void
-g_free (gpointer mem)
+(g_free) (gpointer mem)
 {
   free (mem);
   TRACE(GLIB_MEM_FREE((void*) mem));
@@ -245,6 +256,10 @@ g_free (gpointer mem)
  * It is an error if @size doesn’t match the size passed when @mem was
  * allocated. @size is passed to this function to allow optimizations in the
  * allocator. If you don’t know the allocation size, use g_free() instead.
+ *
+ * In case a GCC compatible compiler is used, this function may be used
+ * automatically via g_free() if the allocated size is known at compile time,
+ * since GLib 2.78.
  *
  * Since: 2.76
  */
@@ -301,10 +316,10 @@ g_clear_pointer (gpointer      *pp,
 /**
  * g_try_malloc:
  * @n_bytes: number of bytes to allocate.
- * 
+ *
  * Attempts to allocate @n_bytes, and returns %NULL on failure.
  * Contrast with g_malloc(), which aborts the program on failure.
- * 
+ *
  * Returns: the allocated memory, or %NULL.
  */
 gpointer
@@ -325,10 +340,10 @@ g_try_malloc (gsize n_bytes)
 /**
  * g_try_malloc0:
  * @n_bytes: number of bytes to allocate
- * 
+ *
  * Attempts to allocate @n_bytes, initialized to 0's, and returns %NULL on
  * failure. Contrast with g_malloc0(), which aborts the program on failure.
- * 
+ *
  * Since: 2.8
  * Returns: the allocated memory, or %NULL
  */
@@ -349,13 +364,13 @@ g_try_malloc0 (gsize n_bytes)
  * g_try_realloc:
  * @mem: (nullable): previously-allocated memory, or %NULL.
  * @n_bytes: number of bytes to allocate.
- * 
+ *
  * Attempts to realloc @mem to a new size, @n_bytes, and returns %NULL
  * on failure. Contrast with g_realloc(), which aborts the program
  * on failure.
  *
  * If @mem is %NULL, behaves the same as g_try_malloc().
- * 
+ *
  * Returns: the allocated memory, or %NULL.
  */
 gpointer
@@ -467,10 +482,10 @@ g_realloc_n (gpointer mem,
  * g_try_malloc_n:
  * @n_blocks: the number of blocks to allocate
  * @n_block_bytes: the size of each block in bytes
- * 
+ *
  * This function is similar to g_try_malloc(), allocating (@n_blocks * @n_block_bytes) bytes,
  * but care is taken to detect possible overflow during multiplication.
- * 
+ *
  * Since: 2.24
  * Returns: the allocated memory, or %NULL.
  */
@@ -488,10 +503,10 @@ g_try_malloc_n (gsize n_blocks,
  * g_try_malloc0_n:
  * @n_blocks: the number of blocks to allocate
  * @n_block_bytes: the size of each block in bytes
- * 
+ *
  * This function is similar to g_try_malloc0(), allocating (@n_blocks * @n_block_bytes) bytes,
  * but care is taken to detect possible overflow during multiplication.
- * 
+ *
  * Since: 2.24
  * Returns: the allocated memory, or %NULL
  */
@@ -510,10 +525,10 @@ g_try_malloc0_n (gsize n_blocks,
  * @mem: (nullable): previously-allocated memory, or %NULL.
  * @n_blocks: the number of blocks to allocate
  * @n_block_bytes: the size of each block in bytes
- * 
+ *
  * This function is similar to g_try_realloc(), allocating (@n_blocks * @n_block_bytes) bytes,
  * but care is taken to detect possible overflow during multiplication.
- * 
+ *
  * Since: 2.24
  * Returns: the allocated memory, or %NULL.
  */
@@ -530,7 +545,7 @@ g_try_realloc_n (gpointer mem,
 
 /**
  * g_mem_is_system_malloc:
- * 
+ *
  * Checks whether the allocator used by g_malloc() is the system's
  * malloc implementation. If it returns %TRUE memory allocated with
  * malloc() can be used interchangeably with memory allocated using g_malloc().
@@ -551,7 +566,7 @@ g_mem_is_system_malloc (void)
 /**
  * g_mem_set_vtable:
  * @vtable: table of memory allocation routines.
- * 
+ *
  * This function used to let you override the memory allocation function.
  * However, its use was incompatible with the use of global constructors
  * in GLib and GIO, because those use the GLib allocators before main is
@@ -679,7 +694,33 @@ g_aligned_alloc (gsize n_blocks,
 #elif defined(HAVE_MEMALIGN)
   res = memalign (alignment, real_size);
 #else
-# error "This platform does not have an aligned memory allocator."
+    alignment--;
+    {
+        size_t offset;
+        unsigned __int8 *mem;
+
+        /* Room for padding and extra pointer stored in front of allocated area */
+        size_t overhead = alignment + sizeof(void *);
+
+        /* let's be extra careful */
+        assert(alignment <= (SIZE_MAX - sizeof(void *)));
+
+        /* Avoid integer overflow */
+        if (real_size > (SIZE_MAX - overhead)) {
+            return NULL;
+        }
+
+        mem = (unsigned __int8*)malloc(real_size + overhead);
+        if (mem == NULL) {
+            return mem;
+        }
+        /* offset = ((alignment + 1U) - ((size_t)(mem + sizeof(void*)) & alignment)) & alignment; */
+        /* Use the fact that alignment + 1U is a power of 2 */
+        offset = ((alignment ^ ((size_t)(mem + sizeof(void*)) & alignment)) + 1U) &
+                 alignment;
+        res = (void *)(mem + sizeof(void*) + offset);
+        ((void**) res)[-1] = mem;
+    }
 #endif
 
   TRACE (GLIB_MEM_ALLOC((void*) res, (unsigned int) real_size, 0, 0));

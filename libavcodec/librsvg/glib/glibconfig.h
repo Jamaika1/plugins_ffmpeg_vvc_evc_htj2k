@@ -61,23 +61,17 @@ typedef unsigned int guint32;
 
 #define G_HAVE_GINT64 1          /* deprecated, always true */
 
-G_GNUC_EXTENSION typedef signed long long gint64;
-G_GNUC_EXTENSION typedef unsigned long long guint64;
 #define G_GINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##LL))
 #define G_GUINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##ULL))
 #define G_GINT64_MODIFIER "ll"
 #define G_GINT64_FORMAT "lli"
 #define G_GUINT64_FORMAT "llu"
 
-/*G_GNUC_EXTENSION typedef signed __int64 gint64;
-G_GNUC_EXTENSION typedef unsigned __int64 guint64;
-
-#define G_GINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##i64))
+/*#define G_GINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##i64))
 #define G_GUINT64_CONSTANT(val)	(G_GNUC_EXTENSION (val##Ui64))
-
 #define G_GINT64_MODIFIER "I64"
-#define G_GINT64_FORMAT "I64i"
-#define G_GUINT64_FORMAT "I64u"*/
+#define G_GUINT64_FORMAT "I64u"
+#define G_GINT64_FORMAT "I64i"*/
 
 #if defined(_WIN64) || defined(_M_X64) || defined(_M_AMD64)
 
@@ -88,10 +82,10 @@ G_GNUC_EXTENSION typedef unsigned __int64 guint64;
 
 typedef signed long long gssize;
 typedef unsigned long long gsize;
-#define G_GSIZE_MODIFIER "I64"
-#define G_GSSIZE_MODIFIER "I64"
-#define G_GSIZE_FORMAT "I64u"
-#define G_GSSIZE_FORMAT "I64d"
+#define G_GSIZE_MODIFIER "ll"
+#define G_GSSIZE_MODIFIER "ll"
+#define G_GSIZE_FORMAT "llu"
+#define G_GSSIZE_FORMAT "lli"
 
 #define G_MAXSIZE	G_MAXUINT64
 #define G_MINSSIZE	G_MININT64
@@ -102,6 +96,7 @@ typedef unsigned long long gsize;
 #define GLIB_SIZEOF_VOID_P 4
 #define GLIB_SIZEOF_LONG   4
 #define GLIB_SIZEOF_SIZE_T 4
+#define GLIB_SIZEOF_SSIZE_T 4
 
 typedef signed int gssize;
 typedef unsigned int gsize;
@@ -116,6 +111,18 @@ typedef unsigned int gsize;
 
 #endif
 
+#ifndef _MSC_VER
+G_GNUC_EXTENSION typedef signed long long gint64;
+G_GNUC_EXTENSION typedef unsigned long long guint64;
+typedef signed long long gintptr;
+typedef unsigned long long guintptr;
+#else
+typedef signed __int64 gint64;
+typedef unsigned __int64 guint64;
+typedef signed __int64 gintptr;
+typedef unsigned __int64 guintptr;
+#endif
+
 typedef gint64 goffset;
 #define G_MINOFFSET	G_MININT64
 #define G_MAXOFFSET	G_MAXINT64
@@ -123,7 +130,6 @@ typedef gint64 goffset;
 #define G_GOFFSET_MODIFIER      G_GINT64_MODIFIER
 #define G_GOFFSET_FORMAT        G_GINT64_FORMAT
 #define G_GOFFSET_CONSTANT(val) G_GINT64_CONSTANT(val)
-
 
 #ifndef _WIN64
 
@@ -134,9 +140,6 @@ typedef gint64 goffset;
 
 #define GINT_TO_POINTER(i)	((gpointer)  (i))
 #define GUINT_TO_POINTER(u)	((gpointer)  (u))
-
-typedef signed int gintptr;
-typedef unsigned int guintptr;
 
 #define G_GINTPTR_MODIFIER      ""
 #define G_GINTPTR_FORMAT        "i"
@@ -152,17 +155,14 @@ typedef unsigned int guintptr;
 #define GINT_TO_POINTER(i)	((gpointer) (gint64) (i))
 #define GUINT_TO_POINTER(u)	((gpointer) (guint64) (u))
 
-typedef signed __int64 gintptr;
-typedef unsigned __int64 guintptr;
-
-#define G_GINTPTR_MODIFIER      "I64"
-#define G_GINTPTR_FORMAT        "I64i"
-#define G_GUINTPTR_FORMAT       "I64u"
+#define G_GINTPTR_MODIFIER      "ll"
+#define G_GINTPTR_FORMAT        "lli"
+#define G_GUINTPTR_FORMAT       "llu"
 
 #endif
 
 #define GLIB_MAJOR_VERSION 2
-#define GLIB_MINOR_VERSION 77
+#define GLIB_MINOR_VERSION 78
 #define GLIB_MICRO_VERSION 0
 
 #define G_OS_WIN32 1
@@ -201,7 +201,7 @@ typedef unsigned __int64 guintptr;
 #define G_THREADS_IMPL_WIN32
 
 #undef G_ATOMIC_OP_MEMORY_BARRIER_NEEDED
-#define G_ATOMIC_LOCK_FREE
+//#define G_ATOMIC_LOCK_FREE
 
 #define GINT16_TO_LE(val)	((gint16) (val))
 #define GUINT16_TO_LE(val)	((guint16) (val))
@@ -256,6 +256,8 @@ typedef void* GPid;
 #define G_DIR_SEPARATOR_S "\\"
 #define G_SEARCHPATH_SEPARATOR ';'
 #define G_SEARCHPATH_SEPARATOR_S ";"
+
+#define G_HAVE_FREE_SIZED 1
 
 G_END_DECLS
 

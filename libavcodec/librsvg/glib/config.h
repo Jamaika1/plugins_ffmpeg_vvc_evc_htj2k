@@ -23,12 +23,22 @@
 #define GLIB_COMPILATION
 #define GIO_COMPILATION
 #define GOBJECT_COMPILATION
+//#define G_DISABLE_ASSERT
+//#define G_DISABLE_CHECKS
+
+//__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
+//_GLIB_GCC_HAVE_SYNC_SWAP
+//#define G_ATOMIC_LOCK_FREE
+//#define HAVE__ALIGNED_MALLOC 1
+#define SIZEOF_WCHAR_T 2
+//
+
 #define USE_SYSTEM_PRINTF
+//#define __GI_SCANNER__ 1
 
 #define ALIGNOF_GUINT32 4
 #define ALIGNOF_GUINT64 8
 #define ALIGNOF_UNSIGNED_LONG 8
-#define HAVE__ALIGNED_MALLOC 1
 
 #define XDG_PREFIX _gio_xdg
 #define GLIB_RUNSTATEDIR "/run/glib"
@@ -58,13 +68,13 @@
 /* always defined to indicate that i18n is enabled */
 //#define ENABLE_NLS 1
 /* Define the gettext package to be used */
-#define GETTEXT_PACKAGE "gtk4"
+#define GETTEXT_PACKAGE "glib20"
 /* Define to the GLIB binary age */
-#define GLIB_BINARY_AGE 8
+#define GLIB_BINARY_AGE 7800
 /* Byte contents of gmutex */
 /* #undef GLIB_BYTE_CONTENTS_GMUTEX */
 /* Define to the GLIB interface age */
-#define GLIB_INTERFACE_AGE 8
+#define GLIB_INTERFACE_AGE 0
 /* Define the location where the catalogs will be installed */
 #define GLIB_LOCALE_DIR "NONE/lib/locale"
 /* Define to the GLIB major version */
@@ -72,7 +82,7 @@
 /* Define to the GLIB micro version */
 #define GLIB_MICRO_VERSION 0
 /* Define to the GLIB minor version */
-#define GLIB_MINOR_VERSION 77
+#define GLIB_MINOR_VERSION 78
 /* The size of gmutex, as computed by sizeof. */
 /* #undef GLIB_SIZEOF_GMUTEX */
 /* The size of system_thread, as computed by sizeof. */
@@ -80,9 +90,7 @@
 /* alpha atomic implementation */
 /* #undef G_ATOMIC_ALPHA */
 /* i486 atomic implementation */
-#ifndef _MSC_VER
-//#define G_ATOMIC_I486 1
-#endif /* _MSC_VER */
+/* #undef G_ATOMIC_I486 1
 /* ia64 atomic implementation */
 /* #undef G_ATOMIC_IA64 */
 /* powerpc atomic implementation */
@@ -94,33 +102,20 @@
 /* Whether glib was compiled with debugging enabled */
 #define G_COMPILED_WITH_DEBUGGING "yes"
 /* Have inline keyword */
-#ifndef _MSC_VER
 #define G_HAVE_INLINE 1
-#else /* _MSC_VER */
-/* #undef G_HAVE_INLINE */
-#endif /* _MSC_VER */
 /* Have __inline keyword */
 #define G_HAVE___INLINE 1
 /* Have __inline__ keyword */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define G_HAVE___INLINE__ 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef G_HAVE___INLINE__ */
-#endif /* _MSC_VER or __DMC__ */
 /* Source file containing theread implementation */
 #define G_THREAD_SOURCE "gthread-win32.c"
 /* A 'va_copy' style function */
-#ifndef _MSC_VER
 #define G_VA_COPY va_copy
-#else /* _MSC_VER */
-/* #undef G_VA_COPY */
-#endif /* _MSC_VER */
 /* 'va_lists' cannot be copies as values */
 /* #undef G_VA_COPY_AS_ARRAY */
 /* Define to 1 if you have `alloca', as a function or macro. */
-#define HAVE_ALLOCA 1
+/* #undef HAVE_ALLOCA 1
 /* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
-   */
 /* #undef HAVE_ALLOCA_H */
 /* Define to 1 if you have the `atexit' function. */
 #define HAVE_ATEXIT 1
@@ -155,24 +150,12 @@
 /* define to support printing 64-bit integers with format I64 */
 #define HAVE_INT64_AND_I64 1
 /* Define if you have the 'intmax_t' type in <stdint.h> or <inttypes.h>. */
-#ifndef _MSC_VER
 #define HAVE_INTMAX_T 1
-#else /* _MSC_VER */
-/* #undef HAVE_INTMAX_T */
-#endif /* _MSC_VER */
 /* Define to 1 if you have the <inttypes.h> header file. */
-#ifndef _MSC_VER
 //#define HAVE_INTTYPES_H 1
-#else /* _MSC_VER */
-/* #undef HAVE_INTTYPES_H */
-#endif /* _MSC_VER */
 /* Define if <inttypes.h> exists, doesn't clash with <sys/types.h>, and
    declares uintmax_t. */
-#ifndef _MSC_VER
 //#define HAVE_INTTYPES_H_WITH_UINTMAX 1
-#else /* _MSC_VER */
-/* #undef HAVE_INTTYPES_H_WITH_UINTMAX */
-#endif /* _MSC_VER */
 /* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
 /* #undef HAVE_LANGINFO_CODESET */
 /* Define to 1 if you have the <langinfo.h> header file. */
@@ -188,11 +171,7 @@
 /* Define if you have the 'long double' type. */
 #define HAVE_LONG_DOUBLE 1
 /* Define if you have the 'long long' type. */
-#ifndef _MSC_VER
 #define HAVE_LONG_LONG 1
-#else /* _MSC_VER */
-/* #undef HAVE_LONG_LONG */
-#endif /* _MSC_VER */
 /* define if system printf can print long long */
 #define HAVE_LONG_LONG_FORMAT 1
 /* Define to 1 if you have the `lstat' function. */
@@ -230,67 +209,40 @@
 /* Define to 1 if you have the `setlocale' function. */
 #define HAVE_SETLOCALE 1
 /* Define to 1 if you have the `snprintf' function. */
-#ifndef _MSC_VER
 #define HAVE_SNPRINTF 1
+#define HAVE_STRNLEN 1
 #ifdef __DMC__
 #define snprintf _snprintf
 #endif
-#else /* _MSC_VER */
-/* #undef HAVE_SNPRINTF */
-#endif /* _MSC_VER */
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
 /* Define to 1 if you have the <stdint.h> header file. */
-#ifndef _MSC_VER
 #define HAVE_STDINT_H 1
-#else /* _MSC_VER */
-/* #undef HAVE_STDINT_H */
-#endif /* _MSC_VER */
 /* Define if <stdint.h> exists, doesn't clash with <sys/types.h>, and declares
    uintmax_t. */
-#ifndef _MSC_VER
 #define HAVE_STDINT_H_WITH_UINTMAX 1
-#else /* _MSC_VER */
-/* #undef HAVE_STDINT_H_WITH_UINTMAX */
-#endif /* _MSC_VER */
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 /* Define to 1 if you have the `stpcpy' function. */
 /* #undef HAVE_STPCPY */
 /* Define to 1 if you have the `strcasecmp' function. */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define HAVE_STRCASECMP 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef HAVE_STRCASECMP */
-#endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the `strerror' function. */
 #define HAVE_STRERROR 1
 /* Define to 1 if you have the <strings.h> header file. */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define HAVE_STRINGS_H 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef HAVE_STRINGS_H */
-#endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 /* Have functions strlcpy and strlcat */
 /* #undef HAVE_STRLCPY */
 /* Define to 1 if you have the `strncasecmp' function. */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define HAVE_STRNCASECMP 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef HAVE_STRNCASECMP */
-#endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the `strsignal' function. */
 /* #undef HAVE_STRSIGNAL */
 /* Define to 1 if you have the `symlink' function. */
 /* #undef HAVE_SYMLINK */
 /* Define to 1 if you have the <sys/param.h> header file. */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define HAVE_SYS_PARAM_H 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef HAVE_SYS_PARAM_H */
-#endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the <sys/poll.h> header file. */
 /* #undef HAVE_SYS_POLL_H */
 /* found fd_set in sys/select.h */
@@ -300,43 +252,27 @@
 /* Define to 1 if you have the <sys/times.h> header file. */
 /* #undef HAVE_SYS_TIMES_H */
 /* Define to 1 if you have the <sys/time.h> header file. */
-#ifndef _MSC_VER
 #define HAVE_SYS_TIME_H 1
-#else /* _MSC_VER */
-/* #undef HAVE_SYS_TIME_H */
-#endif /* _MSC_VER */
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 /* Define to 1 if you have the <unistd.h> header file. */
-#ifndef _MSC_VER
 //#define HAVE_UNISTD_H 1
-#else /* _MSC_VER */
-/* #undef HAVE_UNISTD_H */
-#endif /* _MSC_VER */
 /* Define if your printf function family supports positional parameters as
    specified by Unix98. */
 /* #undef HAVE_UNIX98_PRINTF */
 /* Define to 1 if you have the `unsetenv' function. */
 /* #undef HAVE_UNSETENV */
 /* Define to 1 if you have the <values.h> header file. */
-#if !defined(_MSC_VER) && !defined(__DMC__)
 #define HAVE_VALUES_H 1
-#else /* _MSC_VER or __DMC__ */
-/* #undef HAVE_VALUES_H */
-#endif /* _MSC_VER or __DMC__ */
 /* Define to 1 if you have the `vasprintf' function. */
 #undef HAVE_VASPRINTF
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
 /* Define to 1 if you have the `vsnprintf' function. */
-#ifndef _MSC_VER
 #define HAVE_VSNPRINTF 1
 #ifdef __DMC__
 #define vsnprintf _vsnprintf
 #endif
-#else /* _MSC_VER */
-/* #undef HAVE_VSNPRINTF */
-#endif /* _MSC_VER */
 /* Define if you have the 'wchar_t' type. */
 #define HAVE_WCHAR_T 1
 /* Define if you have the 'wint_t' type. */
@@ -356,11 +292,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.76.0"
+#define PACKAGE_STRING "glib 2.78.0"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.76.0"
+#define PACKAGE_VERSION "2.78.0"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */
@@ -370,11 +306,7 @@
 /* whether realloc (NULL,) works */
 #define REALLOC_0_WORKS 1
 /* Define if you have correct malloc prototypes */
-#ifndef _MSC_VER
 #define SANE_MALLOC_PROTOS 1
-#else /* _MSC_VER */
-/* #undef SANE_MALLOC_PROTOS */
-#endif /* _MSC_VER */
 /* The size of a `char', as computed by sizeof. */
 #define SIZEOF_CHAR 1
 /* The size of a `int', as computed by sizeof. */
@@ -418,11 +350,7 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
 /* Define to long or long long if <inttypes.h> and <stdint.h> don't define. */
-#ifndef _MSC_VER
 /* #undef intmax_t */
-#else /* _MSC_VER */
-#define intmax_t __int64
-#endif /* _MSC_VER */
 /* Define to empty if the C compiler doesn't support this keyword. */
 /* #undef signed */
 /* Define to `unsigned' if <sys/types.h> does not define. */

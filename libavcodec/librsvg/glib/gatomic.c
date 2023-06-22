@@ -880,7 +880,7 @@ gsize
  * Fortunately, we already take care of the Windows case above, and all
  * non-Windows platforms on which glib runs have pthreads.  Use those.
  */
-#include <pthread.h>
+#include "../../libpthread_win32/pthread.h"
 
 static pthread_mutex_t g_atomic_lock = PTHREAD_MUTEX_INITIALIZER;
 
