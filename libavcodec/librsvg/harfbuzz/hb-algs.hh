@@ -87,6 +87,19 @@ static inline constexpr uint16_t hb_uint16_swap (uint16_t v)
 static inline constexpr uint32_t hb_uint32_swap (uint32_t v)
 { return (hb_uint16_swap (v) << 16) | hb_uint16_swap (v >> 16); }
 
+#ifndef HB_FAST_INT_ACCESS
+#if defined(__OPTIMIZE__) && \
+    defined(__BYTE_ORDER) && \
+    (__BYTE_ORDER == __BIG_ENDIAN || \
+     (__BYTE_ORDER == __LITTLE_ENDIAN && \
+      hb_has_builtin(__builtin_bswap16) && \
+      hb_has_builtin(__builtin_bswap32)))
+#define HB_FAST_INT_ACCESS 1
+#else
+#define HB_FAST_INT_ACCESS 0
+#endif
+#endif
+
 template <typename Type, int Bytes = sizeof (Type)>
 struct BEInt;
 template <typename Type>
@@ -101,20 +114,25 @@ struct BEInt<Type, 1>
 template <typename Type>
 struct BEInt<Type, 2>
 {
+  struct __attribute__((packed)) packed_uint16_t { uint16_t v; };
+
   public:
   BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t ((V >>  8) & 0xFF),
-			        uint8_t ((V      ) & 0xFF)} {}
 
-  struct __attribute__((packed)) packed_uint16_t { uint16_t v; };
+  BEInt (Type V)
+#if HB_FAST_INT_ACCESS
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+  { ((packed_uint16_t *) v)->v = __builtin_bswap16 (V); }
+#else /* __BYTE_ORDER == __BIG_ENDIAN */
+  { ((packed_uint16_t *) v)->v = V; }
+#endif
+#else
+    : v {uint8_t ((V >>  8) & 0xFF),
+	 uint8_t ((V      ) & 0xFF)} {}
+#endif
+
   constexpr operator Type () const {
-#if defined(__OPTIMIZE__) && \
-    defined(__BYTE_ORDER) && \
-    (__BYTE_ORDER == __BIG_ENDIAN || \
-     (__BYTE_ORDER == __LITTLE_ENDIAN && \
-      hb_has_builtin(__builtin_bswap16)))
-    /* Spoon-feed the compiler a big-endian integer with alignment 1.
-     * https://github.com/harfbuzz/harfbuzz/pull/1398 */
+#if HB_FAST_INT_ACCESS
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap16 (((packed_uint16_t *) v)->v);
 #else /* __BYTE_ORDER == __BIG_ENDIAN */
@@ -145,22 +163,27 @@ struct BEInt<Type, 3>
 template <typename Type>
 struct BEInt<Type, 4>
 {
+  struct __attribute__((packed)) packed_uint32_t { uint32_t v; };
+
   public:
   BEInt () = default;
-  constexpr BEInt (Type V) : v {uint8_t ((V >> 24) & 0xFF),
-			        uint8_t ((V >> 16) & 0xFF),
-			        uint8_t ((V >>  8) & 0xFF),
-			        uint8_t ((V      ) & 0xFF)} {}
 
-  struct __attribute__((packed)) packed_uint32_t { uint32_t v; };
+  BEInt (Type V)
+#if HB_FAST_INT_ACCESS
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+  { ((packed_uint32_t *) v)->v = __builtin_bswap32 (V); }
+#else /* __BYTE_ORDER == __BIG_ENDIAN */
+  { ((packed_uint32_t *) v)->v = V; }
+#endif
+#else
+    : v {uint8_t ((V >> 24) & 0xFF),
+	 uint8_t ((V >> 16) & 0xFF),
+	 uint8_t ((V >>  8) & 0xFF),
+	 uint8_t ((V      ) & 0xFF)} {}
+#endif
+
   constexpr operator Type () const {
-#if defined(__OPTIMIZE__) && \
-    defined(__BYTE_ORDER) && \
-    (__BYTE_ORDER == __BIG_ENDIAN || \
-     (__BYTE_ORDER == __LITTLE_ENDIAN && \
-      hb_has_builtin(__builtin_bswap32)))
-    /* Spoon-feed the compiler a big-endian integer with alignment 1.
-     * https://github.com/harfbuzz/harfbuzz/pull/1398 */
+#if HB_FAST_INT_ACCESS
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap32 (((packed_uint32_t *) v)->v);
 #else /* __BYTE_ORDER == __BIG_ENDIAN */
@@ -314,24 +337,17 @@ struct
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<2>) const HB_RETURN (uint32_t, hb_deref (v).hash ())
 
-#if 0
-  // The following, unfortunately, while keeps the probing chains short, slows
-  // down the overall hash table performance. Not because of the extra operation
-  // itself in my opinion, but something else going on that we have not been able
-  // to track down. So for now, this is disabled. Discuss:
-  // https://github.com/harfbuzz/harfbuzz/pull/4228
-
   // Horrible: std:hash() of integers seems to be identity in gcc / clang?!
   // https://github.com/harfbuzz/harfbuzz/pull/4228
-
+  //
+  // For performance characteristics see:
+  // https://github.com/harfbuzz/harfbuzz/pull/4228#issuecomment-1565079537
   template <typename T,
 	    hb_enable_if (std::is_integral<T>::value && sizeof (T) <= sizeof (uint32_t))> constexpr auto
-  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, v * 131071u /* Mersenne prime */)
-
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, v * 2654435761u /* Knuh's multiplicative hash */)
   template <typename T,
 	    hb_enable_if (std::is_integral<T>::value && sizeof (T) > sizeof (uint32_t))> constexpr auto
-  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, (v ^ (v >> 32)) * 131071u /* Mersenne prime */)
-#endif
+  impl (const T& v, hb_priority<1>) const HB_RETURN (uint32_t, (v ^ (v >> 32)) * 2654435761u /* Knuth's multiplicative hash */)
 
   template <typename T> constexpr auto
   impl (const T& v, hb_priority<0>) const HB_RETURN (uint32_t, std::hash<hb_decay<decltype (hb_deref (v))>>{} (hb_deref (v)))
@@ -645,6 +661,8 @@ struct hb_pair_t
 };
 template <typename T1, typename T2> static inline hb_pair_t<T1, T2>
 hb_pair (T1&& a, T2&& b) { return hb_pair_t<T1, T2> (a, b); }
+
+typedef hb_pair_t<hb_codepoint_t, hb_codepoint_t> hb_codepoint_pair_t;
 
 struct
 {

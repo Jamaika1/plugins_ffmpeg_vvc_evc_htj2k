@@ -1,6 +1,5 @@
 /*
- * Copyright © 2009  Red Hat, Inc.
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2023  Behdad Esfahbod
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,37 +20,27 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Red Hat Author(s): Behdad Esfahbod
- * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_GLIB_H
-#define HB_GLIB_H
+#include "hb.hh"
 
-#include "hb.h"
+#ifdef HAVE_WASM
 
-#include "../glib/config.h"
-#include "../glib/glib.h"
+#include "hb-wasm-api.hh"
 
-HB_BEGIN_DECLS
+#define module_inst wasm_runtime_get_module_inst (exec_env)
 
 
-HB_EXTERN hb_script_t
-hb_glib_script_to_script (GUnicodeScript script);
+#include "hb-wasm-api-blob.hh"
+#include "hb-wasm-api-buffer.hh"
+#include "hb-wasm-api-common.hh"
+#include "hb-wasm-api-face.hh"
+#include "hb-wasm-api-font.hh"
+#include "hb-wasm-api-shape.hh"
 
-HB_EXTERN GUnicodeScript
-hb_glib_script_from_script (hb_script_t script);
 
+#undef module_inst
 
-HB_EXTERN hb_unicode_funcs_t *
-hb_glib_get_unicode_funcs (void);
+hb_user_data_key_t _hb_wasm_ref_type_key = {};
 
-#if GLIB_CHECK_VERSION(2,31,10)
-HB_EXTERN hb_blob_t *
-hb_glib_blob_create (GBytes *gbytes);
 #endif
-
-HB_END_DECLS
-
-#endif /* HB_GLIB_H */

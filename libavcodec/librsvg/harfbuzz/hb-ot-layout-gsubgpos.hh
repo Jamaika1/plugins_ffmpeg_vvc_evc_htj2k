@@ -143,9 +143,12 @@ struct hb_closure_context_t :
     return active_glyphs_stack.tail ();
   }
 
-  hb_set_t& push_cur_active_glyphs ()
+  hb_set_t* push_cur_active_glyphs ()
   {
-    return *active_glyphs_stack.push ();
+    hb_set_t *s = active_glyphs_stack.push ();
+    if (unlikely (active_glyphs_stack.in_error ()))
+      return nullptr;
+    return s;
   }
 
   bool pop_cur_done_glyphs ()
@@ -1615,10 +1618,13 @@ static void context_closure_recurse_lookups (hb_closure_context_t *c,
     }
 
     covered_seq_indicies.add (seqIndex);
+    hb_set_t *cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs))
+      return;
     if (has_pos_glyphs) {
-      c->push_cur_active_glyphs () = std::move (pos_glyphs);
+      *cur_active_glyphs = std::move (pos_glyphs);
     } else {
-      c->push_cur_active_glyphs ().set (*c->glyphs);
+      *cur_active_glyphs = *c->glyphs;
     }
 
     unsigned endIndex = inputCount;
@@ -2168,8 +2174,9 @@ struct ContextFormat1_4
 
   void closure (hb_closure_context_t *c) const
   {
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
-    get_coverage ().intersect_set (c->previous_parent_active_glyphs (), cur_active_glyphs);
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs)) return;
+    get_coverage ().intersect_set (c->previous_parent_active_glyphs (), *cur_active_glyphs);
 
     struct ContextClosureLookupContext lookup_context = {
       {intersects_glyph, intersected_glyph},
@@ -2338,9 +2345,10 @@ struct ContextFormat2_5
     if (!(this+coverage).intersects (c->glyphs))
       return;
 
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs)) return;
     get_coverage ().intersect_set (c->previous_parent_active_glyphs (),
-                                                 cur_active_glyphs);
+				   *cur_active_glyphs);
 
     const ClassDef &class_def = this+classDef;
 
@@ -2583,10 +2591,10 @@ struct ContextFormat3
     if (!(this+coverageZ[0]).intersects (c->glyphs))
       return;
 
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs)) return;
     get_coverage ().intersect_set (c->previous_parent_active_glyphs (),
-                                                 cur_active_glyphs);
-
+				   *cur_active_glyphs);
 
     const LookupRecord *lookupRecord = &StructAfter<LookupRecord> (coverageZ.as_array (glyphCount));
     struct ContextClosureLookupContext lookup_context = {
@@ -3014,8 +3022,6 @@ struct ChainRule
 		  const hb_map_t *lookahead_map = nullptr) const
   {
     TRACE_SERIALIZE (this);
-    auto *out = c->start_embed (this);
-    if (unlikely (!out)) return_trace (false);
 
     const hb_map_t *mapping = backtrack_map;
     serialize_array (c, backtrack.len, + backtrack.iter ()
@@ -3251,9 +3257,10 @@ struct ChainContextFormat1_4
 
   void closure (hb_closure_context_t *c) const
   {
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs)) return;
     get_coverage ().intersect_set (c->previous_parent_active_glyphs (),
-                                                 cur_active_glyphs);
+				   *cur_active_glyphs);
 
     struct ChainContextClosureLookupContext lookup_context = {
       {intersects_glyph, intersected_glyph},
@@ -3423,10 +3430,10 @@ struct ChainContextFormat2_5
     if (!(this+coverage).intersects (c->glyphs))
       return;
 
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs)) return;
     get_coverage ().intersect_set (c->previous_parent_active_glyphs (),
-                                                 cur_active_glyphs);
-
+				   *cur_active_glyphs);
 
     const ClassDef &backtrack_class_def = this+backtrackClassDef;
     const ClassDef &input_class_def = this+inputClassDef;
@@ -3727,10 +3734,11 @@ struct ChainContextFormat3
     if (!(this+input[0]).intersects (c->glyphs))
       return;
 
-    hb_set_t& cur_active_glyphs = c->push_cur_active_glyphs ();
+    hb_set_t* cur_active_glyphs = c->push_cur_active_glyphs ();
+    if (unlikely (!cur_active_glyphs))
+      return;
     get_coverage ().intersect_set (c->previous_parent_active_glyphs (),
-                                                 cur_active_glyphs);
-
+				   *cur_active_glyphs);
 
     const auto &lookahead = StructAfter<decltype (lookaheadX)> (input);
     const auto &lookup = StructAfter<decltype (lookupX)> (lookahead);
@@ -3849,8 +3857,6 @@ struct ChainContextFormat3
   {
     TRACE_SUBSET (this);
 
-    auto *out = c->serializer->start_embed (this);
-    if (unlikely (!out)) return_trace (false);
     if (unlikely (!c->serializer->embed (this->format))) return_trace (false);
 
     if (!serialize_coverage_offsets (c, backtrack.iter (), this))
@@ -3974,7 +3980,7 @@ struct ExtensionFormat1
     TRACE_SUBSET (this);
 
     auto *out = c->serializer->start_embed (this);
-    if (unlikely (!out || !c->serializer->extend_min (out))) return_trace (false);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
 
     out->format = format;
     out->extensionLookupType = extensionLookupType;

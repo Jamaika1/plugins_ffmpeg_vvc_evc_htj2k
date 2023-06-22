@@ -1,5 +1,4 @@
-/*
- * Copyright © 2011  Google, Inc.
+/* * Copyright © 2011  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -60,7 +59,7 @@ HB_BEGIN_DECLS
  *
  * A string literal containing the library version available at compile-time.
  */
-#define HB_VERSION_STRING "7.3.0-5d543d6"
+#define HB_VERSION_STRING "7.3.0-a77f282"
 
 /**
  * HB_VERSION_ATLEAST:
