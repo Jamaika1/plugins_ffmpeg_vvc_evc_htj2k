@@ -31,18 +31,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 */
 
 static void kf_bfly2(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
-   kiss_fft_cpx * Fout2;
+   celt_kiss_fft_cpx * Fout2;
    const kiss_twiddle_cpx * tw1;
    int i,j;
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    for (i=0;i<N;i++)
    {
       Fout = Fout_beg + i*mm;
@@ -50,7 +50,7 @@ static void kf_bfly2(
       tw1 = st->twiddles;
       for(j=0;j<m;j++)
       {
-         kiss_fft_cpx t;
+         celt_kiss_fft_cpx t;
          Fout->r = SHR(Fout->r, 1);Fout->i = SHR(Fout->i, 1);
          Fout2->r = SHR(Fout2->r, 1);Fout2->i = SHR(Fout2->i, 1);
          C_MUL (t,  *Fout2 , *tw1);
@@ -64,19 +64,19 @@ static void kf_bfly2(
 }
 
 static void ki_bfly2(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
-   kiss_fft_cpx * Fout2;
+   celt_kiss_fft_cpx * Fout2;
    const kiss_twiddle_cpx * tw1;
-   kiss_fft_cpx t;
+   celt_kiss_fft_cpx t;
    int i,j;
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    for (i=0;i<N;i++)
    {
       Fout = Fout_beg + i*mm;
@@ -95,21 +95,21 @@ static void ki_bfly2(
 }
 
 static void kf_bfly4(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
    const kiss_twiddle_cpx *tw1,*tw2,*tw3;
-   kiss_fft_cpx scratch[6];
+   celt_kiss_fft_cpx scratch[6];
    const size_t m2=2*m;
    const size_t m3=3*m;
    int i, j;
 
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    for (i=0;i<N;i++)
    {
       Fout = Fout_beg + i*mm;
@@ -144,21 +144,21 @@ static void kf_bfly4(
 }
 
 static void ki_bfly4(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
    const kiss_twiddle_cpx *tw1,*tw2,*tw3;
-   kiss_fft_cpx scratch[6];
+   celt_kiss_fft_cpx scratch[6];
    const size_t m2=2*m;
    const size_t m3=3*m;
    int i, j;
 
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    for (i=0;i<N;i++)
    {
       Fout = Fout_beg + i*mm;
@@ -191,9 +191,9 @@ static void ki_bfly4(
 #ifndef RADIX_TWO_ONLY
 
 static void kf_bfly3(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
@@ -203,10 +203,10 @@ static void kf_bfly3(
    size_t k;
    const size_t m2 = 2*m;
    const kiss_twiddle_cpx *tw1,*tw2;
-   kiss_fft_cpx scratch[5];
+   celt_kiss_fft_cpx scratch[5];
    kiss_twiddle_cpx epi3;
 
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    epi3 = st->twiddles[fstride*m];
    for (i=0;i<N;i++)
    {
@@ -243,9 +243,9 @@ static void kf_bfly3(
 }
 
 static void ki_bfly3(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      size_t m,
                      int N,
                      int mm
@@ -254,10 +254,10 @@ static void ki_bfly3(
    size_t i, k;
    const size_t m2 = 2*m;
    const kiss_twiddle_cpx *tw1,*tw2;
-   kiss_fft_cpx scratch[5];
+   celt_kiss_fft_cpx scratch[5];
    kiss_twiddle_cpx epi3;
 
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
    epi3 = st->twiddles[fstride*m];
    for (i=0;i<N;i++)
    {
@@ -294,21 +294,21 @@ static void ki_bfly3(
 
 
 static void kf_bfly5(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
-   kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
+   celt_kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
    int i, u;
-   kiss_fft_cpx scratch[13];
+   celt_kiss_fft_cpx scratch[13];
    const kiss_twiddle_cpx * twiddles = st->twiddles;
    const kiss_twiddle_cpx *tw;
    kiss_twiddle_cpx ya,yb;
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
 
    ya = twiddles[fstride*m];
    yb = twiddles[fstride*2*m];
@@ -363,21 +363,21 @@ static void kf_bfly5(
 }
 
 static void ki_bfly5(
-                     kiss_fft_cpx * Fout,
+                     celt_kiss_fft_cpx * Fout,
                      const size_t fstride,
-                     const kiss_fft_state *st,
+                     const celt_kiss_fft_state *st,
                      int m,
                      int N,
                      int mm
                     )
 {
-   kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
+   celt_kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
    int i, u;
-   kiss_fft_cpx scratch[13];
+   celt_kiss_fft_cpx scratch[13];
    const kiss_twiddle_cpx * twiddles = st->twiddles;
    const kiss_twiddle_cpx *tw;
    kiss_twiddle_cpx ya,yb;
-   kiss_fft_cpx * Fout_beg = Fout;
+   celt_kiss_fft_cpx * Fout_beg = Fout;
 
    ya = twiddles[fstride*m];
    yb = twiddles[fstride*2*m];
@@ -433,12 +433,12 @@ static void ki_bfly5(
 #endif
 
 static void kf_work(
-        kiss_fft_cpx * Fout,
-        const kiss_fft_cpx * f,
+        celt_kiss_fft_cpx * Fout,
+        const celt_kiss_fft_cpx * f,
         size_t fstride,
         int in_stride,
         const celt_int16 * factors,
-        const kiss_fft_state *st,
+        const celt_kiss_fft_state *st,
         int N,
         int m2
         )
@@ -464,12 +464,12 @@ static void kf_work(
 
 
 static void ki_work(
-             kiss_fft_cpx * Fout,
-             const kiss_fft_cpx * f,
+             celt_kiss_fft_cpx * Fout,
+             const celt_kiss_fft_cpx * f,
              size_t fstride,
              int in_stride,
              const celt_int16 * factors,
-             const kiss_fft_state *st,
+             const celt_kiss_fft_state *st,
              int N,
              int m2
             )
@@ -503,7 +503,7 @@ void compute_bitrev_table(
          const size_t fstride,
          int in_stride,
          celt_int16 * factors,
-         const kiss_fft_state *st
+         const celt_kiss_fft_state *st
             )
 {
    const int p=*factors++; /* the radix  */
@@ -588,18 +588,18 @@ static void compute_twiddles(kiss_twiddle_cpx *twiddles, int nfft)
  * User-callable function to allocate all necessary storage space for the fft.
  *
  * The return value is a contiguous block of memory, allocated with malloc.  As such,
- * It can be freed with free(), rather than a kiss_fft-specific function.
+ * It can be freed with free(), rather than a celt_kiss_fft-specific function.
  * */
-kiss_fft_state *celt_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  const kiss_fft_state *base)
+celt_kiss_fft_state *celt_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  const celt_kiss_fft_state *base)
 {
-    kiss_fft_state *st=NULL;
-    size_t memneeded = sizeof(struct kiss_fft_state); /* twiddle factors*/
+    celt_kiss_fft_state *st=NULL;
+    size_t memneeded = sizeof(struct celt_kiss_fft_state); /* twiddle factors*/
 
     if ( lenmem==NULL ) {
-        st = ( kiss_fft_state*)KISS_FFT_MALLOC( memneeded );
+        st = ( celt_kiss_fft_state*)KISS_FFT_MALLOC( memneeded );
     }else{
         if (mem != NULL && *lenmem >= memneeded)
-            st = (kiss_fft_state*)mem;
+            st = (celt_kiss_fft_state*)mem;
         *lenmem = memneeded;
     }
     if (st) {
@@ -637,25 +637,25 @@ kiss_fft_state *celt_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  co
     return st;
 }
 
-kiss_fft_state *celt_fft_alloc(int nfft,void * mem,size_t * lenmem )
+celt_kiss_fft_state *celt_fft_alloc(int nfft,void * mem,size_t * lenmem )
 {
    return celt_fft_alloc_twiddles(nfft, mem, lenmem, NULL);
 }
 
-void celt_fft_free(const kiss_fft_state *cfg)
+void celt_fft_free(const celt_kiss_fft_state *cfg)
 {
    if (cfg)
    {
       celt_free((celt_int16*)cfg->bitrev);
       if (cfg->shift < 0)
          celt_free((kiss_twiddle_cpx*)cfg->twiddles);
-      celt_free((kiss_fft_state*)cfg);
+      celt_free((celt_kiss_fft_state*)cfg);
    }
 }
 
 #endif /* CUSTOM_MODES */
 
-static void kiss_fft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
+static void celt_kiss_fft_stride(const celt_kiss_fft_state *st,const celt_kiss_fft_cpx *fin,celt_kiss_fft_cpx *fout,int in_stride)
 {
     int i;
     celt_assert2 (fin != fout, "In-place FFT not supported");
@@ -671,12 +671,12 @@ static void kiss_fft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,kis
     kf_work( fout, fin, 1,in_stride, st->factors,st, 1, 1);
 }
 
-void celt_fft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+void celt_fft(const celt_kiss_fft_state *cfg,const celt_kiss_fft_cpx *fin,celt_kiss_fft_cpx *fout)
 {
-    kiss_fft_stride(cfg,fin,fout,1);
+    celt_kiss_fft_stride(cfg,fin,fout,1);
 }
 
-static void kiss_ifft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
+static void kiss_ifft_stride(const celt_kiss_fft_state *st,const celt_kiss_fft_cpx *fin,celt_kiss_fft_cpx *fout,int in_stride)
 {
    int i;
    celt_assert2 (fin != fout, "In-place FFT not supported");
@@ -686,7 +686,7 @@ static void kiss_ifft_stride(const kiss_fft_state *st,const kiss_fft_cpx *fin,ki
    ki_work( fout, fin, 1,in_stride, st->factors,st, 1, 1);
 }
 
-void celt_ifft(const kiss_fft_state *cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
+void celt_ifft(const celt_kiss_fft_state *cfg,const celt_kiss_fft_cpx *fin,celt_kiss_fft_cpx *fout)
 {
    kiss_ifft_stride(cfg,fin,fout,1);
 }

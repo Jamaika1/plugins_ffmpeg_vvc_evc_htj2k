@@ -3,8 +3,8 @@
 
 //#define CELT_BUILD            1
 
-#define restrict
-#define inline __inline
+//#define restrict
+//#define inline __inline
 
 #define USE_ALLOCA            1
 
