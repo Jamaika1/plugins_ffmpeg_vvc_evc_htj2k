@@ -645,17 +645,17 @@ int ec_write_sqh(bs_t *bs, com_seqh_t *sqh)
 
     sqh->active_ref_minus1[0] = 1;
     sqh->active_ref_minus1[1] = 1;
-    bs_write_ue(bs, sqh->active_ref_minus1[0]); 
+    bs_write_ue(bs, sqh->active_ref_minus1[0]);
     bs_write_ue(bs, sqh->active_ref_minus1[1]);
 
     bs_write (bs, sqh->log2_max_cuwh - 2,      3);
     bs_write (bs, com_tbl_log2[sqh->min_cu_size] - 2,     2);
-             
+
     bs_write (bs, com_tbl_log2[sqh->max_part_ratio] - 2,  2);
     bs_write (bs, sqh->max_split_times - 6,               3);
     bs_write (bs, com_tbl_log2[sqh->min_qt_size] - 2,     3);
     bs_write (bs, com_tbl_log2[sqh->max_bt_size] - 2,     3);
-             
+
     bs_write (bs, com_tbl_log2[sqh->max_eqt_size] - 3,     2);
     bs_write1(bs, 1); // marker_bit
 
@@ -728,7 +728,7 @@ void bs_demulate(bs_t *bs)
     unsigned int current_bytes_size = BS_GET_BYTES(bs);
     if (bs->start[start_idx] == 0x00 && bs->start[start_idx + 1] == 0x00 && bs->start[start_idx + 2] == 0x01) {
         start_idx += 3;
-        start_code = bs->start[start_idx++]; 
+        start_code = bs->start[start_idx++];
         if (start_code == 0x00) {
             zero_cnt++;
         }
@@ -746,8 +746,8 @@ void bs_demulate(bs_t *bs)
             break;
         } else {
         }
-    case 0xb0: 
-    case 0xb2: 
+    case 0xb0:
+    case 0xb2:
         return;
     default:
         break;
@@ -827,7 +827,7 @@ static void ec_write_alf_coef(bs_t *bs, com_alf_pic_param_t *Alfp)
     break;
     case Y_C: {
         noFilters = Alfp->filters_per_group - 1;
-        bs_write_ue(bs, noFilters); 
+        bs_write_ue(bs, noFilters);
         groupIdx[0] = 0;
         f++;
         if (Alfp->filters_per_group > 1) {
@@ -880,7 +880,7 @@ int ec_write_pichdr(bs_t *bs, com_pic_header_t *pichdr, com_seqh_t *sqh, com_pic
         }
     }
 
-    bs_write(bs, pichdr->dtr % DOI_CYCLE_LENGTH, 8); 
+    bs_write(bs, pichdr->dtr % DOI_CYCLE_LENGTH, 8);
 
     if (sqh->temporal_id_enable_flag == 1) {
         bs_write(bs, pic->layer_id, 3);
@@ -915,7 +915,7 @@ int ec_write_pichdr(bs_t *bs, com_pic_header_t *pichdr, com_seqh_t *sqh, com_pic
         } else if (sqh->rpls_l0_num == 1) {
             assert(pichdr->rpl_l0_idx == 0);
         } else {
-            return COM_ERR; 
+            return COM_ERR;
         }
     } else {
         ec_write_rpl(bs, &pichdr->rpl_l0);
@@ -932,7 +932,7 @@ int ec_write_pichdr(bs_t *bs, com_pic_header_t *pichdr, com_seqh_t *sqh, com_pic
         } else if (sqh->rpls_l1_num == 1) {
             assert(pichdr->rpl_l1_idx == 0);
         } else {
-            return COM_ERR; 
+            return COM_ERR;
         }
     } else {
         ec_write_rpl(bs, &pichdr->rpl_l1);
@@ -981,7 +981,7 @@ int ec_write_pichdr(bs_t *bs, com_pic_header_t *pichdr, com_seqh_t *sqh, com_pic
             } else if (pichdr->pic_wq_data_idx == 1) {
                 int i;
 
-                bs_write1(bs, 0); 
+                bs_write1(bs, 0);
                 bs_write(bs, pichdr->wq_param, 2);
                 bs_write(bs, pichdr->wq_model, 2);
 
@@ -1190,7 +1190,7 @@ void lbac_encode_bin(u32 bin, lbac_t *lbac, lbac_ctx_model_t *model, bs_t *bs)
         if (bin == cmps) { // MPS
             if (s_flag) {
                 lbac->code <<= 1;
-                if (--lbac->left_bits < 12) {
+                if (--(lbac->left_bits) < 12) {
                     carry_propagate(lbac, bs);
                 }
             }
@@ -1255,7 +1255,7 @@ void lbac_encode_binW(u32 bin, lbac_t *lbac, lbac_ctx_model_t *model1, lbac_ctx_
         if (bin == cmps) { // MPS
             if (s_flag) {
                 lbac->code <<= 1;
-                if (--lbac->left_bits < 12) {
+                if (--(lbac->left_bits) < 12) {
                     carry_propagate(lbac, bs);
                 }
             }
@@ -1301,7 +1301,7 @@ void lbac_encode_bin_trm(u32 bin, lbac_t *lbac, bs_t *bs)
         if (!bin) { // MPS
             if (s_flag) {
                 lbac->code <<= 1;
-                if (--lbac->left_bits < 12) {
+                if (--(lbac->left_bits) < 12) {
                     carry_propagate(lbac, bs);
                 }
             }
@@ -1736,7 +1736,7 @@ void lbac_enc_run_length_cc_rdo(lbac_t *lbac, s16 *coef, int log2_w, int log2_h,
 
         u32 ctx_idx = 0;
 
-        if (sym--) { 
+        if (sym--) {
             lbac_ctx_model_t m = model[1];
             ctx_idx++;
 
@@ -1890,7 +1890,7 @@ void lbac_enc_run_length_cc_rdo(lbac_t *lbac, s16 *coef, int log2_w, int log2_h,
 
         /* Sign coding */
         bitcounter++;
-        
+
         if (scan_pos == num_coeff - 1) {
             assert(num_sig == 1);
             break;
@@ -2346,7 +2346,7 @@ int lbac_enc_split_mode(lbac_t *lbac, bs_t *bs, core_t *core, s8 split_mode, int
     boundary_r = boundary && (x + cu_width  > info->pic_width ) && !(y + cu_height > info->pic_height);
 
     com_check_split_mode(&info->sqh, split_allow, CONV_LOG2(cu_width), CONV_LOG2(cu_height), boundary, boundary_b, boundary_r, info->log2_max_cuwh, parent_split, qt_depth, bet_depth, core->pichdr->slice_type);
-   
+
     int non_QT_split_mode_num = 0;
     for (int i = 1; i < SPLIT_QUAD; i++) {
         non_QT_split_mode_num += split_allow[i];
@@ -2740,13 +2740,13 @@ void lbac_enc_sao_mode(lbac_t *lbac, bs_t *bs, com_sao_param_t *saoBlkParam)
         lbac_encode_bin(0, lbac, lbac->h.sao_mode, bs);
         lbac_encode_bin_ep(0, lbac, bs);
     }
-    
+
 }
 
 static void sao_one_offset(int value1, int offset_type, lbac_t *lbac, bs_t *bs)
 {
     int act_sym;
-  
+
     if (offset_type == SAO_CLASS_EO_FULL_VALLEY) {
         act_sym = tbl_sao_eo_offset_map[value1 + 1];
     } else if (offset_type == SAO_CLASS_EO_FULL_PEAK) {
@@ -2980,12 +2980,12 @@ int ec_write_ext_and_usr_data(bs_t *bs, int signature, com_pic_t *pic_rec, int i
         /* picture signature */
         if (signature) {
             u8 pic_sign[16];
-    
+
             com_md5_img(pic_rec->img, pic_sign);
-       
+
             /* write user data type */
             bs_write(bs, COM_UD_PIC_SIGNATURE, 8);
-       
+
             for (int i = 0; i < 16; i++) {
                 bs_write(bs, pic_sign[i], 8);
                 if (i % 2 == 1) {
