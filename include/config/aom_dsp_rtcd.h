@@ -3539,11 +3539,20 @@ unsigned int aom_highbd_10_masked_sub_pixel_variance8x8_c(
   aom_highbd_10_masked_sub_pixel_variance8x8_c
 
 unsigned int aom_highbd_10_mse16x16_c(const uint8_t* src_ptr,
- int source_stride,
- const uint8_t* ref_ptr,
- int recon_stride,
- unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_10_mse16x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_10_mse16x16 aom_highbd_10_mse16x16_sse2
+#else
 #define aom_highbd_10_mse16x16 aom_highbd_10_mse16x16_c
+#endif
 
 unsigned int aom_highbd_10_mse16x8_c(const uint8_t* src_ptr,
 int source_stride,
@@ -3560,11 +3569,20 @@ unsigned int* sse);
 #define aom_highbd_10_mse8x16 aom_highbd_10_mse8x16_c
 
 unsigned int aom_highbd_10_mse8x8_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int recon_stride,
-    unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_10_mse8x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_10_mse8x8 aom_highbd_10_mse8x8_sse2
+#else
 #define aom_highbd_10_mse8x8 aom_highbd_10_mse8x8_c
+#endif
 
 unsigned int aom_highbd_10_obmc_sub_pixel_variance128x128_c(const uint8_t* pre,
   int pre_stride,
@@ -4259,8 +4277,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance16x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance16x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance16x16 \
+  aom_highbd_10_sub_pixel_avg_variance16x16_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance16x16 \
   aom_highbd_10_sub_pixel_avg_variance16x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance16x32_c(
     const uint8_t* src_ptr,
@@ -4271,8 +4303,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance16x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance16x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance16x32 \
+  aom_highbd_10_sub_pixel_avg_variance16x32_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance16x32 \
   aom_highbd_10_sub_pixel_avg_variance16x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4282,8 +4328,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance16x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance16x4 \
+  aom_highbd_10_sub_pixel_avg_variance16x4_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance16x4 \
   aom_highbd_10_sub_pixel_avg_variance16x4_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance16x64_c(
     const uint8_t* src_ptr,
@@ -4294,8 +4354,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance16x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance16x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance16x64 \
+  aom_highbd_10_sub_pixel_avg_variance16x64_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance16x64 \
   aom_highbd_10_sub_pixel_avg_variance16x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4305,8 +4379,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance16x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance16x8 \
+  aom_highbd_10_sub_pixel_avg_variance16x8_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance16x8 \
   aom_highbd_10_sub_pixel_avg_variance16x8_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance32x16_c(
     const uint8_t* src_ptr,
@@ -4317,8 +4405,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance32x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance32x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance32x16 \
+  aom_highbd_10_sub_pixel_avg_variance32x16_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance32x16 \
   aom_highbd_10_sub_pixel_avg_variance32x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance32x32_c(
     const uint8_t* src_ptr,
@@ -4329,8 +4431,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance32x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance32x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance32x32 \
+  aom_highbd_10_sub_pixel_avg_variance32x32_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance32x32 \
   aom_highbd_10_sub_pixel_avg_variance32x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance32x64_c(
     const uint8_t* src_ptr,
@@ -4341,8 +4457,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance32x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance32x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance32x64 \
+  aom_highbd_10_sub_pixel_avg_variance32x64_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance32x64 \
   aom_highbd_10_sub_pixel_avg_variance32x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4352,8 +4482,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance32x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance32x8 \
+  aom_highbd_10_sub_pixel_avg_variance32x8_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance32x8 \
   aom_highbd_10_sub_pixel_avg_variance32x8_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance4x16_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4428,8 +4572,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance64x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance64x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance64x16 \
+  aom_highbd_10_sub_pixel_avg_variance64x16_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance64x16 \
   aom_highbd_10_sub_pixel_avg_variance64x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance64x32_c(
     const uint8_t* src_ptr,
@@ -4440,8 +4598,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance64x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance64x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance64x32 \
+  aom_highbd_10_sub_pixel_avg_variance64x32_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance64x32 \
   aom_highbd_10_sub_pixel_avg_variance64x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance64x64_c(
     const uint8_t* src_ptr,
@@ -4452,8 +4624,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance64x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance64x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance64x64 \
+  aom_highbd_10_sub_pixel_avg_variance64x64_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance64x64 \
   aom_highbd_10_sub_pixel_avg_variance64x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4463,8 +4649,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance8x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance8x16 \
+  aom_highbd_10_sub_pixel_avg_variance8x16_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance8x16 \
   aom_highbd_10_sub_pixel_avg_variance8x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
     int source_stride,
@@ -4474,8 +4674,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance8x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance8x32 \
+  aom_highbd_10_sub_pixel_avg_variance8x32_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance8x32 \
   aom_highbd_10_sub_pixel_avg_variance8x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
    int source_stride,
@@ -4485,8 +4699,22 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance8x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance8x4 \
+  aom_highbd_10_sub_pixel_avg_variance8x4_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance8x4 \
   aom_highbd_10_sub_pixel_avg_variance8x4_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
    int source_stride,
@@ -4496,118 +4724,392 @@ uint32_t aom_highbd_10_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_10_sub_pixel_avg_variance8x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_10_sub_pixel_avg_variance8x8 \
+  aom_highbd_10_sub_pixel_avg_variance8x8_sse2
+#else
 #define aom_highbd_10_sub_pixel_avg_variance8x8 \
   aom_highbd_10_sub_pixel_avg_variance8x8_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance128x128_c(const uint8_t* src_ptr,
-   int source_stride,
-   int xoffset,
-   int yoffset,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance128x128_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance128x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance128x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance128x128 \
   aom_highbd_10_sub_pixel_variance128x128_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance128x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance128x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance128x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance128x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance128x64 \
   aom_highbd_10_sub_pixel_variance128x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance16x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance16x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance16x16 \
   aom_highbd_10_sub_pixel_variance16x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance16x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance16x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance16x32 \
   aom_highbd_10_sub_pixel_variance16x32_c
+#endif
 
-uint32_t aom_highbd_10_sub_pixel_variance16x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+uint32_t aom_highbd_10_sub_pixel_variance16x4_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x4_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance16x4 \
+  aom_highbd_10_sub_pixel_variance16x4_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance16x4 \
   aom_highbd_10_sub_pixel_variance16x4_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance16x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance16x64 \
+  aom_highbd_10_sub_pixel_variance16x64_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance16x64 \
   aom_highbd_10_sub_pixel_variance16x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance16x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance16x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance16x8_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance16x8 \
   aom_highbd_10_sub_pixel_variance16x8_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance32x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance32x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance32x16 \
   aom_highbd_10_sub_pixel_variance32x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance32x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance32x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance32x32 \
   aom_highbd_10_sub_pixel_variance32x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance32x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance32x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance32x64 \
   aom_highbd_10_sub_pixel_variance32x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance32x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance32x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance32x8 \
+  aom_highbd_10_sub_pixel_variance32x8_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance32x8 \
   aom_highbd_10_sub_pixel_variance32x8_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance4x16_c(const uint8_t* src_ptr,
 int source_stride,
@@ -4657,84 +5159,260 @@ uint32_t* sse);
   aom_highbd_10_sub_pixel_variance4x8_c
 
 uint32_t aom_highbd_10_sub_pixel_variance64x128_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x128_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance64x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance64x128 \
   aom_highbd_10_sub_pixel_variance64x128_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance64x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance64x16 \
+  aom_highbd_10_sub_pixel_variance64x16_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance64x16 \
   aom_highbd_10_sub_pixel_variance64x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance64x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance64x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance64x32 \
   aom_highbd_10_sub_pixel_variance64x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance64x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance64x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance64x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance64x64 \
   aom_highbd_10_sub_pixel_variance64x64_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance8x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance8x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance8x16 \
   aom_highbd_10_sub_pixel_variance8x16_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance8x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance8x32 \
+  aom_highbd_10_sub_pixel_variance8x32_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance8x32 \
   aom_highbd_10_sub_pixel_variance8x32_c
+#endif
 
 uint32_t aom_highbd_10_sub_pixel_variance8x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD && defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x4_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_10_sub_pixel_variance8x4 \
+  aom_highbd_10_sub_pixel_variance8x4_sse2
+#else
 #define aom_highbd_10_sub_pixel_variance8x4 \
   aom_highbd_10_sub_pixel_variance8x4_c
+#endif
 
-uint32_t aom_highbd_10_sub_pixel_variance8x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+uint32_t aom_highbd_10_sub_pixel_variance8x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_highbd_10_sub_pixel_variance8x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_highbd_10_sub_pixel_variance8x8_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_highbd_10_sub_pixel_variance8x8 \
   aom_highbd_10_sub_pixel_variance8x8_c
+#endif
 
 unsigned int aom_highbd_10_variance128x128_c(const uint8_t* src_ptr,
    int source_stride,
@@ -4785,20 +5463,6 @@ int ref_stride,
 unsigned int* sse);
 #define aom_highbd_10_variance16x8 aom_highbd_10_variance16x8_c
 
-unsigned int aom_highbd_10_variance2x2_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_10_variance2x2 aom_highbd_10_variance2x2_c
-
-unsigned int aom_highbd_10_variance2x4_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_10_variance2x4 aom_highbd_10_variance2x4_c
-
 unsigned int aom_highbd_10_variance32x16_c(const uint8_t* src_ptr,
  int source_stride,
  const uint8_t* ref_ptr,
@@ -4833,13 +5497,6 @@ const uint8_t* ref_ptr,
 int ref_stride,
 uint32_t* sse);
 #define aom_highbd_10_variance4x16 aom_highbd_10_variance4x16_c
-
-unsigned int aom_highbd_10_variance4x2_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_10_variance4x2 aom_highbd_10_variance4x2_c
 
 unsigned int aom_highbd_10_variance4x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -5541,11 +6198,20 @@ unsigned int aom_highbd_12_masked_sub_pixel_variance8x8_c(
   aom_highbd_12_masked_sub_pixel_variance8x8_c
 
 unsigned int aom_highbd_12_mse16x16_c(const uint8_t* src_ptr,
- int source_stride,
- const uint8_t* ref_ptr,
- int recon_stride,
- unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_12_mse16x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_12_mse16x16 aom_highbd_12_mse16x16_sse2
+#else
 #define aom_highbd_12_mse16x16 aom_highbd_12_mse16x16_c
+#endif
 
 unsigned int aom_highbd_12_mse16x8_c(const uint8_t* src_ptr,
 int source_stride,
@@ -5562,11 +6228,20 @@ unsigned int* sse);
 #define aom_highbd_12_mse8x16 aom_highbd_12_mse8x16_c
 
 unsigned int aom_highbd_12_mse8x8_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int recon_stride,
-    unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_12_mse8x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_12_mse8x8 aom_highbd_12_mse8x8_sse2
+#else
 #define aom_highbd_12_mse8x8 aom_highbd_12_mse8x8_c
+#endif
 
 unsigned int aom_highbd_12_obmc_sub_pixel_variance128x128_c(const uint8_t* pre,
   int pre_stride,
@@ -6261,8 +6936,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance16x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance16x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance16x16 \
+  aom_highbd_12_sub_pixel_avg_variance16x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance16x16 \
   aom_highbd_12_sub_pixel_avg_variance16x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance16x32_c(
     const uint8_t* src_ptr,
@@ -6273,8 +6962,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance16x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance16x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance16x32 \
+  aom_highbd_12_sub_pixel_avg_variance16x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance16x32 \
   aom_highbd_12_sub_pixel_avg_variance16x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6284,8 +6987,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance16x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance16x4 \
+  aom_highbd_12_sub_pixel_avg_variance16x4_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance16x4 \
   aom_highbd_12_sub_pixel_avg_variance16x4_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance16x64_c(
     const uint8_t* src_ptr,
@@ -6296,8 +7013,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance16x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance16x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance16x64 \
+  aom_highbd_12_sub_pixel_avg_variance16x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance16x64 \
   aom_highbd_12_sub_pixel_avg_variance16x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6307,8 +7038,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance16x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance16x8 \
+  aom_highbd_12_sub_pixel_avg_variance16x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance16x8 \
   aom_highbd_12_sub_pixel_avg_variance16x8_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance32x16_c(
     const uint8_t* src_ptr,
@@ -6319,8 +7064,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance32x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance32x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance32x16 \
+  aom_highbd_12_sub_pixel_avg_variance32x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance32x16 \
   aom_highbd_12_sub_pixel_avg_variance32x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance32x32_c(
     const uint8_t* src_ptr,
@@ -6331,8 +7090,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance32x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance32x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance32x32 \
+  aom_highbd_12_sub_pixel_avg_variance32x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance32x32 \
   aom_highbd_12_sub_pixel_avg_variance32x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance32x64_c(
     const uint8_t* src_ptr,
@@ -6343,8 +7116,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance32x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance32x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance32x64 \
+  aom_highbd_12_sub_pixel_avg_variance32x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance32x64 \
   aom_highbd_12_sub_pixel_avg_variance32x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6354,8 +7141,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance32x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance32x8 \
+  aom_highbd_12_sub_pixel_avg_variance32x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance32x8 \
   aom_highbd_12_sub_pixel_avg_variance32x8_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance4x16_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6430,8 +7231,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance64x16_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance64x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance64x16 \
+  aom_highbd_12_sub_pixel_avg_variance64x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance64x16 \
   aom_highbd_12_sub_pixel_avg_variance64x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance64x32_c(
     const uint8_t* src_ptr,
@@ -6442,8 +7257,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance64x32_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance64x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance64x32 \
+  aom_highbd_12_sub_pixel_avg_variance64x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance64x32 \
   aom_highbd_12_sub_pixel_avg_variance64x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance64x64_c(
     const uint8_t* src_ptr,
@@ -6454,8 +7283,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance64x64_c(
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance64x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance64x64 \
+  aom_highbd_12_sub_pixel_avg_variance64x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance64x64 \
   aom_highbd_12_sub_pixel_avg_variance64x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6465,8 +7308,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance8x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance8x16 \
+  aom_highbd_12_sub_pixel_avg_variance8x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance8x16 \
   aom_highbd_12_sub_pixel_avg_variance8x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
     int source_stride,
@@ -6476,8 +7333,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance8x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance8x32 \
+  aom_highbd_12_sub_pixel_avg_variance8x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance8x32 \
   aom_highbd_12_sub_pixel_avg_variance8x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
    int source_stride,
@@ -6487,8 +7358,22 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance8x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance8x4 \
+  aom_highbd_12_sub_pixel_avg_variance8x4_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance8x4 \
   aom_highbd_12_sub_pixel_avg_variance8x4_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
    int source_stride,
@@ -6498,118 +7383,264 @@ uint32_t aom_highbd_12_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_avg_variance8x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_12_sub_pixel_avg_variance8x8 \
+  aom_highbd_12_sub_pixel_avg_variance8x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_avg_variance8x8 \
   aom_highbd_12_sub_pixel_avg_variance8x8_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance128x128_c(const uint8_t* src_ptr,
-   int source_stride,
-   int xoffset,
-   int yoffset,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance128x128_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance128x128 \
+  aom_highbd_12_sub_pixel_variance128x128_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance128x128 \
   aom_highbd_12_sub_pixel_variance128x128_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance128x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance128x64_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance128x64 \
+  aom_highbd_12_sub_pixel_variance128x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance128x64 \
   aom_highbd_12_sub_pixel_variance128x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance16x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance16x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance16x16 \
+  aom_highbd_12_sub_pixel_variance16x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance16x16 \
   aom_highbd_12_sub_pixel_variance16x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance16x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance16x32_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance16x32 \
+  aom_highbd_12_sub_pixel_variance16x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance16x32 \
   aom_highbd_12_sub_pixel_variance16x32_c
+#endif
 
-uint32_t aom_highbd_12_sub_pixel_variance16x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+uint32_t aom_highbd_12_sub_pixel_variance16x4_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance16x4_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance16x4 \
+  aom_highbd_12_sub_pixel_variance16x4_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance16x4 \
   aom_highbd_12_sub_pixel_variance16x4_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance16x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance16x64_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance16x64 \
+  aom_highbd_12_sub_pixel_variance16x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance16x64 \
   aom_highbd_12_sub_pixel_variance16x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance16x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance16x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance16x8 \
+  aom_highbd_12_sub_pixel_variance16x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance16x8 \
   aom_highbd_12_sub_pixel_variance16x8_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance32x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance32x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance32x16 \
+  aom_highbd_12_sub_pixel_variance32x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance32x16 \
   aom_highbd_12_sub_pixel_variance32x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance32x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance32x32_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance32x32 \
+  aom_highbd_12_sub_pixel_variance32x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance32x32 \
   aom_highbd_12_sub_pixel_variance32x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance32x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance32x64_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance32x64 \
+  aom_highbd_12_sub_pixel_variance32x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance32x64 \
   aom_highbd_12_sub_pixel_variance32x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance32x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance32x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance32x8 \
+  aom_highbd_12_sub_pixel_variance32x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance32x8 \
   aom_highbd_12_sub_pixel_variance32x8_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance4x16_c(const uint8_t* src_ptr,
 int source_stride,
@@ -6622,27 +7653,27 @@ uint32_t* sse);
   aom_highbd_12_sub_pixel_variance4x16_c
 
 uint32_t aom_highbd_12_sub_pixel_variance4x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
 uint32_t aom_highbd_12_sub_pixel_variance4x4_sse4_1(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
 RTCD_EXTERN uint32_t (*aom_highbd_12_sub_pixel_variance4x4)(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
 #else
 #define aom_highbd_12_sub_pixel_variance4x4 \
   aom_highbd_12_sub_pixel_variance4x4_c
@@ -6659,84 +7690,180 @@ uint32_t* sse);
   aom_highbd_12_sub_pixel_variance4x8_c
 
 uint32_t aom_highbd_12_sub_pixel_variance64x128_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance64x128_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance64x128 \
+  aom_highbd_12_sub_pixel_variance64x128_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance64x128 \
   aom_highbd_12_sub_pixel_variance64x128_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance64x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance64x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance64x16 \
+  aom_highbd_12_sub_pixel_variance64x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance64x16 \
   aom_highbd_12_sub_pixel_variance64x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance64x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance64x32_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance64x32 \
+  aom_highbd_12_sub_pixel_variance64x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance64x32 \
   aom_highbd_12_sub_pixel_variance64x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance64x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance64x64_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance64x64 \
+  aom_highbd_12_sub_pixel_variance64x64_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance64x64 \
   aom_highbd_12_sub_pixel_variance64x64_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance8x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance8x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance8x16 \
+  aom_highbd_12_sub_pixel_variance8x16_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance8x16 \
   aom_highbd_12_sub_pixel_variance8x16_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance8x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance8x32_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance8x32 \
+  aom_highbd_12_sub_pixel_variance8x32_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance8x32 \
   aom_highbd_12_sub_pixel_variance8x32_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance8x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance8x4_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance8x4 \
+  aom_highbd_12_sub_pixel_variance8x4_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance8x4 \
   aom_highbd_12_sub_pixel_variance8x4_c
+#endif
 
 uint32_t aom_highbd_12_sub_pixel_variance8x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_12_sub_pixel_variance8x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     int xoffset,
+     int yoffset,
+     const uint8_t* ref_ptr,
+     int ref_stride,
+     uint32_t* sse);
+#define aom_highbd_12_sub_pixel_variance8x8 \
+  aom_highbd_12_sub_pixel_variance8x8_sse2
+#else
 #define aom_highbd_12_sub_pixel_variance8x8 \
   aom_highbd_12_sub_pixel_variance8x8_c
+#endif
 
 unsigned int aom_highbd_12_variance128x128_c(const uint8_t* src_ptr,
    int source_stride,
@@ -6787,20 +7914,6 @@ int ref_stride,
 unsigned int* sse);
 #define aom_highbd_12_variance16x8 aom_highbd_12_variance16x8_c
 
-unsigned int aom_highbd_12_variance2x2_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_12_variance2x2 aom_highbd_12_variance2x2_c
-
-unsigned int aom_highbd_12_variance2x4_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_12_variance2x4 aom_highbd_12_variance2x4_c
-
 unsigned int aom_highbd_12_variance32x16_c(const uint8_t* src_ptr,
  int source_stride,
  const uint8_t* ref_ptr,
@@ -6835,13 +7948,6 @@ const uint8_t* ref_ptr,
 int ref_stride,
 uint32_t* sse);
 #define aom_highbd_12_variance4x16 aom_highbd_12_variance4x16_c
-
-unsigned int aom_highbd_12_variance4x2_c(const uint8_t* src_ptr,
-    int source_stride,
-    const uint8_t* ref_ptr,
-    int ref_stride,
-    unsigned int* sse);
-#define aom_highbd_12_variance4x2 aom_highbd_12_variance4x2_c
 
 unsigned int aom_highbd_12_variance4x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7543,11 +8649,20 @@ unsigned int aom_highbd_8_masked_sub_pixel_variance8x8_c(
   aom_highbd_8_masked_sub_pixel_variance8x8_c
 
 unsigned int aom_highbd_8_mse16x16_c(const uint8_t* src_ptr,
-int source_stride,
-const uint8_t* ref_ptr,
-int recon_stride,
-unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_8_mse16x16_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_8_mse16x16 aom_highbd_8_mse16x16_sse2
+#else
 #define aom_highbd_8_mse16x16 aom_highbd_8_mse16x16_c
+#endif
 
 unsigned int aom_highbd_8_mse16x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7564,11 +8679,20 @@ unsigned int aom_highbd_8_mse8x16_c(const uint8_t* src_ptr,
 #define aom_highbd_8_mse8x16 aom_highbd_8_mse8x16_c
 
 unsigned int aom_highbd_8_mse8x8_c(const uint8_t* src_ptr,
-   int source_stride,
-   const uint8_t* ref_ptr,
-   int recon_stride,
-   unsigned int* sse);
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+unsigned int aom_highbd_8_mse8x8_sse2(const uint8_t* src_ptr,
+     int source_stride,
+     const uint8_t* ref_ptr,
+     int recon_stride,
+     unsigned int* sse);
+#define aom_highbd_8_mse8x8 aom_highbd_8_mse8x8_sse2
+#else
 #define aom_highbd_8_mse8x8 aom_highbd_8_mse8x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance128x128_c(
     const uint8_t* src_ptr,
@@ -7602,8 +8726,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance16x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance16x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance16x16 \
+  aom_highbd_8_sub_pixel_avg_variance16x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance16x16 \
   aom_highbd_8_sub_pixel_avg_variance16x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance16x32_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7613,8 +8751,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance16x32_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance16x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance16x32 \
+  aom_highbd_8_sub_pixel_avg_variance16x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance16x32 \
   aom_highbd_8_sub_pixel_avg_variance16x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7624,8 +8776,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance16x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance16x4 \
+  aom_highbd_8_sub_pixel_avg_variance16x4_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance16x4 \
   aom_highbd_8_sub_pixel_avg_variance16x4_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance16x64_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7635,8 +8801,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance16x64_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance16x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance16x64 \
+  aom_highbd_8_sub_pixel_avg_variance16x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance16x64 \
   aom_highbd_8_sub_pixel_avg_variance16x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7646,8 +8826,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance16x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance16x8 \
+  aom_highbd_8_sub_pixel_avg_variance16x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance16x8 \
   aom_highbd_8_sub_pixel_avg_variance16x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance32x16_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7657,8 +8851,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance32x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance32x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance32x16 \
+  aom_highbd_8_sub_pixel_avg_variance32x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance32x16 \
   aom_highbd_8_sub_pixel_avg_variance32x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance32x32_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7668,8 +8876,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance32x32_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance32x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance32x32 \
+  aom_highbd_8_sub_pixel_avg_variance32x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance32x32 \
   aom_highbd_8_sub_pixel_avg_variance32x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance32x64_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7679,8 +8901,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance32x64_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance32x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance32x64 \
+  aom_highbd_8_sub_pixel_avg_variance32x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance32x64 \
   aom_highbd_8_sub_pixel_avg_variance32x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7690,8 +8926,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance32x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance32x8 \
+  aom_highbd_8_sub_pixel_avg_variance32x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance32x8 \
   aom_highbd_8_sub_pixel_avg_variance32x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance4x16_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7765,8 +9015,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance64x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance64x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance64x16 \
+  aom_highbd_8_sub_pixel_avg_variance64x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance64x16 \
   aom_highbd_8_sub_pixel_avg_variance64x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance64x32_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7776,8 +9040,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance64x32_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance64x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance64x32 \
+  aom_highbd_8_sub_pixel_avg_variance64x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance64x32 \
   aom_highbd_8_sub_pixel_avg_variance64x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance64x64_c(const uint8_t* src_ptr,
     int source_stride,
@@ -7787,8 +9065,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance64x64_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance64x64_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance64x64 \
+  aom_highbd_8_sub_pixel_avg_variance64x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance64x64 \
   aom_highbd_8_sub_pixel_avg_variance64x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7798,8 +9090,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance8x16_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance8x16 \
+  aom_highbd_8_sub_pixel_avg_variance8x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance8x16 \
   aom_highbd_8_sub_pixel_avg_variance8x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
    int source_stride,
@@ -7809,8 +9115,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
    int ref_stride,
    uint32_t* sse,
    const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance8x32_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance8x32 \
+  aom_highbd_8_sub_pixel_avg_variance8x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance8x32 \
   aom_highbd_8_sub_pixel_avg_variance8x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
   int source_stride,
@@ -7820,8 +9140,22 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
   int ref_stride,
   uint32_t* sse,
   const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance8x4_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance8x4 \
+  aom_highbd_8_sub_pixel_avg_variance8x4_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance8x4 \
   aom_highbd_8_sub_pixel_avg_variance8x4_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
   int source_stride,
@@ -7831,118 +9165,264 @@ uint32_t aom_highbd_8_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
   int ref_stride,
   uint32_t* sse,
   const uint8_t* second_pred);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_avg_variance8x8_sse2(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#define aom_highbd_8_sub_pixel_avg_variance8x8 \
+  aom_highbd_8_sub_pixel_avg_variance8x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_avg_variance8x8 \
   aom_highbd_8_sub_pixel_avg_variance8x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance128x128_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance128x128_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance128x128 \
+  aom_highbd_8_sub_pixel_variance128x128_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance128x128 \
   aom_highbd_8_sub_pixel_variance128x128_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance128x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance128x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance128x64 \
+  aom_highbd_8_sub_pixel_variance128x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance128x64 \
   aom_highbd_8_sub_pixel_variance128x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance16x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance16x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance16x16 \
+  aom_highbd_8_sub_pixel_variance16x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance16x16 \
   aom_highbd_8_sub_pixel_variance16x16_c
+#endif
 
-uint32_t aom_highbd_8_sub_pixel_variance16x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+uint32_t aom_highbd_8_sub_pixel_variance16x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance16x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance16x32 \
+  aom_highbd_8_sub_pixel_variance16x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance16x32 \
   aom_highbd_8_sub_pixel_variance16x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance16x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance16x4_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance16x4 \
+  aom_highbd_8_sub_pixel_variance16x4_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance16x4 \
   aom_highbd_8_sub_pixel_variance16x4_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance16x64_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance16x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance16x64 \
+  aom_highbd_8_sub_pixel_variance16x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance16x64 \
   aom_highbd_8_sub_pixel_variance16x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance16x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance16x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance16x8 \
+  aom_highbd_8_sub_pixel_variance16x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance16x8 \
   aom_highbd_8_sub_pixel_variance16x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance32x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance32x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance32x16 \
+  aom_highbd_8_sub_pixel_variance32x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance32x16 \
   aom_highbd_8_sub_pixel_variance32x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance32x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance32x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance32x32 \
+  aom_highbd_8_sub_pixel_variance32x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance32x32 \
   aom_highbd_8_sub_pixel_variance32x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance32x64_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance32x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance32x64 \
+  aom_highbd_8_sub_pixel_variance32x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance32x64 \
   aom_highbd_8_sub_pixel_variance32x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance32x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance32x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance32x8 \
+  aom_highbd_8_sub_pixel_variance32x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance32x8 \
   aom_highbd_8_sub_pixel_variance32x8_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance4x16_c(const uint8_t* src_ptr,
 int source_stride,
@@ -7990,64 +9470,136 @@ uint32_t aom_highbd_8_sub_pixel_variance4x8_c(const uint8_t* src_ptr,
 #define aom_highbd_8_sub_pixel_variance4x8 aom_highbd_8_sub_pixel_variance4x8_c
 
 uint32_t aom_highbd_8_sub_pixel_variance64x128_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance64x128_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance64x128 \
+  aom_highbd_8_sub_pixel_variance64x128_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance64x128 \
   aom_highbd_8_sub_pixel_variance64x128_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance64x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance64x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance64x16 \
+  aom_highbd_8_sub_pixel_variance64x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance64x16 \
   aom_highbd_8_sub_pixel_variance64x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance64x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance64x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance64x32 \
+  aom_highbd_8_sub_pixel_variance64x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance64x32 \
   aom_highbd_8_sub_pixel_variance64x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance64x64_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance64x64_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance64x64 \
+  aom_highbd_8_sub_pixel_variance64x64_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance64x64 \
   aom_highbd_8_sub_pixel_variance64x64_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance8x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance8x16_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance8x16 \
+  aom_highbd_8_sub_pixel_variance8x16_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance8x16 \
   aom_highbd_8_sub_pixel_variance8x16_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance8x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance8x32_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance8x32 \
+  aom_highbd_8_sub_pixel_variance8x32_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance8x32 \
   aom_highbd_8_sub_pixel_variance8x32_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance8x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -8056,7 +9608,18 @@ uint32_t aom_highbd_8_sub_pixel_variance8x4_c(const uint8_t* src_ptr,
     const uint8_t* ref_ptr,
     int ref_stride,
     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance8x4_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance8x4 aom_highbd_8_sub_pixel_variance8x4_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance8x4 aom_highbd_8_sub_pixel_variance8x4_c
+#endif
 
 uint32_t aom_highbd_8_sub_pixel_variance8x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -8065,7 +9628,18 @@ uint32_t aom_highbd_8_sub_pixel_variance8x8_c(const uint8_t* src_ptr,
     const uint8_t* ref_ptr,
     int ref_stride,
     uint32_t* sse);
+#if defined(__SSE2__) && HAVE_SIMD
+uint32_t aom_highbd_8_sub_pixel_variance8x8_sse2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#define aom_highbd_8_sub_pixel_variance8x8 aom_highbd_8_sub_pixel_variance8x8_sse2
+#else
 #define aom_highbd_8_sub_pixel_variance8x8 aom_highbd_8_sub_pixel_variance8x8_c
+#endif
 
 unsigned int aom_highbd_8_variance128x128_c(const uint8_t* src_ptr,
   int source_stride,
@@ -8116,20 +9690,6 @@ unsigned int aom_highbd_8_variance16x8_c(const uint8_t* src_ptr,
     unsigned int* sse);
 #define aom_highbd_8_variance16x8 aom_highbd_8_variance16x8_c
 
-unsigned int aom_highbd_8_variance2x2_c(const uint8_t* src_ptr,
-   int source_stride,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   unsigned int* sse);
-#define aom_highbd_8_variance2x2 aom_highbd_8_variance2x2_c
-
-unsigned int aom_highbd_8_variance2x4_c(const uint8_t* src_ptr,
-   int source_stride,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   unsigned int* sse);
-#define aom_highbd_8_variance2x4 aom_highbd_8_variance2x4_c
-
 unsigned int aom_highbd_8_variance32x16_c(const uint8_t* src_ptr,
 int source_stride,
 const uint8_t* ref_ptr,
@@ -8164,13 +9724,6 @@ unsigned int aom_highbd_8_variance4x16_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse);
 #define aom_highbd_8_variance4x16 aom_highbd_8_variance4x16_c
-
-unsigned int aom_highbd_8_variance4x2_c(const uint8_t* src_ptr,
-   int source_stride,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   unsigned int* sse);
-#define aom_highbd_8_variance4x2 aom_highbd_8_variance4x2_c
 
 unsigned int aom_highbd_8_variance4x4_c(const uint8_t* src_ptr,
    int source_stride,
@@ -11990,664 +13543,664 @@ const int32_t* mask);
 #define aom_highbd_obmc_sad8x8 aom_highbd_obmc_sad8x8_c
 #endif
 
-unsigned int aom_highbd_obmc_sub_pixel_variance128x128_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance128x128_c(const uint8_t* pre,
     int pre_stride,
     int xoffset,
     int yoffset,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance128x128 \
-  aom_highbd_obmc_sub_pixel_variance128x128_c
+#define aom_highbd_8_obmc_sub_pixel_variance128x128 \
+  aom_highbd_8_obmc_sub_pixel_variance128x128_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance128x64_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance128x64_c(const uint8_t* pre,
    int pre_stride,
    int xoffset,
    int yoffset,
    const int32_t* wsrc,
    const int32_t* mask,
    unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance128x64 \
-  aom_highbd_obmc_sub_pixel_variance128x64_c
+#define aom_highbd_8_obmc_sub_pixel_variance128x64 \
+  aom_highbd_8_obmc_sub_pixel_variance128x64_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance16x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance16x16_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance16x16 \
-  aom_highbd_obmc_sub_pixel_variance16x16_c
+#define aom_highbd_8_obmc_sub_pixel_variance16x16 \
+  aom_highbd_8_obmc_sub_pixel_variance16x16_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance16x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance16x32_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance16x32 \
-  aom_highbd_obmc_sub_pixel_variance16x32_c
+#define aom_highbd_8_obmc_sub_pixel_variance16x32 \
+  aom_highbd_8_obmc_sub_pixel_variance16x32_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance16x4_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance16x4_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance16x4 \
-  aom_highbd_obmc_sub_pixel_variance16x4_c
+#define aom_highbd_8_obmc_sub_pixel_variance16x4 \
+  aom_highbd_8_obmc_sub_pixel_variance16x4_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance16x64_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance16x64_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance16x64 \
-  aom_highbd_obmc_sub_pixel_variance16x64_c
+#define aom_highbd_8_obmc_sub_pixel_variance16x64 \
+  aom_highbd_8_obmc_sub_pixel_variance16x64_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance16x8_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance16x8_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance16x8 \
-  aom_highbd_obmc_sub_pixel_variance16x8_c
+#define aom_highbd_8_obmc_sub_pixel_variance16x8 \
+  aom_highbd_8_obmc_sub_pixel_variance16x8_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance32x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance32x16_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance32x16 \
-  aom_highbd_obmc_sub_pixel_variance32x16_c
+#define aom_highbd_8_obmc_sub_pixel_variance32x16 \
+  aom_highbd_8_obmc_sub_pixel_variance32x16_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance32x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance32x32_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance32x32 \
-  aom_highbd_obmc_sub_pixel_variance32x32_c
+#define aom_highbd_8_obmc_sub_pixel_variance32x32 \
+  aom_highbd_8_obmc_sub_pixel_variance32x32_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance32x64_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance32x64_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance32x64 \
-  aom_highbd_obmc_sub_pixel_variance32x64_c
+#define aom_highbd_8_obmc_sub_pixel_variance32x64 \
+  aom_highbd_8_obmc_sub_pixel_variance32x64_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance32x8_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance32x8_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance32x8 \
-  aom_highbd_obmc_sub_pixel_variance32x8_c
+#define aom_highbd_8_obmc_sub_pixel_variance32x8 \
+  aom_highbd_8_obmc_sub_pixel_variance32x8_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance4x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance4x16_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance4x16 \
-  aom_highbd_obmc_sub_pixel_variance4x16_c
+#define aom_highbd_8_obmc_sub_pixel_variance4x16 \
+  aom_highbd_8_obmc_sub_pixel_variance4x16_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance4x4_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance4x4_c(const uint8_t* pre,
 int pre_stride,
 int xoffset,
 int yoffset,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance4x4 \
-  aom_highbd_obmc_sub_pixel_variance4x4_c
+#define aom_highbd_8_obmc_sub_pixel_variance4x4 \
+  aom_highbd_8_obmc_sub_pixel_variance4x4_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance4x8_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance4x8_c(const uint8_t* pre,
 int pre_stride,
 int xoffset,
 int yoffset,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance4x8 \
-  aom_highbd_obmc_sub_pixel_variance4x8_c
+#define aom_highbd_8_obmc_sub_pixel_variance4x8 \
+  aom_highbd_8_obmc_sub_pixel_variance4x8_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance64x128_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance64x128_c(const uint8_t* pre,
    int pre_stride,
    int xoffset,
    int yoffset,
    const int32_t* wsrc,
    const int32_t* mask,
    unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance64x128 \
-  aom_highbd_obmc_sub_pixel_variance64x128_c
+#define aom_highbd_8_obmc_sub_pixel_variance64x128 \
+  aom_highbd_8_obmc_sub_pixel_variance64x128_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance64x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance64x16_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance64x16 \
-  aom_highbd_obmc_sub_pixel_variance64x16_c
+#define aom_highbd_8_obmc_sub_pixel_variance64x16 \
+  aom_highbd_8_obmc_sub_pixel_variance64x16_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance64x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance64x32_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance64x32 \
-  aom_highbd_obmc_sub_pixel_variance64x32_c
+#define aom_highbd_8_obmc_sub_pixel_variance64x32 \
+  aom_highbd_8_obmc_sub_pixel_variance64x32_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance64x64_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance64x64_c(const uint8_t* pre,
   int pre_stride,
   int xoffset,
   int yoffset,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance64x64 \
-  aom_highbd_obmc_sub_pixel_variance64x64_c
+#define aom_highbd_8_obmc_sub_pixel_variance64x64 \
+  aom_highbd_8_obmc_sub_pixel_variance64x64_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance8x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance8x16_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance8x16 \
-  aom_highbd_obmc_sub_pixel_variance8x16_c
+#define aom_highbd_8_obmc_sub_pixel_variance8x16 \
+  aom_highbd_8_obmc_sub_pixel_variance8x16_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance8x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance8x32_c(const uint8_t* pre,
  int pre_stride,
  int xoffset,
  int yoffset,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance8x32 \
-  aom_highbd_obmc_sub_pixel_variance8x32_c
+#define aom_highbd_8_obmc_sub_pixel_variance8x32 \
+  aom_highbd_8_obmc_sub_pixel_variance8x32_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance8x4_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance8x4_c(const uint8_t* pre,
 int pre_stride,
 int xoffset,
 int yoffset,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance8x4 \
-  aom_highbd_obmc_sub_pixel_variance8x4_c
+#define aom_highbd_8_obmc_sub_pixel_variance8x4 \
+  aom_highbd_8_obmc_sub_pixel_variance8x4_c
 
-unsigned int aom_highbd_obmc_sub_pixel_variance8x8_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_sub_pixel_variance8x8_c(const uint8_t* pre,
 int pre_stride,
 int xoffset,
 int yoffset,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-#define aom_highbd_obmc_sub_pixel_variance8x8 \
-  aom_highbd_obmc_sub_pixel_variance8x8_c
+#define aom_highbd_8_obmc_sub_pixel_variance8x8 \
+  aom_highbd_8_obmc_sub_pixel_variance8x8_c
 
-unsigned int aom_highbd_obmc_variance128x128_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance128x128_c(const uint8_t* pre,
    int pre_stride,
    const int32_t* wsrc,
    const int32_t* mask,
    unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance128x128_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance128x128_sse4_1(const uint8_t* pre,
    int pre_stride,
    const int32_t* wsrc,
    const int32_t* mask,
    unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance128x128)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance128x128)(const uint8_t* pre,
    int pre_stride,
    const int32_t* wsrc,
    const int32_t* mask,
    unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance128x128 aom_highbd_obmc_variance128x128_c
+#define aom_highbd_8_obmc_variance128x128 aom_highbd_8_obmc_variance128x128_c
 #endif
 
-unsigned int aom_highbd_obmc_variance128x64_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance128x64_c(const uint8_t* pre,
   int pre_stride,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance128x64_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance128x64_sse4_1(const uint8_t* pre,
   int pre_stride,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance128x64)(const uint8_t* pre,
-  int pre_stride,
-  const int32_t* wsrc,
-  const int32_t* mask,
-  unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance128x64 aom_highbd_obmc_variance128x64_c
-#endif
-
-unsigned int aom_highbd_obmc_variance16x16_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance16x16_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance16x16)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance16x16 aom_highbd_obmc_variance16x16_c
-#endif
-
-unsigned int aom_highbd_obmc_variance16x32_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance16x32_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance16x32)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance16x32 aom_highbd_obmc_variance16x32_c
-#endif
-
-unsigned int aom_highbd_obmc_variance16x4_c(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance16x4_sse4_1(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance16x4)(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance16x4 aom_highbd_obmc_variance16x4_c
-#endif
-
-unsigned int aom_highbd_obmc_variance16x64_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance16x64_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance16x64)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance16x64 aom_highbd_obmc_variance16x64_c
-#endif
-
-unsigned int aom_highbd_obmc_variance16x8_c(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance16x8_sse4_1(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance16x8)(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance16x8 aom_highbd_obmc_variance16x8_c
-#endif
-
-unsigned int aom_highbd_obmc_variance32x16_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance32x16_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance32x16)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance32x16 aom_highbd_obmc_variance32x16_c
-#endif
-
-unsigned int aom_highbd_obmc_variance32x32_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance32x32_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance32x32)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance32x32 aom_highbd_obmc_variance32x32_c
-#endif
-
-unsigned int aom_highbd_obmc_variance32x64_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance32x64_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance32x64)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance32x64 aom_highbd_obmc_variance32x64_c
-#endif
-
-unsigned int aom_highbd_obmc_variance32x8_c(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance32x8_sse4_1(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance32x8)(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance32x8 aom_highbd_obmc_variance32x8_c
-#endif
-
-unsigned int aom_highbd_obmc_variance4x16_c(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance4x16_sse4_1(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance4x16)(const uint8_t* pre,
-int pre_stride,
-const int32_t* wsrc,
-const int32_t* mask,
-unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance4x16 aom_highbd_obmc_variance4x16_c
-#endif
-
-unsigned int aom_highbd_obmc_variance4x4_c(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance4x4_sse4_1(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance4x4)(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance4x4 aom_highbd_obmc_variance4x4_c
-#endif
-
-unsigned int aom_highbd_obmc_variance4x8_c(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance4x8_sse4_1(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance4x8)(const uint8_t* pre,
-    int pre_stride,
-    const int32_t* wsrc,
-    const int32_t* mask,
-    unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance4x8 aom_highbd_obmc_variance4x8_c
-#endif
-
-unsigned int aom_highbd_obmc_variance64x128_c(const uint8_t* pre,
-  int pre_stride,
-  const int32_t* wsrc,
-  const int32_t* mask,
-  unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance64x128_sse4_1(const uint8_t* pre,
-  int pre_stride,
-  const int32_t* wsrc,
-  const int32_t* mask,
-  unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance64x128)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance128x64)(const uint8_t* pre,
   int pre_stride,
   const int32_t* wsrc,
   const int32_t* mask,
   unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance64x128 aom_highbd_obmc_variance64x128_c
+#define aom_highbd_8_obmc_variance128x64 aom_highbd_8_obmc_variance128x64_c
 #endif
 
-unsigned int aom_highbd_obmc_variance64x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x16_c(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance64x16_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x16_sse4_1(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance64x16)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance16x16)(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance64x16 aom_highbd_obmc_variance64x16_c
+#define aom_highbd_8_obmc_variance16x16 aom_highbd_8_obmc_variance16x16_c
 #endif
 
-unsigned int aom_highbd_obmc_variance64x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x32_c(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance64x32_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x32_sse4_1(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance64x32)(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#else
-#define aom_highbd_obmc_variance64x32 aom_highbd_obmc_variance64x32_c
-#endif
-
-unsigned int aom_highbd_obmc_variance64x64_c(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-#if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance64x64_sse4_1(const uint8_t* pre,
- int pre_stride,
- const int32_t* wsrc,
- const int32_t* mask,
- unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance64x64)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance16x32)(const uint8_t* pre,
  int pre_stride,
  const int32_t* wsrc,
  const int32_t* mask,
  unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance64x64 aom_highbd_obmc_variance64x64_c
+#define aom_highbd_8_obmc_variance16x32 aom_highbd_8_obmc_variance16x32_c
 #endif
 
-unsigned int aom_highbd_obmc_variance8x16_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x4_c(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance8x16_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x4_sse4_1(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance8x16)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance16x4)(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance8x16 aom_highbd_obmc_variance8x16_c
+#define aom_highbd_8_obmc_variance16x4 aom_highbd_8_obmc_variance16x4_c
 #endif
 
-unsigned int aom_highbd_obmc_variance8x32_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x64_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance16x64_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance16x64)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance16x64 aom_highbd_8_obmc_variance16x64_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance16x8_c(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance8x32_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance16x8_sse4_1(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance8x32)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance16x8)(const uint8_t* pre,
 int pre_stride,
 const int32_t* wsrc,
 const int32_t* mask,
 unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance8x32 aom_highbd_obmc_variance8x32_c
+#define aom_highbd_8_obmc_variance16x8 aom_highbd_8_obmc_variance16x8_c
 #endif
 
-unsigned int aom_highbd_obmc_variance8x4_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance32x16_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance32x16_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance32x16)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance32x16 aom_highbd_8_obmc_variance32x16_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance32x32_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance32x32_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance32x32)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance32x32 aom_highbd_8_obmc_variance32x32_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance32x64_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance32x64_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance32x64)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance32x64 aom_highbd_8_obmc_variance32x64_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance32x8_c(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance32x8_sse4_1(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance32x8)(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance32x8 aom_highbd_8_obmc_variance32x8_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance4x16_c(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance4x16_sse4_1(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance4x16)(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance4x16 aom_highbd_8_obmc_variance4x16_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance4x4_c(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance8x4_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance4x4_sse4_1(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance8x4)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance4x4)(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance8x4 aom_highbd_obmc_variance8x4_c
+#define aom_highbd_8_obmc_variance4x4 aom_highbd_8_obmc_variance4x4_c
 #endif
 
-unsigned int aom_highbd_obmc_variance8x8_c(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance4x8_c(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
 #if defined(__SSE4_1__) && HAVE_SIMD
-unsigned int aom_highbd_obmc_variance8x8_sse4_1(const uint8_t* pre,
+unsigned int aom_highbd_8_obmc_variance4x8_sse4_1(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
-RTCD_EXTERN unsigned int (*aom_highbd_obmc_variance8x8)(const uint8_t* pre,
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance4x8)(const uint8_t* pre,
     int pre_stride,
     const int32_t* wsrc,
     const int32_t* mask,
     unsigned int* sse);
 #else
-#define aom_highbd_obmc_variance8x8 aom_highbd_obmc_variance8x8_c
+#define aom_highbd_8_obmc_variance4x8 aom_highbd_8_obmc_variance4x8_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance64x128_c(const uint8_t* pre,
+  int pre_stride,
+  const int32_t* wsrc,
+  const int32_t* mask,
+  unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance64x128_sse4_1(const uint8_t* pre,
+  int pre_stride,
+  const int32_t* wsrc,
+  const int32_t* mask,
+  unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance64x128)(const uint8_t* pre,
+  int pre_stride,
+  const int32_t* wsrc,
+  const int32_t* mask,
+  unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance64x128 aom_highbd_8_obmc_variance64x128_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance64x16_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance64x16_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance64x16)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance64x16 aom_highbd_8_obmc_variance64x16_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance64x32_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance64x32_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance64x32)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance64x32 aom_highbd_8_obmc_variance64x32_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance64x64_c(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance64x64_sse4_1(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance64x64)(const uint8_t* pre,
+ int pre_stride,
+ const int32_t* wsrc,
+ const int32_t* mask,
+ unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance64x64 aom_highbd_8_obmc_variance64x64_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance8x16_c(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance8x16_sse4_1(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance8x16)(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance8x16 aom_highbd_8_obmc_variance8x16_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance8x32_c(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance8x32_sse4_1(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance8x32)(const uint8_t* pre,
+int pre_stride,
+const int32_t* wsrc,
+const int32_t* mask,
+unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance8x32 aom_highbd_8_obmc_variance8x32_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance8x4_c(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance8x4_sse4_1(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance8x4)(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance8x4 aom_highbd_8_obmc_variance8x4_c
+#endif
+
+unsigned int aom_highbd_8_obmc_variance8x8_c(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+#if defined(__SSE4_1__) && HAVE_SIMD
+unsigned int aom_highbd_8_obmc_variance8x8_sse4_1(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+RTCD_EXTERN unsigned int (*aom_highbd_8_obmc_variance8x8)(const uint8_t* pre,
+    int pre_stride,
+    const int32_t* wsrc,
+    const int32_t* mask,
+    unsigned int* sse);
+#else
+#define aom_highbd_8_obmc_variance8x8 aom_highbd_8_obmc_variance8x8_c
 #endif
 
 void aom_highbd_paeth_predictor_16x16_c(uint16_t* dst,
@@ -13174,19 +14727,19 @@ void aom_highbd_sad128x128x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 RTCD_EXTERN void (*aom_highbd_sad128x128x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__AVX2__)
 void aom_highbd_sad128x128x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad128x128x4d aom_highbd_sad128x128x4d_c
@@ -13259,19 +14812,19 @@ void aom_highbd_sad128x64x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 RTCD_EXTERN void (*aom_highbd_sad128x64x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__AVX2__)
 void aom_highbd_sad128x64x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad128x64x4d aom_highbd_sad128x64x4d_c
@@ -13357,19 +14910,19 @@ void aom_highbd_sad16x16x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad16x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad16x16x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad16x16x4d_avx2(const uint8_t* src_ptr,
@@ -13462,26 +15015,26 @@ void aom_highbd_sad16x32x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad16x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad16x32x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad16x32x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad16x32x4d aom_highbd_sad16x32x4d_c
@@ -13567,26 +15120,26 @@ void aom_highbd_sad16x4x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad16x4x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad16x4x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad16x4x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad16x4x4d aom_highbd_sad16x4x4d_c
@@ -13672,26 +15225,26 @@ void aom_highbd_sad16x64x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad16x64x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad16x64x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad16x64x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad16x64x4d aom_highbd_sad16x64x4d_c
@@ -13777,26 +15330,26 @@ void aom_highbd_sad16x8x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad16x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad16x8x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad16x8x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad16x8x4d aom_highbd_sad16x8x4d_c
@@ -13882,26 +15435,26 @@ void aom_highbd_sad32x16x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad32x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad32x16x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad32x16x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad32x16x4d aom_highbd_sad32x16x4d_c
@@ -13987,26 +15540,26 @@ void aom_highbd_sad32x32x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad32x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad32x32x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad32x32x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad32x32x4d aom_highbd_sad32x32x4d_c
@@ -14092,26 +15645,26 @@ void aom_highbd_sad32x64x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad32x64x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad32x64x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad32x64x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad32x64x4d aom_highbd_sad32x64x4d_c
@@ -14197,26 +15750,26 @@ void aom_highbd_sad32x8x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad32x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad32x8x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad32x8x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad32x8x4d aom_highbd_sad32x8x4d_c
@@ -14263,13 +15816,13 @@ void aom_highbd_sad4x16x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad4x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad4x16x4d aom_highbd_sad4x16x4d_sse2
 #else
 #define aom_highbd_sad4x16x4d aom_highbd_sad4x16x4d_c
@@ -14316,13 +15869,13 @@ void aom_highbd_sad4x4x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad4x4x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad4x4x4d aom_highbd_sad4x4x4d_sse2
 #else
 #define aom_highbd_sad4x4x4d aom_highbd_sad4x4x4d_c
@@ -14369,13 +15922,13 @@ void aom_highbd_sad4x8x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad4x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad4x8x4d aom_highbd_sad4x8x4d_sse2
 #else
 #define aom_highbd_sad4x8x4d aom_highbd_sad4x8x4d_c
@@ -14448,19 +16001,19 @@ void aom_highbd_sad64x128x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 RTCD_EXTERN void (*aom_highbd_sad64x128x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__AVX2__)
 void aom_highbd_sad64x128x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad64x128x4d aom_highbd_sad64x128x4d_c
@@ -14546,26 +16099,26 @@ void aom_highbd_sad64x16x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad64x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad64x16x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad64x16x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad64x16x4d aom_highbd_sad64x16x4d_c
@@ -14651,26 +16204,26 @@ void aom_highbd_sad64x32x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad64x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad64x32x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad64x32x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad64x32x4d aom_highbd_sad64x32x4d_c
@@ -14756,26 +16309,26 @@ void aom_highbd_sad64x64x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_highbd_sad64x64x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 RTCD_EXTERN void (*aom_highbd_sad64x64x4d)(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #endif
 #if defined(__AVX2__)
 void aom_highbd_sad64x64x4d_avx2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);;
+     uint32_t sad_array[4]);
 #endif
 #else
 #define aom_highbd_sad64x64x4d aom_highbd_sad64x64x4d_c
@@ -14813,13 +16366,13 @@ void aom_highbd_sad8x16x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad8x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad8x16x4d aom_highbd_sad8x16x4d_sse2
 #else
 #define aom_highbd_sad8x16x4d aom_highbd_sad8x16x4d_c
@@ -14866,13 +16419,13 @@ void aom_highbd_sad8x32x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad8x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad8x32x4d aom_highbd_sad8x32x4d_sse2
 #else
 #define aom_highbd_sad8x32x4d aom_highbd_sad8x32x4d_c
@@ -14919,13 +16472,13 @@ void aom_highbd_sad8x4x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad8x4x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad8x4x4d aom_highbd_sad8x4x4d_sse2
 #else
 #define aom_highbd_sad8x4x4d aom_highbd_sad8x4x4d_c
@@ -14963,13 +16516,13 @@ void aom_highbd_sad8x8x4d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #if defined(__SSE2__) && HAVE_SIMD
 void aom_highbd_sad8x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[],
      int ref_stride,
-     uint32_t* sad_array);
+     uint32_t sad_array[4]);
 #define aom_highbd_sad8x8x4d aom_highbd_sad8x8x4d_sse2
 #else
 #define aom_highbd_sad8x8x4d aom_highbd_sad8x8x4d_c
@@ -18308,41 +19861,6 @@ RTCD_EXTERN void (*aom_masked_sad32x8x4d)(
 #else
 #define aom_masked_sad32x8x4d aom_masked_sad32x8x4d_c
 #endif
-
-/*void aom_masked_sad4x32x4d_c(
-    const uint8_t* src,
-    int src_stride,
-    const uint8_t* ref[4],
-    int ref_stride,
-    const uint8_t* second_pred,
-    const uint8_t* msk,
-    int msk_stride,
-    int invert_mask,
-    unsigned sads[4]);
-#if defined(__SSSE3__) && HAVE_SIMD
-void aom_masked_sad4x32x4d_ssse3(
-    const uint8_t* src,
-    int src_stride,
-    const uint8_t* ref[4],
-    int ref_stride,
-    const uint8_t* second_pred,
-    const uint8_t* msk,
-    int msk_stride,
-    int invert_mask,
-    unsigned sads[4]);
-RTCD_EXTERN void (*aom_masked_sad4x32x4d)(
-    const uint8_t* src,
-    int src_stride,
-    const uint8_t* ref[4],
-    int ref_stride,
-    const uint8_t* second_pred,
-    const uint8_t* msk,
-    int msk_stride,
-    int invert_mask,
-    unsigned sads[4]);
-#else
-#define aom_masked_sad4x32x4d aom_masked_sad4x32x4d_c
-#endif*/
 
 void aom_masked_sad4x16x4d_c(
     const uint8_t* src,
@@ -21749,24 +23267,6 @@ void aom_sad128x128x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad128x128x4d aom_sad128x128x4d_c
 #endif
 
-void aom_sad128x128x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad128x128x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad128x128x4d_avg aom_sad128x128x4d_avg_sse2
-#else
-#define aom_sad128x128x4d_avg aom_sad128x128x4d_avg_c
-#endif
-
 unsigned int aom_sad128x64_c(const uint8_t* src_ptr,
    int src_stride,
    const uint8_t* ref_ptr,
@@ -21872,24 +23372,6 @@ void aom_sad128x64x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad128x64x4d aom_sad128x64x4d_c
 #endif
 
-void aom_sad128x64x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad128x64x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad128x64x4d_avg aom_sad128x64x4d_avg_sse2
-#else
-#define aom_sad128x64x4d_avg aom_sad128x64x4d_avg_c
-#endif
-
 unsigned int aom_sad16x16_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -21969,24 +23451,6 @@ void aom_sad16x16x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad16x16x4d aom_sad16x16x4d_c
-#endif
-
-void aom_sad16x16x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad16x16x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad16x16x4d_avg aom_sad16x16x4d_avg_sse2
-#else
-#define aom_sad16x16x4d_avg aom_sad16x16x4d_avg_c
 #endif
 
 unsigned int aom_sad16x32_c(const uint8_t* src_ptr,
@@ -22070,24 +23534,6 @@ void aom_sad16x32x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad16x32x4d aom_sad16x32x4d_c
 #endif
 
-void aom_sad16x32x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad16x32x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad16x32x4d_avg aom_sad16x32x4d_avg_sse2
-#else
-#define aom_sad16x32x4d_avg aom_sad16x32x4d_avg_c
-#endif
-
 unsigned int aom_sad16x4_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -22152,24 +23598,6 @@ void aom_sad16x4x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad16x4x4d aom_sad16x4x4d_c
-#endif
-
-void aom_sad16x4x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad16x4x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad16x4x4d_avg aom_sad16x4x4d_avg_sse2
-#else
-#define aom_sad16x4x4d_avg aom_sad16x4x4d_avg_c
 #endif
 
 unsigned int aom_sad16x64_c(const uint8_t* src_ptr,
@@ -22253,24 +23681,6 @@ void aom_sad16x64x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad16x64x4d aom_sad16x64x4d_c
 #endif
 
-void aom_sad16x64x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad16x64x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad16x64x4d_avg aom_sad16x64x4d_avg_sse2
-#else
-#define aom_sad16x64x4d_avg aom_sad16x64x4d_avg_c
-#endif
-
 unsigned int aom_sad16x8_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -22350,24 +23760,6 @@ void aom_sad16x8x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad16x8x4d aom_sad16x8x4d_c
-#endif
-
-void aom_sad16x8x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad16x8x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad16x8x4d_avg aom_sad16x8x4d_avg_sse2
-#else
-#define aom_sad16x8x4d_avg aom_sad16x8x4d_avg_c
 #endif
 
 unsigned int aom_sad32x16_c(const uint8_t* src_ptr,
@@ -22475,24 +23867,6 @@ void aom_sad32x16x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad32x16x4d aom_sad32x16x4d_c
 #endif
 
-void aom_sad32x16x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad32x16x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad32x16x4d_avg aom_sad32x16x4d_avg_sse2
-#else
-#define aom_sad32x16x4d_avg aom_sad32x16x4d_avg_c
-#endif
-
 unsigned int aom_sad32x32_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -22596,24 +23970,6 @@ void aom_sad32x32x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad32x32x4d aom_sad32x32x4d_c
-#endif
-
-void aom_sad32x32x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad32x32x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad32x32x4d_avg aom_sad32x32x4d_avg_sse2
-#else
-#define aom_sad32x32x4d_avg aom_sad32x32x4d_avg_c
 #endif
 
 unsigned int aom_sad32x64_c(const uint8_t* src_ptr,
@@ -22721,24 +24077,6 @@ void aom_sad32x64x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad32x64x4d aom_sad32x64x4d_c
 #endif
 
-void aom_sad32x64x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad32x64x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad32x64x4d_avg aom_sad32x64x4d_avg_sse2
-#else
-#define aom_sad32x64x4d_avg aom_sad32x64x4d_avg_c
-#endif
-
 unsigned int aom_sad32x8_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -22820,24 +24158,6 @@ void aom_sad32x8x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad32x8x4d aom_sad32x8x4d_c
 #endif
 
-void aom_sad32x8x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad32x8x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad32x8x4d_avg aom_sad32x8x4d_avg_sse2
-#else
-#define aom_sad32x8x4d_avg aom_sad32x8x4d_avg_c
-#endif
-
 unsigned int aom_sad4x16_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -22868,40 +24188,6 @@ unsigned int aom_sad4x16_avg_sse2(const uint8_t* src_ptr,
 #define aom_sad4x16_avg aom_sad4x16_avg_c
 #endif
 
-void aom_sad4x32x4d_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad4x32x4d_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     uint32_t sad_array[4]);
-#define aom_sad4x32x4d aom_sad4x32x4d_sse2
-#else
-#define aom_sad4x32x4d aom_sad4x32x4d_c
-#endif
-
-void aom_sad4x32x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad4x32x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad4x32x4d_avg aom_sad4x32x4d_avg_sse2
-#else
-#define aom_sad4x32x4d_avg aom_sad4x32x4d_avg_c
-#endif
-
 /*void aom_sad4x16x3d_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[4],
@@ -22923,24 +24209,6 @@ void aom_sad4x16x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad4x16x4d aom_sad4x16x4d_sse2
 #else
 #define aom_sad4x16x4d aom_sad4x16x4d_c
-#endif
-
-void aom_sad4x16x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad4x16x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad4x16x4d_avg aom_sad4x16x4d_avg_sse2
-#else
-#define aom_sad4x16x4d_avg aom_sad4x16x4d_avg_c
 #endif
 
 unsigned int aom_sad4x4_c(const uint8_t* src_ptr,
@@ -22996,24 +24264,6 @@ void aom_sad4x4x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad4x4x4d aom_sad4x4x4d_c
 #endif
 
-void aom_sad4x4x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad4x4x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad4x4x4d_avg aom_sad4x4x4d_avg_sse2
-#else
-#define aom_sad4x4x4d_avg aom_sad4x4x4d_avg_c
-#endif
-
 unsigned int aom_sad4x8_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23065,24 +24315,6 @@ void aom_sad4x8x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad4x8x4d aom_sad4x8x4d_sse2
 #else
 #define aom_sad4x8x4d aom_sad4x8x4d_c
-#endif
-
-void aom_sad4x8x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad4x8x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad4x8x4d_avg aom_sad4x8x4d_avg_sse2
-#else
-#define aom_sad4x8x4d_avg aom_sad4x8x4d_avg_c
 #endif
 
 unsigned int aom_sad64x128_c(const uint8_t* src_ptr,
@@ -23190,24 +24422,6 @@ void aom_sad64x128x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad64x128x4d aom_sad64x128x4d_c
 #endif
 
-void aom_sad64x128x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad64x128x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad64x128x4d_avg aom_sad64x128x4d_avg_sse2
-#else
-#define aom_sad64x128x4d_avg aom_sad64x128x4d_avg_c
-#endif
-
 unsigned int aom_sad64x16_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23287,24 +24501,6 @@ void aom_sad64x16x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad64x16x4d aom_sad64x16x4d_c
-#endif
-
-void aom_sad64x16x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad64x16x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad64x16x4d_avg aom_sad64x16x4d_avg_sse2
-#else
-#define aom_sad64x16x4d_avg aom_sad64x16x4d_avg_c
 #endif
 
 unsigned int aom_sad64x32_c(const uint8_t* src_ptr,
@@ -23412,24 +24608,6 @@ void aom_sad64x32x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad64x32x4d aom_sad64x32x4d_c
 #endif
 
-void aom_sad64x32x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad64x32x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad64x32x4d_avg aom_sad64x32x4d_avg_sse2
-#else
-#define aom_sad64x32x4d_avg aom_sad64x32x4d_avg_c
-#endif
-
 unsigned int aom_sad64x64_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23535,24 +24713,6 @@ void aom_sad64x64x4d_avx2(const uint8_t* src_ptr,
 #define aom_sad64x64x4d aom_sad64x64x4d_c
 #endif
 
-void aom_sad64x64x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad64x64x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad64x64x4d_avg aom_sad64x64x4d_avg_sse2
-#else
-#define aom_sad64x64x4d_avg aom_sad64x64x4d_avg_c
-#endif
-
 unsigned int aom_sad8x16_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23604,24 +24764,6 @@ void aom_sad8x16x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad8x16x4d aom_sad8x16x4d_sse2
 #else
 #define aom_sad8x16x4d aom_sad8x16x4d_c
-#endif
-
-void aom_sad8x16x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad8x16x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad8x16x4d_avg aom_sad8x16x4d_avg_sse2
-#else
-#define aom_sad8x16x4d_avg aom_sad8x16x4d_avg_c
 #endif
 
 unsigned int aom_sad8x32_c(const uint8_t* src_ptr,
@@ -23677,24 +24819,6 @@ void aom_sad8x32x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad8x32x4d aom_sad8x32x4d_c
 #endif
 
-void aom_sad8x32x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad8x32x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad8x32x4d_avg aom_sad8x32x4d_avg_sse2
-#else
-#define aom_sad8x32x4d_avg aom_sad8x32x4d_avg_c
-#endif
-
 unsigned int aom_sad8x4_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23748,24 +24872,6 @@ void aom_sad8x4x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad8x4x4d aom_sad8x4x4d_c
 #endif
 
-void aom_sad8x4x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad8x4x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad8x4x4d_avg aom_sad8x4x4d_avg_sse2
-#else
-#define aom_sad8x4x4d_avg aom_sad8x4x4d_avg_c
-#endif
-
 unsigned int aom_sad8x8_c(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* ref_ptr,
@@ -23817,24 +24923,6 @@ void aom_sad8x8x4d_sse2(const uint8_t* src_ptr,
 #define aom_sad8x8x4d aom_sad8x8x4d_sse2
 #else
 #define aom_sad8x8x4d aom_sad8x8x4d_c
-#endif
-
-void aom_sad8x8x4d_avg_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad8x8x4d_avg_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     const uint8_t* second_pred,
-     uint32_t sad_array[4]);
-#define aom_sad8x8x4d_avg aom_sad8x8x4d_avg_sse2
-#else
-#define aom_sad8x8x4d_avg aom_sad8x8x4d_avg_c
 #endif
 
 unsigned int aom_sad_skip_128x128_c(const uint8_t* src_ptr,
@@ -24333,22 +25421,6 @@ void aom_sad_skip_32x8x4d_avx2(const uint8_t* src_ptr,
 #endif
 #else
 #define aom_sad_skip_32x8x4d aom_sad_skip_32x8x4d_c
-#endif
-
-void aom_sad_skip_4x32x4d_c(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_sad_skip_4x32x4d_sse2(const uint8_t* src_ptr,
-     int src_stride,
-     const uint8_t* const ref_ptr[4],
-     int ref_stride,
-     uint32_t sad_array[4]);
-#define aom_sad_skip_4x32x4d aom_sad_skip_4x32x4d_sse2
-#else
-#define aom_sad_skip_4x32x4d aom_sad_skip_4x32x4d_c
 #endif
 
 unsigned int aom_sad_skip_4x16_c(const uint8_t* src_ptr,
@@ -26735,20 +27807,6 @@ int ref_stride,
 unsigned int* sse);
 #define aom_variance16x8 aom_variance16x8_c
 
-unsigned int aom_variance2x2_c(const uint8_t* src_ptr,
-int source_stride,
-const uint8_t* ref_ptr,
-int ref_stride,
-unsigned int* sse);
-#define aom_variance2x2 aom_variance2x2_c
-
-unsigned int aom_variance2x4_c(const uint8_t* src_ptr,
-int source_stride,
-const uint8_t* ref_ptr,
-int ref_stride,
-unsigned int* sse);
-#define aom_variance2x4 aom_variance2x4_c
-
 unsigned int aom_variance32x16_c(const uint8_t* src_ptr,
  int source_stride,
  const uint8_t* ref_ptr,
@@ -26783,13 +27841,6 @@ const uint8_t* ref_ptr,
 int ref_stride,
 unsigned int* sse);
 #define aom_variance4x16 aom_variance4x16_c
-
-unsigned int aom_variance4x2_c(const uint8_t* src_ptr,
-int source_stride,
-const uint8_t* ref_ptr,
-int ref_stride,
-unsigned int* sse);
-#define aom_variance4x2 aom_variance4x2_c
 
 unsigned int aom_variance4x4_c(const uint8_t* src_ptr,
 int source_stride,
@@ -27179,7 +28230,6 @@ static void setup_rtcd_internal(void) {
   aom_masked_sad8x16x4d = aom_masked_sad8x16x4d_c;
   aom_masked_sad8x8x4d = aom_masked_sad8x8x4d_c;
   aom_masked_sad8x4x4d = aom_masked_sad8x4x4d_c;
-  //aom_masked_sad4x32x4d = aom_masked_sad4x32x4d_c;
   aom_masked_sad4x16x4d = aom_masked_sad4x16x4d_c;
   aom_masked_sad4x8x4d = aom_masked_sad4x8x4d_c;
   aom_masked_sad4x4x4d = aom_masked_sad4x4x4d_c;
@@ -27564,7 +28614,6 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) aom_masked_sad8x16x4d = aom_masked_sad8x16x4d_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sad8x8x4d = aom_masked_sad8x8x4d_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sad8x4x4d = aom_masked_sad8x4x4d_ssse3;
-  //if (flags & HAS_SSSE3) aom_masked_sad4x32x4d = aom_masked_sad4x32x4d_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sad4x16x4d = aom_masked_sad4x16x4d_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sad4x8x4d = aom_masked_sad4x8x4d_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sad4x4x4d = aom_masked_sad4x4x4d_ssse3;
@@ -27912,28 +28961,28 @@ static void setup_rtcd_internal(void) {
   aom_highbd_obmc_sad4x16 = aom_highbd_obmc_sad4x16_c;
   aom_highbd_obmc_sad4x8 = aom_highbd_obmc_sad4x8_c;
   aom_highbd_obmc_sad4x4 = aom_highbd_obmc_sad4x4_c;
-  aom_highbd_obmc_variance128x128 = aom_highbd_obmc_variance128x128_c;
-  aom_highbd_obmc_variance128x64 = aom_highbd_obmc_variance128x64_c;
-  aom_highbd_obmc_variance64x128 = aom_highbd_obmc_variance64x128_c;
-  aom_highbd_obmc_variance64x64 = aom_highbd_obmc_variance64x64_c;
-  aom_highbd_obmc_variance64x32 = aom_highbd_obmc_variance64x32_c;
-  aom_highbd_obmc_variance64x16 = aom_highbd_obmc_variance64x16_c;
-  aom_highbd_obmc_variance32x64 = aom_highbd_obmc_variance32x64_c;
-  aom_highbd_obmc_variance32x32 = aom_highbd_obmc_variance32x32_c;
-  aom_highbd_obmc_variance32x16 = aom_highbd_obmc_variance32x16_c;
-  aom_highbd_obmc_variance32x8 = aom_highbd_obmc_variance32x8_c;
-  aom_highbd_obmc_variance16x64 = aom_highbd_obmc_variance16x64_c;
-  aom_highbd_obmc_variance16x32 = aom_highbd_obmc_variance16x32_c;
-  aom_highbd_obmc_variance16x16 = aom_highbd_obmc_variance16x16_c;
-  aom_highbd_obmc_variance16x8 = aom_highbd_obmc_variance16x8_c;
-  aom_highbd_obmc_variance16x4 = aom_highbd_obmc_variance16x4_c;
-  aom_highbd_obmc_variance8x32 = aom_highbd_obmc_variance8x32_c;
-  aom_highbd_obmc_variance8x16 = aom_highbd_obmc_variance8x16_c;
-  aom_highbd_obmc_variance8x8 = aom_highbd_obmc_variance8x8_c;
-  aom_highbd_obmc_variance8x4 = aom_highbd_obmc_variance8x4_c;
-  aom_highbd_obmc_variance4x16 = aom_highbd_obmc_variance4x16_c;
-  aom_highbd_obmc_variance4x8 = aom_highbd_obmc_variance4x8_c;
-  aom_highbd_obmc_variance4x4 = aom_highbd_obmc_variance4x4_c;
+  aom_highbd_8_obmc_variance128x128 = aom_highbd_8_obmc_variance128x128_c;
+  aom_highbd_8_obmc_variance128x64 = aom_highbd_8_obmc_variance128x64_c;
+  aom_highbd_8_obmc_variance64x128 = aom_highbd_8_obmc_variance64x128_c;
+  aom_highbd_8_obmc_variance64x64 = aom_highbd_8_obmc_variance64x64_c;
+  aom_highbd_8_obmc_variance64x32 = aom_highbd_8_obmc_variance64x32_c;
+  aom_highbd_8_obmc_variance64x16 = aom_highbd_8_obmc_variance64x16_c;
+  aom_highbd_8_obmc_variance32x64 = aom_highbd_8_obmc_variance32x64_c;
+  aom_highbd_8_obmc_variance32x32 = aom_highbd_8_obmc_variance32x32_c;
+  aom_highbd_8_obmc_variance32x16 = aom_highbd_8_obmc_variance32x16_c;
+  aom_highbd_8_obmc_variance32x8 = aom_highbd_8_obmc_variance32x8_c;
+  aom_highbd_8_obmc_variance16x64 = aom_highbd_8_obmc_variance16x64_c;
+  aom_highbd_8_obmc_variance16x32 = aom_highbd_8_obmc_variance16x32_c;
+  aom_highbd_8_obmc_variance16x16 = aom_highbd_8_obmc_variance16x16_c;
+  aom_highbd_8_obmc_variance16x8 = aom_highbd_8_obmc_variance16x8_c;
+  aom_highbd_8_obmc_variance16x4 = aom_highbd_8_obmc_variance16x4_c;
+  aom_highbd_8_obmc_variance8x32 = aom_highbd_8_obmc_variance8x32_c;
+  aom_highbd_8_obmc_variance8x16 = aom_highbd_8_obmc_variance8x16_c;
+  aom_highbd_8_obmc_variance8x8 = aom_highbd_8_obmc_variance8x8_c;
+  aom_highbd_8_obmc_variance8x4 = aom_highbd_8_obmc_variance8x4_c;
+  aom_highbd_8_obmc_variance4x16 = aom_highbd_8_obmc_variance4x16_c;
+  aom_highbd_8_obmc_variance4x8 = aom_highbd_8_obmc_variance4x8_c;
+  aom_highbd_8_obmc_variance4x4 = aom_highbd_8_obmc_variance4x4_c;
   aom_highbd_10_obmc_variance128x128 = aom_highbd_10_obmc_variance128x128_c;
   aom_highbd_10_obmc_variance128x64 = aom_highbd_10_obmc_variance128x64_c;
   aom_highbd_10_obmc_variance64x128 = aom_highbd_10_obmc_variance64x128_c;
@@ -28096,6 +29145,19 @@ static void setup_rtcd_internal(void) {
   aom_highbd_sad16x16x4d = aom_highbd_sad16x16x4d_sse2;
   aom_highbd_sad16x8x4d = aom_highbd_sad16x8x4d_sse2;
   aom_highbd_sad16x4x4d = aom_highbd_sad16x4x4d_sse2;
+  aom_highbd_10_sub_pixel_variance128x128 = aom_highbd_10_sub_pixel_variance128x128_sse2;
+  aom_highbd_10_sub_pixel_variance128x64 = aom_highbd_10_sub_pixel_variance128x64_sse2;
+  aom_highbd_10_sub_pixel_variance64x128 = aom_highbd_10_sub_pixel_variance64x128_sse2;
+  aom_highbd_10_sub_pixel_variance64x64 = aom_highbd_10_sub_pixel_variance64x64_sse2;
+  aom_highbd_10_sub_pixel_variance64x32 = aom_highbd_10_sub_pixel_variance64x32_sse2;
+  aom_highbd_10_sub_pixel_variance32x64 = aom_highbd_10_sub_pixel_variance32x64_sse2;
+  aom_highbd_10_sub_pixel_variance32x32 = aom_highbd_10_sub_pixel_variance32x32_sse2;
+  aom_highbd_10_sub_pixel_variance32x16 = aom_highbd_10_sub_pixel_variance32x16_sse2;
+  aom_highbd_10_sub_pixel_variance16x32 = aom_highbd_10_sub_pixel_variance16x32_sse2;
+  aom_highbd_10_sub_pixel_variance16x16 = aom_highbd_10_sub_pixel_variance16x16_sse2;
+  aom_highbd_10_sub_pixel_variance16x8 = aom_highbd_10_sub_pixel_variance16x8_sse2;
+  aom_highbd_10_sub_pixel_variance8x16 = aom_highbd_10_sub_pixel_variance8x16_sse2;
+  aom_highbd_10_sub_pixel_variance8x8 = aom_highbd_10_sub_pixel_variance8x8_sse2;
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
   if (flags & HAS_SSSE3) aom_highbd_masked_sad128x128 = aom_highbd_masked_sad128x128_ssse3;
@@ -28152,28 +29214,28 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1) aom_highbd_obmc_sad4x16 = aom_highbd_obmc_sad4x16_sse4_1;
   if (flags & HAS_SSE4_1) aom_highbd_obmc_sad4x8 = aom_highbd_obmc_sad4x8_sse4_1;
   if (flags & HAS_SSE4_1) aom_highbd_obmc_sad4x4 = aom_highbd_obmc_sad4x4_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance128x128 = aom_highbd_obmc_variance128x128_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance128x64 = aom_highbd_obmc_variance128x64_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance64x128 = aom_highbd_obmc_variance64x128_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance64x64 = aom_highbd_obmc_variance64x64_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance64x32 = aom_highbd_obmc_variance64x32_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance64x16 = aom_highbd_obmc_variance64x16_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance32x64 = aom_highbd_obmc_variance32x64_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance32x32 = aom_highbd_obmc_variance32x32_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance32x16 = aom_highbd_obmc_variance32x16_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance32x8 = aom_highbd_obmc_variance32x8_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance16x64 = aom_highbd_obmc_variance16x64_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance16x32 = aom_highbd_obmc_variance16x32_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance16x16 = aom_highbd_obmc_variance16x16_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance16x8 = aom_highbd_obmc_variance16x8_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance16x4 = aom_highbd_obmc_variance16x4_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance8x32 = aom_highbd_obmc_variance8x32_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance8x16 = aom_highbd_obmc_variance8x16_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance8x8 = aom_highbd_obmc_variance8x8_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance8x4 = aom_highbd_obmc_variance8x4_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance4x16 = aom_highbd_obmc_variance4x16_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance4x8 = aom_highbd_obmc_variance4x8_sse4_1;
-  if (flags & HAS_SSE4_1) aom_highbd_obmc_variance4x4 = aom_highbd_obmc_variance4x4_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance128x128 = aom_highbd_8_obmc_variance128x128_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance128x64 = aom_highbd_8_obmc_variance128x64_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance64x128 = aom_highbd_8_obmc_variance64x128_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance64x64 = aom_highbd_8_obmc_variance64x64_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance64x32 = aom_highbd_8_obmc_variance64x32_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance64x16 = aom_highbd_8_obmc_variance64x16_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance32x64 = aom_highbd_8_obmc_variance32x64_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance32x32 = aom_highbd_8_obmc_variance32x32_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance32x16 = aom_highbd_8_obmc_variance32x16_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance32x8 = aom_highbd_8_obmc_variance32x8_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance16x64 = aom_highbd_8_obmc_variance16x64_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance16x32 = aom_highbd_8_obmc_variance16x32_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance16x16 = aom_highbd_8_obmc_variance16x16_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance16x8 = aom_highbd_8_obmc_variance16x8_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance16x4 = aom_highbd_8_obmc_variance16x4_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance8x32 = aom_highbd_8_obmc_variance8x32_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance8x16 = aom_highbd_8_obmc_variance8x16_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance8x8 = aom_highbd_8_obmc_variance8x8_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance8x4 = aom_highbd_8_obmc_variance8x4_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance4x16 = aom_highbd_8_obmc_variance4x16_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance4x8 = aom_highbd_8_obmc_variance4x8_sse4_1;
+  if (flags & HAS_SSE4_1) aom_highbd_8_obmc_variance4x4 = aom_highbd_8_obmc_variance4x4_sse4_1;
   if (flags & HAS_SSE4_1) aom_highbd_10_obmc_variance128x128 = aom_highbd_10_obmc_variance128x128_sse4_1;
   if (flags & HAS_SSE4_1) aom_highbd_10_obmc_variance128x64 = aom_highbd_10_obmc_variance128x64_sse4_1;
   if (flags & HAS_SSE4_1) aom_highbd_10_obmc_variance64x128 = aom_highbd_10_obmc_variance64x128_sse4_1;
@@ -28366,6 +29428,19 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_highbd_sad16x16x4d = aom_highbd_sad16x16x4d_avx2;
   if (flags & HAS_AVX2) aom_highbd_sad16x8x4d = aom_highbd_sad16x8x4d_avx2;
   if (flags & HAS_AVX2) aom_highbd_sad16x4x4d = aom_highbd_sad16x4x4d_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance128x128 = aom_highbd_10_sub_pixel_variance128x128_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance128x64 = aom_highbd_10_sub_pixel_variance128x64_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance64x128 = aom_highbd_10_sub_pixel_variance64x128_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance64x64 = aom_highbd_10_sub_pixel_variance64x64_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance64x32 = aom_highbd_10_sub_pixel_variance64x32_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance32x64 = aom_highbd_10_sub_pixel_variance32x64_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance32x32 = aom_highbd_10_sub_pixel_variance32x32_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance32x16 = aom_highbd_10_sub_pixel_variance32x16_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance16x32 = aom_highbd_10_sub_pixel_variance16x32_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance16x16 = aom_highbd_10_sub_pixel_variance16x16_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance16x8 = aom_highbd_10_sub_pixel_variance16x8_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance8x16 = aom_highbd_10_sub_pixel_variance8x16_avx2;
+  if (flags & HAS_AVX2) aom_highbd_10_sub_pixel_variance8x8 = aom_highbd_10_sub_pixel_variance8x8_avx2;
 #endif
 #endif // CONFIG_AV1_HIGHBITDEPTH
 

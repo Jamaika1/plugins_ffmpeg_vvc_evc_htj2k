@@ -1321,6 +1321,10 @@ static int64_t motion_mode_rd(
   const int mi_row = xd->mi_row;
   const int mi_col = xd->mi_col;
   int mode_index_start, mode_index_end;
+  const int txfm_rd_gate_level =
+      get_txfm_rd_gate_level(cpi->sf.inter_sf.txfm_rd_gate_level, bsize,
+                             TX_SEARCH_MOTION_MODE, eval_motion_mode);
+
   // Modify the start and end index according to speed features. For example,
   // if SIMPLE_TRANSLATION has already been searched according to
   // the motion_mode_for_winner_cand speed feature, update the mode_index_start
@@ -1524,7 +1528,7 @@ static int64_t motion_mode_rd(
       if (rd_stats->rdcost < *best_est_rd) {
         *best_est_rd = rd_stats->rdcost;
         assert(sse_y >= 0);
-        ref_skip_rd[1] = cpi->sf.inter_sf.txfm_rd_gate_level
+        ref_skip_rd[1] = txfm_rd_gate_level
                              ? RDCOST(x->rdmult, mode_rate, (sse_y << 4))
                              : INT64_MAX;
       }
@@ -1546,14 +1550,14 @@ static int64_t motion_mode_rd(
       // Perform full transform search
       int64_t skip_rd = INT64_MAX;
       int64_t skip_rdy = INT64_MAX;
-      if (cpi->sf.inter_sf.txfm_rd_gate_level) {
+      if (txfm_rd_gate_level) {
         // Check if the mode is good enough based on skip RD
         int64_t sse_y = INT64_MAX;
         int64_t curr_sse = get_sse(cpi, x, &sse_y);
         skip_rd = RDCOST(x->rdmult, rd_stats->rate, curr_sse);
         skip_rdy = RDCOST(x->rdmult, rd_stats->rate, (sse_y << 4));
         int eval_txfm = check_txfm_eval(x, bsize, ref_skip_rd[0], skip_rd,
-                                        cpi->sf.inter_sf.txfm_rd_gate_level, 0);
+                                        txfm_rd_gate_level, 0);
         if (!eval_txfm) continue;
       }
 
@@ -1636,34 +1640,41 @@ static int64_t motion_mode_rd(
 
 static int64_t skip_mode_rd(RD_STATS *rd_stats, const AV1_COMP *const cpi,
                             MACROBLOCK *const x, BLOCK_SIZE bsize,
-                            const BUFFER_SET *const orig_dst) {
+                            const BUFFER_SET *const orig_dst, int64_t best_rd) {
   assert(bsize < BLOCK_SIZES_ALL);
   const AV1_COMMON *cm = &cpi->common;
   const int num_planes = av1_num_planes(cm);
   MACROBLOCKD *const xd = &x->e_mbd;
   const int mi_row = xd->mi_row;
   const int mi_col = xd->mi_col;
-  av1_enc_build_inter_predictor(cm, xd, mi_row, mi_col, orig_dst, bsize, 0,
-                                av1_num_planes(cm) - 1);
-
   int64_t total_sse = 0;
+  int64_t this_rd = INT64_MAX;
+  const int skip_mode_ctx = av1_get_skip_mode_context(xd);
+  rd_stats->rate = x->mode_costs.skip_mode_cost[skip_mode_ctx][1];
+
   for (int plane = 0; plane < num_planes; ++plane) {
-    const struct macroblock_plane *const p = &x->plane[plane];
+    // Call av1_enc_build_inter_predictor() for one plane at a time.
+    av1_enc_build_inter_predictor(cm, xd, mi_row, mi_col, orig_dst, bsize,
+                                  plane, plane);
     const struct macroblockd_plane *const pd = &xd->plane[plane];
     const BLOCK_SIZE plane_bsize =
         get_plane_block_size(bsize, pd->subsampling_x, pd->subsampling_y);
-    const int bw = block_size_wide[plane_bsize];
-    const int bh = block_size_high[plane_bsize];
 
     av1_subtract_plane(x, plane_bsize, plane);
-    int64_t sse = aom_sum_squares_2d_i16(p->src_diff, bw, bw, bh) << 4;
-    sse >>= ((cpi->frame_info.bit_depth - 8) * 2);
+
+    int64_t sse =
+        av1_pixel_diff_dist(x, plane, 0, 0, plane_bsize, plane_bsize, NULL);
+    if (is_cur_buf_hbd(xd)) sse = ROUND_POWER_OF_TWO(sse, (xd->bd - 8) * 2);
+    sse <<= 4;
     total_sse += sse;
+    // When current rd cost is more than the best rd, skip evaluation of
+    // remaining planes.
+    this_rd = RDCOST(x->rdmult, rd_stats->rate, total_sse);
+    if (this_rd > best_rd) break;
   }
-  const int skip_mode_ctx = av1_get_skip_mode_context(xd);
+
   rd_stats->dist = rd_stats->sse = total_sse;
-  rd_stats->rate = x->mode_costs.skip_mode_cost[skip_mode_ctx][1];
-  rd_stats->rdcost = RDCOST(x->rdmult, rd_stats->rate, rd_stats->dist);
+  rd_stats->rdcost = this_rd;
 
   restore_dst_buf(xd, *orig_dst, num_planes);
   return 0;
@@ -1753,9 +1764,16 @@ static INLINE int get_this_mv(int_mv *this_mv, PREDICTION_MODE this_mode,
 // population
 static INLINE int skip_nearest_near_mv_using_refmv_weight(
     const MACROBLOCK *const x, const PREDICTION_MODE this_mode,
-    const int8_t ref_frame_type) {
+    const int8_t ref_frame_type, PREDICTION_MODE best_mode) {
   if (this_mode != NEARESTMV && this_mode != NEARMV) return 0;
+  // Do not skip the mode if the current block has not yet obtained a valid
+  // inter mode.
+  if (!is_inter_mode(best_mode)) return 0;
 
+  const MACROBLOCKD *xd = &x->e_mbd;
+  // Do not skip the mode if both the top and left neighboring blocks are not
+  // available.
+  if (!xd->left_available || !xd->up_available) return 0;
   const MB_MODE_INFO_EXT *const mbmi_ext = &x->mbmi_ext;
   const uint16_t *const ref_mv_weight = mbmi_ext->weight[ref_frame_type];
   const int ref_mv_count =
@@ -2037,6 +2055,9 @@ static int ref_mv_idx_to_search(AV1_COMP *const cpi, MACROBLOCK *x,
                                 HandleInterModeArgs *const args,
                                 int64_t ref_best_rd, BLOCK_SIZE bsize,
                                 const int ref_set) {
+  // If the number of ref mv count is equal to 1, do not prune the same. It
+  // is better to evaluate the same than to prune it.
+  if (ref_set == 1) return 1;
   AV1_COMMON *const cm = &cpi->common;
   const MACROBLOCKD *const xd = &x->e_mbd;
   const MB_MODE_INFO *const mbmi = xd->mi[0];
@@ -2815,17 +2836,6 @@ static int64_t handle_inter_mode(
   const int base_rate =
       args->ref_frame_cost + args->single_comp_cost + ref_mv_cost;
 
-  // As per the experiments, in real-time preset impact of model rd based
-  // breakouts is less on encoding time if the following conditions are true.
-  //    (1) compound mode is disabled
-  //    (2) interpolation filter search is disabled
-  // TODO(any): Check the impact of model rd based breakouts in other presets
-  const int skip_interp_search_modelrd_calc =
-      cpi->oxcf.mode == REALTIME &&
-      cm->current_frame.reference_mode == SINGLE_REFERENCE &&
-      (cpi->sf.rt_sf.skip_interp_filter_search ||
-       cpi->sf.winner_mode_sf.winner_mode_ifs);
-
   for (i = 0; i < MAX_REF_MV_SEARCH - 1; ++i) {
     save_mv[i][0].as_int = INVALID_MV;
     save_mv[i][1].as_int = INVALID_MV;
@@ -2975,7 +2985,7 @@ static int64_t handle_inter_mode(
       if (not_best_mode) continue;
     }
 
-    if (!skip_interp_search_modelrd_calc) {
+    if (!args->skip_ifs) {
 #if CONFIG_COLLECT_COMPONENT_TIMING
       start_timing(cpi, interpolation_filter_search_time);
 #endif
@@ -3170,10 +3180,14 @@ static int64_t rd_pick_intrabc_mode_sb(const AV1_COMP *cpi, MACROBLOCK *x,
   av1_copy_array(best_tx_type_map, xd->tx_type_map, ctx->num_4x4_blk);
 
   FULLPEL_MOTION_SEARCH_PARAMS fullms_params;
+  const SEARCH_METHODS search_method =
+      av1_get_default_mv_search_method(x, &cpi->sf.mv_sf, bsize);
   const search_site_config *lookahead_search_sites =
       cpi->mv_search_params.search_site_cfg[SS_CFG_LOOKAHEAD];
+  const FULLPEL_MV start_mv = get_fullmv_from_mv(&dv_ref.as_mv);
   av1_make_default_fullpel_ms_params(&fullms_params, cpi, x, bsize,
-                                     &dv_ref.as_mv, lookahead_search_sites,
+                                     &dv_ref.as_mv, start_mv,
+                                     lookahead_search_sites, search_method,
                                      /*fine_search_interval=*/0);
   const IntraBCMVCosts *const dv_costs = x->dv_costs;
   av1_set_ms_to_intra_mode(&fullms_params, dv_costs);
@@ -3220,12 +3234,13 @@ static int64_t rd_pick_intrabc_mode_sb(const AV1_COMP *cpi, MACROBLOCK *x,
     }
 
     const int step_param = cpi->mv_search_params.mv_step_param;
-    const FULLPEL_MV start_mv = get_fullmv_from_mv(&dv_ref.as_mv);
     IntraBCHashInfo *intrabc_hash_info = &x->intrabc_hash_info;
     int_mv best_mv, best_hash_mv;
+    FULLPEL_MV_STATS best_mv_stats;
 
-    int bestsme = av1_full_pixel_search(start_mv, &fullms_params, step_param,
-                                        NULL, &best_mv.as_fullmv, NULL);
+    int bestsme =
+        av1_full_pixel_search(start_mv, &fullms_params, step_param, NULL,
+                              &best_mv.as_fullmv, &best_mv_stats, NULL);
     const int hashsme = av1_intrabc_hash_search(
         cpi, xd, &fullms_params, intrabc_hash_info, &best_hash_mv.as_fullmv);
     if (hashsme < bestsme) {
@@ -3453,9 +3468,6 @@ static AOM_INLINE void rd_pick_skip_mode(
     orig_dst.stride[i] = xd->plane[i].dst.stride;
   }
 
-  // Obtain the rdcost for skip_mode.
-  skip_mode_rd(&skip_mode_rd_stats, cpi, x, bsize, &orig_dst);
-
   // Compare the use of skip_mode with the best intra/inter mode obtained.
   const int skip_mode_ctx = av1_get_skip_mode_context(xd);
   int64_t best_intra_inter_mode_cost = INT64_MAX;
@@ -3468,6 +3480,10 @@ static AOM_INLINE void rd_pick_skip_mode(
     rd_cost->rate += mode_costs->skip_mode_cost[skip_mode_ctx][0];
     av1_rd_cost_update(x->rdmult, rd_cost);
   }
+
+  // Obtain the rdcost for skip_mode.
+  skip_mode_rd(&skip_mode_rd_stats, cpi, x, bsize, &orig_dst,
+               best_intra_inter_mode_cost);
 
   if (skip_mode_rd_stats.rdcost <= best_intra_inter_mode_cost &&
       (!xd->lossless[mbmi->segment_id] || skip_mode_rd_stats.dist == 0)) {
@@ -4975,8 +4991,16 @@ static int skip_inter_mode(AV1_COMP *cpi, MACROBLOCK *x, const BLOCK_SIZE bsize,
   *(args->skip_motion_mode) = (ret == 2);
 
   // We've reached the first compound prediction mode, get stats from the
-  // single reference predictors to help with pruning
-  if (sf->inter_sf.prune_comp_search_by_single_result > 0 && comp_pred &&
+  // single reference predictors to help with pruning.
+  // Disable this pruning logic if interpolation filter search was skipped for
+  // single prediction modes as it can result in aggressive pruning of compound
+  // prediction modes due to the absence of modelled_rd populated by
+  // av1_interpolation_filter_search().
+  // TODO(Remya): Check the impact of the sf
+  // 'prune_comp_search_by_single_result' if compound prediction modes are
+  // enabled in future for REALTIME encode.
+  if (!sf->interp_sf.skip_interp_filter_search &&
+      sf->inter_sf.prune_comp_search_by_single_result > 0 && comp_pred &&
       args->reach_first_comp_mode == 0) {
     analyze_single_states(cpi, args->search_state);
     args->reach_first_comp_mode = 1;
@@ -4994,7 +5018,8 @@ static int skip_inter_mode(AV1_COMP *cpi, MACROBLOCK *x, const BLOCK_SIZE bsize,
 
   // Skip this compound mode based on the RD results from the single prediction
   // modes
-  if (sf->inter_sf.prune_comp_search_by_single_result > 0 && comp_pred) {
+  if (!sf->interp_sf.skip_interp_filter_search &&
+      sf->inter_sf.prune_comp_search_by_single_result > 0 && comp_pred) {
     if (compound_skip_by_single_states(cpi, args->search_state, this_mode,
                                        ref_frame, second_ref_frame, x))
       return 1;
@@ -5036,8 +5061,14 @@ static int skip_inter_mode(AV1_COMP *cpi, MACROBLOCK *x, const BLOCK_SIZE bsize,
 
   if (sf->inter_sf.prune_nearest_near_mv_using_refmv_weight && !comp_pred) {
     const int8_t ref_frame_type = av1_ref_frame_type(ref_frames);
-    if (skip_nearest_near_mv_using_refmv_weight(x, this_mode, ref_frame_type))
+    if (skip_nearest_near_mv_using_refmv_weight(
+            x, this_mode, ref_frame_type,
+            args->search_state->best_mbmode.mode)) {
+      // Ensure the mode is pruned only when the current block has obtained a
+      // valid inter mode.
+      assert(is_inter_mode(args->search_state->best_mbmode.mode));
       return 1;
+    }
   }
 
   if (sf->rt_sf.prune_inter_modes_with_golden_ref &&
@@ -5176,13 +5207,15 @@ static void tx_search_best_inter_candidates(
     RD_STATS rd_stats_uv;
     const int mode_rate = inter_modes_info->mode_rate_arr[data_idx];
     int64_t skip_rd = INT64_MAX;
-    if (cpi->sf.inter_sf.txfm_rd_gate_level) {
+    const int txfm_rd_gate_level = get_txfm_rd_gate_level(
+        cpi->sf.inter_sf.txfm_rd_gate_level, bsize, TX_SEARCH_DEFAULT,
+        /*eval_motion_mode=*/0);
+    if (txfm_rd_gate_level) {
       // Check if the mode is good enough based on skip RD
       int64_t curr_sse = inter_modes_info->sse_arr[data_idx];
       skip_rd = RDCOST(x->rdmult, mode_rate, curr_sse);
-      int eval_txfm =
-          check_txfm_eval(x, bsize, search_state->best_skip_rd[0], skip_rd,
-                          cpi->sf.inter_sf.txfm_rd_gate_level, 0);
+      int eval_txfm = check_txfm_eval(x, bsize, search_state->best_skip_rd[0],
+                                      skip_rd, txfm_rd_gate_level, 0);
       if (!eval_txfm) continue;
     }
 
@@ -5637,6 +5670,20 @@ static AOM_INLINE void skip_intra_modes_in_interframe(
   }
 }
 
+static AOM_INLINE bool skip_interp_filter_search(const AV1_COMP *cpi,
+                                                 int is_single_pred) {
+  const MODE encoding_mode = cpi->oxcf.mode;
+  if (encoding_mode == REALTIME) {
+    return (cpi->common.current_frame.reference_mode == SINGLE_REFERENCE &&
+            (cpi->sf.interp_sf.skip_interp_filter_search ||
+             cpi->sf.winner_mode_sf.winner_mode_ifs));
+  } else if (encoding_mode == GOOD) {
+    // Skip interpolation filter search for single prediction modes.
+    return (cpi->sf.interp_sf.skip_interp_filter_search && is_single_pred);
+  }
+  return false;
+}
+
 static AOM_INLINE int get_block_temp_var(const AV1_COMP *cpi,
                                          const MACROBLOCK *x,
                                          BLOCK_SIZE bsize) {
@@ -5699,9 +5746,11 @@ void av1_rd_pick_inter_mode(struct AV1_COMP *cpi, struct TileDataEnc *tile_data,
                                INT_MAX,
                                search_state.simple_rd,
                                0,
+                               false,
                                interintra_modes,
                                { { { 0 }, { { 0 } }, { 0 }, 0, 0, 0, 0 } },
                                { { 0, 0 } },
+                               { 0 },
                                0,
                                0,
                                -1,
@@ -5931,6 +5980,7 @@ void av1_rd_pick_inter_mode(struct AV1_COMP *cpi, struct TileDataEnc *tile_data,
     args.single_comp_cost = real_compmode_cost;
     args.ref_frame_cost = ref_frame_cost;
     args.best_pred_sse = search_state.best_pred_sse;
+    args.skip_ifs = skip_interp_filter_search(cpi, is_single_pred);
 
     int64_t skip_rd[2] = { search_state.best_skip_rd[0],
                            search_state.best_skip_rd[1] };
@@ -5947,7 +5997,8 @@ void av1_rd_pick_inter_mode(struct AV1_COMP *cpi, struct TileDataEnc *tile_data,
     end_timing(cpi, handle_inter_mode_time);
 #endif
     if (current_frame->reference_mode != SINGLE_REFERENCE) {
-      if (sf->inter_sf.prune_comp_search_by_single_result > 0 &&
+      if (!args.skip_ifs &&
+          sf->inter_sf.prune_comp_search_by_single_result > 0 &&
           is_inter_singleref_mode(this_mode)) {
         collect_single_states(x, &search_state, mbmi);
       }
@@ -5978,6 +6029,10 @@ void av1_rd_pick_inter_mode(struct AV1_COMP *cpi, struct TileDataEnc *tile_data,
       update_search_state(&search_state, rd_cost, ctx, &rd_stats, &rd_stats_y,
                           &rd_stats_uv, mode_enum, x, do_tx_search);
       if (do_tx_search) search_state.best_skip_rd[0] = skip_rd[0];
+      // skip_rd[0] is the best total rd for a skip mode so far.
+      // skip_rd[1] is the best total rd for a skip mode so far in luma.
+      // When do_tx_search = 1, both skip_rd[0] and skip_rd[1] are updated.
+      // When do_tx_search = 0, skip_rd[1] is updated.
       search_state.best_skip_rd[1] = skip_rd[1];
     }
     if (sf->winner_mode_sf.motion_mode_for_winner_cand) {
