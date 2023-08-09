@@ -33,6 +33,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "errors.h"
 #include "../libcelt/entenc.h"
 #include "../libcelt/entdec.h"
+#ifdef NEURAL_PLC
+#include "lpcnet/src/lpcnet_private.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -113,6 +116,9 @@ opus_int silk_Decode(                                   /* O    Returns error co
     ec_dec                          *psRangeDec,        /* I/O  Compressor data structure                       */
     opus_int16                      *samplesOut,        /* O    Decoded output speech vector                    */
     opus_int32                      *nSamplesOut,       /* O    Number of samples decoded                       */
+#ifdef NEURAL_PLC
+    LPCNetPLCState                  *lpcnet,
+#endif
     int                             arch                /* I    Run-time architecture                           */
 );
 

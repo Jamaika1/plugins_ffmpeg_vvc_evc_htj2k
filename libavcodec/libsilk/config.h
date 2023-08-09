@@ -29,13 +29,17 @@ POSSIBILITY OF SUCH DAMAGE.
 #define CONFIG_H
 
 #define USE_ALLOCA            1
+#define HAVE_STDINT_H         1
 
 /* Comment out the next line for floating-point code */
 #define FIXED_POINT           1
 
 #define OPUS_BUILD            1
 
-#define FEATURES              1
+#undef FEATURES
+#define FIX_PREFILTER 1
+#define FIX_ICDF16 1
+#define FIX_PACKET_PARSE 1
 
 #if defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
 /* Can always compile SSE intrinsics (no special compiler flags necessary) */
@@ -61,6 +65,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #endif
 
-#include "version.h"
+//#include "version.h"
 
 #endif /* CONFIG_H */
