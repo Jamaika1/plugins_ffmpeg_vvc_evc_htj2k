@@ -12,10 +12,10 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 
 #include "../enc/vp8i_enc.h"
-#include "../dsp/dsp.h"
 #include "../utils/utils.h"
 
 //------------------------------------------------------------------------------

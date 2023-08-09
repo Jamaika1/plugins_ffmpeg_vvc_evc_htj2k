@@ -16,9 +16,9 @@
 #ifndef WEBP_DSP_LOSSLESS_COMMON_H_
 #define WEBP_DSP_LOSSLESS_COMMON_H_
 
-#include "../webp/types.h"
-
+#include "../dsp/cpu.h"
 #include "../utils/utils.h"
+#include "../webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,7 +166,7 @@ uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
 }
 
 //------------------------------------------------------------------------------
-// Transform-related functions use din both encoding and decoding.
+// Transform-related functions used in both encoding and decoding.
 
 // Macros used to create a batch predictor that iteratively uses a
 // one-pixel predictor.
