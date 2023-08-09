@@ -59,6 +59,9 @@ sure both macros are undefined; an emulation function will then be used. */
 /* Define to 1 if you have the `bcopy' function. */
 #define HAVE_BCOPY 1
 
+/* Define this if your compiler provides __builtin_mul_overflow() */
+#define HAVE_BUILTIN_MUL_OVERFLOW 1
+
 /* Define to 1 if you have the <bzlib.h> header file. */
 #define HAVE_BZLIB_H 1
 
@@ -201,6 +204,10 @@ sure both macros are undefined; an emulation function will then be used. */
    overflow caused by enormously large patterns. */
 #define MAX_NAME_SIZE 32
 
+/* The value of MAX_VARLOOKBEHIND specifies the default maximum length, in
+   characters, for a variable-length lookbehind assertion. */
+#define MAX_VARLOOKBEHIND 255
+
 /* Defining NEVER_BACKSLASH_C locks out the use of \C in all patterns. */
 /* #undef NEVER_BACKSLASH_C */
 
@@ -220,7 +227,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_NAME "PCRE2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PCRE2 10.40"
+#define PACKAGE_STRING "PCRE2 10.43-3c93cdc"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pcre2"
@@ -229,7 +236,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "10.40"
+#define PACKAGE_VERSION "10.43-3c93cdc"
 
 /* The value of PARENS_NEST_LIMIT specifies the maximum depth of nested
    parentheses (of any kind) in a pattern. This limits the amount of system
@@ -250,32 +257,26 @@ sure both macros are undefined; an emulation function will then be used. */
    allows for the buffering of "before" and "after" lines. */
 #define PCRE2GREP_MAX_BUFSIZE 1048576
 
-/* to make a symbol visible */
-#define PCRE2POSIX_EXP_DECL extern __attribute__ ((visibility ("default")))
-
-/* to make a symbol visible */
-#define PCRE2POSIX_EXP_DEFN extern __attribute__ ((visibility ("default")))
-
 /* Define to any value to include debugging code. */
 /* #undef PCRE2_DEBUG */
 
 /* to make a symbol visible */
-#define PCRE2_EXP_DECL extern __attribute__ ((visibility ("default")))
-
+#define PCRE2_EXPORT
 
 /* If you are compiling for a system other than a Unix-like system or
    Win32, and it needs some magic to be inserted before the definition
    of a function that is exported by the library, define this macro to
    contain the relevant magic. If you do not define this macro, a suitable
     __declspec value is used for Windows systems; in other environments
-   "extern" is used for a C compiler and "extern C" for a C++ compiler.
+   a compiler relevant "extern" is used with any "visibility" related
+   attributes from PCRE2_EXPORT included.
    This macro apears at the start of every exported function that is part
    of the external API. It does not appear on functions that are "external"
    in the C sense, but which are internal to the library. */
-#define PCRE2_EXP_DEFN __attribute__ ((visibility ("default")))
+#define PCRE2_EXP_DEFN
 
 /* Define to any value if linking statically (TODO: make nice with Libtool) */
-/* #undef PCRE2_STATIC */
+#define PCRE2_STATIC 1
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
@@ -425,9 +426,8 @@ sure both macros are undefined; an emulation function will then be used. */
 /* # undef _XOPEN_SOURCE */
 #endif
 
-
 /* Version number of package */
-#define VERSION "10.40"
+#define VERSION "10.43-fb84d73"
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

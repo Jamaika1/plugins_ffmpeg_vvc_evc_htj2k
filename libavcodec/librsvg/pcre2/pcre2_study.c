@@ -7,7 +7,7 @@ and semantics are as close as possible to those of the Perl 5 language.
 
                        Written by Philip Hazel
      Original API code Copyright (c) 1997-2012 University of Cambridge
-          New API code Copyright (c) 2016-2021 University of Cambridge
+          New API code Copyright (c) 2016-2023 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -256,6 +256,7 @@ for (;;)
     /* Skip over things that don't match chars */
 
     case OP_REVERSE:
+    case OP_VREVERSE:
     case OP_CREF:
     case OP_DNCREF:
     case OP_RREF:
@@ -273,6 +274,8 @@ for (;;)
     case OP_DOLLM:
     case OP_NOT_WORD_BOUNDARY:
     case OP_WORD_BOUNDARY:
+    case OP_NOT_UCP_WORD_BOUNDARY:
+    case OP_UCP_WORD_BOUNDARY:
     cc += PRIV(OP_lengths)[*cc];
     break;
 
@@ -1054,6 +1057,7 @@ do
       case OP_REF:
       case OP_REFI:
       case OP_REVERSE:
+      case OP_VREVERSE:
       case OP_RREF:
       case OP_SCOND:
       case OP_SET_SOM:
@@ -1101,6 +1105,8 @@ do
 
       case OP_WORD_BOUNDARY:
       case OP_NOT_WORD_BOUNDARY:
+      case OP_UCP_WORD_BOUNDARY:
+      case OP_NOT_UCP_WORD_BOUNDARY:
       tcode++;
       break;
 
