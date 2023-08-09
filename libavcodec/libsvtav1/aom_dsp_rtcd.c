@@ -211,8 +211,8 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_AVX2(svt_aom_highbd_sse, svt_aom_highbd_sse_c, svt_aom_highbd_sse_avx2);
     SET_AVX2(svt_av1_wedge_compute_delta_squares, svt_av1_wedge_compute_delta_squares_c, svt_av1_wedge_compute_delta_squares_avx2);
     SET_SSE2_AVX2(svt_av1_wedge_sign_from_residuals, svt_av1_wedge_sign_from_residuals_c, svt_av1_wedge_sign_from_residuals_sse2, svt_av1_wedge_sign_from_residuals_avx2);
-    SET_SSE41_AVX2(svt_compute_cdef_dist_16bit, svt_aom_compute_cdef_dist_c, svt_aom_compute_cdef_dist_16bit_sse4_1, compute_cdef_dist_16bit_avx2);
-    SET_SSE41_AVX2(svt_compute_cdef_dist_8bit, svt_aom_compute_cdef_dist_8bit_c, svt_aom_compute_cdef_dist_8bit_sse4_1, compute_cdef_dist_8bit_avx2);
+    SET_SSE41_AVX2(svt_compute_cdef_dist_16bit, svt_aom_compute_cdef_dist_c, svt_aom_compute_cdef_dist_16bit_sse4_1, svt_aom_compute_cdef_dist_16bit_avx2);
+    SET_SSE41_AVX2(svt_compute_cdef_dist_8bit, svt_aom_compute_cdef_dist_8bit_c, svt_aom_compute_cdef_dist_8bit_sse4_1, svt_aom_compute_cdef_dist_8bit_avx2);
     SET_SSE41_AVX2(svt_av1_highbd_pixel_proj_error, svt_av1_highbd_pixel_proj_error_c, svt_av1_highbd_pixel_proj_error_sse4_1, svt_av1_highbd_pixel_proj_error_avx2);
     SET_AVX2(svt_av1_calc_frame_error, svt_av1_calc_frame_error_c, svt_av1_calc_frame_error_avx2);
     SET_AVX2(svt_subtract_average, svt_subtract_average_c, svt_subtract_average_avx2);
@@ -398,21 +398,11 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_AVX2(svt_aom_ifft8x8_float, svt_aom_ifft8x8_float_c, svt_aom_ifft8x8_float_avx2);
     SET_AVX2(svt_av1_get_gradient_hist, svt_av1_get_gradient_hist_c, svt_av1_get_gradient_hist_avx2);
     SET_SSE2_AVX2(svt_av1_get_nz_map_contexts, svt_av1_get_nz_map_contexts_c, svt_av1_get_nz_map_contexts_sse2, svt_av1_get_nz_map_contexts_avx2);
-#if !CLN_TF
-    SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise, svt_av1_apply_temporal_filter_planewise_c, svt_av1_apply_temporal_filter_planewise_sse4_1, svt_av1_apply_temporal_filter_planewise_avx2);
-    SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise_hbd, svt_av1_apply_temporal_filter_planewise_hbd_c, svt_av1_apply_temporal_filter_planewise_hbd_sse4_1, svt_av1_apply_temporal_filter_planewise_hbd_avx2);
-#endif
-#if OPT_LD_TF
     SET_SSE41_AVX2(svt_av1_apply_zz_based_temporal_filter_planewise_medium, svt_av1_apply_zz_based_temporal_filter_planewise_medium_c, svt_av1_apply_zz_based_temporal_filter_planewise_medium_sse4_1, svt_av1_apply_zz_based_temporal_filter_planewise_medium_avx2);
     SET_SSE41_AVX2(svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd, svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_c, svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_sse4_1, svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_avx2);
-#endif
     SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise_medium, svt_av1_apply_temporal_filter_planewise_medium_c, svt_av1_apply_temporal_filter_planewise_medium_sse4_1, svt_av1_apply_temporal_filter_planewise_medium_avx2);
     SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise_medium_hbd, svt_av1_apply_temporal_filter_planewise_medium_hbd_c, svt_av1_apply_temporal_filter_planewise_medium_hbd_sse4_1, svt_av1_apply_temporal_filter_planewise_medium_hbd_avx2);
-#if !CLN_TF
-    SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise_fast, svt_av1_apply_temporal_filter_planewise_fast_c, svt_av1_apply_temporal_filter_planewise_fast_sse4_1, svt_av1_apply_temporal_filter_planewise_fast_avx2);
-    SET_SSE41_AVX2(svt_av1_apply_temporal_filter_planewise_fast_hbd, svt_av1_apply_temporal_filter_planewise_fast_hbd_c, svt_av1_apply_temporal_filter_planewise_fast_hbd_sse4_1, svt_av1_apply_temporal_filter_planewise_fast_hbd_avx2);
-#endif
-    SET_SSE41_AVX2(get_final_filtered_pixels, svt_aom_get_final_filtered_pixels_c, svt_aom_get_final_filtered_pixels_sse4_1, get_final_filtered_pixels_avx2);
+    SET_SSE41_AVX2(get_final_filtered_pixels, svt_aom_get_final_filtered_pixels_c, svt_aom_get_final_filtered_pixels_sse4_1, svt_aom_get_final_filtered_pixels_avx2);
     SET_SSE41_AVX2(apply_filtering_central, svt_aom_apply_filtering_central_c, svt_aom_apply_filtering_central_sse4_1, svt_aom_apply_filtering_central_avx2);
     SET_SSE41_AVX2(apply_filtering_central_highbd, svt_aom_apply_filtering_central_highbd_c, svt_aom_apply_filtering_central_highbd_sse4_1, svt_aom_apply_filtering_central_highbd_avx2);
     SET_SSE41_AVX2(downsample_2d, svt_aom_downsample_2d_c, svt_aom_downsample_2d_sse4_1, svt_aom_downsample_2d_avx2);
@@ -435,10 +425,6 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_SSE41_AVX2(svt_unpack_and_2bcompress, svt_unpack_and_2bcompress_c, svt_unpack_and_2bcompress_sse4_1, svt_unpack_and_2bcompress_avx2);
     SET_AVX2(svt_estimate_noise_fp16, svt_estimate_noise_fp16_c, svt_estimate_noise_fp16_avx2);
     SET_AVX2(svt_estimate_noise_highbd_fp16, svt_estimate_noise_highbd_fp16_c, svt_estimate_noise_highbd_fp16_avx2);
-#if !CLN_TF
-    SET_AVX2(svt_estimate_noise, svt_estimate_noise_c, svt_estimate_noise_avx2);
-    SET_AVX2(svt_estimate_noise_highbd, svt_estimate_noise_highbd_c, svt_estimate_noise_highbd_avx2);
-#endif
     SET_AVX2(svt_copy_mi_map_grid, svt_copy_mi_map_grid_c, svt_copy_mi_map_grid_avx2);
     SET_AVX2(svt_av1_add_block_observations_internal, svt_av1_add_block_observations_internal_c, svt_av1_add_block_observations_internal_avx2);
     SET_AVX2(svt_av1_pointwise_multiply, svt_av1_pointwise_multiply_c, svt_av1_pointwise_multiply_avx2);
@@ -454,6 +440,12 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_AVX2(svt_av1_highbd_resize_plane, svt_av1_highbd_resize_plane_c, svt_av1_highbd_resize_plane_avx2);
     SET_AVX2(svt_av1_resize_plane, svt_av1_resize_plane_c, svt_av1_resize_plane_avx2);
     SET_AVX2(svt_av1_compute_cul_level, svt_av1_compute_cul_level_c, svt_av1_compute_cul_level_avx2);
+#if TUNE_SSIM_FULL_SPACIAL_DIST
+    SET_AVX2(svt_ssim_8x8, svt_ssim_8x8_c, svt_ssim_8x8_avx2);
+    SET_AVX2(svt_ssim_4x4, svt_ssim_4x4_c, svt_ssim_4x4_avx2);
+    SET_AVX2(svt_ssim_8x8_hbd, svt_ssim_8x8_hbd_c, svt_ssim_8x8_hbd_avx2);
+    SET_AVX2(svt_ssim_4x4_hbd, svt_ssim_4x4_hbd_c, svt_ssim_4x4_hbd_avx2);
+#endif
 
     SET_FUNCTIONS(svt_aom_sub_pixel_variance16x16, svt_aom_sub_pixel_variance16x16_c, NULL, NULL, svt_aom_sub_pixel_variance16x16_sse2, NULL, svt_aom_sub_pixel_variance16x16_ssse3, NULL, NULL, NULL, svt_aom_sub_pixel_variance16x16_avx2, NULL);
     SET_FUNCTIONS(svt_aom_sub_pixel_variance16x32, svt_aom_sub_pixel_variance16x32_c, NULL, NULL, svt_aom_sub_pixel_variance16x32_sse2, NULL, svt_aom_sub_pixel_variance16x32_ssse3, NULL, NULL, NULL, svt_aom_sub_pixel_variance16x32_avx2, NULL);
@@ -592,20 +584,10 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_SSE41(svt_av1_fwd_txfm2d_32x64_N4, svt_av1_fwd_txfm2d_32x64_N4_c, svt_av1_fwd_txfm2d_32x64_N4_sse4_1);
     SET_SSE41(svt_av1_fwd_txfm2d_64x16_N4, svt_av1_fwd_txfm2d_64x16_N4_c, svt_av1_fwd_txfm2d_64x16_N4_sse4_1);
     SET_SSE41(svt_av1_fwd_txfm2d_64x32_N4, svt_av1_fwd_txfm2d_64x32_N4_c, svt_av1_fwd_txfm2d_64x32_N4_sse4_1);
-#if !CLN_TF
-    SET_SSE41(svt_av1_apply_temporal_filter_planewise, svt_av1_apply_temporal_filter_planewise_c, svt_av1_apply_temporal_filter_planewise_sse4_1);
-    SET_SSE41(svt_av1_apply_temporal_filter_planewise_hbd, svt_av1_apply_temporal_filter_planewise_hbd_c, svt_av1_apply_temporal_filter_planewise_hbd_sse4_1);
-#endif
-#if OPT_LD_TF
     SET_SSE41(svt_av1_apply_zz_based_temporal_filter_planewise_medium, svt_av1_apply_zz_based_temporal_filter_planewise_medium_c, svt_av1_apply_zz_based_temporal_filter_planewise_medium_sse4_1);
     SET_SSE41(svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd, svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_c, svt_av1_apply_zz_based_temporal_filter_planewise_medium_hbd_sse4_1);
-#endif
     SET_SSE41(svt_av1_apply_temporal_filter_planewise_medium, svt_av1_apply_temporal_filter_planewise_medium_c, svt_av1_apply_temporal_filter_planewise_medium_sse4_1);
     SET_SSE41(svt_av1_apply_temporal_filter_planewise_medium_hbd, svt_av1_apply_temporal_filter_planewise_medium_hbd_c, svt_av1_apply_temporal_filter_planewise_medium_hbd_sse4_1);
-#if !CLN_TF
-    SET_SSE41(svt_av1_apply_temporal_filter_planewise_fast, svt_av1_apply_temporal_filter_planewise_fast_c, svt_av1_apply_temporal_filter_planewise_fast_sse4_1);
-    SET_SSE41(svt_av1_apply_temporal_filter_planewise_fast_hbd, svt_av1_apply_temporal_filter_planewise_fast_hbd_c, svt_av1_apply_temporal_filter_planewise_fast_hbd_sse4_1);
-#endif
     SET_SSE41(get_final_filtered_pixels, svt_aom_get_final_filtered_pixels_c, svt_aom_get_final_filtered_pixels_sse4_1);
     SET_SSE41(apply_filtering_central, svt_aom_apply_filtering_central_c, svt_aom_apply_filtering_central_sse4_1);
     SET_SSE41(apply_filtering_central_highbd, svt_aom_apply_filtering_central_highbd_c, svt_aom_apply_filtering_central_highbd_sse4_1);
@@ -732,10 +714,6 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_ONLY_C(svt_av1_haar_ac_sad_8x8_uint8_input, svt_av1_haar_ac_sad_8x8_uint8_input_c);
     SET_ONLY_C(svt_estimate_noise_fp16, svt_estimate_noise_fp16_c);
     SET_ONLY_C(svt_estimate_noise_highbd_fp16, svt_estimate_noise_highbd_fp16_c);
-#if !CLN_TF
-    SET_ONLY_C(svt_estimate_noise, svt_estimate_noise_c);
-    SET_ONLY_C(svt_estimate_noise_highbd, svt_estimate_noise_highbd_c);
-#endif
     SET_ONLY_C(svt_copy_mi_map_grid, svt_copy_mi_map_grid_c);
     SET_ONLY_C(svt_av1_add_block_observations_internal, svt_av1_add_block_observations_internal_c);
     SET_ONLY_C(svt_av1_pointwise_multiply, svt_av1_pointwise_multiply_c);
@@ -751,6 +729,12 @@ void svt_aom_setup_rtcd_internal(EbCpuFlags flags) {
     SET_ONLY_C(svt_av1_highbd_resize_plane, svt_av1_highbd_resize_plane_c);
     SET_ONLY_C(svt_av1_resize_plane, svt_av1_resize_plane_c);
     SET_ONLY_C(svt_av1_compute_cul_level, svt_av1_compute_cul_level_c);
+#if TUNE_SSIM_FULL_SPACIAL_DIST
+    SET_ONLY_C(svt_ssim_8x8, svt_ssim_8x8_c);
+    SET_ONLY_C(svt_ssim_4x4, svt_ssim_4x4_c);
+    SET_ONLY_C(svt_ssim_8x8_hbd, svt_ssim_8x8_hbd_c);
+    SET_ONLY_C(svt_ssim_4x4_hbd, svt_ssim_4x4_hbd_c);
+#endif
 
     SET_FUNCTIONS(svt_aom_sub_pixel_variance16x16, svt_aom_sub_pixel_variance16x16_c, NULL, NULL, svt_aom_sub_pixel_variance16x16_sse2, NULL, svt_aom_sub_pixel_variance16x16_ssse3, NULL, NULL, NULL, NULL, NULL);
     SET_FUNCTIONS(svt_aom_sub_pixel_variance16x32, svt_aom_sub_pixel_variance16x32_c, NULL, NULL, svt_aom_sub_pixel_variance16x32_sse2, NULL, svt_aom_sub_pixel_variance16x32_ssse3, NULL, NULL, NULL, NULL, NULL);
