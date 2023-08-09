@@ -611,7 +611,7 @@ static INLINE void init_encode_rd_sb(AV1_COMP *cpi, ThreadData *td,
       }
 
       // TODO(jingning): revisit this function.
-      if (cpi->oxcf.algo_cfg.enable_tpl_model && 0) {
+      if (cpi->oxcf.algo_cfg.enable_tpl_model && (0)) {
         adjust_rdmult_tpl_model(cpi, x, mi_row, mi_col);
       }
     }
@@ -1097,6 +1097,7 @@ static AOM_INLINE void encode_sb_row(AV1_COMP *cpi, ThreadData *td,
   const int mib_size_log2 = cm->seq_params->mib_size_log2;
   const int sb_row = (mi_row - tile_info->mi_row_start) >> mib_size_log2;
   const int use_nonrd_mode = cpi->sf.rt_sf.use_nonrd_pick_mode;
+  bool row_mt_exit = false;
 
 #if CONFIG_COLLECT_COMPONENT_TIMING
   start_timing(cpi, encode_sb_row_time);
@@ -1124,6 +1125,17 @@ static AOM_INLINE void encode_sb_row(AV1_COMP *cpi, ThreadData *td,
     // top-right superblock to finish encoding.
     enc_row_mt->sync_read_ptr(
         row_mt_sync, sb_row, sb_col_in_tile - delay_wait_for_top_right_sb(cpi));
+
+#if CONFIG_MULTITHREAD
+    if (row_mt_enabled) {
+      pthread_mutex_lock(enc_row_mt->mutex_);
+      row_mt_exit = enc_row_mt->row_mt_exit;
+      pthread_mutex_unlock(enc_row_mt->mutex_);
+    }
+#endif
+    // Exit in case any worker has encountered an error.
+    if (row_mt_exit) return;
+
     const int update_cdf = tile_data->allow_update_cdf && row_mt_enabled;
     if (update_cdf && (tile_info->mi_row_start != mi_row)) {
       if ((tile_info->mi_col_start == mi_col)) {
@@ -1871,11 +1883,12 @@ static AOM_INLINE void encode_frame_internal(AV1_COMP *cpi) {
     // base_qindex
     cm->delta_q_info.delta_q_present_flag &= quant_params->base_qindex > 0;
     cm->delta_q_info.delta_lf_present_flag &= quant_params->base_qindex > 0;
-  } else {
+  } else if (cpi->cyclic_refresh->apply_cyclic_refresh ||
+             cpi->svc.number_temporal_layers == 1) {
     cpi->cyclic_refresh->actual_num_seg1_blocks = 0;
     cpi->cyclic_refresh->actual_num_seg2_blocks = 0;
-    cpi->rc.cnt_zeromv = 0;
   }
+  cpi->rc.cnt_zeromv = 0;
 
   av1_frame_init_quantizer(cpi);
   init_encode_frame_mb_context(cpi);

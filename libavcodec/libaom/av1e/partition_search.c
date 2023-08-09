@@ -40,7 +40,6 @@
 #endif
 
 #define COLLECT_MOTION_SEARCH_FEATURE_SB 0
-#define ML_PARTITION_WHOLE_TREE_DECISION 0
 
 void av1_reset_part_sf(PARTITION_SPEED_FEATURES *part_sf) {
   part_sf->partition_search_type = SEARCH_PARTITION;
@@ -73,6 +72,7 @@ void av1_reset_part_sf(PARTITION_SPEED_FEATURES *part_sf) {
   part_sf->intra_cnn_based_part_prune_level = 0;
   part_sf->ext_partition_eval_thresh = BLOCK_8X8;
   part_sf->rect_partition_eval_thresh = BLOCK_128X128;
+  part_sf->ext_part_eval_based_on_cur_best = 0;
   part_sf->prune_ext_part_using_split_info = 0;
   part_sf->prune_rectangular_split_based_on_qidx = 0;
   part_sf->early_term_after_none_split = 0;
@@ -2319,7 +2319,9 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
     // Do not skip if intra or new mv is picked, or color sensitivity is set.
     // Never skip on slide/scene change.
     if (cpi->sf.rt_sf.skip_cdef_sb >= 2) {
-      mi_sb[0]->cdef_strength = mi_sb[0]->cdef_strength && allow_cdef_skipping;
+      mi_sb[0]->cdef_strength =
+          mi_sb[0]->cdef_strength &&
+          (allow_cdef_skipping || x->source_variance == 0);
     } else {
       mi_sb[0]->cdef_strength =
           mi_sb[0]->cdef_strength && allow_cdef_skipping &&
@@ -3880,6 +3882,41 @@ static void rd_pick_4partition(
                       blk_params.bsize, av1_num_planes(cm));
 }
 
+// Do not evaluate extended partitions if NONE partition is skippable.
+static INLINE int prune_ext_part_none_skippable(
+    PICK_MODE_CONTEXT *part_none, int must_find_valid_partition,
+    int skip_non_sq_part_based_on_none, int bsize) {
+  if ((skip_non_sq_part_based_on_none >= 1) && (part_none != NULL)) {
+    if (part_none->skippable && !must_find_valid_partition &&
+        bsize >= BLOCK_16X16) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+// Allow ab partition search
+static int allow_ab_partition_search(PartitionSearchState *part_search_state,
+                                     PARTITION_SPEED_FEATURES *part_sf,
+                                     PARTITION_TYPE curr_best_part,
+                                     int must_find_valid_partition,
+                                     int prune_ext_part_state) {
+  const PartitionBlkParams blk_params = part_search_state->part_blk_params;
+  const int bsize = blk_params.bsize;
+
+  // Determine min bsize to evaluate ab partitions
+  int ab_min_bsize_allowed = part_sf->ext_partition_eval_thresh;
+  if (part_sf->ext_part_eval_based_on_cur_best && !must_find_valid_partition &&
+      !(curr_best_part == PARTITION_HORZ || curr_best_part == PARTITION_VERT))
+    ab_min_bsize_allowed = BLOCK_128X128;
+
+  int ab_partition_allowed =
+      part_search_state->do_rectangular_split && bsize > ab_min_bsize_allowed &&
+      av1_blk_has_rows_and_cols(&blk_params) && !prune_ext_part_state;
+
+  return ab_partition_allowed;
+}
+
 // Prune 4-way partitions based on the number of horz/vert wins
 // in the current block and sub-blocks in PARTITION_SPLIT.
 static void prune_4_partition_using_split_info(
@@ -3913,9 +3950,21 @@ static void prune_4_partition_using_split_info(
 static void prune_4_way_partition_search(
     AV1_COMP *const cpi, MACROBLOCK *x, PC_TREE *pc_tree,
     PartitionSearchState *part_search_state, RD_STATS *best_rdc,
-    int pb_source_variance, int ext_partition_allowed,
+    int pb_source_variance, int prune_ext_part_state,
     int part4_search_allowed[NUM_PART4_TYPES]) {
-  PartitionBlkParams blk_params = part_search_state->part_blk_params;
+  const PartitionBlkParams blk_params = part_search_state->part_blk_params;
+  const int bsize = blk_params.bsize;
+
+  // Determine min bsize to evaluate 4-way partitions
+  int part4_min_bsize_allowed = cpi->sf.part_sf.ext_partition_eval_thresh;
+  if (cpi->sf.part_sf.ext_part_eval_based_on_cur_best &&
+      !x->must_find_valid_partition && pc_tree->partitioning == PARTITION_NONE)
+    part4_min_bsize_allowed = BLOCK_128X128;
+
+  bool partition4_allowed = part_search_state->do_rectangular_split &&
+                            bsize > part4_min_bsize_allowed &&
+                            av1_blk_has_rows_and_cols(&blk_params) &&
+                            !prune_ext_part_state;
 
   // Disable 4-way partition search flags for width less than a multiple of the
   // minimum partition width.
@@ -3926,17 +3975,15 @@ static void prune_4_way_partition_search(
     return;
   }
 
-  const int bsize = blk_params.bsize;
   PARTITION_TYPE cur_part[NUM_PART4_TYPES] = { PARTITION_HORZ_4,
                                                PARTITION_VERT_4 };
   const PartitionCfg *const part_cfg = &cpi->oxcf.part_cfg;
   // partition4_allowed is 1 if we can use a PARTITION_HORZ_4 or
   // PARTITION_VERT_4 for this block. This is almost the same as
-  // ext_partition_allowed, except that we don't allow 128x32 or 32x128
+  // partition4_allowed, except that we don't allow 128x32 or 32x128
   // blocks, so we require that bsize is not BLOCK_128X128.
-  const int partition4_allowed = part_cfg->enable_1to4_partitions &&
-                                 ext_partition_allowed &&
-                                 bsize != BLOCK_128X128;
+  partition4_allowed &=
+      part_cfg->enable_1to4_partitions && bsize != BLOCK_128X128;
 
   for (PART4_TYPES i = HORZ4; i < NUM_PART4_TYPES; i++) {
     part4_search_allowed[i] =
@@ -4398,6 +4445,7 @@ static void write_partition_tree(AV1_COMP *const cpi,
   fclose(pfile);
 }
 
+#if CONFIG_PARTITION_SEARCH_ORDER
 static void verify_write_partition_tree(const AV1_COMP *const cpi,
                                         const PC_TREE *const pc_tree,
                                         const BLOCK_SIZE bsize,
@@ -4462,14 +4510,15 @@ static void verify_write_partition_tree(const AV1_COMP *const cpi,
 
 static int read_partition_tree(AV1_COMP *const cpi, PC_TREE *const pc_tree,
                                const int config_id) {
+  const AV1_COMMON *const cm = &cpi->common;
   const char *path = cpi->oxcf.partition_info_path;
   char filename[256];
   snprintf(filename, sizeof(filename), "%s/partition_tree_sb%d_c%d", path,
            cpi->sb_counter, config_id);
   FILE *pfile = fopen(filename, "r");
   if (pfile == NULL) {
-    printf("Can't find the file: %s\n", filename);
-    exit(0);
+    aom_internal_error(cm->error, AOM_CODEC_ERROR, "Can't find input file: %s.",
+                       filename);
   }
 
   int read_bsize;
@@ -4629,7 +4678,9 @@ static RD_STATS rd_search_for_fixed_partition(
       best_rdc.dist = sum_subblock_dist;
       best_rdc.rdcost = RDCOST(x->rdmult, best_rdc.rate, best_rdc.dist);
       break;
-    default: assert(0 && "invalid partition type."); exit(0);
+    default:
+      assert(0 && "invalid partition type.");
+      aom_internal_error(cm->error, AOM_CODEC_ERROR, "Invalid partition type.");
   }
   // Note: it is necessary to restore context information.
   av1_restore_context(x, &x_ctx, mi_row, mi_col, bsize, num_planes);
@@ -5071,6 +5122,7 @@ bool av1_rd_partition_search(AV1_COMP *const cpi, ThreadData *td,
                              SIMPLE_MOTION_DATA_TREE *sms_root, int mi_row,
                              int mi_col, const BLOCK_SIZE bsize,
                              RD_STATS *best_rd_cost) {
+  AV1_COMMON *const cm = &cpi->common;
   if (cpi->ext_part_controller.ready) {
     bool valid_search = true;
     const aom_ext_part_decision_mode_t decision_mode =
@@ -5086,13 +5138,13 @@ bool av1_rd_partition_search(AV1_COMP *const cpi, ThreadData *td,
       return false;
     }
     if (!valid_search) {
-      assert(0 && "Invalid search from ML model, partition search failed.");
-      exit(0);
+      aom_internal_error(
+          cm->error, AOM_CODEC_ERROR,
+          "Invalid search from ML model, partition search failed");
     }
     return true;
   }
 
-  AV1_COMMON *const cm = &cpi->common;
   MACROBLOCK *const x = &td->mb;
   int best_idx = 0;
   int64_t min_rdcost = INT64_MAX;
@@ -5109,8 +5161,7 @@ bool av1_rd_partition_search(AV1_COMP *const cpi, ThreadData *td,
       av1_free_pc_tree_recursive(pc_tree, av1_num_planes(cm), 0, 0,
                                  cpi->sf.part_sf.partition_search_type);
       if (rdcost != NULL) aom_free(rdcost);
-      exit(0);
-      return false;
+      aom_internal_error(cm->error, AOM_CODEC_ERROR, "Invalid configs.");
     }
     verify_write_partition_tree(cpi, pc_tree, bsize, i, mi_row, mi_col);
     // Encode the block with the given partition tree. Get rdcost and encoding
@@ -5143,6 +5194,7 @@ bool av1_rd_partition_search(AV1_COMP *const cpi, ThreadData *td,
 
   return true;
 }
+#endif  // CONFIG_PARTITION_SEARCH_ORDER
 
 static AOM_INLINE bool should_do_dry_run_encode_for_current_block(
     BLOCK_SIZE sb_size, BLOCK_SIZE max_partition_size, int curr_block_index,
@@ -5488,25 +5540,21 @@ BEGIN_PARTITION_SEARCH:
   assert(IMPLIES(!cpi->oxcf.part_cfg.enable_rect_partitions,
                  !part_search_state.do_rectangular_split));
 
-  int ext_partition_allowed =
-      part_search_state.do_rectangular_split &&
-      bsize > cpi->sf.part_sf.ext_partition_eval_thresh &&
-      av1_blk_has_rows_and_cols(&blk_params);
+  const int prune_ext_part_state = prune_ext_part_none_skippable(
+      pc_tree->none, x->must_find_valid_partition,
+      cpi->sf.part_sf.skip_non_sq_part_based_on_none, bsize);
 
-  // Do not evaluate extended partitions if NONE partition is skippable.
-  if ((cpi->sf.part_sf.skip_non_sq_part_based_on_none >= 1) &&
-      (pc_tree->none != NULL)) {
-    if (pc_tree->none->skippable && !x->must_find_valid_partition &&
-        bsize >= BLOCK_16X16)
-      ext_partition_allowed = 0;
-  }
+  const int ab_partition_allowed = allow_ab_partition_search(
+      &part_search_state, &cpi->sf.part_sf, pc_tree->partitioning,
+      x->must_find_valid_partition, prune_ext_part_state);
+
 #if CONFIG_COLLECT_COMPONENT_TIMING
   start_timing(cpi, ab_partitions_search_time);
 #endif
   // AB partitions search stage.
   ab_partitions_search(cpi, td, tile_data, tp, x, &x_ctx, pc_tree,
                        &part_search_state, &best_rdc, rect_part_win_info,
-                       pb_source_variance, ext_partition_allowed, HORZ_A,
+                       pb_source_variance, ab_partition_allowed, HORZ_A,
                        VERT_B);
 #if CONFIG_COLLECT_COMPONENT_TIMING
   end_timing(cpi, ab_partitions_search_time);
@@ -5516,7 +5564,7 @@ BEGIN_PARTITION_SEARCH:
   int part4_search_allowed[NUM_PART4_TYPES] = { 1, 1 };
   // Prune 4-way partition search.
   prune_4_way_partition_search(cpi, x, pc_tree, &part_search_state, &best_rdc,
-                               pb_source_variance, ext_partition_allowed,
+                               pb_source_variance, prune_ext_part_state,
                                part4_search_allowed);
 
 #if CONFIG_COLLECT_COMPONENT_TIMING
