@@ -29,9 +29,6 @@
 #include "config.h"
 #endif
 
-#ifdef FEATURES
-#include <stdio.h>
-#endif
 #include <stdarg.h>
 #include "..\libcelt\celt.h"
 #include "..\libcelt\entenc.h"
@@ -70,6 +67,9 @@ struct OpusEncoder {
     int          celt_enc_offset;
     int          silk_enc_offset;
     silk_EncControlStruct silk_mode;
+#ifdef ENABLE_NEURAL_FEC
+    DREDEnc      dred_encoder;
+#endif
     int          application;
     int          channels;
     int          delay_compensation;
@@ -118,6 +118,9 @@ struct OpusEncoder {
     int          detected_bandwidth;
     int          nb_no_activity_ms_Q1;
     opus_val32   peak_signal_energy;
+#endif
+#ifdef ENABLE_NEURAL_FEC
+    int          dred_duration;
 #endif
     int          nonfinal_frame; /* current frame is not the final in a packet */
     opus_uint32  rangeFinal;
@@ -227,6 +230,9 @@ int opus_encoder_init(OpusEncoder* st, opus_int32 Fs, int channels, int applicat
     st->silk_mode.packetLossPercentage      = 0;
     st->silk_mode.complexity                = 9;
     st->silk_mode.useInBandFEC              = 0;
+#ifdef ENABLE_NEURAL_FEC
+    st->silk_mode.useDRED                   = 0;
+#endif
     st->silk_mode.useDTX                    = 0;
     st->silk_mode.useCBR                    = 0;
     st->silk_mode.reducedDependency         = 0;
@@ -238,6 +244,11 @@ int opus_encoder_init(OpusEncoder* st, opus_int32 Fs, int channels, int applicat
 
     celt_encoder_ctl(celt_enc, CELT_SET_SIGNALLING(0));
     celt_encoder_ctl(celt_enc, OPUS_SET_COMPLEXITY(st->silk_mode.complexity));
+
+#ifdef ENABLE_NEURAL_FEC
+    /* Initialize DRED Encoder */
+    dred_encoder_init( &st->dred_encoder, Fs, channels );
+#endif
 
     st->use_vbr = 1;
     /* Makes constrained VBR the default (safer for real-time use) */
@@ -700,16 +711,16 @@ opus_val16 compute_stereo_width(const opus_val16 *pcm, int frame_size, opus_int3
       opus_val16 corr;
       opus_val16 ldiff;
       opus_val16 width;
-      sqrt_xx = celt_sqrt(mem->XX);
-      sqrt_yy = celt_sqrt(mem->YY);
-      qrrt_xx = celt_sqrt(sqrt_xx);
-      qrrt_yy = celt_sqrt(sqrt_yy);
+      sqrt_xx = celt2_sqrt(mem->XX);
+      sqrt_yy = celt2_sqrt(mem->YY);
+      qrrt_xx = celt2_sqrt(sqrt_xx);
+      qrrt_yy = celt2_sqrt(sqrt_yy);
       /* Inter-channel correlation */
       mem->XY = MIN32(mem->XY, sqrt_xx*sqrt_yy);
-      corr = SHR32(frac_div32(mem->XY,EPSILON+MULT16_16(sqrt_xx,sqrt_yy)),16);
+      corr = SHR32(frac2_div32(mem->XY,EPSILON+MULT16_16(sqrt_xx,sqrt_yy)),16);
       /* Approximate loudness difference */
       ldiff = MULT16_16(Q15ONE, ABS16(qrrt_xx-qrrt_yy))/(EPSILON+qrrt_xx+qrrt_yy);
-      width = MULT16_16_Q15(celt_sqrt(QCONST32(1.f,30)-MULT16_16(corr,corr)), ldiff);
+      width = MULT16_16_Q15(celt2_sqrt(QCONST32(1.f,30)-MULT16_16(corr,corr)), ldiff);
       /* Smoothing over one second */
       mem->smoothed_width += (width-mem->smoothed_width)/frame_rate;
       /* Peak follower */
@@ -1006,7 +1017,12 @@ static opus_int32 encode_multiframe_packet(OpusEncoder *st,
       }
    }
 
+#ifdef FIX_PACKET_PARSE
+   /* FIXME: Handle extensions here. */
+   ret = opus_repacketizer_out_range_impl(rp, 0, nb_frames, data, repacketize_len, 0, !st->use_vbr, NULL, 0);
+#else
    ret = opus_repacketizer_out_range_impl(rp, 0, nb_frames, data, repacketize_len, 0, !st->use_vbr);
+#endif
 
    if (ret<0)
    {
@@ -1654,24 +1670,6 @@ opus_int32 opus_encode_native(OpusEncoder *st, const opus_val16 *pcm, int frame_
     if (st->application == OPUS_APPLICATION_VOIP)
     {
        hp_cutoff(pcm, cutoff_Hz, &pcm_buf[total_buffer*st->channels], st->hp_mem, frame_size, st->channels, st->Fs, st->arch);
-#ifdef FEATURES
-       /* write out high pass filtered clean signal*/
-       static FILE *fout =NULL;
-       if (fout == NULL)
-       {
-         fout = fopen("clean_hp.s16", "wb");
-       }
-
-       {
-         int idx;
-         opus_int16 tmp;
-         for (idx = 0; idx < frame_size; idx++)
-         {
-            tmp = (opus_int16) (32768 * pcm_buf[total_buffer + idx] + 0.5f);
-            fwrite(&tmp, sizeof(tmp), 1, fout);
-         }
-       }
-#endif
     } else {
        dc_reject(pcm, 3, &pcm_buf[total_buffer*st->channels], st->hp_mem, frame_size, st->channels, st->Fs);
     }
@@ -1690,6 +1688,14 @@ opus_int32 opus_encode_native(OpusEncoder *st, const opus_val16 *pcm, int frame_
     }
 #endif
 
+#ifdef ENABLE_NEURAL_FEC
+    if ( st->dred_duration > 0 ) {
+        /* DRED Encoder */
+        dred_compute_latents( &st->dred_encoder, &pcm_buf[total_buffer*st->channels], frame_size, total_buffer );
+    } else {
+        st->dred_encoder.latents_buffer_fill = 0;
+    }
+#endif
 
     /* SILK processing */
     HB_gain = Q15ONE;
@@ -2199,6 +2205,41 @@ opus_int32 opus_encode_native(OpusEncoder *st, const opus_val16 *pcm, int frame_
     }
     /* Count ToC and redundancy */
     ret += 1+redundancy_bytes;
+#ifdef ENABLE_NEURAL_FEC
+    if (st->dred_duration > 0) {
+       opus_extension_data extension;
+       unsigned char buf[DRED_MAX_DATA_SIZE];
+       int dred_chunks;
+       int dred_bytes_left;
+       dred_chunks = IMIN((st->dred_duration+5)/4, DRED_NUM_REDUNDANCY_FRAMES/2);
+       dred_bytes_left = IMIN(DRED_MAX_DATA_SIZE, max_data_bytes-ret-2);
+       /* Check whether we actually have something to encode. */
+       if (dred_chunks >= 1 && dred_bytes_left >= DRED_MIN_BYTES+2) {
+           int dred_bytes;
+           /* Add temporary extension type and version.
+              These bytes will be removed once extension is finalized. */
+           buf[0] = 'D';
+           buf[1] = DRED_VERSION;
+           dred_bytes = dred_encode_silk_frame(&st->dred_encoder, buf+2, dred_chunks, dred_bytes_left-2);
+           dred_bytes += 2;
+           celt_assert(dred_bytes <= dred_bytes_left);
+           extension.id = 127;
+           extension.frame = 0;
+           extension.data = buf;
+           extension.len = dred_bytes;
+           ret = opus_packet_pad_impl(data, ret, max_data_bytes, !st->use_vbr, &extension, 1);
+       } else if (!st->use_vbr) {
+           ret = opus_packet_pad(data, ret, max_data_bytes);
+           if (ret == OPUS_OK)
+              ret = max_data_bytes;
+       }
+       if (ret < 0)
+       {
+          RESTORE_STACK;
+          return OPUS_INTERNAL_ERROR;
+       }
+    } else
+#endif
     if (!st->use_vbr)
     {
        if (opus_packet_pad(data, ret, max_data_bytes) != OPUS_OK)
@@ -2698,6 +2739,29 @@ int opus_encoder_ctl(OpusEncoder *st, int request, ...)
             celt_encoder_ctl(celt_enc, OPUS_GET_PHASE_INVERSION_DISABLED(value));
         }
         break;
+#ifdef ENABLE_NEURAL_FEC
+        case OPUS_SET_DRED_DURATION_REQUEST:
+        {
+            opus_int32 value = va_arg(ap, opus_int32);
+            if(value<0 || value>DRED_MAX_FRAMES)
+            {
+               goto bad_arg;
+            }
+            st->dred_duration = value;
+            st->silk_mode.useDRED = !!value;
+        }
+        break;
+        case OPUS_GET_DRED_DURATION_REQUEST:
+        {
+            opus_int32 *value = va_arg(ap, opus_int32*);
+            if (!value)
+            {
+               goto bad_arg;
+            }
+            *value = st->dred_duration;
+        }
+        break;
+#endif
         case OPUS_RESET_STATE:
         {
            void *silk_enc;
@@ -2713,6 +2777,10 @@ int opus_encoder_ctl(OpusEncoder *st, int request, ...)
 
            celt_encoder_ctl(celt_enc, OPUS_RESET_STATE);
            silk_InitEncoder( silk_enc, st->arch, &dummy );
+#ifdef ENABLE_NEURAL_FEC
+           /* Initialize DRED Encoder */
+           dred_encoder_reset( &st->dred_encoder );
+#endif
            st->stream_channels = st->channels;
            st->hybrid_stereo_width_Q14 = 1 << 14;
            st->prev_HB_gain = Q15ONE;
@@ -2773,6 +2841,19 @@ int opus_encoder_ctl(OpusEncoder *st, int request, ...)
             }
         }
         break;
+#ifdef USE_WEIGHTS_FILE
+   case OPUS_SET_DNN_BLOB_REQUEST:
+   {
+       const unsigned char *data = va_arg(ap, const unsigned char *);
+       opus_int32 len = va_arg(ap, opus_int32);
+       if(len<0 || data == NULL)
+       {
+          goto bad_arg;
+       }
+       return dred_encoder_load_model(&st->dred_encoder, data, len);
+   }
+   break;
+#endif
         case CELT_GET_MODE_REQUEST:
         {
            const CELTMode ** value = va_arg(ap, const CELTMode**);

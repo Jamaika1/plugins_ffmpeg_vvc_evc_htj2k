@@ -446,9 +446,9 @@ static int is_digital_silence32(const opus_val32* pcm, int frame_size, int chann
 static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt_mode, const void *x, int len, int offset, int c1, int c2, int C, int lsb_depth, downmix_func downmix)
 {
     int i, b;
-    const kiss_fft_state *kfft;
-    VARDECL(kiss_fft_cpx, in);
-    VARDECL(kiss_fft_cpx, out);
+    const celt2_kiss_fft_state *kfft;
+    VARDECL(celt2_kiss_fft_cpx, in);
+    VARDECL(celt2_kiss_fft_cpx, out);
     int N = 480, N2=240;
     float * OPUS_RESTRICT A = tonal->angle;
     float * OPUS_RESTRICT dA = tonal->d_angle;
@@ -529,17 +529,17 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
 
     is_silence = is_digital_silence32(tonal->inmem, ANALYSIS_BUF_SIZE, 1, lsb_depth);
 
-    ALLOC(in, 480, kiss_fft_cpx);
-    ALLOC(out, 480, kiss_fft_cpx);
+    ALLOC(in, 480, celt2_kiss_fft_cpx);
+    ALLOC(out, 480, celt2_kiss_fft_cpx);
     ALLOC(tonality, 240, float);
     ALLOC(noisiness, 240, float);
     for (i=0;i<N2;i++)
     {
        float w = analysis_window[i];
-       in[i].r = (kiss_fft_scalar)(w*tonal->inmem[i]);
-       in[i].i = (kiss_fft_scalar)(w*tonal->inmem[N2+i]);
-       in[N-i-1].r = (kiss_fft_scalar)(w*tonal->inmem[N-i-1]);
-       in[N-i-1].i = (kiss_fft_scalar)(w*tonal->inmem[N+N2-i-1]);
+       in[i].r = (celt2_kiss_fft_scalar)(w*tonal->inmem[i]);
+       in[i].i = (celt2_kiss_fft_scalar)(w*tonal->inmem[N2+i]);
+       in[N-i-1].r = (celt2_kiss_fft_scalar)(w*tonal->inmem[N-i-1]);
+       in[N-i-1].i = (celt2_kiss_fft_scalar)(w*tonal->inmem[N+N2-i-1]);
     }
     OPUS_MOVE(tonal->inmem, tonal->inmem+ANALYSIS_BUF_SIZE-240, 240);
     remaining = len - (ANALYSIS_BUF_SIZE-tonal->mem_fill);
@@ -929,9 +929,9 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
     features[23] = info->tonality_slope + 0.069216f;
     features[24] = tonal->lowECount - 0.067930f;
 
-    compute_dense(&layer0, layer_out, features);
-    compute_gru(&layer1, tonal->rnn_state, layer_out);
-    compute_dense(&layer2, frame_probs, tonal->rnn_state);
+    analysis_compute_dense(&layer0, layer_out, features);
+    analysis_compute_gru(&layer1, tonal->rnn_state, layer_out);
+    analysis_compute_dense(&layer2, frame_probs, tonal->rnn_state);
 
     /* Probability of speech or music vs noise */
     info->activity_probability = frame_probs[1];
