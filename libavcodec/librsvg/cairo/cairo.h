@@ -72,7 +72,7 @@ CAIRO_BEGIN_DECLS
 
 
 #define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
-	#major"."#minor"."#micro"-9831eba"
+	#major"."#minor"."#micro"-0560aa5"
 #define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
 	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
 
