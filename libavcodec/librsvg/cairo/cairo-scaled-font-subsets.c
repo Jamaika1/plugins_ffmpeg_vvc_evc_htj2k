@@ -430,7 +430,7 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
     if (utf8 != NULL && utf8_len != 0) {
 	if (sub_font_glyph->utf8 != NULL) {
 	    if (utf8_len == sub_font_glyph->utf8_len &&
-		memcmp (utf8, sub_font_glyph->utf8, utf8_len) == 0)
+		strncmp (utf8, sub_font_glyph->utf8, utf8_len) == 0)
 	    {
 		/* Requested utf8 mapping matches the existing mapping */
 		*is_mapped = TRUE;

@@ -85,6 +85,10 @@
 #include "cairo-surface-wrapper-private.h"
 
 #if CAIRO_HAS_FT_FONT
+#if HAVE_FT_COLR_V1
+#include <ft2build.h>
+#include FT_COLOR_H
+#endif
 #include "cairo-ft-private.h"
 #endif
 
@@ -720,7 +724,7 @@ _emit_hairline (cairo_script_surface_t *surface, cairo_bool_t set_hairline)
 
     surface->cr.current_style.is_hairline = set_hairline;
 
-    _cairo_output_stream_printf (to_context (surface)->stream, 
+    _cairo_output_stream_printf (to_context (surface)->stream,
 					"%d set-hairline\n",
 					set_hairline);
     return CAIRO_STATUS_SUCCESS;
