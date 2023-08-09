@@ -384,8 +384,6 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	int oldinputMax;
 	xmlParserInputPtr *oldinputTab;
 	xmlParserInputPtr input = NULL;
-	xmlCharEncoding enc;
-	int oldcharset;
 	const xmlChar *oldencoding;
 	int oldprogressive;
         unsigned long consumed;
@@ -410,7 +408,6 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	oldinputNr = ctxt->inputNr;
 	oldinputMax = ctxt->inputMax;
 	oldinputTab = ctxt->inputTab;
-	oldcharset = ctxt->charset;
 	oldencoding = ctxt->encoding;
         oldprogressive = ctxt->progressive;
 	ctxt->encoding = NULL;
@@ -425,7 +422,6 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	    ctxt->inputNr = oldinputNr;
 	    ctxt->inputMax = oldinputMax;
 	    ctxt->inputTab = oldinputTab;
-	    ctxt->charset = oldcharset;
 	    ctxt->encoding = oldencoding;
             ctxt->progressive = oldprogressive;
 	    return;
@@ -434,14 +430,6 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	ctxt->inputMax = 5;
 	ctxt->input = NULL;
 	xmlPushInput(ctxt, input);
-
-	/*
-	 * On the fly encoding conversion if needed
-	 */
-	if (ctxt->input->length >= 4) {
-	    enc = xmlDetectCharEncoding(ctxt->input->cur, 4);
-	    xmlSwitchEncoding(ctxt, enc);
-	}
 
 	if (input->filename == NULL)
 	    input->filename = (char *) xmlCanonicPath(SystemID);
@@ -484,7 +472,6 @@ xmlSAX2ExternalSubset(void *ctx, const xmlChar *name,
 	ctxt->inputNr = oldinputNr;
 	ctxt->inputMax = oldinputMax;
 	ctxt->inputTab = oldinputTab;
-	ctxt->charset = oldcharset;
 	if ((ctxt->encoding != NULL) &&
 	    ((ctxt->dict == NULL) ||
 	     (!xmlDictOwns(ctxt->dict, ctxt->encoding))))
@@ -1040,16 +1027,6 @@ xmlSAX2EndDocument(void *ctx)
 	(ctxt->myDoc->encoding == NULL)) {
 	ctxt->myDoc->encoding = ctxt->encoding;
 	ctxt->encoding = NULL;
-    }
-    if ((ctxt->inputTab != NULL) &&
-        (ctxt->inputNr > 0) && (ctxt->inputTab[0] != NULL) &&
-        (ctxt->inputTab[0]->encoding != NULL) && (ctxt->myDoc != NULL) &&
-	(ctxt->myDoc->encoding == NULL)) {
-	ctxt->myDoc->encoding = xmlStrdup(ctxt->inputTab[0]->encoding);
-    }
-    if ((ctxt->charset != XML_CHAR_ENCODING_NONE) && (ctxt->myDoc != NULL) &&
-	(ctxt->myDoc->charset == XML_CHAR_ENCODING_NONE)) {
-	ctxt->myDoc->charset = ctxt->charset;
     }
 }
 
@@ -2174,15 +2151,11 @@ xmlSAX2AttributeNs(xmlParserCtxtPtr ctxt,
 	     *
 	     * Open issue: normalization of the value.
 	     */
-#if defined(LIBXML_SAX1_ENABLED) || defined(LIBXML_HTML_ENABLED) || defined(LIBXML_WRITER_ENABLED) || defined(LIBXML_LEGACY_ENABLED)
-#ifdef LIBXML_VALID_ENABLED
 	    if (xmlValidateNCName(content, 1) != 0) {
 	        xmlErrValid(ctxt, XML_DTD_XMLID_VALUE,
 		      "xml:id : attribute value %s is not an NCName\n",
 			    (const char *) content, NULL);
 	    }
-#endif
-#endif
 	    xmlAddID(&ctxt->vctxt, ctxt->myDoc, content, ret);
 	} else if (xmlIsID(ctxt->myDoc, ctxt->node, ret)) {
 	    xmlAddID(&ctxt->vctxt, ctxt->myDoc, content, ret);
@@ -2507,10 +2480,7 @@ xmlSAX2Reference(void *ctx, const xmlChar *name)
     xmlGenericError(xmlGenericErrorContext,
 	    "SAX.xmlSAX2Reference(%s)\n", name);
 #endif
-    if (name[0] == '#')
-	ret = xmlNewCharRef(ctxt->myDoc, name);
-    else
-	ret = xmlNewReference(ctxt->myDoc, name);
+    ret = xmlNewReference(ctxt->myDoc, name);
 #ifdef DEBUG_SAX_TREE
     xmlGenericError(xmlGenericErrorContext,
 	    "add xmlSAX2Reference %s to %s \n", name, ctxt->node->name);
