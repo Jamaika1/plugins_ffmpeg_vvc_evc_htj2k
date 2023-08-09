@@ -102,18 +102,18 @@ void clt_mdct_clear(mdct_lookup *l)
 
 #endif /* CUSTOM_MODES */
 
-void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar * restrict out, const celt_word16 *window, int overlap, int shift)
+void clt_mdct_forward(const mdct_lookup *l, celt_kiss_fft_scalar *in, celt_kiss_fft_scalar * restrict out, const celt_word16 *window, int overlap, int shift)
 {
    int i;
    int N, N2, N4;
    kiss_twiddle_scalar sine;
-   VARDECL(kiss_fft_scalar, f);
+   VARDECL(celt_kiss_fft_scalar, f);
    SAVE_STACK;
    N = l->n;
    N >>= shift;
    N2 = N>>1;
    N4 = N>>2;
-   ALLOC(f, N2, kiss_fft_scalar);
+   ALLOC(f, N2, celt_kiss_fft_scalar);
    /* sin(x) ~= x here */
 #ifdef FIXED_POINT
    sine = TRIG_UPSCALE*(QCONST16(0.7853981f, 15)+N2)/N;
@@ -125,9 +125,9 @@ void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar
    /* Window, shuffle, fold */
    {
       /* Temp pointers to make it really clear to the compiler what we're doing */
-      const kiss_fft_scalar * restrict xp1 = in+(overlap>>1);
-      const kiss_fft_scalar * restrict xp2 = in+N2-1+(overlap>>1);
-      kiss_fft_scalar * restrict yp = out;
+      const celt_kiss_fft_scalar * restrict xp1 = in+(overlap>>1);
+      const celt_kiss_fft_scalar * restrict xp2 = in+N2-1+(overlap>>1);
+      celt_kiss_fft_scalar * restrict yp = out;
       const celt_word16 * restrict wp1 = window+(overlap>>1);
       const celt_word16 * restrict wp2 = window+(overlap>>1)-1;
       for(i=0;i<(overlap>>2);i++)
@@ -163,11 +163,11 @@ void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar
    }
    /* Pre-rotation */
    {
-      kiss_fft_scalar * restrict yp = out;
+      celt_kiss_fft_scalar * restrict yp = out;
       const kiss_twiddle_scalar *t = &l->trig[0];
       for(i=0;i<N4;i++)
       {
-         kiss_fft_scalar re, im, yr, yi;
+         celt_kiss_fft_scalar re, im, yr, yi;
          re = yp[0];
          im = yp[1];
          yr = -S_MUL(re,t[i<<shift])  -  S_MUL(im,t[(N4-i)<<shift]);
@@ -179,19 +179,19 @@ void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar
    }
 
    /* N/4 complex FFT, down-scales by 4/N */
-   celt_fft(l->kfft[shift], (kiss_fft_cpx *)out, (kiss_fft_cpx *)f);
+   celt_fft(l->kfft[shift], (celt_kiss_fft_cpx *)out, (celt_kiss_fft_cpx *)f);
 
    /* Post-rotate */
    {
       /* Temp pointers to make it really clear to the compiler what we're doing */
-      const kiss_fft_scalar * restrict fp = f;
-      kiss_fft_scalar * restrict yp1 = out;
-      kiss_fft_scalar * restrict yp2 = out+N2-1;
+      const celt_kiss_fft_scalar * restrict fp = f;
+      celt_kiss_fft_scalar * restrict yp1 = out;
+      celt_kiss_fft_scalar * restrict yp2 = out+N2-1;
       const kiss_twiddle_scalar *t = &l->trig[0];
       /* Temp pointers to make it really clear to the compiler what we're doing */
       for(i=0;i<N4;i++)
       {
-         kiss_fft_scalar yr, yi;
+         celt_kiss_fft_scalar yr, yi;
          yr = S_MUL(fp[1],t[(N4-i)<<shift]) + S_MUL(fp[0],t[i<<shift]);
          yi = S_MUL(fp[0],t[(N4-i)<<shift]) - S_MUL(fp[1],t[i<<shift]);
          /* works because the cos is nearly one */
@@ -206,20 +206,20 @@ void clt_mdct_forward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar
 }
 
 
-void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scalar * restrict out, const celt_word16 * restrict window, int overlap, int shift)
+void clt_mdct_backward(const mdct_lookup *l, celt_kiss_fft_scalar *in, celt_kiss_fft_scalar * restrict out, const celt_word16 * restrict window, int overlap, int shift)
 {
    int i;
    int N, N2, N4;
    kiss_twiddle_scalar sine;
-   VARDECL(kiss_fft_scalar, f);
-   VARDECL(kiss_fft_scalar, f2);
+   VARDECL(celt_kiss_fft_scalar, f);
+   VARDECL(celt_kiss_fft_scalar, f2);
    SAVE_STACK;
    N = l->n;
    N >>= shift;
    N2 = N>>1;
    N4 = N>>2;
-   ALLOC(f, N2, kiss_fft_scalar);
-   ALLOC(f2, N2, kiss_fft_scalar);
+   ALLOC(f, N2, celt_kiss_fft_scalar);
+   ALLOC(f2, N2, celt_kiss_fft_scalar);
    /* sin(x) ~= x here */
 #ifdef FIXED_POINT
    sine = TRIG_UPSCALE*(QCONST16(0.7853981f, 15)+N2)/N;
@@ -230,13 +230,13 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
    /* Pre-rotate */
    {
       /* Temp pointers to make it really clear to the compiler what we're doing */
-      const kiss_fft_scalar * restrict xp1 = in;
-      const kiss_fft_scalar * restrict xp2 = in+N2-1;
-      kiss_fft_scalar * restrict yp = f2;
+      const celt_kiss_fft_scalar * restrict xp1 = in;
+      const celt_kiss_fft_scalar * restrict xp2 = in+N2-1;
+      celt_kiss_fft_scalar * restrict yp = f2;
       const kiss_twiddle_scalar *t = &l->trig[0];
       for(i=0;i<N4;i++)
       {
-         kiss_fft_scalar yr, yi;
+         celt_kiss_fft_scalar yr, yi;
          yr = -S_MUL(*xp2, t[i<<shift]) + S_MUL(*xp1,t[(N4-i)<<shift]);
          yi =  -S_MUL(*xp2, t[(N4-i)<<shift]) - S_MUL(*xp1,t[i<<shift]);
          /* works because the cos is nearly one */
@@ -248,16 +248,16 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
    }
 
    /* Inverse N/4 complex FFT. This one should *not* downscale even in fixed-point */
-   celt_ifft(l->kfft[shift], (kiss_fft_cpx *)f2, (kiss_fft_cpx *)f);
+   celt_ifft(l->kfft[shift], (celt_kiss_fft_cpx *)f2, (celt_kiss_fft_cpx *)f);
 
    /* Post-rotate */
    {
-      kiss_fft_scalar * restrict fp = f;
+      celt_kiss_fft_scalar * restrict fp = f;
       const kiss_twiddle_scalar *t = &l->trig[0];
 
       for(i=0;i<N4;i++)
       {
-         kiss_fft_scalar re, im, yr, yi;
+         celt_kiss_fft_scalar re, im, yr, yi;
          re = fp[0];
          im = fp[1];
          /* We'd scale up by 2 here, but instead it's done when mixing the windows */
@@ -270,9 +270,9 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
    }
    /* De-shuffle the components for the middle of the window only */
    {
-      const kiss_fft_scalar * restrict fp1 = f;
-      const kiss_fft_scalar * restrict fp2 = f+N2-1;
-      kiss_fft_scalar * restrict yp = f2;
+      const celt_kiss_fft_scalar * restrict fp1 = f;
+      const celt_kiss_fft_scalar * restrict fp2 = f+N2-1;
+      celt_kiss_fft_scalar * restrict yp = f2;
       for(i = 0; i < N4; i++)
       {
          *yp++ =-*fp1;
@@ -284,9 +284,9 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
    out -= (N2-overlap)>>1;
    /* Mirror on both sides for TDAC */
    {
-      kiss_fft_scalar * restrict fp1 = f2+N4-1;
-      kiss_fft_scalar * restrict xp1 = out+N2-1;
-      kiss_fft_scalar * restrict yp1 = out+N4-overlap/2;
+      celt_kiss_fft_scalar * restrict fp1 = f2+N4-1;
+      celt_kiss_fft_scalar * restrict xp1 = out+N2-1;
+      celt_kiss_fft_scalar * restrict yp1 = out+N4-overlap/2;
       const celt_word16 * restrict wp1 = window;
       const celt_word16 * restrict wp2 = window+overlap-1;
       for(i = 0; i< N4-overlap/2; i++)
@@ -297,7 +297,7 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
       }
       for(; i < N4; i++)
       {
-         kiss_fft_scalar x1;
+         celt_kiss_fft_scalar x1;
          x1 = *fp1--;
          *yp1++ +=-MULT16_32_Q15(*wp1, x1);
          *xp1-- += MULT16_32_Q15(*wp2, x1);
@@ -306,9 +306,9 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
       }
    }
    {
-      kiss_fft_scalar * restrict fp2 = f2+N4;
-      kiss_fft_scalar * restrict xp2 = out+N2;
-      kiss_fft_scalar * restrict yp2 = out+N-1-(N4-overlap/2);
+      celt_kiss_fft_scalar * restrict fp2 = f2+N4;
+      celt_kiss_fft_scalar * restrict xp2 = out+N2;
+      celt_kiss_fft_scalar * restrict yp2 = out+N-1-(N4-overlap/2);
       const celt_word16 * restrict wp1 = window;
       const celt_word16 * restrict wp2 = window+overlap-1;
       for(i = 0; i< N4-overlap/2; i++)
@@ -319,7 +319,7 @@ void clt_mdct_backward(const mdct_lookup *l, kiss_fft_scalar *in, kiss_fft_scala
       }
       for(; i < N4; i++)
       {
-         kiss_fft_scalar x2;
+         celt_kiss_fft_scalar x2;
          x2 = *fp2++;
          *yp2--  = MULT16_32_Q15(*wp1, x2);
          *xp2++  = MULT16_32_Q15(*wp2, x2);
