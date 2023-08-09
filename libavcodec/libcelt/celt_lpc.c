@@ -44,7 +44,7 @@ int          p
    opus_val32 r;
    opus_val32 error = ac[0];
 #ifdef FIXED_POINT
-   opus_val32 lpc[LPC_ORDER];
+   opus_val32 lpc[CELT_LPC_ORDER];
 #else
    float *lpc = _lpc;
 #endif
@@ -62,7 +62,7 @@ int          p
          for (j = 0; j < i; j++)
             rr += MULT32_32_Q31(lpc[j],ac[i - j]);
          rr += SHR32(ac[i + 1],6);
-         r = -frac_div32(SHL32(rr,6), error);
+         r = -frac2_div32(SHL32(rr,6), error);
          /*  Update LPC coefficients and total error */
          lpc[i] = SHR32(r,6);
          for (j = 0; j < (i+1)>>1; j++)

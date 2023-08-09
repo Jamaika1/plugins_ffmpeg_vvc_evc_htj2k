@@ -123,7 +123,7 @@ void celt2_compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener
                } while (++j<eBands[i+1]<<LM);
             }
             /* We're adding one here to ensure the normalized band isn't larger than unity norm */
-            bandE[i+c*m->nbEBands] = EPSILON+VSHR32(EXTEND32(celt_sqrt(sum)),-shift);
+            bandE[i+c*m->nbEBands] = EPSILON+VSHR32(EXTEND32(celt2_sqrt(sum)),-shift);
          } else {
             bandE[i+c*m->nbEBands] = EPSILON;
          }
@@ -146,7 +146,7 @@ void celt2_normalise_bands(const CELTMode *m, const celt_sig * OPUS_RESTRICT fre
          opus_val16 E;
          shift = celt_zlog2(bandE[i+c*m->nbEBands])-13;
          E = VSHR32(bandE[i+c*m->nbEBands], shift);
-         g = EXTRACT16(celt_rcp(SHL32(E,3)));
+         g = EXTRACT16(celt2_rcp(SHL32(E,3)));
          j=M*eBands[i]; do {
             X[j+c*N] = MULT16_16_Q15(VSHR32(freq[j+c*N],shift-1),g);
          } while (++j<M*eBands[i+1]);
@@ -166,7 +166,7 @@ void celt2_compute_band_energies(const CELTMode *m, const celt_sig *X, celt_ener
       {
          opus_val32 sum;
          sum = 1e-27f + celt_inner_prod(&X[c*N+(eBands[i]<<LM)], &X[c*N+(eBands[i]<<LM)], (eBands[i+1]-eBands[i])<<LM, arch);
-         bandE[i+c*m->nbEBands] = celt_sqrt(sum);
+         bandE[i+c*m->nbEBands] = celt2_sqrt(sum);
          /*printf ("%f ", bandE[i+c*m->nbEBands]);*/
       }
    } while (++c<C);
@@ -293,11 +293,11 @@ void celt2_anti_collapse(const CELTMode *m, celt_norm *X_, unsigned char *collap
          t = N0<<LM;
          shift = celt_ilog2(t)>>1;
          t = SHL32(t, (7-shift)<<1);
-         sqrt_1 = celt_rsqrt_norm(t);
+         sqrt_1 = celt2_rsqrt_norm(t);
       }
 #else
       thresh = .5f*celt_exp2(-.125f*depth);
-      sqrt_1 = celt_rsqrt(N0<<LM);
+      sqrt_1 = celt2_rsqrt(N0<<LM);
 #endif
 
       c=0; do
@@ -397,7 +397,7 @@ static void intensity_stereo(const CELTMode *m, celt_norm * OPUS_RESTRICT X, con
 #endif
    left = VSHR32(bandE[i],shift);
    right = VSHR32(bandE[i+m->nbEBands],shift);
-   norm = EPSILON + celt_sqrt(EPSILON+MULT16_16(left,left)+MULT16_16(right,right));
+   norm = EPSILON + celt2_sqrt(EPSILON+MULT16_16(left,left)+MULT16_16(right,right));
    a1 = DIV32_16(SHL32(EXTEND32(left),14),norm);
    a2 = DIV32_16(SHL32(EXTEND32(right),14),norm);
    for (j=0;j<N;j++)
@@ -453,9 +453,9 @@ static void stereo_merge(celt_norm * OPUS_RESTRICT X, celt_norm * OPUS_RESTRICT 
    kr = celt_ilog2(Er)>>1;
 #endif
    t = VSHR32(El, (kl-7)<<1);
-   lgain = celt_rsqrt_norm(t);
+   lgain = celt2_rsqrt_norm(t);
    t = VSHR32(Er, (kr-7)<<1);
-   rgain = celt_rsqrt_norm(t);
+   rgain = celt2_rsqrt_norm(t);
 
 #ifdef FIXED_POINT
    if (kl < 7)
@@ -1221,7 +1221,7 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
       {
          int j;
          opus_val16 n;
-         n = celt_sqrt(SHL32(EXTEND32(N0),22));
+         n = celt2_sqrt(SHL32(EXTEND32(N0),22));
          for (j=0;j<N0;j++)
             lowband_out[j] = MULT16_16_Q15(n,X[j]);
       }

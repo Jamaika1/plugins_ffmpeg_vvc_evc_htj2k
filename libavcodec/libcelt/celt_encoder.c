@@ -353,9 +353,9 @@ static int transient_analysis(const opus_val32 * OPUS_RESTRICT in, int len, int 
          geometric mean of the energy and half the max */
 #ifdef FIXED_POINT
       /* Costs two sqrt() to avoid overflows */
-      mean = MULT16_16(celt_sqrt(mean), celt_sqrt(MULT16_16(maxE,len2>>1)));
+      mean = MULT16_16(celt2_sqrt(mean), celt2_sqrt(MULT16_16(maxE,len2>>1)));
 #else
-      mean = celt_sqrt(mean * maxE*.5*len2);
+      mean = celt2_sqrt(mean * maxE*.5*len2);
 #endif
       /* Inverse of the mean energy in Q15+6 */
       norm = SHL32(EXTEND32(len2),6+14)/ADD32(EPSILON,SHR32(mean,1));
@@ -395,9 +395,9 @@ static int transient_analysis(const opus_val32 * OPUS_RESTRICT in, int len, int 
       *weak_transient = 1;
    }
    /* Arbitrary metric for VBR boost */
-   tf_max = MAX16(0,celt_sqrt(27*mask_metric)-42);
+   tf_max = MAX16(0,celt2_sqrt(27*mask_metric)-42);
    /* *tf_estimate = 1 + MIN16(1, sqrt(MAX16(0, tf_max-30))/20); */
-   *tf_estimate = celt_sqrt(MAX32(0, SHL32(MULT16_16(QCONST16(0.0069,14),MIN16(163,tf_max)),14)-QCONST32(0.139,28)));
+   *tf_estimate = celt2_sqrt(MAX32(0, SHL32(MULT16_16(QCONST16(0.0069,14),MIN16(163,tf_max)),14)-QCONST32(0.139,28)));
    /*printf("%d %f\n", tf_max, mask_metric);*/
    RESTORE_STACK;
 #ifdef FUZZING
@@ -2137,7 +2137,7 @@ int celt2_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm,
      if (st->vbr_count < 970)
      {
         st->vbr_count++;
-        alpha = celt_rcp(SHL32(EXTEND32(st->vbr_count+20),16));
+        alpha = celt2_rcp(SHL32(EXTEND32(st->vbr_count+20),16));
      } else
         alpha = QCONST16(.001f,15);
      /* How many bits have we used in excess of what we're allowed */

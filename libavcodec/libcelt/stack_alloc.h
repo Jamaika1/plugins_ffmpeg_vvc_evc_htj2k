@@ -133,14 +133,14 @@ char *global_stack_top=0;
 extern char *global_stack_top;
 #endif /* CELT_C */
 
-#define ALIGN(stack, size) ((stack) += ((size) - (long)(stack)) & ((size) - 1))
+#define ALIGN(stack, size) ((stack) += ((size) - (long long)(stack)) & ((size) - 1))
 #define PUSH(stack, size, type) (VALGRIND_MAKE_MEM_NOACCESS(stack, global_stack_top-stack),ALIGN((stack),sizeof(type)/sizeof(char)),VALGRIND_MAKE_MEM_UNDEFINED(stack, ((size)*sizeof(type)/sizeof(char))),(stack)+=(2*(size)*sizeof(type)/sizeof(char)),(type*)((stack)-(2*(size)*sizeof(type)/sizeof(char))))
 #define RESTORE_STACK ((global_stack = _saved_stack),VALGRIND_MAKE_MEM_NOACCESS(global_stack, global_stack_top-global_stack))
 #define ALLOC_STACK char *_saved_stack; ((global_stack = (global_stack==0) ? ((global_stack_top=opus_alloc_scratch(GLOBAL_STACK_SIZE*2)+(GLOBAL_STACK_SIZE*2))-(GLOBAL_STACK_SIZE*2)) : global_stack),VALGRIND_MAKE_MEM_NOACCESS(global_stack, global_stack_top-global_stack)); _saved_stack = global_stack;
 
 #else
 
-#define ALIGN(stack, size) ((stack) += ((size) - (long)(stack)) & ((size) - 1))
+#define ALIGN(stack, size) ((stack) += ((size) - (long long)(stack)) & ((size) - 1))
 #define PUSH(stack, size, type) (ALIGN((stack),sizeof(type)/sizeof(char)),(stack)+=(size)*(sizeof(type)/sizeof(char)),(type*)((stack)-(size)*(sizeof(type)/sizeof(char))))
 #if 0 /* Set this to 1 to instrument pseudostack usage */
 #define RESTORE_STACK (printf("%ld %s:%d\n", global_stack-scratch_ptr, __FILE__, __LINE__),global_stack = _saved_stack)

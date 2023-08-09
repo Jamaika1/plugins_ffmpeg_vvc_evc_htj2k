@@ -113,13 +113,13 @@ static OPUS_INLINE opus_val32 celt_maxabs32(const opus_val32 *x, int len)
 
 #ifndef FIXED_POINT
 
-#define celt_sqrt(x) ((float)sqrt(x))
-#define celt_rsqrt(x) (1.f/celt_sqrt(x))
-#define celt_rsqrt_norm(x) (celt_rsqrt(x))
-#define celt_cos_norm(x) ((float)cos((.5f*PI)*(x)))
-#define celt_rcp(x) (1.f/(x))
-#define celt_div(a,b) ((a)/(b))
-#define frac_div32(a,b) ((float)(a)/(b))
+#define celt2_sqrt(x) ((float)sqrt(x))
+#define celt2_rsqrt(x) (1.f/celt2_sqrt(x))
+#define celt2_rsqrt_norm(x) (celt2_rsqrt(x))
+#define celt2_cos_norm(x) ((float)cos((.5f*PI)*(x)))
+#define celt2_rcp(x) (1.f/(x))
+#define celt2_div(a,b) ((a)/(b))
+#define frac2_div32(a,b) ((float)(a)/(b))
 
 #ifdef FLOAT_APPROX
 
@@ -191,11 +191,11 @@ static OPUS_INLINE opus_int16 celt_zlog2(opus_val32 x)
    return x <= 0 ? 0 : celt_ilog2(x);
 }
 
-opus_val16 celt_rsqrt_norm(opus_val32 x);
+opus_val16 celt2_rsqrt_norm(opus_val32 x);
 
-opus_val32 celt_sqrt(opus_val32 x);
+opus_val32 celt2_sqrt(opus_val32 x);
 
-opus_val16 celt_cos_norm(opus_val32 x);
+opus_val16 celt2_cos_norm(opus_val32 x);
 
 /** Base-2 logarithm approximation (log2(x)). (Q14 input, Q10 output) */
 static OPUS_INLINE opus_val16 celt_log2(opus_val32 x)
@@ -230,6 +230,12 @@ static OPUS_INLINE opus_val32 celt_exp2_frac(opus_val16 x)
    frac = SHL16(x, 4);
    return ADD16(D0, MULT16_16_Q15(frac, ADD16(D1, MULT16_16_Q15(frac, ADD16(D2 , MULT16_16_Q15(D3,frac))))));
 }
+
+#undef D0
+#undef D1
+#undef D2
+#undef D3
+
 /** Base-2 exponential approximation (2^x). (Q10 input, Q16 output) */
 static OPUS_INLINE opus_val32 celt_exp2(opus_val16 x)
 {
@@ -244,11 +250,11 @@ static OPUS_INLINE opus_val32 celt_exp2(opus_val16 x)
    return VSHR32(EXTEND32(frac), -integer-2);
 }
 
-opus_val32 celt_rcp(opus_val32 x);
+opus_val32 celt2_rcp(opus_val32 x);
 
-#define celt_div(a,b) MULT32_32_Q31((opus_val32)(a),celt_rcp(b))
+#define celt2_div(a,b) MULT32_32_Q31((opus_val32)(a),celt2_rcp(b))
 
-opus_val32 frac_div32(opus_val32 a, opus_val32 b);
+opus_val32 frac2_div32(opus_val32 a, opus_val32 b);
 
 #define M1 32767
 #define M2 -21
@@ -273,13 +279,13 @@ static OPUS_INLINE opus_val16 celt_atan2p(opus_val16 y, opus_val16 x)
    if (y < x)
    {
       opus_val32 arg;
-      arg = celt_div(SHL32(EXTEND32(y),15),x);
+      arg = celt2_div(SHL32(EXTEND32(y),15),x);
       if (arg >= 32767)
          arg = 32767;
       return SHR16(celt_atan01(EXTRACT16(arg)),1);
    } else {
       opus_val32 arg;
-      arg = celt_div(SHL32(EXTEND32(x),15),y);
+      arg = celt2_div(SHL32(EXTEND32(x),15),y);
       if (arg >= 32767)
          arg = 32767;
       return 25736-SHR16(celt_atan01(EXTRACT16(arg)),1);

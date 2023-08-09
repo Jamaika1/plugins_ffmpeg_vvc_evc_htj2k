@@ -424,7 +424,7 @@ static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy
          shift++;
       }
    }
-   den = celt_rsqrt_norm(x2y2);
+   den = celt2_rsqrt_norm(x2y2);
    g = MULT16_32_Q15(den, xy);
    g = VSHR32(g, (shift>>1)-1);
    return EXTRACT16(MIN32(g, Q15ONE));
@@ -432,7 +432,7 @@ static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy
 #else
 static opus_val16 compute_pitch_gain(opus_val32 xy, opus_val32 xx, opus_val32 yy)
 {
-   return xy/celt_sqrt(1+xx*yy);
+   return xy/celt2_sqrt(1+xx*yy);
 }
 #endif
 
@@ -525,7 +525,7 @@ opus_val16 celt2_remove_doubling(opus_val16 *x, int maxperiod, int minperiod,
    if (best_yy <= best_xy)
       pg = Q15ONE;
    else
-      pg = SHR32(frac_div32(best_xy,best_yy+1),16);
+      pg = SHR32(frac2_div32(best_xy,best_yy+1),16);
 
    for (k=0;k<3;k++)
       xcorr[k] = celt_inner_prod(x, x-(T+k-1), N, arch);
