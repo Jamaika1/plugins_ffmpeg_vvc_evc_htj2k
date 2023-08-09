@@ -84,11 +84,11 @@ void exp_rotation(celt_norm *X, int len, int dir, int stride, int K, int spread)
       return;
    factor = SPREAD_FACTOR[spread-1];
 
-   gain = celt_div((opus_val32)MULT16_16(Q15_ONE,len),(opus_val32)(len+factor*K));
+   gain = celt2_div((opus_val32)MULT16_16(Q15_ONE,len),(opus_val32)(len+factor*K));
    theta = HALF16(MULT16_16_Q15(gain,gain));
 
-   c = celt_cos_norm(EXTEND32(theta));
-   s = celt_cos_norm(EXTEND32(SUB16(Q15ONE,theta))); /*  sin(theta) */
+   c = celt2_cos_norm(EXTEND32(theta));
+   s = celt2_cos_norm(EXTEND32(SUB16(Q15ONE,theta))); /*  sin(theta) */
 
    if (len>=8*stride)
    {
@@ -132,7 +132,7 @@ static void normalise_residual(int * OPUS_RESTRICT iy, celt_norm * OPUS_RESTRICT
    k = celt_ilog2(Ryy)>>1;
 #endif
    t = VSHR32(Ryy, 2*(k-7));
-   g = MULT16_16_P15(celt_rsqrt_norm(t),gain);
+   g = MULT16_16_P15(celt2_rsqrt_norm(t),gain);
 
    i=0;
    do
@@ -215,10 +215,10 @@ opus_val16 op_pvq_search_c(celt_norm *X, int *iy, int K, int N, int arch)
          sum = QCONST16(1.f,14);
       }
 #ifdef FIXED_POINT
-      rcp = EXTRACT16(MULT16_32_Q16(K, celt_rcp(sum)));
+      rcp = EXTRACT16(MULT16_32_Q16(K, celt2_rcp(sum)));
 #else
       /* Using K+e with e < 1 guarantees we cannot get more than K pulses. */
-      rcp = EXTRACT16(MULT16_32_Q16(K+0.8f, celt_rcp(sum)));
+      rcp = EXTRACT16(MULT16_32_Q16(K+0.8f, celt2_rcp(sum)));
 #endif
       j=0; do {
 #ifdef FIXED_POINT
@@ -395,7 +395,7 @@ void renormalise_vector(celt_norm *X, int N, opus_val16 gain, int arch)
    k = celt_ilog2(E)>>1;
 #endif
    t = VSHR32(E, 2*(k-7));
-   g = MULT16_16_P15(celt_rsqrt_norm(t),gain);
+   g = MULT16_16_P15(celt2_rsqrt_norm(t),gain);
 
    xptr = X;
    for (i=0;i<N;i++)
@@ -403,7 +403,7 @@ void renormalise_vector(celt_norm *X, int N, opus_val16 gain, int arch)
       *xptr = EXTRACT16(PSHR32(MULT16_16(g, *xptr), k+1));
       xptr++;
    }
-   /*return celt_sqrt(E);*/
+   /*return celt2_sqrt(E);*/
 }
 #endif /* OVERRIDE_renormalise_vector */
 
@@ -429,8 +429,8 @@ int stereo_itheta(const celt_norm *X, const celt_norm *Y, int stereo, int N, int
       Emid += celt_inner_prod(X, X, N, arch);
       Eside += celt_inner_prod(Y, Y, N, arch);
    }
-   mid = celt_sqrt(Emid);
-   side = celt_sqrt(Eside);
+   mid = celt2_sqrt(Emid);
+   side = celt2_sqrt(Eside);
 #ifdef FIXED_POINT
    /* 0.63662 = 2/pi */
    itheta = MULT16_16_Q15(QCONST16(0.63662f,15),celt_atan2p(side, mid));

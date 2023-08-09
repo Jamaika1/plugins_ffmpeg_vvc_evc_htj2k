@@ -67,7 +67,7 @@ unsigned celt2_isqrt32(opus_uint32 _val){
 
 #ifdef FIXED_POINT
 
-opus_val32 frac_div32(opus_val32 a, opus_val32 b)
+opus_val32 frac2_div32(opus_val32 a, opus_val32 b)
 {
    opus_val16 rcp;
    opus_val32 result, rem;
@@ -75,7 +75,7 @@ opus_val32 frac_div32(opus_val32 a, opus_val32 b)
    a = VSHR32(a,shift);
    b = VSHR32(b,shift);
    /* 16-bit reciprocal */
-   rcp = ROUND16(celt_rcp(ROUND16(b,16)),3);
+   rcp = ROUND16(celt2_rcp(ROUND16(b,16)),3);
    result = MULT16_32_Q15(rcp, a);
    rem = PSHR32(a,2)-MULT32_32_Q31(result, b);
    result = ADD32(result, SHL32(MULT16_32_Q15(rcp, rem),2));
@@ -88,7 +88,7 @@ opus_val32 frac_div32(opus_val32 a, opus_val32 b)
 }
 
 /** Reciprocal sqrt approximation in the range [0.25,1) (Q16 in, Q14 out) */
-opus_val16 celt_rsqrt_norm(opus_val32 x)
+opus_val16 celt2_rsqrt_norm(opus_val32 x)
 {
    opus_val16 n;
    opus_val16 r;
@@ -116,7 +116,7 @@ opus_val16 celt_rsqrt_norm(opus_val32 x)
 }
 
 /** Sqrt approximation (QX input, QX/2 output) */
-opus_val32 celt_sqrt(opus_val32 x)
+opus_val32 celt2_sqrt(opus_val32 x)
 {
    int k;
    opus_val16 n;
@@ -154,7 +154,7 @@ static OPUS_INLINE opus_val16 _celt_cos_pi_2(opus_val16 x)
 #undef L3
 #undef L4
 
-opus_val16 celt_cos_norm(opus_val32 x)
+opus_val16 celt2_cos_norm(opus_val32 x)
 {
    x = x&0x0001ffff;
    if (x>SHL32(EXTEND32(1), 16))
@@ -178,7 +178,7 @@ opus_val16 celt_cos_norm(opus_val32 x)
 }
 
 /** Reciprocal approximation (Q15 input, Q16 output) */
-opus_val32 celt_rcp(opus_val32 x)
+opus_val32 celt2_rcp(opus_val32 x)
 {
    int i;
    opus_val16 n;
