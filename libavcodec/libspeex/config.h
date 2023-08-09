@@ -1,15 +1,15 @@
 // Microsoft version of 'inline'
-#define inline __inline
+//#define inline __inline
 
 // In Visual Studio, _M_IX86_FP=1 means /arch:SSE was used, likewise
 // _M_IX86_FP=2 means /arch:SSE2 was used.
 // Also, enable both _USE_SSE and _USE_SSE2 if we're compiling for x86-64
 #if _M_IX86_FP >= 1 || defined(_M_X64) || defined(__x86_64__)
-#define _USE_SSE
+//#define _USE_SSE
 #endif
 
 #if _M_IX86_FP >= 2 || defined(_M_X64) || defined(__x86_64__)
-#define _USE_SSE2
+//#define _USE_SSE2
 #endif
 
 // Visual Studio support alloca(), but it always align variables to 16-bit
@@ -18,6 +18,8 @@
 #ifndef _USE_SSE
 #  define USE_ALLOCA
 #endif
+
+//#define FIXED_POINT 1
 
 /* Default to floating point */
 #ifndef FIXED_POINT
