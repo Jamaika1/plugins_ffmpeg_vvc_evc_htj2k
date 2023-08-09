@@ -26,7 +26,7 @@
 
 #ifdef ARCH_X86_64
 // for svt_aom_get_cpu_flags
-#include "cpuinfo.h"
+#include "cpuinfo/cpuinfo.h"
 #endif
 
 /*
