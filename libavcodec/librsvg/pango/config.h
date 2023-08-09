@@ -52,7 +52,7 @@
 
 /* Whether Cairo can use FreeType for fonts */
 #ifndef PANGO_VISUALC_NO_FC
-#define HAVE_CAIRO_FREETYPE 1
+//#define HAVE_CAIRO_FREETYPE 1
 #endif
 
 /* Whether Cairo has PDF support */
@@ -68,7 +68,7 @@
 /* #undef HAVE_CAIRO_QUARTZ */
 
 /* Whether Cairo can use the Win32 GDI for fonts */
-//#define HAVE_CAIRO_WIN32 0
+#define HAVE_CAIRO_WIN32 1
 
 /* Whether Cairo has Xlib support */
 //#define HAVE_CAIRO_XLIB 1
@@ -88,7 +88,7 @@
 
 /* Have FreeType 2 library */
 #ifndef PANGO_VISUALC_NO_FC
-#define HAVE_FREETYPE 1
+//#define HAVE_FREETYPE 1
 #endif
 
 /* Define to 1 if you have the `getpagesize' function. */
