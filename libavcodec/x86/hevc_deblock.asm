@@ -37,7 +37,7 @@ cextern pw_8
 cextern pw_m1
 
 SECTION .text
-INIT_XMM sse2
+INIT_XMM avx
 
 ; in: 8 rows of 4 bytes in %4..%11
 ; out: 4 rows of 8 words in m0..m3
