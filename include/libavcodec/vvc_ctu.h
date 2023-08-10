@@ -24,6 +24,7 @@
 #define AVCODEC_VVC_CTU_H
 
 #include "libavcodec/cabac.h"
+#include "libavutil/mem_internal.h"
 
 #include "vvcdec.h"
 
@@ -104,6 +105,8 @@ typedef enum VVCTreeType {
 } VVCTreeType;
 
 typedef struct TransformUnit {
+    AVBufferRef *buf;
+
     int x0;
     int y0;
     int width;
@@ -114,6 +117,8 @@ typedef struct TransformUnit {
     uint8_t coded_flag[VVC_MAX_SAMPLE_ARRAYS];          ///< tu_y_coded_flag, tu_cb_coded_flag, tu_cr_coded_flag
     uint8_t nb_tbs;
     TransformBlock tbs[VVC_MAX_SAMPLE_ARRAYS];
+
+    struct TransformUnit *next;
 } TransformUnit;
 
 typedef enum PredMode {
@@ -157,6 +162,7 @@ typedef enum PredFlag {
 } PredFlag;
 
 typedef enum IntraPredMode {
+    INTRA_INVALID   = -1,
     INTRA_PLANAR    = 0,
     INTRA_DC,
     INTRA_HORZ      = 18,
@@ -206,7 +212,6 @@ typedef struct PredictionUnit {
     int cb_prof_flag[2];
 } PredictionUnit;
 
-struct CodingUnit;
 typedef struct CodingUnit {
     AVBufferRef *buf;
 
@@ -251,8 +256,10 @@ typedef struct CodingUnit {
 
     int apply_lfnst_flag[VVC_MAX_SAMPLE_ARRAYS];    ///< ApplyLfnstFlag[]
 
-    TransformUnit tus[MAX_TUS_IN_CU];
-    int num_tus;
+    struct {
+        TransformUnit *head;
+        TransformUnit *tail;
+    } tus;
 
     int8_t qp[4];                                   ///< QpY, Qp′Cb, Qp′Cr, Qp′CbCr
 
@@ -263,6 +270,8 @@ typedef struct CodingUnit {
 
 struct CTU {
     CodingUnit *cus;
+    int max_y[2][VVC_MAX_REF_ENTRIES];
+    int max_y_idx[2];
 };
 
 typedef struct ReconstructedArea {
@@ -280,15 +289,17 @@ typedef struct VVCCabacState {
 // VVC_CONTEXTS matched with SYNTAX_ELEMENT_LAST, it's checked by cabac_init_state.
 #define VVC_CONTEXTS 378
 typedef struct EntryPoint {
-    int8_t qp_y;                                    //< QpY
+    int8_t qp_y;                                    ///< QpY
+
+    int stat_coeff[VVC_MAX_SAMPLE_ARRAYS];          ///< StatCoeff
 
     VVCCabacState cabac_state[VVC_CONTEXTS];
     CABACContext cc;
 
     VVCTask *parse_task;
-    int ctu_addr_last;
+    int ctu_end;
 
-    uint8_t is_first_qg;
+    uint8_t is_first_qg;                            // first quantization group
     MvField hmvp[MAX_NUM_HMVP_CANDS];               ///< HmvpCandList
     int     num_hmvp;                               ///< NumHmvpCand
 } EntryPoint;
@@ -399,12 +410,13 @@ struct ALFParams {
  * @param ry raster order y for the CTU.
  * @return AVERROR
  */
-int ff_vvc_coding_tree_unit(VVCLocalContext *lc, int ctb_addr, int rs, int rx, int ry);
+int ff_vvc_coding_tree_unit(VVCLocalContext *lc, int ctu_idx, int rs, int rx, int ry);
 
 //utils
 void ff_vvc_set_neighbour_available(VVCLocalContext *lc, int x0, int y0, int w, int h);
 void ff_vvc_decode_neighbour(VVCLocalContext *lc, int x_ctb, int y_ctb, int rx, int ry, int rs);
 void ff_vvc_ctu_free_cus(CTU *ctu);
 int ff_vvc_get_qPy(const VVCFrameContext *fc, int xc, int yc);
+void ff_vvc_ep_init_stat_coeff(EntryPoint *ep, int bit_depth, int persistent_rice_adaptation_enabled_flag);
 
 #endif // AVCODEC_VVC_CTU_H

@@ -118,8 +118,16 @@ typedef struct H266GeneralConstraintsInfo {
     uint8_t gci_no_lmcs_constraint_flag;
     uint8_t gci_no_ladf_constraint_flag;
     uint8_t gci_no_virtual_boundaries_constraint_flag;
-    uint8_t gci_num_reserved_bits;
-    uint8_t gci_reserved_zero_bit[255];
+
+    uint8_t gci_num_additional_bits;
+    uint8_t gci_reserved_bit[255];
+
+    uint8_t gci_all_rap_pictures_constraint_flag;
+    uint8_t gci_no_extended_precision_processing_constraint_flag;
+    uint8_t gci_no_ts_residual_coding_rice_constraint_flag;
+    uint8_t gci_no_rrc_rice_extension_constraint_flag;
+    uint8_t gci_no_persistent_rice_adaptation_constraint_flag;
+    uint8_t gci_no_reverse_last_sig_coeff_constraint_flag;
 } H266GeneralConstraintsInfo;
 
 typedef struct H266RawProfileTierLevel {
@@ -229,6 +237,27 @@ typedef struct H266RawVUI {
     uint8_t  vui_chroma_sample_loc_type_bottom_field;
     H266RawExtensionData extension_data;
 } H266RawVUI;
+
+typedef struct H266RawOPI {
+    H266RawNALUnitHeader nal_unit_header;
+
+    uint8_t opi_ols_info_present_flag;
+    uint8_t opi_htid_info_present_flag;
+    uint16_t opi_ols_idx;
+    uint8_t opi_htid_plus1;
+    uint8_t opi_extension_flag;
+    H266RawExtensionData extension_data;
+} H266RawOPI;
+
+typedef struct H266RawDCI {
+    H266RawNALUnitHeader nal_unit_header;
+
+    uint8_t dci_reserved_zero_4bits;
+    uint8_t dci_num_ptls_minus1;
+    H266RawProfileTierLevel dci_profile_tier_level[VVC_MAX_DCI_PTLS];
+    uint8_t dci_extension_flag;
+    H266RawExtensionData extension_data;
+} H266RawDCI;
 
 typedef struct H266RawVPS {
     H266RawNALUnitHeader nal_unit_header;
@@ -451,12 +480,17 @@ typedef struct H266RawSPS {
 
     uint8_t  sps_extension_flag;
 
+    uint8_t  sps_range_extension_flag;
+    uint8_t  sps_extension_7bits;
+
+    uint8_t  sps_extended_precision_flag;
+    uint8_t  sps_ts_residual_coding_rice_present_in_sh_flag;
+    uint8_t  sps_rrc_rice_extension_flag;
+    uint8_t  sps_persistent_rice_adaptation_enabled_flag;
+    uint8_t  sps_reverse_last_sig_coeff_enabled_flag;
+
     H266RawExtensionData extension_data;
 
-    //calcalated value
-    uint8_t sub_width_c;
-    uint8_t sub_height_c;
-    uint8_t min_cb_size_y;
 } H266RawSPS;
 
 typedef struct H266RawPPS {
@@ -556,12 +590,56 @@ typedef struct H266RawPPS {
     uint16_t num_tiles_in_pic;
     uint16_t slice_height_in_ctus[VVC_MAX_SLICES];
     uint16_t num_slices_in_subpic[VVC_MAX_SLICES];
-    uint16_t min_cb_width;
-    uint16_t min_cb_height;
-    uint8_t  log2_ctb_size;
-    uint16_t ctb_width;
-    uint16_t ctb_height;
+    uint16_t sub_pic_id_val[VVC_MAX_SLICES];
+    uint16_t col_width_val[VVC_MAX_TILE_COLUMNS];
+    uint16_t row_height_val[VVC_MAX_TILE_ROWS];
 } H266RawPPS;
+
+typedef struct H266RawAPS {
+    H266RawNALUnitHeader nal_unit_header;
+    uint8_t aps_params_type;
+    uint8_t aps_adaptation_parameter_set_id;
+    uint8_t aps_chroma_present_flag;
+
+    uint8_t alf_luma_filter_signal_flag;
+    uint8_t alf_chroma_filter_signal_flag;
+    uint8_t alf_cc_cb_filter_signal_flag;
+    uint8_t alf_cc_cr_filter_signal_flag;
+    uint8_t alf_luma_clip_flag;
+    uint8_t alf_luma_num_filters_signalled_minus1;
+    uint8_t alf_luma_coeff_delta_idx[VVC_NUM_ALF_FILTERS];
+    uint8_t alf_luma_coeff_abs[VVC_NUM_ALF_FILTERS][12];
+    uint8_t alf_luma_coeff_sign[VVC_NUM_ALF_FILTERS][12];
+    uint8_t alf_luma_clip_idx[VVC_NUM_ALF_FILTERS][12];
+    uint8_t alf_chroma_clip_flag;
+    uint8_t alf_chroma_num_alt_filters_minus1;
+    uint8_t alf_chroma_coeff_abs[8][6];
+    uint8_t alf_chroma_coeff_sign[8][6];
+    uint8_t alf_chroma_clip_idx[8][6];
+    uint8_t alf_cc_cb_filters_signalled_minus1;
+    uint8_t alf_cc_cb_mapped_coeff_abs[4][7];
+    uint8_t alf_cc_cb_coeff_sign[4][7];
+    uint8_t alf_cc_cr_filters_signalled_minus1;
+    uint8_t alf_cc_cr_mapped_coeff_abs[4][7];
+    uint8_t alf_cc_cr_coeff_sign[4][7];
+
+    uint8_t scaling_list_copy_mode_flag[28];
+    uint8_t scaling_list_pred_mode_flag[28];
+    uint8_t scaling_list_pred_id_delta[28];
+    int8_t  scaling_list_dc_coef[14];
+    int8_t  scaling_list_delta_coef[28][64];
+
+    uint8_t lmcs_min_bin_idx;
+    uint8_t lmcs_delta_max_bin_idx;
+    uint8_t lmcs_delta_cw_prec_minus1;
+    uint16_t lmcs_delta_abs_cw[16];
+    uint8_t lmcs_delta_sign_cw_flag[16];
+    uint8_t lmcs_delta_abs_crs;
+    uint8_t lmcs_delta_sign_crs_flag;
+
+    uint8_t aps_extension_flag;
+    H266RawExtensionData extension_data;
+} H266RawAPS;
 
 typedef struct H266RawAUD {
     H266RawNALUnitHeader nal_unit_header;
@@ -590,8 +668,7 @@ typedef struct H266RawPredWeightTable {
     int16_t  delta_chroma_offset_l1[15][2];
 } H266RawPredWeightTable;
 
-typedef struct  H266RawPH {
-    H266RawNALUnitHeader nal_unit_header;
+typedef struct  H266RawPictureHeader {
     uint8_t  ph_gdr_or_irap_pic_flag;
     uint8_t  ph_non_ref_pic_flag;
     uint8_t  ph_gdr_pic_flag;
@@ -679,12 +756,17 @@ typedef struct  H266RawPH {
 
     uint8_t  ph_extension_length;
     uint8_t  ph_extension_data_byte[256];
+} H266RawPictureHeader;
+
+typedef struct H266RawPH {
+    H266RawNALUnitHeader nal_unit_header;
+    H266RawPictureHeader ph_picture_header;
 } H266RawPH;
 
 typedef struct  H266RawSliceHeader {
     H266RawNALUnitHeader nal_unit_header;
     uint8_t  sh_picture_header_in_slice_header_flag;
-    H266RawPH sh_picture_header;
+    H266RawPictureHeader sh_picture_header;
 
     uint16_t sh_subpic_id;
     uint16_t sh_slice_address;
@@ -738,22 +820,14 @@ typedef struct  H266RawSliceHeader {
 
     uint8_t  sh_sign_data_hiding_used_flag;
     uint8_t  sh_ts_residual_coding_disabled_flag;
+    uint8_t  sh_ts_residual_coding_rice_idx_minus1;
+    uint8_t  sh_reverse_last_sig_coeff_flag;
     uint16_t sh_slice_header_extension_length;
     uint8_t  sh_slice_header_extension_data_byte[256];
 
     uint8_t  sh_entry_offset_len_minus1;
     uint32_t sh_entry_point_offset_minus1[VVC_MAX_ENTRY_POINTS];
 
-    //calculated value;
-    uint32_t num_ctus_in_curr_slice;
-    uint8_t  min_qt_size_y;
-    uint8_t  min_qt_size_c;
-    uint8_t  max_bt_size_y;
-    uint8_t  max_bt_size_c;
-    uint8_t  max_tt_size_y;
-    uint8_t  max_tt_size_c;
-    uint8_t  max_mtt_depth_y;
-    uint8_t  max_mtt_depth_c;
 } H266RawSliceHeader;
 
 typedef struct H266RawSlice {
@@ -789,15 +863,11 @@ typedef struct CodedBitstreamH266Context {
     AVBufferRef *vps_ref[VVC_MAX_VPS_COUNT];
     AVBufferRef *sps_ref[VVC_MAX_SPS_COUNT];
     AVBufferRef *pps_ref[VVC_MAX_PPS_COUNT];
-    H266RawVPS  *vps[VVC_MAX_SPS_COUNT];
+    AVBufferRef *ph_ref;
+    H266RawVPS  *vps[VVC_MAX_VPS_COUNT];
     H266RawSPS  *sps[VVC_MAX_SPS_COUNT];
     H266RawPPS  *pps[VVC_MAX_PPS_COUNT];
-
-    struct {
-        AVBufferRef *ph_ref;
-        H266RawPH   *ph;
-    } priv;
-
+    H266RawPictureHeader *ph;
 } CodedBitstreamH266Context;
 
 #endif /* AVCODEC_CBS_H266_H */
