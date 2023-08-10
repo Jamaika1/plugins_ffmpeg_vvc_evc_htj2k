@@ -21,7 +21,6 @@
 #include "libavutil/common.h"
 #include "libavutil/intfloat.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 #include "libavfilter/blend.h"
