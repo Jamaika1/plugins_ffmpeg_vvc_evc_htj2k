@@ -31,10 +31,8 @@
 #include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-
 #include "libavfilter/avfilter.h"
 #include "libavfilter/drawutils.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 
@@ -254,20 +252,13 @@ static const AVFilterPad histeq_inputs[] = {
     },
 };
 
-static const AVFilterPad histeq_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_histeq = {
     .name          = "histeq",
     .description   = NULL_IF_CONFIG_SMALL("Apply global color histogram equalization."),
     .priv_size     = sizeof(HisteqContext),
     .init          = init,
     FILTER_INPUTS(histeq_inputs),
-    FILTER_OUTPUTS(histeq_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .priv_class    = &histeq_class,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,

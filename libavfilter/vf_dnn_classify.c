@@ -26,6 +26,7 @@
 #include "libavfilter/filters.h"
 #include "libavfilter/dnn_filter_common.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libavutil/time.h"
 #include "libavutil/avstring.h"
 #include "libavutil/detection_bbox.h"
@@ -293,28 +294,14 @@ static av_cold void dnn_classify_uninit(AVFilterContext *context)
     free_classify_labels(ctx);
 }
 
-static const AVFilterPad dnn_classify_inputs[] = {
-    {
-        .name         = "default",
-        .type         = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
-static const AVFilterPad dnn_classify_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_dnn_classify = {
     .name          = "dnn_classify",
     .description   = NULL_IF_CONFIG_SMALL("Apply DNN classify filter to the input."),
     .priv_size     = sizeof(DnnClassifyContext),
     .init          = dnn_classify_init,
     .uninit        = dnn_classify_uninit,
-    FILTER_INPUTS(dnn_classify_inputs),
-    FILTER_OUTPUTS(dnn_classify_outputs),
+    FILTER_INPUTS(ff_video_default_filterpad),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .priv_class    = &dnn_classify_class,
     .activate      = dnn_classify_activate,

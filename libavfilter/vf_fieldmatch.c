@@ -38,7 +38,9 @@
 #include "libavutil/timestamp.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define INPUT_MAIN     0
 #define INPUT_CLEANSRC 1

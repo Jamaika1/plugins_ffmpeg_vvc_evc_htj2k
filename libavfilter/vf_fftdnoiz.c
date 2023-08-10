@@ -24,6 +24,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/tx.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libavfilter/window_func.h"
 
 #define MAX_BLOCK 256

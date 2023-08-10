@@ -25,7 +25,7 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavfilter/internal.h"
-
+#include "libavfilter/video.h"
 #include "libavfilter/lavfutils.h"
 
 #define MAX_MIPMAPS 5
@@ -281,13 +281,6 @@ static const AVFilterPad foc_inputs[] = {
     },
 };
 
-static const AVFilterPad foc_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_find_rect = {
     .name            = "find_rect",
     .description     = NULL_IF_CONFIG_SMALL("Find a user specified object."),
@@ -296,7 +289,7 @@ const AVFilter ff_vf_find_rect = {
     .uninit          = uninit,
     .flags           = AVFILTER_FLAG_METADATA_ONLY,
     FILTER_INPUTS(foc_inputs),
-    FILTER_OUTPUTS(foc_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS(AV_PIX_FMT_YUV420P, AV_PIX_FMT_YUVJ420P),
     .priv_class      = &find_rect_class,
 };

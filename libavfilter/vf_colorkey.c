@@ -21,12 +21,10 @@
 #include "libavcodec/config_components.h"
 
 #include "libavutil/opt.h"
-#include "libavutil/imgutils.h"
+#include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/drawutils.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/video.h"
 
 typedef struct ColorkeyContext {
     const AVClass *class;

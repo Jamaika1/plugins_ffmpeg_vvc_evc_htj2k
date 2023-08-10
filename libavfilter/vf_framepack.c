@@ -31,10 +31,8 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/rational.h"
 #include "libavutil/stereo3d.h"
-
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 

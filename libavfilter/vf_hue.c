@@ -30,9 +30,7 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 
@@ -500,13 +498,6 @@ static const AVFilterPad hue_inputs[] = {
     },
 };
 
-static const AVFilterPad hue_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_hue = {
     .name            = "hue",
     .description     = NULL_IF_CONFIG_SMALL("Adjust the hue and saturation of the input video."),
@@ -515,7 +506,7 @@ const AVFilter ff_vf_hue = {
     .uninit          = uninit,
     .process_command = process_command,
     FILTER_INPUTS(hue_inputs),
-    FILTER_OUTPUTS(hue_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .priv_class      = &hue_class,
     .flags           = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,

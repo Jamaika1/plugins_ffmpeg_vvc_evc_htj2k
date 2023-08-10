@@ -23,15 +23,14 @@
  * implementing a generic image processing filter using deep learning networks.
  */
 
-#include "libavformat/avio.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
 #include "libavfilter/filters.h"
 #include "libavfilter/dnn_filter_common.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libswscale/swscale.h"
 #include "libavutil/time.h"
 

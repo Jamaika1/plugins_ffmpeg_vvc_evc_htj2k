@@ -34,9 +34,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 #include "libavfilter/vf_hqdn3d.h"
@@ -383,13 +381,6 @@ static const AVFilterPad avfilter_vf_hqdn3d_inputs[] = {
 };
 
 
-static const AVFilterPad avfilter_vf_hqdn3d_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO
-    },
-};
-
 const AVFilter ff_vf_hqdn3d = {
     .name          = "hqdn3d",
     .description   = NULL_IF_CONFIG_SMALL("Apply a High Quality 3D Denoiser."),
@@ -398,7 +389,7 @@ const AVFilter ff_vf_hqdn3d = {
     .init          = init,
     .uninit        = uninit,
     FILTER_INPUTS(avfilter_vf_hqdn3d_inputs),
-    FILTER_OUTPUTS(avfilter_vf_hqdn3d_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = process_command,
