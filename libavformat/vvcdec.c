@@ -1,5 +1,5 @@
 /*
- * RAW VVC video demuxer
+ * RAW H.266 / VVC video demuxer
  * Copyright (c) 2020 Nuo Mi <nuomi2021@gmail.com>
  *
  * This file is part of FFmpeg.
@@ -58,4 +58,4 @@ static int vvc_probe(const AVProbeData *p)
     return 0;
 }
 
-FF_DEF_RAWVIDEO_DEMUXER(vvc, "raw VVC video", vvc_probe, "h266,266,vvc", AV_CODEC_ID_VVC)
+FF_DEF_RAWVIDEO_DEMUXER(vvc, "raw H.266/VVC video", vvc_probe, "h266,266,vvc", AV_CODEC_ID_VVC)

@@ -1226,6 +1226,7 @@ static int mov_write_pcmc_tag(AVFormatContext *s, AVIOContext *pb, MOVTrack *tra
 {
     int64_t pos = avio_tell(pb);
     int format_flags;
+    int sample_size;
 
     avio_wb32(pb, 0); /* size */
     ffio_wfourcc(pb, "pcmC");
@@ -1238,7 +1239,11 @@ static int mov_write_pcmc_tag(AVFormatContext *s, AVIOContext *pb, MOVTrack *tra
                     track->par->codec_id == AV_CODEC_ID_PCM_S24LE ||
                     track->par->codec_id == AV_CODEC_ID_PCM_S32LE);
     avio_w8(pb, format_flags);
-    avio_w8(pb, track->par->bits_per_raw_sample);
+    sample_size = track->par->bits_per_raw_sample;
+    if (!sample_size)
+        sample_size = av_get_exact_bits_per_sample(track->par->codec_id);
+    av_assert0(sample_size);
+    avio_w8(pb, sample_size);
 
     return update_size(pb, pos);
 }
@@ -1481,9 +1486,9 @@ static int mov_write_vvcc_tag(AVIOContext *pb, MOVTrack *track)
     //ffio_wfourcc_full_box(pb, "vvcC");
 
     if (track->tag == MKTAG('v','v','i','1') || track->tag == MKTAG('v','v','c','1'))
-        ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 1);
+        ff_isom_write_evcc(pb, track->vos_data, track->vos_len, 1);
     else
-        ff_isom_write_vvcc(pb, track->vos_data, track->vos_len, 0);
+        ff_isom_write_evcc(pb, track->vos_data, track->vos_len, 0);
 
     return update_size(pb, pos);
 }
@@ -6252,10 +6257,10 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
                 size = ff_hevc_annexb2mp4(pb, pkt->data, pkt->size, 0, NULL);
             }
         }
-    } else if (par->codec_id == AV_CODEC_ID_VVC && trk->vos_len > 6 &&
-               (AV_RB24(trk->vos_data) == 1 || AV_RB32(trk->vos_data) == 1)) {
+    } /*else if (par->codec_id == AV_CODEC_ID_VVC && trk->vos_len > 6 &&
+               (AV_RB24(trk->vos_data) == 1 || AV_RB32(trk->vos_data) == 1)) {*/
         /* extradata is Annex B, assume the bitstream is too and convert it */
-        if (trk->hint_track >= 0 && trk->hint_track < mov->nb_streams) {
+        /*if (trk->hint_track >= 0 && trk->hint_track < mov->nb_streams) {
             ret = ff_vvc_annexb2mp4_buf(pkt->data, &reformatted_data,
                                          &size, 0, NULL);
             if (ret < 0)
@@ -6264,7 +6269,7 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
         } else {
             size = ff_vvc_annexb2mp4(pb, pkt->data, pkt->size, 0, NULL);
         }
-    } else if (par->codec_id == AV_CODEC_ID_AV1) {
+    }*/ else if (par->codec_id == AV_CODEC_ID_AV1) {
         if (trk->hint_track >= 0 && trk->hint_track < mov->nb_streams) {
             ret = ff_av1_filter_obus_buf(pkt->data, &reformatted_data,
                                          &size, &offset);
@@ -6307,7 +6312,7 @@ int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt)
             if (par->codec_id == AV_CODEC_ID_H264 && par->extradata_size > 4) {
                 int nal_size_length = (par->extradata[4] & 0x3) + 1;
                 ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
-            } else if((par->codec_id == AV_CODEC_ID_HEVC || par->codec_id == AV_CODEC_ID_VVC) && par->extradata_size > 21) {
+            } else if((par->codec_id == AV_CODEC_ID_HEVC /*|| par->codec_id == AV_CODEC_ID_VVC*/) && par->extradata_size > 21) {
                 int nal_size_length = (par->extradata[21] & 0x3) + 1;
                 ret = ff_mov_cenc_avc_write_nal_units(s, &trk->cenc, nal_size_length, pb, pkt->data, size);
             } else {
@@ -7392,7 +7397,7 @@ static int mov_init(AVFormatContext *s)
 
         if (mov->encryption_scheme == MOV_ENC_CENC_AES_CTR) {
             ret = ff_mov_cenc_init(&track->cenc, mov->encryption_key,
-                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC || track->par->codec_id == AV_CODEC_ID_VVC),
+                (track->par->codec_id == AV_CODEC_ID_H264 || track->par->codec_id == AV_CODEC_ID_HEVC /*|| track->par->codec_id == AV_CODEC_ID_VVC*/),
                 s->flags & AVFMT_FLAG_BITEXACT);
             if (ret)
                 return ret;
