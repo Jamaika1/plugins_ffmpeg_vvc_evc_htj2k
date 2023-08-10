@@ -9,8 +9,8 @@
                              "-ldavs2_x64 -ldav1d_x64 -luavs3d_x64 -lxevd_x64 -laom_x64 -lkvazaar_x64 -lopenh264_x64 -lsvtav1_x64 -ltheora_x64 -lvpx_x64 -luvg266_x64 -luavs3e_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxeve_x64 -lxvid_x64 " \
                              "-lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -lmp3lame_x64 -lgsm_x64 -lvorbis_x64 -lfdk-aac_x64 -lshine_x64 -lsnappy_x64 -lspeex_x64 -ltwolame_x64 " \
                              "-ljxl_x64 -lpng_x64 -lwebp_x64 -lopenjpeg_x64 -llcms2_x64 -logg_x64 -lpthread_x64 " \
-                             "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a " \
-                             "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+                             "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:opencl_x64.a " \
+                             "-L. -lcfgmgr32 -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #else
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_dec.o fftools/ffmpeg_demux.o fftools/ffmpeg_enc.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o "\
@@ -18,7 +18,7 @@
                              "-ldavs2_x64 -ldav1d_x64 -luavs3d_x64 -lxevd_x64 -laom_x64 -lkvazaar_x64 -lopenh264_x64 -lsvtav1_x64 -ltheora_x64 -lvpx_x64 -luvg266_x64 -luavs3e_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxeve_x64 -lxvid_x64 " \
                              "-lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -lmp3lame_x64 -lgsm_x64 -lvorbis_x64 -lfdk-aac_x64 -lshine_x64 -lsnappy_x64 -lspeex_x64 -ltwolame_x64 " \
                              "-ljxl_x64 -lpng_x64 -lwebp_x64 -lopenjpeg_x64 -llcms2_x64 -logg_x64 -lpthread_x64 " \
-                             "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a " \
+                             "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:opencl_x64.a " \
                              "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #endif
 #define FFMPEG_LICENSE "nonfree and unredistributable"
@@ -260,7 +260,7 @@
 #define HAVE_MACHINE_IOCTL_METEOR_H 0
 #define HAVE_MALLOC_H 0
 #define HAVE_OPENCV2_CORE_CORE_C_H 0
-#define HAVE_OPENGL_GL3_H 0
+#define HAVE_OPENGL_GL3_H 1
 #define HAVE_POLL_H 0
 #define HAVE_SYS_PARAM_H 1
 #define HAVE_SYS_RESOURCE_H 0
@@ -271,7 +271,7 @@
 #define HAVE_SYS_VIDEOIO_H 0
 #define HAVE_TERMIOS_H 0
 #define HAVE_UDPLITE_H 0
-#define HAVE_UNISTD_H 1
+#define HAVE_UNISTD_H 0
 #define HAVE_VALGRIND_VALGRIND_H 0
 #define HAVE_WINDOWS_H 1
 #define HAVE_WINSOCK2_H 1
@@ -357,10 +357,10 @@
 #define HAVE_STRERROR_R 0
 #define HAVE_SYSCONF 0
 #define HAVE_SYSCTL 0
-#define HAVE_USLEEP 1
+#define HAVE_USLEEP 0
 #define HAVE_UTGETOSTYPEFROMSTRING 0
 #define HAVE_VIRTUALALLOC 1
-#define HAVE_WGLGETPROCADDRESS 0
+#define HAVE_WGLGETPROCADDRESS 1
 #define HAVE_BCRYPT 1
 #define HAVE_VAAPI_DRM 0
 #define HAVE_VAAPI_X11 0
@@ -408,10 +408,10 @@
 #define HAVE_STRUCT_V4L2_FRMIVALENUM_DISCRETE 0
 #define HAVE_MAKEINFO 0
 #define HAVE_MAKEINFO_HTML 0
-#define HAVE_OPENCL_D3D11 0
+#define HAVE_OPENCL_D3D11 1
 #define HAVE_OPENCL_DRM_ARM 0
 #define HAVE_OPENCL_DRM_BEIGNET 0
-#define HAVE_OPENCL_DXVA2 0
+#define HAVE_OPENCL_DXVA2 1
 #define HAVE_OPENCL_VAAPI_BEIGNET 0
 #define HAVE_OPENCL_VAAPI_INTEL_MEDIA 0
 #define HAVE_PERL 1
@@ -529,7 +529,7 @@
 #define CONFIG_LIBZVBI 0
 #define CONFIG_LV2 0
 #define CONFIG_OPENAL 0
-#define CONFIG_OPENGL 0
+#define CONFIG_OPENGL 1
 #define CONFIG_POCKETSPHINX 0
 #define CONFIG_VAPOURSYNTH 0
 #define CONFIG_ALSA 0
@@ -544,7 +544,7 @@
 #define CONFIG_LIBXCB_XFIXES 0
 #define CONFIG_LZMA 1
 #define CONFIG_SCHANNEL 0
-#define CONFIG_SDL2 1
+//#define CONFIG_SDL2 1
 #define CONFIG_SECURETRANSPORT 0
 #define CONFIG_SNDIO 0
 #define CONFIG_XLIB 0
@@ -555,7 +555,7 @@
 #define CONFIG_LIBMFX 0
 #define CONFIG_MMAL 0
 #define CONFIG_OMX 0
-#define CONFIG_OPENCL 0
+#define CONFIG_OPENCL 1
 #define CONFIG_AMF 0
 #define CONFIG_AUDIOTOOLBOX 0
 #define CONFIG_CRYSTALHD 0
@@ -1282,6 +1282,7 @@
 #define CONFIG_QDMC_AT_DECODER 0
 #define CONFIG_QDM2_AT_DECODER 0
 #define CONFIG_LIBAOM_AV1_DECODER 1
+#define CONFIG_AV1_AMF_ENCODER 0
 #define CONFIG_LIBJXL_DECODER 1
 #define CONFIG_LIBARIBB24_DECODER 0
 #define CONFIG_LIBARIBCAPTION_DECODER 1
@@ -1698,7 +1699,7 @@
 #define CONFIG_CACA_OUTDEV 0
 #define CONFIG_DECKLINK_OUTDEV 0
 #define CONFIG_FBDEV_OUTDEV 0
-#define CONFIG_OPENGL_OUTDEV 0
+#define CONFIG_OPENGL_OUTDEV 1
 #define CONFIG_OSS_OUTDEV 0
 #define CONFIG_PULSE_OUTDEV 0
 #define CONFIG_SDL2_OUTDEV 1
@@ -1865,7 +1866,7 @@
 #define CONFIG_ASS_FILTER 1
 #define CONFIG_ATADENOISE_FILTER 1
 #define CONFIG_AVGBLUR_FILTER 1
-#define CONFIG_AVGBLUR_OPENCL_FILTER 0
+#define CONFIG_AVGBLUR_OPENCL_FILTER 1
 #define CONFIG_AVGBLUR_VULKAN_FILTER 0
 #define CONFIG_BACKGROUNDKEY_FILTER 1
 #define CONFIG_BBOX_FILTER 1
@@ -1881,7 +1882,7 @@
 #define CONFIG_BLURDETECT_FILTER 1
 #define CONFIG_BM3D_FILTER 1
 #define CONFIG_BOXBLUR_FILTER 1
-#define CONFIG_BOXBLUR_OPENCL_FILTER 0
+#define CONFIG_BOXBLUR_OPENCL_FILTER 1
 #define CONFIG_BWDIF_FILTER 1
 #define CONFIG_BWDIF_VULKAN_FILTER 0
 #define CONFIG_CAS_FILTER 1
@@ -1900,7 +1901,7 @@
 #define CONFIG_COLORCORRECT_FILTER 1
 #define CONFIG_COLORIZE_FILTER 1
 #define CONFIG_COLORKEY_FILTER 1
-#define CONFIG_COLORKEY_OPENCL_FILTER 0
+#define CONFIG_COLORKEY_OPENCL_FILTER 1
 #define CONFIG_COLORHOLD_FILTER 1
 #define CONFIG_COLORLEVELS_FILTER 1
 #define CONFIG_COLORMAP_FILTER 1
@@ -1909,7 +1910,7 @@
 #define CONFIG_COLORSPACE_CUDA_FILTER 0
 #define CONFIG_COLORTEMPERATURE_FILTER 1
 #define CONFIG_CONVOLUTION_FILTER 1
-#define CONFIG_CONVOLUTION_OPENCL_FILTER 0
+#define CONFIG_CONVOLUTION_OPENCL_FILTER 1
 #define CONFIG_CONVOLVE_FILTER 1
 #define CONFIG_COPY_FILTER 1
 #define CONFIG_COREIMAGE_FILTER 0
@@ -1935,12 +1936,12 @@
 #define CONFIG_DELOGO_FILTER 1
 #define CONFIG_DENOISE_VAAPI_FILTER 0
 #define CONFIG_DERAIN_FILTER 1
-#define CONFIG_DESHAKE_OPENCL_FILTER 0
+#define CONFIG_DESHAKE_OPENCL_FILTER 1
 #define CONFIG_DESHAKE_FILTER 1
 #define CONFIG_DESPILL_FILTER 1
 #define CONFIG_DETELECINE_FILTER 1
 #define CONFIG_DILATION_FILTER 1
-#define CONFIG_DILATION_OPENCL_FILTER 0
+#define CONFIG_DILATION_OPENCL_FILTER 1
 #define CONFIG_DISPLACE_FILTER 1
 #define CONFIG_DNN_CLASSIFY_FILTER 1
 #define CONFIG_DNN_DETECT_FILTER 1
@@ -1949,14 +1950,14 @@
 #define CONFIG_DRAWBOX_FILTER 1
 #define CONFIG_DRAWGRAPH_FILTER 1
 #define CONFIG_DRAWGRID_FILTER 1
-#define CONFIG_DRAWTEXT_FILTER 0
+#define CONFIG_DRAWTEXT_FILTER 1
 #define CONFIG_EDGEDETECT_FILTER 1
 #define CONFIG_ELBG_FILTER 1
 #define CONFIG_ENTROPY_FILTER 1
 #define CONFIG_EPX_FILTER 1
 #define CONFIG_EQ_FILTER 1
 #define CONFIG_EROSION_FILTER 1
-#define CONFIG_EROSION_OPENCL_FILTER 0
+#define CONFIG_EROSION_OPENCL_FILTER 1
 #define CONFIG_ESTDIF_FILTER 1
 #define CONFIG_EXPOSURE_FILTER 1
 #define CONFIG_EXTRACTPLANES_FILTER 1
@@ -2048,10 +2049,11 @@
 #define CONFIG_MONOCHROME_FILTER 1
 #define CONFIG_MORPHO_FILTER 1
 #define CONFIG_MPDECIMATE_FILTER 1
+//#define CONFIG_MSAD_FILTER 0
 #define CONFIG_MULTIPLY_FILTER 1
 #define CONFIG_NEGATE_FILTER 1
 #define CONFIG_NLMEANS_FILTER 1
-#define CONFIG_NLMEANS_OPENCL_FILTER 0
+#define CONFIG_NLMEANS_OPENCL_FILTER 1
 #define CONFIG_NLMEANS_VULKAN_FILTER 0
 #define CONFIG_NNEDI_FILTER 1
 #define CONFIG_NOFORMAT_FILTER 1
@@ -2063,13 +2065,13 @@
 #define CONFIG_OSCILLOSCOPE_FILTER 1
 #define CONFIG_OVERLAY_FILTER 1
 #define CONFIG_OVERLAY_CUDA_FILTER 0
-#define CONFIG_OVERLAY_OPENCL_FILTER 0
+#define CONFIG_OVERLAY_OPENCL_FILTER 1
 #define CONFIG_OVERLAY_QSV_FILTER 0
 #define CONFIG_OVERLAY_VAAPI_FILTER 0
 #define CONFIG_OVERLAY_VULKAN_FILTER 0
 #define CONFIG_OWDENOISE_FILTER 1
 #define CONFIG_PAD_FILTER 1
-#define CONFIG_PAD_OPENCL_FILTER 0
+#define CONFIG_PAD_OPENCL_FILTER 1
 #define CONFIG_PALETTEGEN_FILTER 1
 #define CONFIG_PALETTEUSE_FILTER 1
 #define CONFIG_PERMS_FILTER 1
@@ -2083,9 +2085,9 @@
 #define CONFIG_PP7_FILTER 1
 #define CONFIG_PREMULTIPLY_FILTER 1
 #define CONFIG_PREWITT_FILTER 1
-#define CONFIG_PREWITT_OPENCL_FILTER 0
+#define CONFIG_PREWITT_OPENCL_FILTER 1
 #define CONFIG_PROCAMP_VAAPI_FILTER 0
-#define CONFIG_PROGRAM_OPENCL_FILTER 0
+#define CONFIG_PROGRAM_OPENCL_FILTER 1
 #define CONFIG_PSEUDOCOLOR_FILTER 1
 #define CONFIG_PSNR_FILTER 1
 #define CONFIG_PULLUP_FILTER 1
@@ -2095,14 +2097,14 @@
 #define CONFIG_READVITC_FILTER 1
 #define CONFIG_REALTIME_FILTER 1
 #define CONFIG_REMAP_FILTER 1
-#define CONFIG_REMAP_OPENCL_FILTER 0
+#define CONFIG_REMAP_OPENCL_FILTER 1
 #define CONFIG_REMOVEGRAIN_FILTER 1
 #define CONFIG_REMOVELOGO_FILTER 1
 #define CONFIG_REPEATFIELDS_FILTER 1
 #define CONFIG_REVERSE_FILTER 1
 #define CONFIG_RGBASHIFT_FILTER 1
 #define CONFIG_ROBERTS_FILTER 1
-#define CONFIG_ROBERTS_OPENCL_FILTER 0
+#define CONFIG_ROBERTS_OPENCL_FILTER 1
 #define CONFIG_ROTATE_FILTER 1
 #define CONFIG_SAB_FILTER 1
 #define CONFIG_SCALE_FILTER 1
@@ -2141,7 +2143,7 @@
 #define CONFIG_SIGNATURE_FILTER 1
 #define CONFIG_SMARTBLUR_FILTER 1
 #define CONFIG_SOBEL_FILTER 1
-#define CONFIG_SOBEL_OPENCL_FILTER 0
+#define CONFIG_SOBEL_OPENCL_FILTER 1
 #define CONFIG_SITI_FILTER 1
 #define CONFIG_SPLIT_FILTER 1
 #define CONFIG_SPP_FILTER 1
@@ -2167,18 +2169,18 @@
 #define CONFIG_TMIDEQUALIZER_FILTER 1
 #define CONFIG_TMIX_FILTER 1
 #define CONFIG_TONEMAP_FILTER 1
-#define CONFIG_TONEMAP_OPENCL_FILTER 0
+#define CONFIG_TONEMAP_OPENCL_FILTER 1
 #define CONFIG_TONEMAP_VAAPI_FILTER 0
 #define CONFIG_TPAD_FILTER 1
 #define CONFIG_TRANSPOSE_FILTER 1
 #define CONFIG_TRANSPOSE_NPP_FILTER 0
-#define CONFIG_TRANSPOSE_OPENCL_FILTER 0
+#define CONFIG_TRANSPOSE_OPENCL_FILTER 1
 #define CONFIG_TRANSPOSE_VAAPI_FILTER 0
 #define CONFIG_TRANSPOSE_VULKAN_FILTER 0
 #define CONFIG_TRIM_FILTER 1
 #define CONFIG_UNPREMULTIPLY_FILTER 1
 #define CONFIG_UNSHARP_FILTER 1
-#define CONFIG_UNSHARP_OPENCL_FILTER 0
+#define CONFIG_UNSHARP_OPENCL_FILTER 1
 #define CONFIG_UNTILE_FILTER 1
 #define CONFIG_USPP_FILTER 1
 #define CONFIG_V360_FILTER 1
@@ -2202,7 +2204,7 @@
 #define CONFIG_XBR_FILTER 1
 #define CONFIG_XCORRELATE_FILTER 1
 #define CONFIG_XFADE_FILTER 1
-#define CONFIG_XFADE_OPENCL_FILTER 0
+#define CONFIG_XFADE_OPENCL_FILTER 1
 #define CONFIG_XFADE_VULKAN_FILTER 0
 #define CONFIG_XMEDIAN_FILTER 1
 #define CONFIG_XSTACK_FILTER 1
@@ -2235,7 +2237,7 @@
 #define CONFIG_MANDELBROT_FILTER 1
 #define CONFIG_MPTESTSRC_FILTER 1
 #define CONFIG_NULLSRC_FILTER 1
-#define CONFIG_OPENCLSRC_FILTER 0
+#define CONFIG_OPENCLSRC_FILTER 1
 #define CONFIG_PAL75BARS_FILTER 1
 #define CONFIG_PAL100BARS_FILTER 1
 #define CONFIG_RGBTESTSRC_FILTER 1
