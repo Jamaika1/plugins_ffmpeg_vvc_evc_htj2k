@@ -31,9 +31,9 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/mem.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "internal.h"
-#include "jpeg2000.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/jpeg2000.h"
 
 #define SHL(a, n) ((n) >= 0 ? (a) << (n) : (a) >> -(n))
 

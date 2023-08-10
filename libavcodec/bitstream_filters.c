@@ -34,7 +34,6 @@ extern const FFBitStreamFilter ff_dca_core_bsf;
 extern const FFBitStreamFilter ff_dts2pts_bsf;
 extern const FFBitStreamFilter ff_dv_error_marker_bsf;
 extern const FFBitStreamFilter ff_eac3_core_bsf;
-extern const FFBitStreamFilter ff_evc_frame_merge_bsf;
 extern const FFBitStreamFilter ff_extract_extradata_bsf;
 extern const FFBitStreamFilter ff_filter_units_bsf;
 extern const FFBitStreamFilter ff_h264_metadata_bsf;
@@ -68,16 +67,17 @@ extern const FFBitStreamFilter ff_vp9_superframe_bsf;
 extern const FFBitStreamFilter ff_vp9_superframe_split_bsf;
 extern const FFBitStreamFilter ff_vvc_metadata_bsf;
 extern const FFBitStreamFilter ff_vvc_mp4toannexb_bsf;
+extern const FFBitStreamFilter ff_evc_frame_merge_bsf;
 
 #include "extra/bsf_list.c"
 
 const AVBitStreamFilter *av_bsf_iterate(void **opaque)
 {
-    uintptr_t i = (uintptr_t)*opaque;
+    uintptr_t i = (uintptr_t) * opaque;
     const FFBitStreamFilter *f = bitstream_filters[i];
 
     if (f) {
-        *opaque = (void*)(i + 1);
+        *opaque = (void *)(i + 1);
         return &f->p;
     }
     return NULL;

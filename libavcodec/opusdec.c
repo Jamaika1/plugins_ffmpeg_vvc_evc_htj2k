@@ -46,15 +46,15 @@
 
 #include "libswresample/swresample.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "opus.h"
-#include "opustab.h"
-#include "opus_celt.h"
-#include "opus_parse.h"
-#include "opus_rc.h"
-#include "opus_silk.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/opus.h"
+#include "libavcodec/opustab.h"
+#include "libavcodec/opus_celt.h"
+#include "libavcodec/opus_parse.h"
+#include "libavcodec/opus_rc.h"
+#include "libavcodec/opus_silk.h"
 
 static const uint16_t silk_frame_duration_ms[16] = {
     10, 20, 40, 60,

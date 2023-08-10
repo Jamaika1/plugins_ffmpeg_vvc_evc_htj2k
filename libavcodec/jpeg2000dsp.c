@@ -20,9 +20,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "jpeg2000dsp.h"
+#include "libavcodec/jpeg2000dsp.h"
 
 /* Inverse ICT parameters in float and integer.
  * int value = (float value) * (1<<16) */

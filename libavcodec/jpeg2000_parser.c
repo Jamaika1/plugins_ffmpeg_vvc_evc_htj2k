@@ -24,7 +24,7 @@
  * JPEG2000 parser.
  */
 
-#include "parser.h"
+#include "libavcodec/parser.h"
 
 /* Whether frame is jp2 file or codestream
 */
