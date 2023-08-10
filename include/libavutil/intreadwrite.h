@@ -65,15 +65,13 @@ typedef union {
 #include "config.h"
 
 #if   ARCH_ARM
-#   include "arm/intreadwrite.h"
+#   include "libavutil/x86/arm/intreadwrite.h"
 #elif ARCH_AVR32
-#   include "avr32/intreadwrite.h"
+#   include "libavutil/x86/avr32/intreadwrite.h"
 #elif ARCH_MIPS
-#   include "mips/intreadwrite.h"
+#   include "libavutil/x86/mips/intreadwrite.h"
 #elif ARCH_PPC
-#   include "ppc/intreadwrite.h"
-#elif ARCH_TOMI
-#   include "tomi/intreadwrite.h"
+#   include "libavutil/x86/ppc/intreadwrite.h"
 #elif ARCH_X86
 #   include "libavutil/x86/intreadwrite.h"
 #endif
@@ -215,7 +213,7 @@ typedef union {
  * by per-arch headers.
  */
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 
 union unaligned_64 { uint64_t l; } __attribute__((packed)) av_alias;
 union unaligned_32 { uint32_t l; } __attribute__((packed)) av_alias;
