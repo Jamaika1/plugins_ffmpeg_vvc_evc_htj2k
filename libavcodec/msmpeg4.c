@@ -29,15 +29,15 @@
 
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "idctdsp.h"
-#include "mpegvideo.h"
-#include "msmpeg4.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/msmpeg4.h"
 #include "libavutil/x86/asm.h"
-#include "mpeg4videodata.h"
-#include "msmpeg4data.h"
-#include "msmpeg4_vc1_data.h"
-#include "mpegvideodata.h"
+#include "libavcodec/mpeg4videodata.h"
+#include "libavcodec/msmpeg4data.h"
+#include "libavcodec/msmpeg4_vc1_data.h"
+#include "libavcodec/mpegvideodata.h"
 
 /*
  * You can also call this codec: MPEG-4 with a twist!

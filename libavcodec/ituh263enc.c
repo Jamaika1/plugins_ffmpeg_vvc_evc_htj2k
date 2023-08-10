@@ -27,24 +27,24 @@
  * H.263 bitstream encoder.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <limits.h>
 
 #include "libavutil/attributes.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "mpegvideo.h"
-#include "mpegvideodata.h"
-#include "flvenc.h"
-#include "mpegvideoenc.h"
-#include "h263.h"
-#include "h263enc.h"
-#include "h263data.h"
-#include "mathops.h"
-#include "mpegutils.h"
-#include "internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/flvenc.h"
+#include "libavcodec/mpegvideoenc.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263enc.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/internal.h"
 
 /**
  * Table of number of bits a motion vector component needs.

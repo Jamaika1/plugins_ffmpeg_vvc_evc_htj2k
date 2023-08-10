@@ -27,10 +27,10 @@
  * MSMPEG4 data tables.
  */
 
-#include "h263data.h"
-#include "mpeg4videodata.h"
-#include "msmpeg4data.h"
-#include "rl.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/mpeg4videodata.h"
+#include "libavcodec/msmpeg4data.h"
+#include "libavcodec/rl.h"
 
 uint32_t ff_v2_dc_lum_table[512][2];
 uint32_t ff_v2_dc_chroma_table[512][2];

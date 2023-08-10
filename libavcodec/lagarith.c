@@ -27,13 +27,13 @@
 
 #include <inttypes.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "mathops.h"
-#include "lagarithrac.h"
-#include "lossless_videodsp.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/lagarithrac.h"
+#include "libavcodec/lossless_videodsp.h"
+#include "libavcodec/thread.h"
 
 enum LagarithFrameType {
     FRAME_RAW           = 1,    /**< uncompressed */

@@ -204,14 +204,33 @@ static void set_qp_c(VVCLocalContext *lc)
     }
 }
 
-static TransformUnit* add_tu(CodingUnit *cu, const int x0, const int y0, const int tu_width, const int tu_height)
+static TransformUnit* alloc_tu(VVCFrameContext *fc, CodingUnit *cu)
 {
     TransformUnit *tu;
-
-    if (cu->num_tus >= FF_ARRAY_ELEMS(cu->tus))
+    AVBufferRef *buf = av_buffer_pool_get(fc->tu_pool);
+    if (!buf)
         return NULL;
 
-    tu = &cu->tus[cu->num_tus];
+    tu = (TransformUnit *)buf->data;
+    tu->next = NULL;
+    tu->buf = buf;
+
+    if (cu->tus.tail)
+        cu->tus.tail->next =  tu;
+    else
+        cu->tus.head = tu;
+    cu->tus.tail = tu;
+
+    return tu;
+}
+
+static TransformUnit* add_tu(VVCFrameContext *fc, CodingUnit *cu, const int x0, const int y0, const int tu_width, const int tu_height)
+{
+    TransformUnit *tu = alloc_tu(fc, cu);
+
+    if (!tu)
+        return NULL;
+
     tu->x0 = x0;
     tu->y0 = y0;
     tu->width = tu_width;
@@ -219,7 +238,6 @@ static TransformUnit* add_tu(CodingUnit *cu, const int x0, const int y0, const i
     tu->joint_cbcr_residual_flag = 0;
     memset(tu->coded_flag, 0, sizeof(tu->coded_flag));
     tu->nb_tbs = 0;
-    cu->num_tus++;
 
     return tu;
 }
@@ -295,7 +313,7 @@ static int hls_transform_unit(VVCLocalContext *lc, int x0, int y0,int tu_width, 
     const VVCSPS *sps   = fc->ps.sps;
     const VVCPPS *pps   = fc->ps.pps;
     CodingUnit *cu      = lc->cu;
-    TransformUnit *tu   = add_tu(cu, x0, y0, tu_width, tu_height);
+    TransformUnit *tu   = add_tu(fc, cu, x0, y0, tu_width, tu_height);
     const int min_cb_width      = pps->min_cb_width;
     const VVCTreeType tree_type = cu->tree_type;
     const int is_128            = cu->cb_width > 64 || cu->cb_height > 64;
@@ -459,7 +477,7 @@ static int hls_transform_tree(VVCLocalContext *lc, int x0, int y0,int tu_width, 
 
 static int skipped_transform_tree(VVCLocalContext *lc, int x0, int y0,int tu_width, int tu_height)
 {
-    const VVCFrameContext *fc   = lc->fc;
+    VVCFrameContext *fc   = lc->fc;
     const VVCSPS *sps           = fc->ps.sps;
 
     if (tu_width > sps->max_tb_size_y || tu_height > sps->max_tb_size_y) {
@@ -479,7 +497,7 @@ static int skipped_transform_tree(VVCLocalContext *lc, int x0, int y0,int tu_wid
         else
             SKIPPED_TRANSFORM_TREE(x0, y0 + trafo_height);
     } else {
-        TransformUnit *tu = add_tu(lc->cu, x0, y0, tu_width, tu_height);
+        TransformUnit *tu = add_tu(fc, lc->cu, x0, y0, tu_width, tu_height);
         const int c_end = sps->chroma_format_idc ? VVC_MAX_SAMPLE_ARRAYS : (LUMA + 1);
         if (!tu)
             return AVERROR_INVALIDDATA;
@@ -773,6 +791,7 @@ static int lfnst_idx_decode(VVCLocalContext *lc)
     const VVCSPS *sps           = lc->fc->ps.sps;
     const int cb_width          = cu->cb_width;
     const int cb_height         = cu->cb_height;
+    const TransformUnit  *tu    = cu->tus.head;
     int lfnst_width, lfnst_height, min_lfnst;
     int lfnst_idx = 0;
 
@@ -781,13 +800,13 @@ static int lfnst_idx_decode(VVCLocalContext *lc)
     if (!sps->lfnst_enabled_flag || cu->pred_mode != MODE_INTRA || FFMAX(cb_width, cb_height) > sps->max_tb_size_y)
         return 0;
 
-    for (int i = 0; i < cu->num_tus; i++) {
-        const TransformUnit  *tu  = &cu->tus[i];
+    while (tu) {
         for (int j = 0; j < tu->nb_tbs; j++) {
             const TransformBlock *tb = tu->tbs + j;
             if (tu->coded_flag[tb->c_idx] && tb->ts)
                 return 0;
         }
+        tu = tu->next;
     }
 
     if (tree_type == DUAL_TREE_CHROMA) {
@@ -822,7 +841,7 @@ static MtsIdx mts_idx_decode(VVCLocalContext *lc)
     const VVCSPS     *sps   = lc->fc->ps.sps;
     const int cb_width      = cu->cb_width;
     const int cb_height     = cu->cb_height;
-    const uint8_t transform_skip_flag = cu->tus[0].tbs[0].ts; //fix me
+    const uint8_t transform_skip_flag = cu->tus.head->tbs[0].ts; //fix me
     int mts_idx = MTS_DCT2_DCT2;
     if (cu->tree_type != DUAL_TREE_CHROMA && !cu->lfnst_idx &&
         !transform_skip_flag && FFMAX(cb_width, cb_height) <= 32 &&
@@ -846,8 +865,11 @@ static enum IntraPredMode derive_center_luma_intra_pred_mode(const VVCFrameConte
     const int cu_pred_mode        = SAMPLE_CTB(fc->tab.cpm[0], x_center, y_center);
     const int intra_pred_mode_y   = SAMPLE_CTB(fc->tab.ipm, x_center, y_center);
 
-    if (intra_mip_flag)
+    if (intra_mip_flag) {
+        if (cu->tree_type == SINGLE_TREE && sps->chroma_format_idc == CHROMA_FORMAT_444)
+            return INTRA_INVALID;
         return INTRA_PLANAR;
+    }
     if (cu_pred_mode == MODE_IBC || cu_pred_mode == MODE_PLT)
         return INTRA_DC;
     return intra_pred_mode_y;
@@ -891,11 +913,11 @@ static void derive_chroma_intra_pred_mode(VVCLocalContext *lc,
         };
         const int modes[4] = {INTRA_PLANAR, INTRA_VERT, INTRA_HORZ, INTRA_DC};
         int idx;
-
         for (idx = 0; idx < FF_ARRAY_ELEMS(modes); idx++) {
             if (modes[idx] == luma_intra_pred_mode)
                 break;
         }
+
         cu->intra_pred_mode_c = pred_mode_c[intra_chroma_pred_mode][idx];
     }
     if (sps->chroma_format_idc == CHROMA_FORMAT_422 && cu->intra_pred_mode_c <= INTRA_VDIAG) {
@@ -1128,11 +1150,9 @@ static void set_cb_pos(const VVCFrameContext *fc, const CodingUnit *cu)
     }
 }
 
-static CodingUnit* add_cu(VVCLocalContext *lc, const int x0, const int y0,
-    const int cb_width, const int cb_height, const int cqt_depth, const VVCTreeType tree_type)
+static CodingUnit* alloc_cu(VVCLocalContext *lc, const int x0, const int y0)
 {
     VVCFrameContext *fc = lc->fc;
-    const int ch_type   = tree_type == DUAL_TREE_CHROMA ? 1 : 0;
     const VVCSPS *sps   = fc->ps.sps;
     const VVCPPS *pps   = fc->ps.pps;
     const int rx        = x0 >> sps->ctb_log2_size_y;
@@ -1147,11 +1167,24 @@ static CodingUnit* add_cu(VVCLocalContext *lc, const int x0, const int y0,
     cu->next = NULL;
     cu->buf = buf;
 
-    if (ctu->cus)
+    if (lc->cu)
         lc->cu->next = cu;
     else
         ctu->cus = cu;
     lc->cu = cu;
+
+    return cu;
+}
+
+static CodingUnit* add_cu(VVCLocalContext *lc, const int x0, const int y0,
+    const int cb_width, const int cb_height, const int cqt_depth, const VVCTreeType tree_type)
+{
+    VVCFrameContext *fc = lc->fc;
+    const int ch_type   = tree_type == DUAL_TREE_CHROMA ? 1 : 0;
+    CodingUnit *cu      = alloc_cu(lc, x0, y0);
+
+    if (!cu)
+        return NULL;
 
     memset(&cu->pu, 0, sizeof(cu->pu));
 
@@ -1167,7 +1200,7 @@ static CodingUnit* add_cu(VVCLocalContext *lc, const int x0, const int y0,
     cu->cb_height = cb_height;
     cu->ch_type = ch_type;
     cu->cqt_depth = cqt_depth;
-    cu->num_tus = 0;
+    cu->tus.head = cu->tus.tail = NULL;
     cu->bdpcm_flag[LUMA] = cu->bdpcm_flag[CB] = cu->bdpcm_flag[CR] = 0;
     cu->isp_split_type = ISP_NO_SPLIT;
     cu->intra_mip_flag = 0;
@@ -1181,21 +1214,22 @@ static CodingUnit* add_cu(VVCLocalContext *lc, const int x0, const int y0,
 
 static void set_cu_tabs(const VVCLocalContext *lc, const CodingUnit *cu)
 {
-    const VVCFrameContext *fc = lc->fc;
+    const VVCFrameContext *fc   = lc->fc;
+    const TransformUnit *tu     = cu->tus.head;
 
     set_cb_tab(lc, fc->tab.cpm[cu->ch_type], cu->pred_mode);
     if (cu->tree_type != DUAL_TREE_CHROMA)
         set_cb_tab(lc, fc->tab.skip, cu->skip_flag);
 
-    for (int i = 0; i < cu->num_tus; i++) {
-        const TransformUnit *tu = cu->tus + i;
-        for (int j = 0; j < tu->nb_tbs; j++) {
+    while (tu) {
+          for (int j = 0; j < tu->nb_tbs; j++) {
             const TransformBlock *tb = tu->tbs + j;
             if (tb->c_idx != LUMA)
                 set_qp_c_tab(lc, tu, tb);
             if (tb->c_idx != CR && cu->bdpcm_flag[tb->c_idx])
                 set_tb_tab(fc->tab.pcmf[tb->c_idx], 1, fc, tb);
         }
+        tu = tu->next;
     }
 }
 
@@ -1467,6 +1501,53 @@ static int8_t ref_idx_decode(VVCLocalContext *lc, const VVCSH *sh, const int sym
     return ref_idx;
 }
 
+static int mvds_decode(VVCLocalContext *lc, Mv mvds[2][MAX_CONTROL_POINTS],
+    const int num_cp_mv, const int lx)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCPH *ph             = fc->ps.ph;
+    const PredictionUnit *pu    = &lc->cu->pu;
+    const MotionInfo *mi        = &pu->mi;
+    int has_no_zero_mvd         = 0;
+
+    if (lx == L1 && ph->mvd_l1_zero_flag && mi->pred_flag == PF_BI) {
+        for (int j = 0; j < num_cp_mv; j++)
+            AV_ZERO64(&mvds[lx][j]);
+    } else {
+        Mv *mvd0 = &mvds[lx][0];
+        if (lx == L1 && pu->sym_mvd_flag) {
+            mvd0->x = -mvds[L0][0].x;
+            mvd0->y = -mvds[L0][0].y;
+        } else {
+            hls_mvd_coding(lc, mvd0);
+        }
+        has_no_zero_mvd |= (mvd0->x || mvd0->y);
+        for (int j = 1; j < num_cp_mv; j++) {
+            Mv *mvd = &mvds[lx][j];
+            hls_mvd_coding(lc, mvd);
+            mvd->x += mvd0->x;
+            mvd->y += mvd0->y;
+            has_no_zero_mvd |= (mvd->x || mvd->y);
+        }
+    }
+    return has_no_zero_mvd;
+}
+
+static void mvp_add_difference(MotionInfo *mi, const int num_cp_mv,
+    const Mv mvds[2][MAX_CONTROL_POINTS], const int amvr_shift)
+{
+    for (int i = 0; i < 2; i++) {
+        const PredFlag mask = i + PF_L0;
+        if (mi->pred_flag & mask) {
+            for (int j = 0; j < num_cp_mv; j++) {
+                const Mv *mvd = &mvds[i][j];
+                mi->mv[i][j].x += mvd->x << amvr_shift;
+                mi->mv[i][j].y += mvd->y << amvr_shift;
+            }
+        }
+    }
+}
+
 static int mvp_data(VVCLocalContext *lc)
 {
     const VVCFrameContext *fc   = lc->fc;
@@ -1481,9 +1562,8 @@ static int mvp_data(VVCLocalContext *lc)
 
     int mvp_lx_flag[2] = {0};
     int cu_affine_type_flag = 0;
-    int i, num_cp_mv;
+    int num_cp_mv;
     int amvr_enabled, has_no_zero_mvd = 0, amvr_shift;
-
     Mv mvds[2][MAX_CONTROL_POINTS];
 
     mi->pred_flag = ff_vvc_pred_flag(lc, IS_B(sh));
@@ -1505,26 +1585,7 @@ static int mvp_data(VVCLocalContext *lc)
         const PredFlag pred_flag = PF_L0 + !i;
         if (mi->pred_flag != pred_flag) {
             mi->ref_idx[i] = ref_idx_decode(lc, sh, pu->sym_mvd_flag, i);
-            if (i == L1 && ph->mvd_l1_zero_flag && mi->pred_flag == PF_BI) {
-                for (int j = 0; j < num_cp_mv; j++)
-                    AV_ZERO64(&mvds[i][j]);
-            } else {
-                Mv *mvd0 = &mvds[i][0];
-                if (i == L1 && pu->sym_mvd_flag) {
-                    mvd0->x = -mvds[L0][0].x;
-                    mvd0->y = -mvds[L0][0].y;
-                }
-                else
-                    hls_mvd_coding(lc, mvd0);
-                has_no_zero_mvd |= (mvd0->x || mvd0->y);
-                for (int j = 1; j < num_cp_mv; j++) {
-                    Mv *mvd = &mvds[i][j];
-                    hls_mvd_coding(lc, mvd);
-                    mvd->x += mvd0->x;
-                    mvd->y += mvd0->y;
-                    has_no_zero_mvd |= (mvd->x || mvd->y);
-                }
-            }
+            has_no_zero_mvd |= mvds_decode(lc, mvds, num_cp_mv, i);
             mvp_lx_flag[i] = ff_vvc_mvp_lx_flag(lc);
         }
     }
@@ -1543,16 +1604,8 @@ static int mvp_data(VVCLocalContext *lc)
     else
         ff_vvc_mvp(lc, mvp_lx_flag, amvr_shift, mi);
 
-    for (i = 0; i < 2; i++) {
-        const PredFlag lx = i + 1;
-        if (mi->pred_flag & lx) {
-            for (int j = 0; j < num_cp_mv; j++) {
-                    const Mv *mvd = &mvds[i][j];
-                    mi->mv[i][j].x += mvd->x << amvr_shift;
-                    mi->mv[i][j].y += mvd->y << amvr_shift;
-            }
-        }
-    }
+    mvp_add_difference(mi, num_cp_mv, mvds, amvr_shift);
+
     if (mi->motion_model_idc)
         ff_vvc_store_sb_mvs(lc, pu);
     else
@@ -2170,13 +2223,15 @@ static void deblock_params(VVCLocalContext *lc, const int rx, const int ry)
     CTB(fc->tab.deblock, rx, ry) = sh->deblock;
 }
 
-static int hls_coding_tree_unit(VVCLocalContext *lc,  int x0, int y0)
+static int hls_coding_tree_unit(VVCLocalContext *lc,
+    const int x0, const int y0, const int ctu_idx, const int rx, const int ry)
 {
-    int ret = 0;
     const VVCFrameContext *fc   = lc->fc;
     const VVCSPS *sps           = fc->ps.sps;
+    const VVCPPS *pps           = fc->ps.pps;
     const VVCSH *sh             = &lc->sc->sh;
     const unsigned int ctb_size = sps->ctb_size_y;
+    int ret                     = 0;
 
     memset(lc->parse.chroma_qp_offset, 0, sizeof(lc->parse.chroma_qp_offset));
 
@@ -2192,38 +2247,8 @@ static int hls_coding_tree_unit(VVCLocalContext *lc,  int x0, int y0)
     if (ret < 0)
         return ret;
 
-    return 0;
-}
-
-int ff_vvc_coding_tree_unit(VVCLocalContext *lc, const int ctb_addr, const int rs, const int rx, const int ry)
-{
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCPPS *pps           = fc->ps.pps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const int x_ctb             = rx << sps->ctb_log2_size_y;
-    const int y_ctb             = ry << sps->ctb_log2_size_y;
-    const int ctb_size          = 1 << sps->ctb_log2_size_y << sps->ctb_log2_size_y;
-    EntryPoint* ep              = lc->ep;
-    int ret;
-
-    if (rx == pps->ctb_to_col_bd[rx]) {
-        //fix me for ibc
-        ep->num_hmvp = 0;
-        ep->is_first_qg = ry == pps->ctb_to_row_bd[ry] || !ctb_addr;
-    }
-
-    lc->coeffs = fc->tab.coeffs + (ry * pps->ctb_width + rx) * ctb_size * VVC_MAX_SAMPLE_ARRAYS;
-
-    ff_vvc_cabac_init(lc, ctb_addr, rx, ry);
-    fc->tab.slice_idx[rs] = lc->sc->slice_idx;
-    ff_vvc_decode_neighbour(lc, x_ctb, y_ctb, rx, ry, rs);
-    ret = hls_coding_tree_unit(lc, x_ctb, y_ctb);
-    if (ret < 0)
-        return ret;
-
     if (rx == pps->ctb_to_col_bd[rx + 1] - 1) {
-        if (ctb_addr == sh->num_ctus_in_curr_slice - 1) {
+        if (ctu_idx == sh->num_ctus_in_curr_slice - 1) {
             const int end_of_slice_one_bit = ff_vvc_end_of_slice_flag_decode(lc);
             if (!end_of_slice_one_bit)
                 return AVERROR_INVALIDDATA;
@@ -2241,6 +2266,107 @@ int ff_vvc_coding_tree_unit(VVCLocalContext *lc, const int ctb_addr, const int r
             }
         }
     }
+
+    return 0;
+}
+
+static int has_inter_luma(const CodingUnit *cu)
+{
+    return cu->pred_mode != MODE_INTRA && cu->pred_mode != MODE_PLT && cu->tree_type != DUAL_TREE_CHROMA;
+}
+
+static int pred_get_y(const int y0, const Mv *mv, const int height)
+{
+    return FFMAX(0, y0 + (mv->y >> 4) + height);
+}
+
+static void cu_get_max_y(const CodingUnit *cu, int max_y[2][VVC_MAX_REF_ENTRIES], const VVCFrameContext *fc)
+{
+    const PredictionUnit *pu    = &cu->pu;
+
+    if (pu->merge_gpm_flag) {
+        for (int i = 0; i < FF_ARRAY_ELEMS(pu->gpm_mv); i++) {
+            const MvField *mvf  = pu->gpm_mv + i;
+            const int lx        = mvf->pred_flag - PF_L0;
+            const int idx       = mvf->ref_idx[lx];
+            const int y         = pred_get_y(cu->y0, mvf->mv + lx, cu->cb_height);
+
+            max_y[lx][idx]      = FFMAX(max_y[lx][idx], y);
+        }
+    } else {
+        const MotionInfo *mi    = &pu->mi;
+        const int max_dmvr_off  = (!pu->inter_affine_flag && pu->dmvr_flag) ? 2 : 0;
+        const int sbw           = cu->cb_width / mi->num_sb_x;
+        const int sbh           = cu->cb_height / mi->num_sb_y;
+        for (int sby = 0; sby < mi->num_sb_y; sby++) {
+            for (int sbx = 0; sbx < mi->num_sb_x; sbx++) {
+                const int x0        = cu->x0 + sbx * sbw;
+                const int y0        = cu->y0 + sby * sbh;
+                const MvField *mvf  = ff_vvc_get_mvf(fc, x0, y0);
+                for (int lx = 0; lx < 2; lx++) {
+                    const PredFlag mask = 1 << lx;
+                    if (mvf->pred_flag & mask) {
+                        const int idx   = mvf->ref_idx[lx];
+                        const int y     = pred_get_y(y0, mvf->mv + lx, sbh);
+
+                        max_y[lx][idx]  = FFMAX(max_y[lx][idx], y + max_dmvr_off);
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void pred_get_max_y(VVCLocalContext *lc, const int rs)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSH *sh             = &lc->sc->sh;
+    CTU *ctu                    = fc->tab.ctus + rs;
+    const CodingUnit *cu        = ctu->cus;
+
+    if (IS_I(sh))
+        return;
+
+    for (int lx = 0; lx < 2; lx++)
+        memset(ctu->max_y[lx], -1, sizeof(ctu->max_y[0][0]) * sh->nb_refs[lx]);
+
+    while (cu) {
+        if (has_inter_luma(cu))
+            cu_get_max_y(cu, ctu->max_y, fc);
+        cu = cu->next;
+    }
+    ctu->max_y_idx[0] = ctu->max_y_idx[1] = 0;
+}
+
+int ff_vvc_coding_tree_unit(VVCLocalContext *lc,
+    const int ctu_idx, const int rs, const int rx, const int ry)
+{
+    const VVCFrameContext *fc   = lc->fc;
+    const VVCSPS *sps           = fc->ps.sps;
+    const VVCPPS *pps           = fc->ps.pps;
+    const int x_ctb             = rx << sps->ctb_log2_size_y;
+    const int y_ctb             = ry << sps->ctb_log2_size_y;
+    const int ctb_size          = 1 << sps->ctb_log2_size_y << sps->ctb_log2_size_y;
+    EntryPoint* ep              = lc->ep;
+    int ret;
+
+    if (rx == pps->ctb_to_col_bd[rx]) {
+        //fix me for ibc
+        ep->num_hmvp = 0;
+        ep->is_first_qg = ry == pps->ctb_to_row_bd[ry] || !ctu_idx;
+    }
+
+    lc->coeffs = fc->tab.coeffs + rs * ctb_size * VVC_MAX_SAMPLE_ARRAYS;
+    lc->cu     = NULL;
+
+    ff_vvc_cabac_init(lc, ctu_idx, rx, ry);
+    fc->tab.slice_idx[rs] = lc->sc->slice_idx;
+    ff_vvc_decode_neighbour(lc, x_ctb, y_ctb, rx, ry, rs);
+    ret = hls_coding_tree_unit(lc, x_ctb, y_ctb, ctu_idx, rx, ry);
+    if (ret < 0)
+        return ret;
+    pred_get_max_y(lc, rs);
+
     return 0;
 }
 
@@ -2290,13 +2416,22 @@ void ff_vvc_set_neighbour_available(VVCLocalContext *lc,
 
 void ff_vvc_ctu_free_cus(CTU *ctu)
 {
-    while (ctu->cus) {
-        CodingUnit *cu      = ctu->cus;
-        AVBufferRef *buf    = cu->buf;
+    CodingUnit *cu  = ctu->cus;
+    while (cu) {
+        AVBufferRef *cu_buf = cu->buf;
+        TransformUnit *tu   = cu->tus.head;
 
-        ctu->cus = ctu->cus->next;
-        av_buffer_unref(&buf);
+        while (tu) {
+            AVBufferRef *buf = tu->buf;
+            tu  = tu->next;
+            av_buffer_unref(&buf);
+        }
+        cu->tus.head = cu->tus.tail = NULL;
+
+        cu = cu->next;
+        av_buffer_unref(&cu_buf);
     }
+    ctu->cus = NULL;
 }
 
 int ff_vvc_get_qPy(const VVCFrameContext *fc, const int xc, const int yc)
@@ -2307,3 +2442,11 @@ int ff_vvc_get_qPy(const VVCFrameContext *fc, const int xc, const int yc)
     return fc->tab.qp[LUMA][x + y * fc->ps.pps->min_cb_width];
 }
 
+void ff_vvc_ep_init_stat_coeff(EntryPoint *ep,
+	const int bit_depth, const int persistent_rice_adaptation_enabled_flag)
+{
+    for (size_t i = 0; i < FF_ARRAY_ELEMS(ep->stat_coeff); ++i) {
+        ep->stat_coeff[i] =
+            persistent_rice_adaptation_enabled_flag ? 2 * (av_log2(bit_depth - 10)) : 0;
+    }
+}

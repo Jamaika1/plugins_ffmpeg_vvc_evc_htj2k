@@ -24,19 +24,19 @@
 
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "msmpeg4.h"
-#include "msmpeg4dec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/msmpeg4.h"
+#include "libavcodec/msmpeg4dec.h"
 #include "libavutil/imgutils.h"
-#include "h263.h"
-#include "h263data.h"
-#include "h263dec.h"
-#include "mpeg4videodec.h"
-#include "msmpeg4data.h"
-#include "msmpeg4_vc1_data.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/mpeg4videodec.h"
+#include "libavcodec/msmpeg4data.h"
+#include "libavcodec/msmpeg4_vc1_data.h"
 
 #define V2_INTRA_CBPC_VLC_BITS 3
 #define V2_MB_TYPE_VLC_BITS 7

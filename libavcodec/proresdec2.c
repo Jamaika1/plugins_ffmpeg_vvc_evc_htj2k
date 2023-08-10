@@ -28,7 +28,7 @@
 
 #define LONG_BITSTREAM_READER
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/internal.h"
 #include "libavutil/mem_internal.h"
@@ -37,6 +37,7 @@
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/decode.h"
 #include "libavcodec/get_bits.h"
+#include "libavcodec/hwaccel_internal.h"
 #include "libavcodec/hwconfig.h"
 #include "libavcodec/idctdsp.h"
 #include "libavcodec/profiles.h"
@@ -804,13 +805,14 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
     ff_thread_finish_setup(avctx);
 
     if (avctx->hwaccel) {
-        ret = avctx->hwaccel->start_frame(avctx, NULL, 0);
+        const FFHWAccel *hwaccel = ffhwaccel(avctx->hwaccel);
+        ret = hwaccel->start_frame(avctx, NULL, 0);
         if (ret < 0)
             return ret;
-        ret = avctx->hwaccel->decode_slice(avctx, avpkt->data, avpkt->size);
+        ret = hwaccel->decode_slice(avctx, avpkt->data, avpkt->size);
         if (ret < 0)
             return ret;
-        ret = avctx->hwaccel->end_frame(avctx);
+        ret = hwaccel->end_frame(avctx);
         if (ret < 0)
             return ret;
         goto finish;

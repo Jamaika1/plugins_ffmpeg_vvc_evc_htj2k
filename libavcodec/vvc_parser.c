@@ -1,5 +1,5 @@
 /*
- * VVC parser
+ * H.266 / VVC parser
  *
  * Copyright (C) 2021 Nuo Mi <nuomi2021@gmail.com>
  *
@@ -22,26 +22,16 @@
 
 #include "libavcodec/cbs.h"
 #include "libavcodec/cbs_h266.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/internal.h"
 #include "libavcodec/parser.h"
 
 #define START_CODE 0x000001 ///< start_code_prefix_one_3bytes
-
-#define IS_SLICE(nut) (nut <= VVC_RASL_NUT || (nut >= VVC_IDR_W_RADL && nut <= VVC_GDR_NUT))
-#define IS_PH(nut) (nut == VVC_PH_NUT)
-#define IS_IDR(nut) (nut == VVC_IDR_W_RADL || nut == VVC_IDR_N_LP)
-
+#define IS_IDR(nut)   (nut == VVC_IDR_W_RADL || nut == VVC_IDR_N_LP)
+#define IS_H266_SLICE(nut) (nut <= VVC_RASL_NUT || (nut >= VVC_IDR_W_RADL && nut <= VVC_GDR_NUT))
 
 typedef struct PuInfo {
-    AVBufferRef *sps_ref;
-    AVBufferRef *pps_ref;
-    AVBufferRef *slice_ref;
-    AVBufferRef *ph_ref;
-
     const H266RawPPS *pps;
     const H266RawSPS *sps;
-    const H266RawPH *ph;
+    const H266RawPictureHeader *ph;
     const H266RawSlice *slice;
     int pic_type;
 } PuInfo;
@@ -58,7 +48,6 @@ typedef struct VVCParserContext {
 
     CodedBitstreamFragment picture_unit;
 
-    PuInfo   au_info;
     AVPacket au;
     AVPacket last_au;
 
@@ -77,20 +66,13 @@ static const enum AVPixelFormat pix_fmts_10bit[] = {
     AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV444P10
 };
 
-static const enum AVPixelFormat pix_fmts_12bit[] = {
-    AV_PIX_FMT_GRAY12, AV_PIX_FMT_YUV420P12,
-    AV_PIX_FMT_YUV422P12, AV_PIX_FMT_YUV444P12
-};
-
 static int get_format(const H266RawSPS *sps)
 {
     switch (sps->sps_bitdepth_minus8) {
-        case 0:
-            return pix_fmts_8bit[sps->sps_chroma_format_idc];
-        case 2:
-            return pix_fmts_10bit[sps->sps_chroma_format_idc];
-        case 4:
-            return pix_fmts_12bit[sps->sps_chroma_format_idc];
+    case 0:
+        return pix_fmts_8bit[sps->sps_chroma_format_idc];
+    case 2:
+        return pix_fmts_10bit[sps->sps_chroma_format_idc];
     }
     return AV_PIX_FMT_NONE;
 }
@@ -100,38 +82,42 @@ static int get_format(const H266RawSPS *sps)
  * @return the position of the first byte of the next frame, or END_NOT_FOUND
  */
 static int find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
-                               int buf_size)
+                          int buf_size)
 {
     VVCParserContext *ctx = s->priv_data;
-    ParseContext       *pc = &ctx->pc;
+    ParseContext *pc = &ctx->pc;
     int i;
 
     for (i = 0; i < buf_size; i++) {
-        int nut;
+        int nut, code_len;
 
         pc->state64 = (pc->state64 << 8) | buf[i];
 
         if (((pc->state64 >> 3 * 8) & 0xFFFFFF) != START_CODE)
             continue;
 
+        code_len = ((pc->state64 >> 3 * 8) & 0xFFFFFFFF) == 0x01 ? 4 : 3;
+
         nut = (pc->state64 >> (8 + 3)) & 0x1F;
         // 7.4.2.4.3 and 7.4.2.4.4
-        if ((nut >= VVC_OPI_NUT && nut <= VVC_PREFIX_APS_NUT && nut != VVC_PH_NUT) ||
-            nut == VVC_AUD_NUT || (nut == VVC_PREFIX_SEI_NUT && !pc->frame_start_found) || nut == VVC_RSV_NVCL_26 ||
-            nut == VVC_UNSPEC_28 || nut == VVC_UNSPEC_29) {
+        if ((nut >= VVC_OPI_NUT && nut <= VVC_PREFIX_APS_NUT &&
+             nut != VVC_PH_NUT) || nut == VVC_AUD_NUT
+            || (nut == VVC_PREFIX_SEI_NUT && !pc->frame_start_found)
+            || nut == VVC_RSV_NVCL_26 || nut == VVC_UNSPEC_28
+            || nut == VVC_UNSPEC_29) {
             if (pc->frame_start_found) {
                 pc->frame_start_found = 0;
-                return i - 5;
+                return i - (code_len + 2);
             }
-        } else if (nut == VVC_PH_NUT  || IS_SLICE(nut)) {
+        } else if (nut == VVC_PH_NUT || IS_H266_SLICE(nut)) {
             int sh_picture_header_in_slice_header_flag = buf[i] >> 7;
 
             if (nut == VVC_PH_NUT || sh_picture_header_in_slice_header_flag) {
                 if (!pc->frame_start_found) {
                     pc->frame_start_found = 1;
-                } else { // First slice of next frame found
+                } else {        // First slice of next frame found
                     pc->frame_start_found = 0;
-                    return i - 5;
+                    return i - (code_len + 2);
                 }
             }
         }
@@ -144,7 +130,7 @@ static int get_pict_type(const CodedBitstreamFragment *pu)
     int has_p = 0;
     for (int i = 0; i < pu->nb_units; i++) {
         CodedBitstreamUnit *unit = &pu->units[i];
-        if (IS_SLICE(unit->type)) {
+        if (IS_H266_SLICE(unit->type)) {
             const H266RawSlice *slice = unit->content;
             uint8_t type = slice->header.sh_slice_type;
             if (type == VVC_SLICE_TYPE_B) {
@@ -158,44 +144,9 @@ static int get_pict_type(const CodedBitstreamFragment *pu)
     return has_p ? AV_PICTURE_TYPE_P : AV_PICTURE_TYPE_I;
 }
 
-static void pu_info_unref(PuInfo *info)
+static void set_parser_ctx(AVCodecParserContext *s, AVCodecContext *avctx,
+                           const PuInfo *pu)
 {
-    av_buffer_unref(&info->slice_ref);
-    av_buffer_unref(&info->ph_ref);
-    av_buffer_unref(&info->pps_ref);
-    av_buffer_unref(&info->sps_ref);
-    info->slice = NULL;
-    info->ph = NULL;
-    info->pps = NULL;
-    info->sps = NULL;
-    info->pic_type = AV_PICTURE_TYPE_NONE;
-}
-
-static int pu_info_ref(PuInfo *dest, const PuInfo *src)
-{
-    pu_info_unref(dest);
-    dest->sps_ref = av_buffer_ref(src->sps_ref);
-    dest->pps_ref = av_buffer_ref(src->pps_ref);
-    if (src->ph_ref)
-        dest->ph_ref = av_buffer_ref(src->ph_ref);
-    dest->slice_ref = av_buffer_ref(src->slice_ref);
-    if (!dest->sps_ref || !dest->pps_ref || (src->ph_ref && !dest->ph_ref) || !dest->slice_ref) {
-        pu_info_unref(dest);
-        return AVERROR(ENOMEM);
-    }
-
-    dest->sps = src->sps;
-    dest->pps = src->pps;
-    dest->ph = src->ph;
-    dest->slice = src->slice;
-    dest->pic_type = src->pic_type;
-    return 0;
-}
-
-static int set_parser_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx,
-                          const PuInfo *pu)
-{
-    int ret, num = 0, den = 0;
     static const uint8_t h266_sub_width_c[] = {
         1, 2, 2, 1
     };
@@ -204,79 +155,60 @@ static int set_parser_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx,
     };
     const H266RawSPS *sps = pu->sps;
     const H266RawPPS *pps = pu->pps;
-    const H266RawPH  *ph  = pu->ph;
     const H266RawNALUnitHeader *nal = &pu->slice->header.nal_unit_header;
 
-    /* set some sane default values */
-    ctx->pict_type         = AV_PICTURE_TYPE_I;
-    ctx->key_frame         = 0;
-    ctx->picture_structure = AV_PICTURE_STRUCTURE_FRAME;
+    s->pict_type = pu->pic_type;
+    s->format = get_format(sps);
+    s->picture_structure = AV_PICTURE_STRUCTURE_FRAME;
 
-    ctx->key_frame    = nal->nal_unit_type == VVC_IDR_W_RADL ||
-                        nal->nal_unit_type == VVC_IDR_N_LP   ||
-                        nal->nal_unit_type == VVC_CRA_NUT    ||
-                        nal->nal_unit_type == VVC_GDR_NUT;
+    s->key_frame = nal->nal_unit_type == VVC_IDR_W_RADL ||
+                   nal->nal_unit_type == VVC_IDR_N_LP ||
+                   nal->nal_unit_type == VVC_CRA_NUT ||
+                   nal->nal_unit_type == VVC_GDR_NUT;
 
-    ctx->coded_width  = pps->pps_pic_width_in_luma_samples;
-    ctx->coded_height = pps->pps_pic_height_in_luma_samples;
-    ctx->width        = pps->pps_pic_width_in_luma_samples  -
+    s->coded_width  = pps->pps_pic_width_in_luma_samples;
+    s->coded_height = pps->pps_pic_height_in_luma_samples;
+    s->width = pps->pps_pic_width_in_luma_samples -
         (pps->pps_conf_win_left_offset + pps->pps_conf_win_right_offset) *
         h266_sub_width_c[sps->sps_chroma_format_idc];
-    ctx->height       = pps->pps_pic_height_in_luma_samples -
+    s->height = pps->pps_pic_height_in_luma_samples -
         (pps->pps_conf_win_top_offset + pps->pps_conf_win_bottom_offset) *
-        h266_sub_height_c[sps->sps_chroma_format_idc];
-    ctx->pict_type    = pu->pic_type;
-    ctx->format       = get_format(sps);
+        h266_sub_height_c[sps->sps_chroma_format_idc];;
 
-    avctx->profile  = sps->profile_tier_level.general_profile_idc;
-    avctx->level    = sps->profile_tier_level.general_level_idc;
+    avctx->profile = sps->profile_tier_level.general_profile_idc;
+    avctx->level = sps->profile_tier_level.general_level_idc;
 
     avctx->colorspace = (enum AVColorSpace) sps->vui.vui_matrix_coeffs;
     avctx->color_primaries = (enum AVColorPrimaries) sps->vui.vui_colour_primaries;
     avctx->color_trc = (enum AVColorTransferCharacteristic) sps->vui.vui_transfer_characteristics;
-    avctx->color_range = sps->vui.vui_full_range_flag ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
+    avctx->color_range =
+        sps->vui.vui_full_range_flag ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
 
-    if (ctx->width != avctx->width || ctx->height != avctx->height) {
-        ret = ff_set_dimensions(avctx, ctx->width, ctx->height);
-        if (ret < 0)
-            return ret;
-    }
-    avctx->pix_fmt = ctx->format;
+    avctx->has_b_frames = (sps->sps_max_sublayers_minus1 + 1) > 2 ? 2 :
+                           sps->sps_max_sublayers_minus1;
+    avctx->max_b_frames = sps->sps_max_sublayers_minus1;
 
-    if (sps->sps_ptl_dpb_hrd_params_present_flag && sps->sps_timing_hrd_params_present_flag) {
-        num = sps->sps_general_timing_hrd_parameters.num_units_in_tick;
-        den = sps->sps_general_timing_hrd_parameters.time_scale;
-    } else {
-        return 1;
-    }
-    if (num != 0 && den != 0)
-        av_reduce(&avctx->framerate.den, &avctx->framerate.num,
-                  num, den, 1 << 30);
-    return 1;
-}
+    if (sps->sps_ptl_dpb_hrd_params_present_flag &&
+        sps->sps_timing_hrd_params_present_flag) {
+        int num = sps->sps_general_timing_hrd_parameters.num_units_in_tick;
+        int den = sps->sps_general_timing_hrd_parameters.time_scale;
 
-static int set_ctx(AVCodecParserContext *ctx, AVCodecContext *avctx, const PuInfo *next_pu)
-{
-    VVCParserContext *s = ctx->priv_data;
-    int ret;
-    if (s->au_info.slice) {
-        if ((ret = set_parser_ctx(ctx, avctx, &s->au_info)) < 0)
-            return ret;
+        if (num != 0 && den != 0)
+            av_reduce(&avctx->framerate.den, &avctx->framerate.num,
+                      num, den, 1 << 30);
     }
-    ret = pu_info_ref(&s->au_info, next_pu);
-    return ret;
 }
 
 //8.3.1 Decoding process for picture order count.
 //VTM did not follow the spec, and it's much simpler than spec.
 //We follow the VTM.
 static void get_slice_poc(VVCParserContext *s, int *poc,
-                         const H266RawSPS *sps,
-                         const H266RawPH *ph, const H266RawSliceHeader *slice,
-                         void *log_ctx)
+                          const H266RawSPS *sps,
+                          const H266RawPictureHeader *ph,
+                          const H266RawSliceHeader *slice, void *log_ctx)
 {
     int poc_msb, max_poc_lsb, poc_lsb;
-    AuDetector   *d = &s->au_detector;
+    AuDetector *d = &s->au_detector;
     max_poc_lsb = 1 << (sps->sps_log2_max_pic_order_cnt_lsb_minus4 + 4);
     poc_lsb = ph->ph_pic_order_cnt_lsb;
     if (IS_IDR(slice->nal_unit_header.nal_unit_type)) {
@@ -289,11 +221,13 @@ static void get_slice_poc(VVCParserContext *s, int *poc,
         int prev_poc_lsb = prev_poc & (max_poc_lsb - 1);
         int prev_poc_msb = prev_poc - prev_poc_lsb;
         if (ph->ph_poc_msb_cycle_present_flag) {
-             poc_msb = ph->ph_poc_msb_cycle_val * max_poc_lsb;
+            poc_msb = ph->ph_poc_msb_cycle_val * max_poc_lsb;
         } else {
-            if ((poc_lsb < prev_poc_lsb) && ((prev_poc_lsb - poc_lsb) >= (max_poc_lsb / 2)))
+            if ((poc_lsb < prev_poc_lsb) && ((prev_poc_lsb - poc_lsb) >=
+                (max_poc_lsb / 2)))
                 poc_msb = prev_poc_msb + max_poc_lsb;
-            else if ((poc_lsb > prev_poc_lsb) && ((poc_lsb - prev_poc_lsb) > (max_poc_lsb / 2)))
+            else if ((poc_lsb > prev_poc_lsb) && ((poc_lsb - prev_poc_lsb) >
+                     (max_poc_lsb / 2)))
                 poc_msb = prev_poc_msb - max_poc_lsb;
             else
                 poc_msb = prev_poc_msb;
@@ -316,7 +250,7 @@ static int is_au_start(VVCParserContext *s, const PuInfo *pu, void *log_ctx)
     AuDetector *d = &s->au_detector;
     const H266RawSPS *sps = pu->sps;
     const H266RawNALUnitHeader *nal = &pu->slice->header.nal_unit_header;
-    const H266RawPH *ph = pu->ph;
+    const H266RawPictureHeader *ph = pu->ph;
     const H266RawSlice *slice = pu->slice;
     int ret, poc, nut;
 
@@ -328,7 +262,8 @@ static int is_au_start(VVCParserContext *s, const PuInfo *pu, void *log_ctx)
     d->prev_layer_id = nal->nuh_layer_id;
     d->prev_poc = poc;
     if (nal->nuh_temporal_id_plus1 == 1 &&
-        !ph->ph_non_ref_pic_flag && nut != VVC_RADL_NUT && nut != VVC_RASL_NUT) {
+        !ph->ph_non_ref_pic_flag && nut != VVC_RADL_NUT
+        && nut != VVC_RASL_NUT) {
         d->prev_tid0_poc = poc;
     }
     return ret;
@@ -345,12 +280,11 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
         nal = pu->units[i].content;
         if (!nal)
             continue;
-        if (IS_PH(nal->nal_unit_type)) {
-            info->ph = pu->units[i].content;
-            info->ph_ref = pu->units[i].content_ref;
-        } else if (IS_SLICE(nal->nal_unit_type)) {
+        if ( nal->nal_unit_type == VVC_PH_NUT ) {
+            const H266RawPH *ph = pu->units[i].content;
+            info->ph = &ph->ph_picture_header;
+        } else if (IS_H266_SLICE(nal->nal_unit_type)) {
             info->slice = pu->units[i].content;
-            info->slice_ref = pu->units[i].content_ref;
             if (info->slice->header.sh_picture_header_in_slice_header_flag)
                 info->ph = &info->slice->header.sh_picture_header;
             if (!info->ph) {
@@ -363,8 +297,7 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
         }
     }
     if (!info->slice) {
-        av_log(logctx, AV_LOG_ERROR,
-            "can't find slice in picture unit.\n");
+        av_log(logctx, AV_LOG_ERROR, "can't find slice in picture unit.\n");
         ret = AVERROR_INVALIDDATA;
         goto error;
     }
@@ -375,7 +308,6 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
         ret = AVERROR_INVALIDDATA;
         goto error;
     }
-    info->pps_ref = h266->pps_ref[info->ph->ph_pic_parameter_set_id];
     info->sps = h266->sps[info->pps->pps_seq_parameter_set_id];
     if (!info->sps) {
         av_log(logctx, AV_LOG_ERROR, "SPS id %d is not avaliable.\n",
@@ -383,10 +315,9 @@ static int get_pu_info(PuInfo *info, const CodedBitstreamH266Context *h266,
         ret = AVERROR_INVALIDDATA;
         goto error;
     }
-    info->sps_ref = h266->sps_ref[info->pps->pps_seq_parameter_set_id];
     info->pic_type = get_pict_type(pu);
     return 0;
-error:
+  error:
     memset(info, 0, sizeof(*info));
     return ret;
 }
@@ -398,58 +329,54 @@ static int append_au(AVPacket *pkt, const uint8_t *buf, int buf_size)
     if ((ret = av_grow_packet(pkt, buf_size)) < 0)
         goto end;
     memcpy(pkt->data + offset, buf, buf_size);
-end:
+  end:
     return ret;
 }
 
 /**
  * Parse NAL units of found picture and decode some basic information.
  *
- * @param ctx parser context.
+ * @param s parser context.
  * @param avctx codec context.
  * @param buf buffer with field/frame data.
  * @param buf_size size of the buffer.
  * @return < 0 for error, == 0 for a complete au, > 0 is not a completed au.
  */
-static int parse_nal_units(AVCodecParserContext *ctx, const uint8_t *buf,
+static int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
                            int buf_size, AVCodecContext *avctx)
 {
-    VVCParserContext *s = ctx->priv_data;
-    const CodedBitstreamH266Context *h266 = s->cbc->priv_data;
+    VVCParserContext *ctx = s->priv_data;
+    const CodedBitstreamH266Context *h266 = ctx->cbc->priv_data;
 
-    CodedBitstreamFragment *pu = &s->picture_unit;
+    CodedBitstreamFragment *pu = &ctx->picture_unit;
     int ret;
     PuInfo info;
 
     if (!buf_size) {
-        if (s->au.size) {
-            if ((ret = av_packet_ref(&s->last_au, &s->au)) < 0)
-                goto end;
-            av_packet_unref(&s->au);
+        if (ctx->au.size) {
+            av_packet_move_ref(&ctx->last_au, &ctx->au);
             return 0;
         }
         return 1;
     }
 
-    if ((ret = ff_cbs_read(s->cbc, pu, buf, buf_size))< 0) {
+    if ((ret = ff_cbs_read(ctx->cbc, pu, buf, buf_size)) < 0) {
         av_log(avctx, AV_LOG_ERROR, "Failed to parse picture unit.\n");
         goto end;
     }
     if ((ret = get_pu_info(&info, h266, pu, avctx)) < 0)
         goto end;
-    if (is_au_start(s, &info, avctx)) {
-        if ((ret = set_ctx(ctx, avctx, &info)) < 0)
-            goto end;
-        if ((ret = av_packet_ref(&s->last_au, &s->au)) < 0)
-            goto end;
-        av_packet_unref(&s->au);
-    } else {
-        //not a completed au
-        ret = 1;
-    }
-    if (append_au(&s->au, buf, buf_size) < 0)
+    if (append_au(&ctx->au, buf, buf_size) < 0) {
         ret = AVERROR(ENOMEM);
-end:
+        goto end;
+    }
+    if (is_au_start(ctx, &info, avctx)) {
+        set_parser_ctx(s, avctx, &info);
+        av_packet_move_ref(&ctx->last_au, &ctx->au);
+    } else {
+        ret = 1; //not a completed au
+    }
+  end:
     ff_cbs_fragment_reset(pu);
     return ret;
 }
@@ -457,82 +384,84 @@ end:
 /**
  * Combine PU to AU
  *
- * @param ctx parser context.
+ * @param s parser context.
  * @param avctx codec context.
  * @param buf buffer to a PU.
  * @param buf_size size of the buffer.
  * @return < 0 for error, == 0 a complete au, > 0 not a completed au.
  */
-
-static int combine_au(AVCodecParserContext *ctx, AVCodecContext *avctx,
+static int combine_au(AVCodecParserContext *s, AVCodecContext *avctx,
                       const uint8_t **buf, int *buf_size)
 {
-    VVCParserContext *s = ctx->priv_data;
-    CodedBitstreamFragment *pu = &s->picture_unit;
+    VVCParserContext *ctx = s->priv_data;
     int ret;
 
-    s->cbc->log_ctx = avctx;
+    ctx->cbc->log_ctx = avctx;
 
-    if (avctx->extradata_size && !s->parsed_extradata) {
-        s->parsed_extradata = 1;
+    av_packet_unref(&ctx->last_au);
+    ret = parse_nal_units(s, *buf, *buf_size, avctx);
+    if (ret == 0) {
+        if (ctx->last_au.size) {
+            *buf = ctx->last_au.data;
+            *buf_size = ctx->last_au.size;
+        } else {
+            ret = 1; //no output
+        }
+    }
+    ctx->cbc->log_ctx = NULL;
+    return ret;
+}
 
-        if ((ret = ff_cbs_read(s->cbc, pu, avctx->extradata, avctx->extradata_size)) < 0)
+static int vvc_parser_parse(AVCodecParserContext *s, AVCodecContext *avctx,
+                            const uint8_t **poutbuf, int *poutbuf_size,
+                            const uint8_t *buf, int buf_size)
+{
+    int next, ret;
+    VVCParserContext *ctx = s->priv_data;
+    ParseContext *pc = &ctx->pc;
+    CodedBitstreamFragment *pu = &ctx->picture_unit;
+
+    int is_dummy_buf = !buf_size;
+    int flush = !buf_size;
+    const uint8_t *dummy_buf = buf;
+
+    *poutbuf = NULL;
+    *poutbuf_size = 0;
+
+    if (avctx->extradata_size && !ctx->parsed_extradata) {
+        ctx->parsed_extradata = 1;
+
+        ret = ff_cbs_read_extradata_from_codec(ctx->cbc, pu, avctx);
+        if (ret < 0)
             av_log(avctx, AV_LOG_WARNING, "Failed to parse extradata.\n");
 
         ff_cbs_fragment_reset(pu);
     }
-    av_packet_unref(&s->last_au);
-    ret = parse_nal_units(ctx, *buf, *buf_size, avctx);
-    if (ret == 0) {
-        if (s->last_au.size) {
-            *buf = s->last_au.data;
-            *buf_size = s->last_au.size;
-        } else {
-            //no output
-            ret = 1;
-        }
-    }
-    s->cbc->log_ctx = NULL;
-    return ret;
-}
 
-static int vvc_parser_parse(AVCodecParserContext *ctx, AVCodecContext *avctx,
-                      const uint8_t **poutbuf, int *poutbuf_size,
-                      const uint8_t *buf, int buf_size)
-{
-    int next;
-    VVCParserContext *s = ctx->priv_data;
-    ParseContext *pc = &s->pc;
-
-    if (avctx->extradata && !s->parsed_extradata) {
-        av_log(avctx, AV_LOG_INFO, "extra data is not supported yet.\n");
-        return AVERROR_PATCHWELCOME;
-    }
-
-    if (ctx->flags & PARSER_FLAG_COMPLETE_FRAMES) {
+    if (s->flags & PARSER_FLAG_COMPLETE_FRAMES) {
         next = buf_size;
     } else {
-        int ret, flush = !buf_size;
-        next = find_frame_end(ctx, buf, buf_size);
+        next = find_frame_end(s, buf, buf_size);
         if (ff_combine_frame(pc, next, &buf, &buf_size) < 0)
-            goto no_out;
-        ret = combine_au(ctx, avctx, &buf, &buf_size);
+            return buf_size;
+    }
+
+    is_dummy_buf &= (dummy_buf == buf);
+
+    if (!is_dummy_buf) {
+        ret = combine_au(s, avctx, &buf, &buf_size);
         if (ret > 0 && flush) {
             buf_size = 0;
-            ret = combine_au(ctx, avctx, &buf, &buf_size);
+            ret = combine_au(s, avctx, &buf, &buf_size);
         }
-        if (ret != 0) {
-            buf_size = next;
-            goto no_out;
-        }
+        if (ret != 0)
+            return next;
     }
-    *poutbuf      = buf;
+
+    *poutbuf = buf;
     *poutbuf_size = buf_size;
+
     return next;
-no_out:
-    *poutbuf      = NULL;
-    *poutbuf_size = 0;
-    return buf_size;
 }
 
 static const CodedBitstreamUnitType decompose_unit_types[] = {
@@ -551,33 +480,32 @@ static const CodedBitstreamUnitType decompose_unit_types[] = {
     VVC_AUD_NUT,
 };
 
-static av_cold int vvc_parser_init(AVCodecParserContext *ctx)
+static av_cold int vvc_parser_init(AVCodecParserContext *s)
 {
-    VVCParserContext *s = ctx->priv_data;
+    VVCParserContext *ctx = s->priv_data;
     int ret;
 
-    ret = ff_cbs_init(&s->cbc, AV_CODEC_ID_VVC, NULL);
+    ret = ff_cbs_init(&ctx->cbc, AV_CODEC_ID_VVC, NULL);
     if (ret < 0)
         return ret;
-    au_detector_init(&s->au_detector);
+    au_detector_init(&ctx->au_detector);
 
-    s->cbc->decompose_unit_types    = decompose_unit_types;
-    s->cbc->nb_decompose_unit_types = FF_ARRAY_ELEMS(decompose_unit_types);
+    ctx->cbc->decompose_unit_types    = decompose_unit_types;
+    ctx->cbc->nb_decompose_unit_types = FF_ARRAY_ELEMS(decompose_unit_types);
 
     return ret;
 }
 
-static void vvc_parser_close(AVCodecParserContext *ctx)
+static av_cold void vvc_parser_close(AVCodecParserContext *s)
 {
-    VVCParserContext *s = ctx->priv_data;
+    VVCParserContext *ctx = s->priv_data;
 
-    pu_info_unref(&s->au_info);
-    av_packet_unref(&s->au);
-    av_packet_unref(&s->last_au);
-    ff_cbs_fragment_free(&s->picture_unit);
+    av_packet_unref(&ctx->au);
+    av_packet_unref(&ctx->last_au);
+    ff_cbs_fragment_free(&ctx->picture_unit);
 
-    ff_cbs_close(&s->cbc);
-    av_freep(&s->pc.buffer);
+    ff_cbs_close(&ctx->cbc);
+    av_freep(&ctx->pc.buffer);
 }
 
 const AVCodecParser ff_vvc_parser = {

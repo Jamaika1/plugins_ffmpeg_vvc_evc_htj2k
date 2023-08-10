@@ -26,12 +26,13 @@
  */
 
 #include "libavutil/avassert.h"
-#include "error_resilience.h"
-#include "avcodec.h"
-#include "h264dec.h"
-#include "mpegutils.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/hwaccel_internal.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
 
 void ff_h264_unref_picture(H264Context *h, H264Picture *pic)
 {
@@ -154,8 +155,7 @@ int ff_h264_replace_picture(H264Context *h, H264Picture *dst, const H264Picture 
     av_assert0(src->tf.f == src->f);
 
     dst->tf.f = dst->f;
-    ff_thread_release_ext_buffer(h->avctx, &dst->tf);
-    ret = ff_thread_ref_frame(&dst->tf, &src->tf);
+    ret = ff_thread_replace_frame(h->avctx, &dst->tf, &src->tf);
     if (ret < 0)
         goto fail;
 
@@ -234,7 +234,7 @@ int ff_h264_field_end(H264Context *h, H264SliceContext *sl, int in_setup)
     }
 
     if (avctx->hwaccel) {
-        err = avctx->hwaccel->end_frame(avctx);
+        err = FF_HW_SIMPLE_CALL(avctx, end_frame);
         if (err < 0)
             av_log(avctx, AV_LOG_ERROR,
                    "hardware accelerator failed to decode picture\n");

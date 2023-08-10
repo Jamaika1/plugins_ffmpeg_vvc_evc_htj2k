@@ -27,8 +27,8 @@
  * Common MSMPEG-4 and VC-1 tables and VLC init code
  */
 
-#include "msmpeg4_vc1_data.h"
-#include "vlc.h"
+#include "libavcodec/msmpeg4_vc1_data.h"
+#include "libavcodec/vlc.h"
 #include "libavutil/attributes.h"
 #include "libavutil/thread.h"
 

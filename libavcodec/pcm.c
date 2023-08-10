@@ -24,18 +24,18 @@
  * PCM codecs
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 #include "libavutil/attributes.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/reverse.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "encode.h"
-#include "pcm_tablegen.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/pcm_tablegen.h"
 
 static av_cold int pcm_encode_init(AVCodecContext *avctx)
 {
@@ -578,7 +578,7 @@ const FFCodec ff_ ## name_ ## _decoder = {                                  \
     .priv_data_size = sizeof(PCMDecode),                                    \
     .init           = pcm_decode_init,                                      \
     FF_CODEC_DECODE_CB(pcm_decode_frame),                                    \
-    .p.capabilities = AV_CODEC_CAP_DR1,                                     \
+    .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_PARAM_CHANGE,         \
     .p.sample_fmts  = (const enum AVSampleFormat[]){ sample_fmt_,           \
                                                      AV_SAMPLE_FMT_NONE },  \
 }

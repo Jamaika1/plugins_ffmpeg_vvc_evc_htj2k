@@ -26,22 +26,22 @@
  *   http://www.pcisys.net/~melanson/codecs/
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "hpeldsp.h"
-#include "me_cmp.h"
-#include "mpegvideo.h"
-#include "h263.h"
-#include "h263enc.h"
-#include "internal.h"
-#include "mpegutils.h"
-#include "packet_internal.h"
-#include "put_bits.h"
-#include "svq1.h"
-#include "svq1encdsp.h"
-#include "svq1enc_cb.h"
-#include "version.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/hpeldsp.h"
+#include "libavcodec/me_cmp.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263enc.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/packet_internal.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/svq1.h"
+#include "libavcodec/svq1encdsp.h"
+#include "libavcodec/svq1enc_cb.h"
+#include "libavcodec/version.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/frame.h"
@@ -118,7 +118,7 @@ static void svq1_write_header(SVQ1EncContext *s, PutBitContext *pb, int frame_ty
         /* output 5 unknown bits (2 + 2 + 1) */
         put_bits(pb, 5, 2); /* 2 needed by quicktime decoder */
 
-        i = ff_match_2uint16((void*)ff_svq1_frame_size_table,
+        i = ff_match_2uint16(ff_svq1_frame_size_table,
                              FF_ARRAY_ELEMS(ff_svq1_frame_size_table),
                              s->frame_width, s->frame_height);
         put_bits(pb, 3, i);

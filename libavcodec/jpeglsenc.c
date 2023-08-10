@@ -27,16 +27,16 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "get_bits.h"
-#include "put_bits.h"
-#include "put_golomb.h"
-#include "mathops.h"
-#include "mjpeg.h"
-#include "jpegls.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/put_golomb.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mjpeg.h"
+#include "libavcodec/jpegls.h"
 
 typedef struct JPEGLSContext {
     AVClass *class;

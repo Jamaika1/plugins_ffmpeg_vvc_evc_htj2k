@@ -26,11 +26,11 @@
 #include "libavutil/opt.h"
 #include "libavutil/tx.h"
 
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "dolby_e.h"
-#include "kbdwin.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/dolby_e.h"
+#include "libavcodec/kbdwin.h"
 
 #define MAX_SEGMENTS    2
 
@@ -1200,7 +1200,7 @@ static av_cold void init_tables(void)
         gain_tab[i] = exp2f((i - 960) / 64.0f);
 
     // short 1
-    ff_kbd_window_init(window, 3.0f, 128);
+    avpriv_kbd_window_init(window, 3.0f, 128);
     for (i = 0; i < 128; i++)
         window[128 + i] = window[127 - i];
 
@@ -1227,7 +1227,7 @@ static av_cold void init_tables(void)
         window[1088 + i] = 1.0f;
 
     // long
-    ff_kbd_window_init(window + 1408, 3.0f, 256);
+    avpriv_kbd_window_init(window + 1408, 3.0f, 256);
     for (i = 0; i < 640; i++)
         window[1664 + i] = 1.0f;
     for (i = 0; i < 256; i++)

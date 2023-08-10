@@ -580,10 +580,10 @@ static int ciip_derive_intra_weight(const VVCLocalContext *lc, const int x0, con
 
     int w = 1;
 
-    if (available_u &&fc->ref->tab_mvf[((y0 - 1) >> MIN_PU_LOG2) * min_pu_width + ((x0 - 1 + width)>> MIN_PU_LOG2)].pred_flag == PF_INTRA)
+    if (available_u &&fc->tab.mvf[((y0 - 1) >> MIN_PU_LOG2) * min_pu_width + ((x0 - 1 + width)>> MIN_PU_LOG2)].pred_flag == PF_INTRA)
         w++;
 
-    if (available_l && fc->ref->tab_mvf[((y0 - 1 + height)>> MIN_PU_LOG2) * min_pu_width + ((x0 - 1) >> MIN_PU_LOG2)].pred_flag == PF_INTRA)
+    if (available_l && fc->tab.mvf[((y0 - 1 + height)>> MIN_PU_LOG2) * min_pu_width + ((x0 - 1) >> MIN_PU_LOG2)].pred_flag == PF_INTRA)
         w++;
 
     return w;
@@ -682,28 +682,6 @@ static void pred_regular_chroma(VVCLocalContext *lc, const MvField *mv,
         fc->vvcdsp.inter.put_ciip(dst1, dst1_stride, w_c, h_c, inter1, inter1_stride, intra_weight);
         fc->vvcdsp.inter.put_ciip(dst2, dst2_stride, w_c, h_c, inter2, inter2_stride, intra_weight);
 
-    }
-}
-
-void ff_vvc_ctu_apply_dmvr_info(VVCFrameContext *fc, const int x0, const int y0)
-{
-    const VVCPPS *pps = fc->ps.pps;
-    const int ctb_size = fc->ps.sps->ctb_size_y;
-    const int x_end = FFMIN(x0 + ctb_size, pps->width);
-    const int y_end = FFMIN(y0 + ctb_size, pps->height);
-
-    for (int y = y0; y < y_end; y += MIN_PU_SIZE) {
-        for (int x = x0; x < x_end; x += MIN_PU_SIZE) {
-            const int off = pps->min_pu_width * (y >> MIN_PU_LOG2) + (x >> MIN_PU_LOG2);
-            const DMVRInfo *di = &fc->tab.dmvr[off];
-            if (di->dmvr_enabled) {
-                MvField *mvf = &fc->ref->tab_mvf[off];
-                if (mvf->pred_flag & PF_L0)
-                    mvf->mv[L0] = di->mv[L0];
-                if (mvf->pred_flag & PF_L1)
-                    mvf->mv[L1] = di->mv[L1];
-            }
-        }
     }
 }
 
@@ -824,18 +802,29 @@ static void dmvr_mv_refine(VVCLocalContext *lc, MvField *mv, MvField *orig_mv, i
 
 static void set_dmvr_info(VVCFrameContext *fc, const int x0, const int y0,
     const int width, const int height, const MvField *mvf)
+
 {
     const VVCPPS *pps = fc->ps.pps;
 
     for (int y = y0; y < y0 + height; y += MIN_PU_SIZE) {
         for (int x = x0; x < x0 + width; x += MIN_PU_SIZE) {
-            DMVRInfo *di = &fc->tab.dmvr[pps->min_pu_width * (y >> MIN_PU_LOG2) + (x >> MIN_PU_LOG2)];
-            di->dmvr_enabled = 1;
-            if (mvf->pred_flag & PF_L0)
-                di->mv[L0] = mvf->mv[L0];
-            if (mvf->pred_flag & PF_L1)
-                di->mv[L1] = mvf->mv[L1];
+            const int idx = pps->min_pu_width * (y >> MIN_PU_LOG2) + (x >> MIN_PU_LOG2);
+            fc->ref->tab_dmvr_mvf[idx] = *mvf;
         }
+    }
+}
+
+static void fill_dmvr_info(const VVCFrameContext *fc, const int x0, const int y0,
+    const int width, const int height)
+{
+    const VVCPPS *pps = fc->ps.pps;
+    const int w = width >> MIN_PU_LOG2;
+
+    for (int y = y0 >> MIN_PU_LOG2; y < (y0 + height) >> MIN_PU_LOG2; y++) {
+        const int idx = pps->min_pu_width * y + (x0 >> MIN_PU_LOG2);
+        const MvField *mvf = fc->tab.mvf + idx;
+        MvField *dmvr_mvf  = fc->ref->tab_dmvr_mvf + idx;
+        memcpy(dmvr_mvf, mvf, sizeof(MvField) * w);
     }
 }
 
@@ -962,6 +951,9 @@ static void predict_inter(VVCLocalContext *lc)
         pred_affine_blk(lc);
     else
         pred_regular_blk(lc, 1);    //intra block is not ready yet, skip ciip
+
+    if (!pu->dmvr_flag)
+        fill_dmvr_info(fc, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
     if (lc->sc->sh.lmcs_used_flag && !cu->ciip_flag) {
         uint8_t* dst0 = POS(0, cu->x0, cu->y0);
         fc->vvcdsp.lmcs.filter(dst0, fc->frame->linesize[LUMA], cu->cb_width, cu->cb_height, fc->ps.ph->lmcs_fwd_lut);
@@ -973,81 +965,12 @@ static int has_inter_luma(const CodingUnit *cu)
     return cu->pred_mode != MODE_INTRA && cu->pred_mode != MODE_PLT && cu->tree_type != DUAL_TREE_CHROMA;
 }
 
-static int pred_get_y(const int y0, const Mv *mv, const int height)
-{
-    return FFMAX(0, y0 + (mv->y >> 4) + height);
-}
-
-static void cu_get_max_y(const CodingUnit *cu, int max_y[2][VVC_MAX_REF_ENTRIES], const VVCFrameContext *fc)
-{
-    const PredictionUnit *pu    = &cu->pu;
-
-    if (pu->merge_gpm_flag) {
-        for (int i = 0; i < FF_ARRAY_ELEMS(pu->gpm_mv); i++) {
-            const MvField *mvf  = pu->gpm_mv + i;
-            const int lx        = mvf->pred_flag - PF_L0;
-            const int idx       = mvf->ref_idx[lx];
-            const int y         = pred_get_y(cu->y0, mvf->mv + lx, cu->cb_height);
-
-            max_y[lx][idx]      = FFMAX(max_y[lx][idx], y);
-        }
-    } else {
-        const MotionInfo *mi    = &pu->mi;
-        const int max_dmvr_off  = (!pu->inter_affine_flag && pu->dmvr_flag) ? 2 : 0;
-        const int sbw           = cu->cb_width / mi->num_sb_x;
-        const int sbh           = cu->cb_height / mi->num_sb_y;
-        for (int sby = 0; sby < mi->num_sb_y; sby++) {
-            for (int sbx = 0; sbx < mi->num_sb_x; sbx++) {
-                const int x0        = cu->x0 + sbx * sbw;
-                const int y0        = cu->y0 + sby * sbh;
-                const MvField *mvf  = ff_vvc_get_mvf(fc, x0, y0);
-                for (int lx = 0; lx < 2; lx++) {
-                    const PredFlag mask = 1 << lx;
-                    if (mvf->pred_flag & mask) {
-                        const int idx   = mvf->ref_idx[lx];
-                        const int y     = pred_get_y(y0, mvf->mv + lx, sbh);
-
-                        max_y[lx][idx]  = FFMAX(max_y[lx][idx], y + max_dmvr_off);
-                    }
-                }
-            }
-        }
-    }
-}
-
-static void ctu_wait_refs(VVCLocalContext *lc, const CTU *ctu)
-{
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSH *sh             = &lc->sc->sh;
-    CodingUnit *cu = ctu->cus;
-    int max_y[2][VVC_MAX_REF_ENTRIES];
-
-    for (int lx = 0; lx < 2; lx++)
-        memset(max_y[lx], -1, sizeof(max_y[0][0]) * sh->nb_refs[lx]);
-
-    while (cu) {
-        if (has_inter_luma(cu))
-            cu_get_max_y(cu, max_y, fc);
-        cu = cu->next;
-    }
-
-    for (int lx = 0; lx < 2; lx++) {
-        for (int i = 0; i < sh->nb_refs[lx]; i++) {
-            const int y = max_y[lx][i];
-            VVCFrame *ref = lc->sc->rpl[lx].ref[i];
-            if (ref && y >= 0)
-                ff_vvc_await_progress(ref, y + LUMA_EXTRA_AFTER);
-        }
-    }
-}
-
 int ff_vvc_predict_inter(VVCLocalContext *lc, const int rs)
 {
     const VVCFrameContext *fc   = lc->fc;
     const CTU *ctu              = fc->tab.ctus + rs;
     CodingUnit *cu              = ctu->cus;
 
-    ctu_wait_refs(lc, ctu);
     while (cu) {
         lc->cu = cu;
         if (has_inter_luma(cu))
