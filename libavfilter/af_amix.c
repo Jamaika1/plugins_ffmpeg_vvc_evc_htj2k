@@ -39,11 +39,9 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 
 #define INPUT_ON       1    /**< input is active */

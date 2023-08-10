@@ -25,8 +25,10 @@
 #include "libavutil/opt.h"
 #include "libavutil/parseutils.h"
 #include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/audio.h"
+#include "libavfilter/video.h"
 
 #define FILTER_ORDER 4
 

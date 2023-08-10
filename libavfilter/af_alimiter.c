@@ -28,10 +28,8 @@
 #include "libavutil/common.h"
 #include "libavutil/fifo.h"
 #include "libavutil/opt.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 
 typedef struct MetaItem {

@@ -37,7 +37,6 @@
 #include "libavutil/opt.h"
 #include "libavutil/rational.h"
 #include "libavutil/xga_font_data.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
@@ -45,6 +44,7 @@
 #include "libavfilter/internal.h"
 #include "libavfilter/af_afir.h"
 #include "libavfilter/af_afirdsp.h"
+#include "libavfilter/video.h"
 
 static void drawtext(AVFrame *pic, int x, int y, const char *txt, uint32_t color)
 {
@@ -222,8 +222,8 @@ static int init_segment(AVFilterContext *ctx, AudioFIRSegment *seg, int selir,
 
     seg->fft_length    = (part_size + 1) * 2;
     seg->part_size     = part_size;
-    seg->block_size    = FFALIGN(seg->fft_length, cpu_align);
     seg->coeff_size    = FFALIGN(seg->part_size + 1, cpu_align);
+    seg->block_size    = FFMAX(seg->coeff_size * 2, FFALIGN(seg->fft_length, cpu_align));
     seg->nb_partitions = nb_partitions;
     seg->input_size    = offset + s->min_part_size;
     seg->input_offset  = offset;
