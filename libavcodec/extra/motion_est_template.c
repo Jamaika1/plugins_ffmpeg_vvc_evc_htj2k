@@ -25,7 +25,7 @@
  */
 
 #include "libavutil/qsort.h"
-#include "../mpegvideo.h"
+#include "libavcodec/mpegvideo.h"
 
 //Let us hope gcc will remove the unused vars ...(gcc 3.2.2 seems to do it ...)
 #define LOAD_COMMON\

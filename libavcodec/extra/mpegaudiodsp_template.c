@@ -24,10 +24,10 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
-#include "../dct32.h"
-#include "../mathops.h"
-#include "../mpegaudiodsp.h"
-#include "../mpegaudio.h"
+#include "libavcodec/dct32.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegaudiodsp.h"
+#include "libavcodec/mpegaudio.h"
 
 #if USE_FLOATS
 #define RENAME(n) n##_float

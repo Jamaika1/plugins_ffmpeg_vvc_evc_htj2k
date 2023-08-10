@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include "libavutil/common.h"
-#include "../mathops.h"
+#include "libavcodec/mathops.h"
 
 #undef FUNC
 #undef sum_type

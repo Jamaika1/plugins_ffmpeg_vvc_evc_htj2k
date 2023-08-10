@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "../h264dec.h"
+#include "libavcodec/h264dec.h"
 
 #undef MCFUNC
 

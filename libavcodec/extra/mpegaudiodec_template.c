@@ -24,7 +24,7 @@
  * MPEG Audio decoder
  */
 
-#include "../config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
@@ -35,19 +35,19 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
-#include "../avcodec.h"
-#include "../decode.h"
-#include "../get_bits.h"
-#include "../mathops.h"
-#include "../mpegaudiodsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegaudiodsp.h"
 
 /*
  * TODO:
  *  - test lsf / mpeg25 extensively.
  */
 
-#include "../mpegaudio.h"
-#include "../mpegaudiodecheader.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodecheader.h"
 
 #define BACKSTEP_SIZE 512
 #define EXTRABYTES 24

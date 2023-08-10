@@ -26,17 +26,17 @@
 
 #include "libavutil/channel_layout.h"
 
-#include "../avcodec.h"
-#include "../encode.h"
-#include "../put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/put_bits.h"
 
 #define FRAC_BITS   15   /* fractional bits for sb_samples and dct */
 #define WFRAC_BITS  14   /* fractional bits for window */
 
-#include "../mpegaudio.h"
-#include "../mpegaudiodsp.h"
-#include "../mpegaudiodata.h"
-#include "../mpegaudiotab.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodsp.h"
+#include "libavcodec/mpegaudiodata.h"
+#include "libavcodec/mpegaudiotab.h"
 
 /* currently, cannot change these constants (need to modify
    quantization stage) */

@@ -27,8 +27,8 @@
 
 #include "bit_depth_template.c"
 #include "libavutil/common.h"
-#include "../h264dec.h"
-#include "../h264idct.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/h264idct.h"
 
 void FUNCC(ff_h264_idct_add)(uint8_t *_dst, int16_t *_block, int stride)
 {

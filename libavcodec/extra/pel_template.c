@@ -20,8 +20,8 @@
 #include <stdint.h>
 
 #include "libavutil/intreadwrite.h"
-#include "../pixels.h"
-#include "../rnd_avg.h"
+#include "libavcodec/pixels.h"
+#include "libavcodec/rnd_avg.h"
 
 #include "bit_depth_template.c"
 
