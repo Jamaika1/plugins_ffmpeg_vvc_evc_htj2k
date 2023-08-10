@@ -22,6 +22,7 @@
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libavfilter/yadif.h"
 
 static int return_frame(AVFilterContext *ctx, int is_second)

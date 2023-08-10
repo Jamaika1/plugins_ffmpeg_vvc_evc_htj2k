@@ -21,11 +21,8 @@
 
 #include "libavutil/common.h"
 #include "libavutil/pixdesc.h"
-#include "libavutil/imgutils.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/video.h"
 #include "libavfilter/yadif.h"
 
 typedef struct ThreadData {

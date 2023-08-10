@@ -20,13 +20,10 @@
 
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/video.h"
 #include "libavfilter/internal.h"
 #include "libavutil/imgutils.h"
-#include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "libavutil/parseutils.h"
 #include "libavutil/lfg.h"
 #include "libavutil/random_seed.h"
 #include <float.h>
