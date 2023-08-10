@@ -27,12 +27,10 @@
  */
 
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/video.h"
 #include "libavfilter/internal.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-#include "libavutil/parseutils.h"
 #include <float.h>
 #include <math.h>
 

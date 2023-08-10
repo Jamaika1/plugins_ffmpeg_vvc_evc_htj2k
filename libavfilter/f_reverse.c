@@ -20,11 +20,8 @@
 
 #include "libavcodec/config_components.h"
 
-#include "libavutil/opt.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/video.h"
 
 #define DEFAULT_LENGTH 300
 

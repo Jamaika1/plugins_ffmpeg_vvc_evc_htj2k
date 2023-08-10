@@ -23,13 +23,10 @@
  * MP test source, ported from MPlayer libmpcodecs/vf_test.c
  */
 
-#include "libavutil/avstring.h"
 #include "libavutil/opt.h"
-#include "libavutil/parseutils.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/video.h"
 
 #define WIDTH 512

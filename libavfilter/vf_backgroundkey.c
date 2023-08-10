@@ -19,7 +19,6 @@
 #include "libavutil/opt.h"
 #include "libavutil/imgutils.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 

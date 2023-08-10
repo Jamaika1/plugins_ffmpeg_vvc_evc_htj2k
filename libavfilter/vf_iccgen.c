@@ -22,7 +22,7 @@
  * filter for generating ICC profiles
  */
 
-#include "../libavcodec/liblcms2/lcms2.h"
+#include "liblcms2/lcms2.h"
 
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
@@ -30,6 +30,7 @@
 #include "libavfilter/avfilter.h"
 #include "../libavcodec/fflcms2.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct IccGenContext {
     const AVClass *class;
@@ -161,13 +162,6 @@ static const AVFilterPad iccgen_inputs[] = {
     },
 };
 
-static const AVFilterPad iccgen_outputs[] = {
-    {
-        .name           = "default",
-        .type           = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_iccgen = {
     .name        = "iccgen",
     .description = NULL_IF_CONFIG_SMALL("Generate and attach ICC profiles."),
@@ -177,5 +171,5 @@ const AVFilter ff_vf_iccgen = {
     .init        = &iccgen_init,
     .uninit      = &iccgen_uninit,
     FILTER_INPUTS(iccgen_inputs),
-    FILTER_OUTPUTS(iccgen_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
 };

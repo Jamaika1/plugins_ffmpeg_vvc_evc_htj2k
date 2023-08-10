@@ -30,10 +30,8 @@
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/drawutils.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/framesync.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/video.h"
 #include "libavfilter/scene_sad.h"
 
 typedef struct IdentityContext {

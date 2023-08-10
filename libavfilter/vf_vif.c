@@ -27,15 +27,11 @@
 
 #include <float.h>
 
-#include "libavutil/avstring.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/framesync.h"
-#include "libavfilter/drawutils.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
-#include "libavfilter/video.h"
 
 #define NUM_DATA_BUFS 13
 

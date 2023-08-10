@@ -23,6 +23,7 @@
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavutil/lfg.h"
 #include "libavutil/random_seed.h"

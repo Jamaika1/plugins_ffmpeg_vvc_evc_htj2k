@@ -32,9 +32,7 @@
 
 #define FF_BUFQUEUE_SIZE 129
 #include "libavfilter/bufferqueue.h"
-
 #include "libavfilter/atadenoise.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 

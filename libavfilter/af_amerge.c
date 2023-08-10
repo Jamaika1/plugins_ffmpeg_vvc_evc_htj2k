@@ -30,6 +30,7 @@
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
 #include "libavfilter/audio.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 
 #define SWR_CH_MAX 64

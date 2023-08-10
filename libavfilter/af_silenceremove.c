@@ -25,10 +25,8 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
-#include "libavutil/timestamp.h"
 #include "libavfilter/audio.h"
 #include "libavfilter/filters.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/internal.h"
 

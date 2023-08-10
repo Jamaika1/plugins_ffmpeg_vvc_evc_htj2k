@@ -22,8 +22,8 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/pixfmt.h"
-
 #include "libavfilter/avfilter.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 
@@ -153,20 +153,13 @@ static const AVFilterPad shuffleplanes_inputs[] = {
     },
 };
 
-static const AVFilterPad shuffleplanes_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_shuffleplanes = {
     .name         = "shuffleplanes",
     .description  = NULL_IF_CONFIG_SMALL("Shuffle video planes."),
     .priv_size    = sizeof(ShufflePlanesContext),
     .priv_class   = &shuffleplanes_class,
     FILTER_INPUTS(shuffleplanes_inputs),
-    FILTER_OUTPUTS(shuffleplanes_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_QUERY_FUNC(query_formats),
     .flags        = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
 };

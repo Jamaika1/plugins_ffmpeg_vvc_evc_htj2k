@@ -21,10 +21,8 @@
 #include "libavutil/common.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/opt.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/filters.h"
 #include "libavfilter/internal.h"
 

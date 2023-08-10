@@ -28,7 +28,9 @@
 #include "libavfilter/avfilter.h"
 #include "libavfilter/drawutils.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define PLANE_R 0x01
 #define PLANE_G 0x02

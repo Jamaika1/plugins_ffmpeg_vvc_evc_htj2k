@@ -21,13 +21,10 @@
 #include <float.h>
 
 #include "libavutil/avassert.h"
-#include "libavutil/avstring.h"
 #include "libavutil/opt.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/audio.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/filters.h"
-
 #include "libavfilter/af_anlmdndsp.h"
 
 #define WEIGHT_LUT_NBITS 20
@@ -343,13 +340,6 @@ static av_cold void uninit(AVFilterContext *ctx)
     av_frame_free(&s->window);
 }
 
-static const AVFilterPad inputs[] = {
-    {
-        .name         = "default",
-        .type         = AVMEDIA_TYPE_AUDIO,
-    },
-};
-
 static const AVFilterPad outputs[] = {
     {
         .name          = "default",
@@ -365,7 +355,7 @@ const AVFilter ff_af_anlmdn = {
     .priv_class    = &anlmdn_class,
     .activate      = activate,
     .uninit        = uninit,
-    FILTER_INPUTS(inputs),
+    FILTER_INPUTS(ff_audio_default_filterpad),
     FILTER_OUTPUTS(outputs),
     FILTER_SINGLE_SAMPLEFMT(AV_SAMPLE_FMT_FLTP),
     .process_command = process_command,

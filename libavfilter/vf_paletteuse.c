@@ -31,9 +31,11 @@
 #include "libavutil/qsort.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/framesync.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/palette.h"
+#include "libavfilter/video.h"
 
 enum dithering_mode {
     DITHERING_NONE,

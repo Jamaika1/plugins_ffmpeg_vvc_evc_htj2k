@@ -21,10 +21,10 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 
 typedef struct AFDelaySrcContext {

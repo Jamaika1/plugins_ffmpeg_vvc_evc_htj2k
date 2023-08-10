@@ -33,6 +33,7 @@
 #include "libavfilter/avfilter.h"
 #include "libavfilter/audio.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
 
 static const char * const var_names[] = {
