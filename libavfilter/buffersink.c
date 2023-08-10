@@ -32,12 +32,13 @@
 
 #define FF_INTERNAL_FIELDS 1
 #include "libavfilter/framequeue.h"
-
 #include "libavfilter/audio.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/buffersink.h"
 #include "libavfilter/filters.h"
+#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 typedef struct BufferSinkContext {
     const AVClass *class;
@@ -377,13 +378,6 @@ static const AVOption abuffersink_options[] = {
 AVFILTER_DEFINE_CLASS(buffersink);
 AVFILTER_DEFINE_CLASS(abuffersink);
 
-static const AVFilterPad avfilter_vsink_buffer_inputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vsink_buffer = {
     .name          = "buffersink",
     .description   = NULL_IF_CONFIG_SMALL("Buffer video frames, and make them available to the end of the filter graph."),
@@ -391,16 +385,9 @@ const AVFilter ff_vsink_buffer = {
     .priv_class    = &buffersink_class,
     .init          = common_init,
     .activate      = activate,
-    FILTER_INPUTS(avfilter_vsink_buffer_inputs),
+    FILTER_INPUTS(ff_video_default_filterpad),
     .outputs       = NULL,
     FILTER_QUERY_FUNC(vsink_query_formats),
-};
-
-static const AVFilterPad avfilter_asink_abuffer_inputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_AUDIO,
-    },
 };
 
 const AVFilter ff_asink_abuffer = {
@@ -410,7 +397,7 @@ const AVFilter ff_asink_abuffer = {
     .priv_size     = sizeof(BufferSinkContext),
     .init          = common_init,
     .activate      = activate,
-    FILTER_INPUTS(avfilter_asink_abuffer_inputs),
+    FILTER_INPUTS(ff_audio_default_filterpad),
     .outputs       = NULL,
     FILTER_QUERY_FUNC(asink_query_formats),
 };

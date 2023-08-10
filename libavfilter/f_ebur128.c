@@ -43,6 +43,7 @@
 #include "libavfilter/filters.h"
 #include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define ABS_THRES    -70            ///< silence gate: we discard anything below this absolute (LUFS) threshold
 #define ABS_UP_THRES  10            ///< upper loud limit to consider (ABS_THRES being the minimum)
