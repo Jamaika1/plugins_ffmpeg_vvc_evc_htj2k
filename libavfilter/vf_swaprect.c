@@ -22,7 +22,6 @@
 #include "libavutil/eval.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/opt.h"
-
 #include "libavfilter/avfilter.h"
 #include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
@@ -237,13 +236,6 @@ static const AVFilterPad inputs[] = {
     },
 };
 
-static const AVFilterPad outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_swaprect = {
     .name          = "swaprect",
     .description   = NULL_IF_CONFIG_SMALL("Swap 2 rectangular objects in video."),
@@ -251,7 +243,7 @@ const AVFilter ff_vf_swaprect = {
     .priv_class    = &swaprect_class,
     .uninit        = uninit,
     FILTER_INPUTS(inputs),
-    FILTER_OUTPUTS(outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_QUERY_FUNC(query_formats),
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
     .process_command = ff_filter_process_command,

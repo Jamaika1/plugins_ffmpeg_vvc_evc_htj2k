@@ -32,6 +32,7 @@
 #include "libavfilter/avfilter.h"
 #include "libavfilter/internal.h"
 #include "libavfilter/tinterlace.h"
+#include "libavfilter/video.h"
 
 #define OFFSET(x) offsetof(TInterlaceContext, x)
 #define FLAGS AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_VIDEO_PARAM

@@ -28,10 +28,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libswscale/swscale.h"
-
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 
 #define RADIUS_MIN 0.1
 #define RADIUS_MAX 5.0
@@ -274,13 +273,6 @@ static const AVFilterPad smartblur_inputs[] = {
     },
 };
 
-static const AVFilterPad smartblur_outputs[] = {
-    {
-        .name = "default",
-        .type = AVMEDIA_TYPE_VIDEO,
-    },
-};
-
 const AVFilter ff_vf_smartblur = {
     .name          = "smartblur",
     .description   = NULL_IF_CONFIG_SMALL("Blur the input video without impacting the outlines."),
@@ -288,7 +280,7 @@ const AVFilter ff_vf_smartblur = {
     .init          = init,
     .uninit        = uninit,
     FILTER_INPUTS(smartblur_inputs),
-    FILTER_OUTPUTS(smartblur_outputs),
+    FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .priv_class    = &smartblur_class,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,

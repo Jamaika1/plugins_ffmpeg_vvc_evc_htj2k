@@ -26,11 +26,10 @@
  */
 
 #include "libavfilter/avfilter.h"
-#include "libavfilter/formats.h"
 #include "libavfilter/internal.h"
+#include "libavfilter/video.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "libavformat/avio.h"
 #include "libswscale/swscale.h"
 #include "libavfilter/dnn_filter_common.h"
 
