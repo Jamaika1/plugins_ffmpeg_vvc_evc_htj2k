@@ -17,11 +17,10 @@
  */
 
 #include "libavutil/attributes.h"
-#include "avcodec.h"
-#include "dct.h"
-#include "faandct.h"
-#include "fdctdsp.h"
-#include "config.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/faandct.h"
+#include "libavcodec/fdctdsp.h"
+#include "libavutil/config.h"
 
 av_cold void ff_fdctdsp_init(FDCTDSPContext *c, AVCodecContext *avctx)
 {

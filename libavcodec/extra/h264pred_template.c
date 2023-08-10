@@ -27,7 +27,7 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "../mathops.h"
+#include "libavcodec/mathops.h"
 
 #include "bit_depth_template.c"
 

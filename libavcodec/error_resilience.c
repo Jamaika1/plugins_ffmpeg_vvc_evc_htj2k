@@ -28,13 +28,13 @@
 #include <limits.h>
 
 #include "libavutil/internal.h"
-#include "avcodec.h"
-#include "error_resilience.h"
-#include "me_cmp.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "rectangle.h"
-#include "threadframe.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/me_cmp.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/rectangle.h"
+#include "libavcodec/threadframe.h"
 
 /**
  * @param stride the number of MVs to get to the next row
@@ -804,7 +804,7 @@ void ff_er_frame_start(ERContext *s)
 
 static int er_supported(ERContext *s)
 {
-    if(s->avctx->hwaccel && s->avctx->hwaccel->decode_slice           ||
+    if (s->avctx->hwaccel ||
        !s->cur_pic.f                                                  ||
        s->cur_pic.field_picture
     )
@@ -828,7 +828,7 @@ void ff_er_add_slice(ERContext *s, int startx, int starty,
     const int end_xy   = s->mb_index2xy[end_i];
     int mask           = -1;
 
-    if (s->avctx->hwaccel && s->avctx->hwaccel->decode_slice)
+    if (s->avctx->hwaccel)
         return;
 
     if (start_i > end_i || start_xy > end_xy) {

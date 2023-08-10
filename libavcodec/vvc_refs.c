@@ -26,15 +26,21 @@
 
 #include "libavcodec/vvc_refs.h"
 
+#if !HAVE_THREADS
+#define pthread_mutex_init(m, a)        0
+#define pthread_mutex_lock(l)           do {} while(0)
+#define pthread_mutex_unlock(l)         do {} while(0)
+#define pthread_mutex_destroy(l)        do {} while(0)
+#endif
+
 #define VVC_FRAME_FLAG_OUTPUT    (1 << 0)
 #define VVC_FRAME_FLAG_SHORT_REF (1 << 1)
 #define VVC_FRAME_FLAG_LONG_REF  (1 << 2)
 #define VVC_FRAME_FLAG_BUMPING   (1 << 3)
 
 typedef struct FrameProgress {
-    atomic_int progress;
+    atomic_int progress[VVC_PROGRESS_LAST];
     pthread_mutex_t lock;
-    pthread_cond_t cond;
 } FrameProgress;
 
 void ff_vvc_unref_frame(VVCFrameContext *fc, VVCFrame *frame, int flags)
@@ -49,8 +55,8 @@ void ff_vvc_unref_frame(VVCFrameContext *fc, VVCFrame *frame, int flags)
 
         av_buffer_unref(&frame->progress_buf);
 
-        av_buffer_unref(&frame->tab_mvf_buf);
-        frame->tab_mvf = NULL;
+        av_buffer_unref(&frame->tab_dmvr_mvf_buf);
+        frame->tab_dmvr_mvf = NULL;
 
         av_buffer_unref(&frame->rpl_buf);
         av_buffer_unref(&frame->rpl_tab_buf);
@@ -80,9 +86,7 @@ void ff_vvc_clear_refs(VVCFrameContext *fc)
 
 static void free_progress(void *opaque, uint8_t *data)
 {
-    FrameProgress *p = (FrameProgress*)data;
-    pthread_cond_destroy(&p->cond);
-    pthread_mutex_destroy(&p->lock);
+    pthread_mutex_destroy(&((FrameProgress*)data)->lock);
     av_free(data);
 }
 
@@ -94,15 +98,9 @@ static AVBufferRef *alloc_progress(void)
 
     if (!p)
         return NULL;
-    ret = pthread_cond_init(&p->cond, NULL);
-    if (ret) {
-        av_free(p);
-        return NULL;
-    }
 
     ret = pthread_mutex_init(&p->lock, NULL);
     if (ret) {
-        pthread_cond_destroy(&p->cond);
         av_free(p);
         return NULL;
     }
@@ -130,12 +128,12 @@ static VVCFrame *alloc_frame(VVCContext *s, VVCFrameContext *fc)
         if (!frame->rpl_buf)
             goto fail;
 
-        frame->tab_mvf_buf = av_buffer_pool_get(fc->tab_mvf_pool);
-        if (!frame->tab_mvf_buf)
+        frame->tab_dmvr_mvf_buf = av_buffer_pool_get(fc->tab_dmvr_mvf_pool);
+        if (!frame->tab_dmvr_mvf_buf)
             goto fail;
-        frame->tab_mvf = (MvField *)frame->tab_mvf_buf->data;
+        frame->tab_dmvr_mvf = (MvField *)frame->tab_dmvr_mvf_buf->data;
         //fixme: remove this
-        memset(frame->tab_mvf, 0, frame->tab_mvf_buf->size);
+        memset(frame->tab_dmvr_mvf, 0, frame->tab_dmvr_mvf_buf->size);
 
         frame->rpl_tab_buf = av_buffer_pool_get(fc->rpl_tab_pool);
         if (!frame->rpl_tab_buf)
@@ -354,7 +352,7 @@ static VVCFrame *generate_missing_ref(VVCContext *s, VVCFrameContext *fc, int po
     frame->sequence = s->seq_decode;
     frame->flags    = 0;
 
-    ff_vvc_report_progress(frame, INT_MAX);
+    ff_vvc_report_frame_finished(frame);
 
     return frame;
 }
@@ -469,29 +467,33 @@ fail:
     return ret;
 }
 
+void ff_vvc_report_frame_finished(VVCFrame *frame)
+{
+    ff_vvc_report_progress(frame, VVC_PROGRESS_MV, INT_MAX);
+    ff_vvc_report_progress(frame, VVC_PROGRESS_PIXEL, INT_MAX);
+}
 
-void ff_vvc_report_progress(VVCFrame *frame, int n)
+void ff_vvc_report_progress(VVCFrame *frame, const VVCProgress vp, const int y)
 {
     FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
 
     pthread_mutex_lock(&p->lock);
 
-    av_assert0(p->progress < n || p->progress == INT_MAX);
-    p->progress = n;
+    av_assert0(p->progress[vp] < y || p->progress[vp] == INT_MAX);
+    p->progress[vp] = y;
 
-    pthread_cond_broadcast(&p->cond);
     pthread_mutex_unlock(&p->lock);
 }
 
-void ff_vvc_await_progress(VVCFrame *frame, int n)
+int ff_vvc_check_progress(VVCFrame *frame, const VVCProgress vp, const int y)
 {
+    int ready ;
     FrameProgress *p = (FrameProgress*)frame->progress_buf->data;
 
     pthread_mutex_lock(&p->lock);
 
-    // +1 for progress default value 0
-    while (p->progress < n + 1)
-        pthread_cond_wait(&p->cond, &p->lock);
+    ready = p->progress[vp] > y + 1;
 
     pthread_mutex_unlock(&p->lock);
+    return ready;
 }

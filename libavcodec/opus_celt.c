@@ -21,9 +21,9 @@
 
 #include <stdint.h>
 
-#include "opus_celt.h"
-#include "opus_pvq.h"
-#include "opustab.h"
+#include "libavcodec/opus_celt.h"
+#include "libavcodec/opus_pvq.h"
+#include "libavcodec/opustab.h"
 
 void ff_celt_quant_bands(CeltFrame *f, OpusRangeCoder *rc)
 {

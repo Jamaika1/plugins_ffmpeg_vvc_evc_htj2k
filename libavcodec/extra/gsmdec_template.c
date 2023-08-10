@@ -24,9 +24,9 @@
  * GSM decoder
  */
 
-#include "../get_bits.h"
-#include "../gsm.h"
-#include "../gsmdec_data.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/gsm.h"
+#include "libavcodec/gsmdec_data.h"
 
 static void apcm_dequant_add(GetBitContext *gb, int16_t *dst, const int *frame_bits)
 {

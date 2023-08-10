@@ -120,7 +120,6 @@ typedef struct EntryPoint EntryPoint;
 typedef struct VVCTask VVCTask;
 typedef struct Mv Mv;
 typedef struct MvField MvField;
-typedef struct DMVRInfo DMVRInfo;
 typedef struct CTU CTU;
 typedef struct SAOParams SAOParams;
 typedef struct ALFParams ALFParams;
@@ -140,7 +139,7 @@ typedef struct VVCFrame {
     AVFrame *frame;
     ThreadFrame tf;
 
-    MvField  *tab_mvf;
+    MvField  *tab_dmvr_mvf;
     RefPicListTab **rpl_tab;
 
     int ctb_count;
@@ -149,7 +148,7 @@ typedef struct VVCFrame {
 
     struct VVCFrame *collocated_ref;
 
-    AVBufferRef *tab_mvf_buf;
+    AVBufferRef *tab_dmvr_mvf_buf;
     AVBufferRef *rpl_tab_buf;
     AVBufferRef *rpl_buf;
     AVBufferRef *progress_buf;
@@ -199,10 +198,11 @@ struct VVCFrameContext {
     AVPacket *avpkt;
     H2645Packet pkt;
 
-    AVBufferPool *tab_mvf_pool;
+    AVBufferPool *tab_dmvr_mvf_pool;
     AVBufferPool *rpl_tab_pool;
 
     AVBufferPool *cu_pool;
+    AVBufferPool *tu_pool;
 
     struct {
         int16_t *slice_idx;
@@ -210,7 +210,6 @@ struct VVCFrameContext {
         DBParams  *deblock;
         SAOParams *sao;
         ALFParams *alf;
-        DMVRInfo  *dmvr;
 
         int     *cb_pos_x[2];                           ///< CbPosX[][][]
         int     *cb_pos_y[2];                           ///< CbPosY[][][]
@@ -231,6 +230,7 @@ struct VVCFrameContext {
         uint8_t *iaf;                                   ///< InterAffineFlag[][]
         uint8_t *mmi;                                   ///< MotionModelIdc[][]
         Mv      *cp_mv[2];                              ///< CpMvLX[][][][MAX_CONTROL_POINTS];
+        MvField *mvf;                                   ///< MvDmvrL0, MvDmvrL1
 
         uint8_t *tu_coded_flag[VVC_MAX_SAMPLE_ARRAYS];  ///< tu_y_coded_flag[][],  tu_cb_coded_flag[][],  tu_cr_coded_flag[][]
         uint8_t *tu_joint_cbcr_residual_flag;           ///< tu_joint_cbcr_residual_flag[][]

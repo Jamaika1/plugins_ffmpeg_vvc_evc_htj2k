@@ -29,7 +29,7 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/imgutils.h"
@@ -37,20 +37,20 @@
 #include "libavutil/mathematics.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "mpegvideo.h"
-#include "h263.h"
-#include "h263data.h"
-#include "h263dec.h"
-#include "mathops.h"
-#include "mpegutils.h"
-#include "unary.h"
-#include "rv10dec.h"
-#include "mpeg4video.h"
-#include "mpegvideodata.h"
-#include "mpegvideodec.h"
-#include "mpeg4videodec.h"
-#include "mpeg4videodefs.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/unary.h"
+#include "libavcodec/rv10dec.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/mpeg4videodec.h"
+#include "libavcodec/mpeg4videodefs.h"
 
 // The defines below define the number of bits that are read at once for
 // reading vlc values. Changing these may improve speed and data cache needs

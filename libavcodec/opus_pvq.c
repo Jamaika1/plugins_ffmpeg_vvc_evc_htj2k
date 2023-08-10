@@ -25,11 +25,11 @@
 
 #include <float.h>
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "mathops.h"
-#include "opustab.h"
-#include "opus_pvq.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/opustab.h"
+#include "libavcodec/opus_pvq.h"
 
 #define ROUND_MUL16(a,b)  ((MUL16(a, b) + 16384) >> 15)
 

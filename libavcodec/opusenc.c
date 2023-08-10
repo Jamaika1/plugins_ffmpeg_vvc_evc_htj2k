@@ -21,19 +21,19 @@
 
 #include <float.h>
 
-#include "encode.h"
-#include "opusenc.h"
-#include "opus_pvq.h"
-#include "opusenc_psy.h"
-#include "opustab.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/opusenc.h"
+#include "libavcodec/opus_pvq.h"
+#include "libavcodec/opusenc_psy.h"
+#include "libavcodec/opustab.h"
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/opt.h"
-#include "bytestream.h"
-#include "audio_frame_queue.h"
-#include "codec_internal.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/codec_internal.h"
 
 typedef struct OpusEncContext {
     AVClass *av_class;

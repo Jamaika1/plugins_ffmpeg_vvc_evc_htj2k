@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "../bytestream.h"
-#include "../internal.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/internal.h"
 
 static void RENAME(v210_enc)(AVCodecContext *avctx,
         uint8_t *dst, const AVFrame *pic)

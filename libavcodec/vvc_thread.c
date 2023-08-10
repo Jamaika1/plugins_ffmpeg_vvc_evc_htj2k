@@ -31,11 +31,23 @@
 #include "libavcodec/vvc_intra.h"
 #include "libavcodec/vvc_refs.h"
 
+#if !HAVE_THREADS
+#define pthread_cond_init(c, a)         0
+#define pthread_cond_broadcast(c)       do {} while(0)
+#define pthread_cond_wait(c, m)         do {} while(0)
+#define pthread_cond_destroy(c)         do {} while(0)
+
+#define pthread_mutex_init(m, a)        0
+#define pthread_mutex_lock(l)           do {} while(0)
+#define pthread_mutex_unlock(l)         do {} while(0)
+#define pthread_mutex_destroy(l)        do {} while(0)
+#endif
+
 typedef struct VVCRowThread {
     VVCTask reconstruct_task;
     VVCTask deblock_v_task;
     VVCTask sao_task;
-    atomic_int  alf_progress;
+    atomic_int progress[VVC_PROGRESS_LAST];
 } VVCRowThread;
 
 typedef struct VVCColThread {
@@ -60,7 +72,7 @@ struct VVCFrameThread {
     //protected by lock
     int nb_scheduled_tasks;
     int nb_parse_tasks;
-    int alf_row_progress;
+    int row_progress[VVC_PROGRESS_LAST];
 
     pthread_mutex_t lock;
     pthread_cond_t  cond;
@@ -92,15 +104,15 @@ void ff_vvc_task_init(VVCTask *task, VVCTaskType type, VVCFrameContext *fc)
 }
 
 void ff_vvc_parse_task_init(VVCTask *t, VVCTaskType type, VVCFrameContext *fc,
-    SliceContext *sc, EntryPoint *ep, const int ctu_addr)
+    SliceContext *sc, EntryPoint *ep, const int ctu_idx)
 {
     const VVCFrameThread *ft = fc->frame_thread;
-    const int rs = sc->sh.ctb_addr_in_curr_slice[ctu_addr];
+    const int rs = sc->sh.ctb_addr_in_curr_slice[ctu_idx];
 
     ff_vvc_task_init(t, type, fc);
     t->sc = sc;
     t->ep = ep;
-    t->ctb_addr_in_slice = ctu_addr;
+    t->ctu_idx = ctu_idx;
     t->rx = rs % ft->ctu_width;
     t->ry = rs / ft->ctu_width;
 }
@@ -110,9 +122,23 @@ VVCTask* ff_vvc_task_alloc(void)
     return av_malloc(sizeof(VVCTask));
 }
 
+static int check_colocation_ctu(const VVCFrameContext *fc, const VVCTask *t)
+{
+    if (fc->ps.ph->temporal_mvp_enabled_flag || fc->ps.sps->sbtmvp_enabled_flag) {
+        //-1 to avoid we are waiting for next CTU line.
+        const int y = (t->ry << fc->ps.sps->ctb_log2_size_y) - 1;
+        VVCFrame *col = fc->ref->collocated_ref;
+        if (col && !ff_vvc_check_progress(col, VVC_PROGRESS_MV, y))
+            return 0;
+    }
+    return 1;
+}
+
 static int is_parse_ready(const VVCFrameContext *fc, const VVCTask *t)
 {
     av_assert0(t->type == VVC_TASK_TYPE_PARSE);
+    if (!check_colocation_ctu(fc, t))
+        return 0;
     if (fc->ps.sps->entropy_coding_sync_enabled_flag && t->ry != fc->ps.pps->ctb_to_row_bd[t->ry])
         return get_avail(fc->frame_thread, t->rx, t->ry - 1, VVC_TASK_TYPE_PARSE);
     return 1;
@@ -120,7 +146,30 @@ static int is_parse_ready(const VVCFrameContext *fc, const VVCTask *t)
 
 static int is_inter_ready(const VVCFrameContext *fc, const VVCTask *t)
 {
+    VVCFrameThread *ft  = fc->frame_thread;
+    const int rs        = t->ry * ft->ctu_width + t->rx;
+    const int slice_idx = fc->tab.slice_idx[rs];
+
     av_assert0(t->type == VVC_TASK_TYPE_INTER);
+
+    if (slice_idx != -1) {
+        const SliceContext *sc = fc->slices[slice_idx];
+        const VVCSH *sh        = &sc->sh;
+        CTU *ctu               = fc->tab.ctus + rs;
+        if (!IS_I(sh)) {
+            for (int lx = 0; lx < 2; lx++) {
+                for (int i = ctu->max_y_idx[lx]; i < sh->nb_refs[lx]; i++) {
+                    const int y = ctu->max_y[lx][i];
+                    VVCFrame *ref = sc->rpl[lx].ref[i];
+                    if (ref && y >= 0) {
+                        if (!ff_vvc_check_progress(ref, VVC_PROGRESS_PIXEL, y + LUMA_EXTRA_AFTER))
+                            return 0;
+                    }
+                    ctu->max_y_idx[lx]++;
+                }
+            }
+        }
+    }
     return 1;
 }
 
@@ -182,7 +231,7 @@ typedef int (*is_ready_func)(const VVCFrameContext *fc, const VVCTask *t);
 int ff_vvc_task_ready(const Tasklet *_t, void *user_data)
 {
     const VVCTask *t            = (const VVCTask*)_t;
-    const VVCFrameThread *ft    = t->fc->frame_thread;
+    VVCFrameThread *ft          = t->fc->frame_thread;
     int ready;
     is_ready_func is_ready[]    = {
         is_parse_ready,
@@ -202,31 +251,28 @@ int ff_vvc_task_ready(const Tasklet *_t, void *user_data)
     return ready;
 }
 
+#define CHECK(a, b)                         \
+    do {                                    \
+        if ((a) != (b))                     \
+            return (a) < (b);               \
+    } while (0)
+
 int ff_vvc_task_priority_higher(const Tasklet *_a, const Tasklet *_b)
 {
     const VVCTask *a = (const VVCTask*)_a;
     const VVCTask *b = (const VVCTask*)_b;
-    //order by frame decoder order
-    if (a->decode_order != b->decode_order)
-        return a->decode_order < b->decode_order;
 
-    if (a->type == b->type) {
-        // order by y
-        if (a->ry != b->ry)
-            return a->ry < b->ry;
-        // order by x
+    CHECK(a->decode_order, b->decode_order);                //decode order
+
+    if (a->type == VVC_TASK_TYPE_PARSE || b->type == VVC_TASK_TYPE_PARSE) {
+        CHECK(a->type, b->type);
+        CHECK(a->ry, b->ry);
         return a->rx < b->rx;
     }
-    if (a->type != VVC_TASK_TYPE_PARSE && b->type != VVC_TASK_TYPE_PARSE) {
-        // order by y
-        if (a->ry != b->ry)
-            return a->ry < b->ry;
-        // order by x
-        if (a->rx != b->rx)
-            return a->rx < b->rx;
-    }
-    // order by type
-    return a->type < b->type;
+
+    CHECK(a->rx + a->ry + a->type, b->rx + b->ry + b->type);    //zigzag with type
+    CHECK(a->rx + a->ry, b->rx + b->ry);                        //zigzag
+    return a->ry < b->ry;
 }
 
 static void add_task(VVCContext *s, VVCTask *t, const VVCTaskType type)
@@ -238,6 +284,7 @@ static void add_task(VVCContext *s, VVCTask *t, const VVCTaskType type)
 static int run_parse(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
 {
     VVCFrameContext *fc     = lc->fc;
+    const VVCSPS *sps       = fc->ps.sps;
     const VVCPPS *pps       = fc->ps.pps;
     SliceContext *sc        = t->sc;
     const VVCSH *sh         = &sc->sh;
@@ -249,12 +296,12 @@ static int run_parse(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
     lc->ep = ep;
 
     //reconstruct one line a time
-    rs = sh->ctb_addr_in_curr_slice[t->ctb_addr_in_slice];
+    rs = sh->ctb_addr_in_curr_slice[t->ctu_idx];
     do {
 
         prev_ry = t->ry;
 
-        ret = ff_vvc_coding_tree_unit(lc, t->ctb_addr_in_slice, rs, t->rx, t->ry);
+        ret = ff_vvc_coding_tree_unit(lc, t->ctu_idx, rs, t->rx, t->ry);
         if (ret < 0)
             return ret;
 
@@ -266,23 +313,46 @@ static int run_parse(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
             if (next < sc->eps + sc->nb_eps) {
                 memcpy(next->cabac_state, ep->cabac_state, sizeof(next->cabac_state));
                 av_assert0(!next->parse_task->type);
+                ff_vvc_ep_init_stat_coeff(lc->ep, sps->bit_depth, sps->persistent_rice_adaptation_enabled_flag);
                 ff_vvc_frame_add_task(s, next->parse_task);
             }
         }
 
-        t->ctb_addr_in_slice++;
-        if (t->ctb_addr_in_slice >= ep->ctu_addr_last)
+        t->ctu_idx++;
+        if (t->ctu_idx >= ep->ctu_end)
             break;
 
-        rs = sh->ctb_addr_in_curr_slice[t->ctb_addr_in_slice];
+        rs = sh->ctb_addr_in_curr_slice[t->ctu_idx];
         t->rx = rs % ft->ctu_width;
         t->ry = rs / ft->ctu_width;
     } while (t->ry == prev_ry && is_parse_ready(fc, t));
 
-    if (t->ctb_addr_in_slice < ep->ctu_addr_last)
+    if (t->ctu_idx < ep->ctu_end)
         ff_vvc_frame_add_task(s, t);
 
     return 0;
+}
+
+static void report_frame_progress(VVCFrameContext *fc, VVCTask *t)
+{
+    VVCFrameThread *ft  = fc->frame_thread;
+    const int ctu_size  = ft->ctu_size;
+    const int idx       = t->type == VVC_TASK_TYPE_INTER ? VVC_PROGRESS_MV : VVC_PROGRESS_PIXEL;
+    int old;
+
+    if (atomic_fetch_add(&ft->rows[t->ry].progress[idx], 1) == ft->ctu_width - 1) {
+        int y;
+        pthread_mutex_lock(&ft->lock);
+        y = old = ft->row_progress[idx];
+        while (y < ft->ctu_height && atomic_load(&ft->rows[y].progress[idx]) == ft->ctu_width)
+            y++;
+        if (old != y) {
+            const int progress = y == ft->ctu_height ? INT_MAX : y * ctu_size;
+            ft->row_progress[idx] = y;
+            ff_vvc_report_progress(fc->ref, idx, progress);
+        }
+        pthread_mutex_unlock(&ft->lock);
+    }
 }
 
 static int run_inter(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
@@ -299,6 +369,7 @@ static int run_inter(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
             ff_vvc_frame_add_task(s, &ft->rows[t->ry].reconstruct_task);
     }
     set_avail(ft, t->rx, t->ry, VVC_TASK_TYPE_INTER);
+    report_frame_progress(fc, t);
 
     return 0;
 }
@@ -473,25 +544,6 @@ static int run_sao(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
     return 0;
 }
 
-static void report_frame_progress(VVCFrameContext *fc, VVCTask *t)
-{
-    VVCFrameThread *ft  = fc->frame_thread;
-    const int ctu_size  = ft->ctu_size;
-    int old;
-
-    if (atomic_fetch_add(&ft->rows[t->ry].alf_progress, 1) == ft->ctu_width - 1) {
-        pthread_mutex_lock(&ft->lock);
-        old = ft->alf_row_progress;
-        while (ft->alf_row_progress < ft->ctu_height && atomic_load(&ft->rows[ft->alf_row_progress].alf_progress) == ft->ctu_width)
-            ft->alf_row_progress++;
-        if (old != ft->alf_row_progress) {
-            const int progress = ft->alf_row_progress == ft->ctu_height ? INT_MAX : ft->alf_row_progress * ctu_size;
-            ff_vvc_report_progress(fc->ref, progress);
-        }
-        pthread_mutex_unlock(&ft->lock);
-    }
-}
-
 static int run_alf(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
 {
     VVCFrameContext *fc = lc->fc;
@@ -509,7 +561,6 @@ static int run_alf(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
             ff_vvc_alf_filter(lc, x0, y0);
         }
     }
-    ff_vvc_ctu_apply_dmvr_info(fc, x0, y0);
     set_avail(ft, t->rx, t->ry, VVC_TASK_TYPE_ALF);
     report_frame_progress(fc, t);
 
@@ -580,7 +631,7 @@ int ff_vvc_task_run(Tasklet *_t, void *local_context, void *user_data)
 
     if (!atomic_load(&ft->ret)) {
         if ((ret = run[t->type](s, lc, t)) < 0) {
-#ifndef WIN32
+#ifdef COMPAT_ATOMICS_WIN32_STDATOMIC_H
             intptr_t zero = 0;
 #else
             int zero = 0;
@@ -683,7 +734,7 @@ int ff_vvc_frame_thread_init(VVCFrameContext *fc)
         VVCRowThread *row = ft->rows + y;
 
         row->reconstruct_task.rx = 0;
-        row->alf_progress = 0;
+        memset(&row->progress[0], 0, sizeof(row->progress));
         row->deblock_v_task.rx = 0;
         row->sao_task.rx = 0;
     }
@@ -698,7 +749,7 @@ int ff_vvc_frame_thread_init(VVCFrameContext *fc)
         ft->tasks[rs].decode_order = fc->decode_order;
     }
 
-    ft->alf_row_progress = 0;
+    memset(&ft->row_progress[0], 0, sizeof(ft->row_progress));
     fc->frame_thread = ft;
 
     return 0;
@@ -745,8 +796,8 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
                 atomic_uchar mask = 1 << VVC_TASK_TYPE_PARSE;
                 if (!(atomic_load(ft->avails + rs) & mask)) {
                     atomic_store(&ft->ret, AVERROR_INVALIDDATA);
-                    // maybe all thread are waiting, let us wake up them
-                    ff_executor_wakeup(s->executor);
+                    // maybe all thread are waiting, let us wake up one
+                    ff_executor_execute(s->executor, NULL);
                     break;
                 }
             }
@@ -756,7 +807,7 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
     }
 
     pthread_mutex_unlock(&ft->lock);
-    ff_vvc_report_progress(fc->ref, INT_MAX);
+    ff_vvc_report_frame_finished(fc->ref);
 
 #ifdef VVC_THREAD_DEBUG
     av_log(s->avctx, AV_LOG_DEBUG, "frame %5d done\r\n", (int)fc->decode_order);

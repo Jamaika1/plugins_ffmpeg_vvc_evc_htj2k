@@ -24,13 +24,29 @@
 
 #include "libavcodec/executor.h"
 
+#if !HAVE_THREADS
+#define pthread_create(t, a, s, ar)     0
+#define pthread_join(t, r)              do {} while(0)
+
+#define pthread_cond_init(c, a)         0
+#define pthread_cond_broadcast(c)       do {} while(0)
+#define pthread_cond_signal(c)          do {} while(0)
+#define pthread_cond_wait(c, m)         do {} while(0)
+#define pthread_cond_destroy(c)         do {} while(0)
+
+#define pthread_mutex_init(m, a)        0
+#define pthread_mutex_lock(l)           do {} while(0)
+#define pthread_mutex_unlock(l)         do {} while(0)
+#define pthread_mutex_destroy(l)        do {} while(0)
+#endif
+
 typedef struct ThreadInfo {
     Executor *e;
     pthread_t thread;
 } ThreadInfo;
 
 struct Executor {
-    TaskCallbacks cb;
+    TaskletCallbacks cb;
     ThreadInfo *threads;
     uint8_t *local_contexts;
     int thread_count;
@@ -53,32 +69,41 @@ static void add_task(Tasklet **prev, Tasklet *t)
     *prev   = t;
 }
 
+static int run_one_task(Executor *e, void *lc)
+{
+    TaskletCallbacks *cb = &e->cb;
+    Tasklet **prev;
+    Tasklet *t = NULL;
+
+    for (prev = &e->tasks; *prev; prev = &(*prev)->next) {
+        if (cb->ready(*prev, cb->user_data)) {
+            t = *prev;
+            break;
+        }
+    }
+    if (t) {
+        //found one task
+        remove_task(prev, t);
+        pthread_mutex_unlock(&e->lock);
+        cb->run(t, lc, cb->user_data);
+        pthread_mutex_lock(&e->lock);
+        return 1;
+    }
+    return 0;
+}
+
+#if HAVE_THREADS
 static void *executor_worker_task(void *data)
 {
     ThreadInfo *ti = (ThreadInfo*)data;
-    Executor *e = ti->e;
+    Executor *e    = ti->e;
     void *lc       = e->local_contexts + (ti - e->threads) * e->cb.local_context_size;
-    Tasklet **prev;
-    TaskCallbacks *cb = &e->cb;
 
     pthread_mutex_lock(&e->lock);
     while (1) {
-        Tasklet* t = NULL;
         if (e->die) break;
 
-        for (prev = &e->tasks; *prev; prev = &(*prev)->next) {
-            if (cb->ready(*prev, cb->user_data)) {
-                t = *prev;
-                break;
-            }
-        }
-        if (t) {
-            //found one task
-            remove_task(prev, t);
-            pthread_mutex_unlock(&e->lock);
-            cb->run(t, lc, cb->user_data);
-            pthread_mutex_lock(&e->lock);
-        } else {
+        if (!run_one_task(e, lc)) {
             //no task in one loop
             pthread_cond_wait(&e->cond, &e->lock);
         }
@@ -86,8 +111,9 @@ static void *executor_worker_task(void *data)
     pthread_mutex_unlock(&e->lock);
     return NULL;
 }
+#endif
 
-Executor* ff_executor_alloc(const TaskCallbacks *cb, int thread_count)
+Executor* ff_executor_alloc(const TaskletCallbacks *cb, int thread_count)
 {
     Executor *e;
     int i, j, ret;
@@ -168,20 +194,21 @@ void ff_executor_free(Executor **executor)
 
 void ff_executor_execute(Executor *e, Tasklet *t)
 {
-    TaskCallbacks *cb = &e->cb;
+    TaskletCallbacks *cb = &e->cb;
     Tasklet **prev;
 
     pthread_mutex_lock(&e->lock);
-    for (prev = &e->tasks; *prev && cb->priority_higher(*prev, t); prev = &(*prev)->next)
-        /* nothing */;
-    add_task(prev, t);
+    if (t) {
+        for (prev = &e->tasks; *prev && cb->priority_higher(*prev, t); prev = &(*prev)->next)
+            /* nothing */;
+        add_task(prev, t);
+    }
     pthread_cond_signal(&e->cond);
     pthread_mutex_unlock(&e->lock);
-}
 
-void ff_executor_wakeup(Executor *e)
-{
-    pthread_mutex_lock(&e->lock);
-    pthread_cond_broadcast(&e->cond);
-    pthread_mutex_unlock(&e->lock);
+#if !HAVE_THREADS
+    // We are running in a single-threaded environment, so we must handle all tasks ourselves
+    while (run_one_task(e, e->local_contexts))
+        /* nothing */;
+#endif
 }

@@ -23,7 +23,7 @@
 
 #include "libavutil/common.h"
 #include "bit_depth_template.c"
-#include "../vp9dsp.h"
+#include "libavcodec/vp9dsp.h"
 
 #if BIT_DEPTH != 12
 

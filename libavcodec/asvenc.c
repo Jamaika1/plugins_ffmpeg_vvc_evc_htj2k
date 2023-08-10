@@ -33,7 +33,6 @@
 #include "libavcodec/asv.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/codec_internal.h"
-#include "libavcodec/dct.h"
 #include "libavcodec/encode.h"
 #include "libavcodec/fdctdsp.h"
 #include "libavcodec/mpeg12data.h"

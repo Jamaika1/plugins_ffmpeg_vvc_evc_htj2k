@@ -28,7 +28,7 @@
 /* Based upon some commented-out C code from mpeg2dec (idct_mmx.c
  * written by Aaron Holtzman <aholtzma@ess.engr.uvic.ca>). */
 
-#include "../simple_idct.h"
+#include "libavcodec/simple_idct.h"
 
 #include "bit_depth_template.c"
 

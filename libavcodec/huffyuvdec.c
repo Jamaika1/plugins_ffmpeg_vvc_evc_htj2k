@@ -32,16 +32,16 @@
 
 #define UNCHECKED_BITSTREAM_READER 1
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "huffyuv.h"
-#include "huffyuvdsp.h"
-#include "lossless_videodsp.h"
-#include "thread.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/huffyuv.h"
+#include "libavcodec/huffyuvdsp.h"
+#include "libavcodec/lossless_videodsp.h"
+#include "libavcodec/thread.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/pixdesc.h"
 

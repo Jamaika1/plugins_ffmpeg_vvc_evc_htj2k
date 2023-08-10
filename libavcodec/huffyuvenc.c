@@ -28,17 +28,17 @@
  * huffyuv encoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "huffyuv.h"
-#include "huffman.h"
-#include "huffyuvencdsp.h"
-#include "lossless_videoencdsp.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/huffyuv.h"
+#include "libavcodec/huffman.h"
+#include "libavcodec/huffyuvencdsp.h"
+#include "libavcodec/lossless_videoencdsp.h"
+#include "libavcodec/put_bits.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 

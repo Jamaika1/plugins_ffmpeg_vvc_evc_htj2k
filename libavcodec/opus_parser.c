@@ -25,11 +25,11 @@
  * Determines the duration for each packet.
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "opus.h"
-#include "opus_parse.h"
-#include "parser.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/opus.h"
+#include "libavcodec/opus_parse.h"
+#include "libavcodec/parser.h"
 
 typedef struct OpusParserContext {
     ParseContext pc;

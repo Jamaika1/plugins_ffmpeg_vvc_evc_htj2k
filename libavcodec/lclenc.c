@@ -41,11 +41,11 @@
 #include <stdlib.h>
 
 #include "libavutil/avassert.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "lcl.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/lcl.h"
+#include "libavcodec/zlib_wrapper.h"
 #include "libavutil/internal.h"
 #include "libavutil/mem.h"
 

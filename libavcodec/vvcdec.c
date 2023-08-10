@@ -20,7 +20,7 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "libavcodec/config_components.h"
+#include "config_components.h"
 
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/decode.h"
@@ -28,9 +28,9 @@
 #include "libavcodec/vvc.h"
 
 #include "libavutil/cpu.h"
-#include "libavutil/thread.h"
 
 #include "libavcodec/vvcdec.h"
+#include "libavcodec/hwaccel_internal.h"
 #include "libavcodec/vvc_ctu.h"
 #include "libavcodec/vvc_data.h"
 #include "libavcodec/vvc_refs.h"
@@ -252,11 +252,11 @@ static int min_tu_arrays_init(VVCFrameContext *fc, const int pic_size_in_min_tu)
 
 static void min_pu_arrays_free(VVCFrameContext *fc)
 {
+    av_freep(&fc->tab.mvf);
     av_freep(&fc->tab.msf);
     av_freep(&fc->tab.iaf);
     av_freep(&fc->tab.mmi);
-    av_freep(&fc->tab.dmvr);
-    av_buffer_pool_uninit(&fc->tab_mvf_pool);
+    av_buffer_pool_uninit(&fc->tab_dmvr_mvf_pool);
 }
 
 static int min_pu_arrays_init(VVCFrameContext *fc, const int pic_size_in_min_pu)
@@ -266,17 +266,17 @@ static int min_pu_arrays_init(VVCFrameContext *fc, const int pic_size_in_min_pu)
         fc->tab.msf  = av_mallocz(pic_size_in_min_pu);
         fc->tab.iaf  = av_mallocz(pic_size_in_min_pu);
         fc->tab.mmi  = av_mallocz(pic_size_in_min_pu);
-        fc->tab.dmvr = av_calloc(pic_size_in_min_pu, sizeof(*fc->tab.dmvr));
-        if (!fc->tab.msf || !fc->tab.iaf || !fc->tab.mmi || !fc->tab.dmvr)
+        fc->tab.mvf  = av_mallocz(pic_size_in_min_pu * sizeof(*fc->tab.mvf));
+        if (!fc->tab.msf || !fc->tab.iaf || !fc->tab.mmi || !fc->tab.mvf)
             return AVERROR(ENOMEM);
-        fc->tab_mvf_pool  = av_buffer_pool_init(pic_size_in_min_pu * sizeof(MvField), av_buffer_allocz);
-        if (!fc->tab_mvf_pool)
+        fc->tab_dmvr_mvf_pool  = av_buffer_pool_init(pic_size_in_min_pu * sizeof(MvField), av_buffer_allocz);
+        if (!fc->tab_dmvr_mvf_pool)
             return AVERROR(ENOMEM);
     } else {
         memset(fc->tab.msf, 0, pic_size_in_min_pu);
         memset(fc->tab.iaf, 0, pic_size_in_min_pu);
         memset(fc->tab.mmi, 0, pic_size_in_min_pu);
-        memset(fc->tab.dmvr, 0, pic_size_in_min_pu * sizeof(*fc->tab.dmvr));
+        memset(fc->tab.mvf, 0, pic_size_in_min_pu * sizeof(*fc->tab.mvf));
     }
 
     return 0;
@@ -377,6 +377,7 @@ static void pic_arrays_free(VVCFrameContext *fc)
     min_tu_arrays_free(fc);
     bs_arrays_free(fc);
     av_buffer_pool_uninit(&fc->cu_pool);
+    av_buffer_pool_uninit(&fc->tu_pool);
     pixel_buffer_free(fc);
 
     for (int i = 0; i < 2; i++)
@@ -454,6 +455,12 @@ static int pic_arrays_init(VVCContext *s, VVCFrameContext *fc)
     if (!fc->cu_pool) {
         fc->cu_pool = av_buffer_pool_init(sizeof(CodingUnit), NULL);
         if (!fc->cu_pool)
+            goto fail;
+    }
+
+    if (!fc->tu_pool) {
+        fc->tu_pool = av_buffer_pool_init(sizeof(TransformUnit), NULL);
+        if (!fc->tu_pool)
             goto fail;
     }
 
@@ -621,7 +628,7 @@ static int init_slice_context(SliceContext *sc, VVCFrameContext *fc, const H2645
     {
         EntryPoint *ep = sc->eps + i;
         ff_vvc_parse_task_init(ep->parse_task, VVC_TASK_TYPE_PARSE, fc, sc, ep, ctu_addr);
-        ep->ctu_addr_last = (i + 1 == sc->nb_eps ? sh->num_ctus_in_curr_slice : sh->entry_point_start_ctu[i]);
+        ep->ctu_end = (i + 1 == sc->nb_eps ? sh->num_ctus_in_curr_slice : sh->entry_point_start_ctu[i]);
         ep_init_cabac_decoder(sc, i, nal, gb);
         if (i + 1 < sc->nb_eps)
             ctu_addr = sh->entry_point_start_ctu[i];
@@ -647,10 +654,10 @@ static int vvc_ref_frame(VVCFrameContext *fc, VVCFrame *dst, VVCFrame *src)
 
     dst->progress_buf = av_buffer_ref(src->progress_buf);
 
-    dst->tab_mvf_buf = av_buffer_ref(src->tab_mvf_buf);
-    if (!dst->tab_mvf_buf)
+    dst->tab_dmvr_mvf_buf = av_buffer_ref(src->tab_dmvr_mvf_buf);
+    if (!dst->tab_dmvr_mvf_buf)
         goto fail;
-    dst->tab_mvf = src->tab_mvf;
+    dst->tab_dmvr_mvf = src->tab_dmvr_mvf;
 
     dst->rpl_tab_buf = av_buffer_ref(src->rpl_tab_buf);
     if (!dst->rpl_tab_buf)
@@ -765,7 +772,8 @@ static int decode_slice(VVCContext *s, VVCFrameContext *fc, const H2645NAL *nal,
         if (pic_arrays_init(s, fc))
             goto fail;
         export_frame_params(fc);
-        ff_vvc_dsp_init (&fc->vvcdsp, fc->ps.sps->bit_depth);
+        ff_vvc_dsp_init (&fc->vvcdsp, fc->ps.sps->bit_depth,
+                         fc->ps.sps->extended_precision_flag);
         ff_videodsp_init (&fc->vdsp, fc->ps.sps->bit_depth);
         ret = vvc_frame_start(s, fc, sc);
         if (ret < 0)
@@ -811,11 +819,9 @@ static int decode_nal_unit(VVCContext *s, VVCFrameContext *fc, const H2645NAL *n
     case VVC_VPS_NUT:
         break;
     case VVC_SPS_NUT:
-        if (s->avctx->hwaccel && s->avctx->hwaccel->decode_params) {
-            ret = s->avctx->hwaccel->decode_params(s->avctx,
-                                                   nal->type,
-                                                   nal->raw_data,
-                                                   nal->raw_size);
+        if (FF_HW_HAS_CB(s->avctx, decode_params)) {
+            ret = FF_HW_CALL(s->avctx, decode_params,
+                             nal->type, nal->raw_data, nal->raw_size);
             if (ret < 0)
                 goto fail;
         }
@@ -824,11 +830,9 @@ static int decode_nal_unit(VVCContext *s, VVCFrameContext *fc, const H2645NAL *n
             goto fail;
         break;
     case VVC_PPS_NUT:
-        if (s->avctx->hwaccel && s->avctx->hwaccel->decode_params) {
-            ret = s->avctx->hwaccel->decode_params(s->avctx,
-                                                   nal->type,
-                                                   nal->raw_data,
-                                                   nal->raw_size);
+        if (FF_HW_HAS_CB(s->avctx, decode_params)) {
+            ret = FF_HW_CALL(s->avctx, decode_params,
+                             nal->type, nal->raw_data, nal->raw_size);
             if (ret < 0)
                 goto fail;
         }
@@ -837,11 +841,9 @@ static int decode_nal_unit(VVCContext *s, VVCFrameContext *fc, const H2645NAL *n
             goto fail;
         break;
     case VVC_PH_NUT:
-        if (s->avctx->hwaccel && s->avctx->hwaccel->decode_params) {
-            ret = s->avctx->hwaccel->decode_params(s->avctx,
-                                                   nal->type,
-                                                   nal->raw_data,
-                                                   nal->raw_size);
+        if (FF_HW_HAS_CB(s->avctx, decode_params)) {
+            ret = FF_HW_CALL(s->avctx, decode_params,
+                             nal->type, nal->raw_data, nal->raw_size);
             if (ret < 0)
                 goto fail;
         }
@@ -931,7 +933,7 @@ static int decode_nal_units(VVCContext *s, VVCFrameContext *fc, const uint8_t *b
 
 fail:
     if (fc->ref)
-        ff_vvc_report_progress(fc->ref, INT_MAX);
+        ff_vvc_report_frame_finished(fc->ref);
     return ret;
 }
 
@@ -1119,19 +1121,12 @@ static av_cold int vvc_decode_free(AVCodecContext *avctx)
     return 0;
 }
 
-static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-
-static void vvc_one_time_init(void)
-{
-    memset(&ff_vvc_default_scale_m, 16, sizeof(ff_vvc_default_scale_m));
-}
-
 #define VVC_MAX_FRMAE_DELAY 16
 static av_cold int vvc_decode_init(AVCodecContext *avctx)
 {
     VVCContext *s       = avctx->priv_data;
     int ret;
-    TaskCallbacks callbacks = {
+    TaskletCallbacks callbacks = {
         s,
         sizeof(VVCLocalContext),
         ff_vvc_task_priority_higher,
@@ -1153,10 +1148,10 @@ static av_cold int vvc_decode_init(AVCodecContext *avctx)
             goto fail;
     }
 
-    s->executor = ff_executor_alloc(&callbacks, s->nb_fcs * 3 / 2);
+    s->executor = ff_executor_alloc(&callbacks, s->nb_fcs);
     s->eos = 1;
     GDR_SET_RECOVERED(s);
-    pthread_once(&once_control, vvc_one_time_init);
+    memset(&ff_vvc_default_scale_m, 16, sizeof(ff_vvc_default_scale_m));
 
     return 0;
 

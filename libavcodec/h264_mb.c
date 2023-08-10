@@ -26,15 +26,16 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "h264dec.h"
-#include "h264_ps.h"
-#include "qpeldsp.h"
-#include "threadframe.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/h264_ps.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/rectangle.h"
+#include "libavcodec/threadframe.h"
 
 static inline int get_lowest_part_list_y(H264SliceContext *sl,
                                          int n, int height, int y_offset, int list)

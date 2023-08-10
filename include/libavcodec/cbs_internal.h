@@ -41,9 +41,9 @@ enum CBSContentType {
 };
 
 enum {
-      // Maximum number of unit types described by the same unit type
-      // descriptor.
-      CBS_MAX_UNIT_TYPES  = 8,
+      // Maximum number of unit types described by the same non-range
+      // unit type descriptor.
+      CBS_MAX_LIST_UNIT_TYPES = 3,
       // Maximum number of reference buffer offsets in any one unit.
       CBS_MAX_REF_OFFSETS = 2,
       // Special value used in a unit type descriptor to indicate that it
@@ -60,7 +60,7 @@ typedef const struct CodedBitstreamUnitTypeDescriptor {
 
     union {
         // Array of unit types that this entry describes.
-        CodedBitstreamUnitType list[CBS_MAX_UNIT_TYPES];
+        CodedBitstreamUnitType list[CBS_MAX_LIST_UNIT_TYPES];
         // Start and end of unit type range, used if nb_unit_types is
         // CBS_UNIT_TYPE_RANGE.
         struct {
@@ -163,17 +163,26 @@ void ff_cbs_trace_syntax_element(CodedBitstreamContext *ctx, int position,
 
 
 // Helper functions for read/write of common bitstream elements, including
-// generation of trace output.
+// generation of trace output. The simple functions are equivalent to
+// their non-simple counterparts except that their range is unrestricted
+// (i.e. only limited by the amount of bits used) and they lack
+// the ability to use subscripts.
 
 int ff_cbs_read_unsigned(CodedBitstreamContext *ctx, GetBitContext *gbc,
                          int width, const char *name,
                          const int *subscripts, uint32_t *write_to,
                          uint32_t range_min, uint32_t range_max);
 
+int ff_cbs_read_simple_unsigned(CodedBitstreamContext *ctx, GetBitContext *gbc,
+                                int width, const char *name, uint32_t *write_to);
+
 int ff_cbs_write_unsigned(CodedBitstreamContext *ctx, PutBitContext *pbc,
                           int width, const char *name,
                           const int *subscripts, uint32_t value,
                           uint32_t range_min, uint32_t range_max);
+
+int ff_cbs_write_simple_unsigned(CodedBitstreamContext *ctx, PutBitContext *pbc,
+                                 int width, const char *name, uint32_t value);
 
 int ff_cbs_read_signed(CodedBitstreamContext *ctx, GetBitContext *gbc,
                        int width, const char *name,

@@ -21,7 +21,7 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "../pixels.h"
+#include "libavcodec/pixels.h"
 
 #include "bit_depth_template.c"
 
