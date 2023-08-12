@@ -118,7 +118,7 @@ static av_always_inline void FUNC(cclm_select_luma)(const VVCFrameContext *fc,
                 const pixel *src = source + x;
                 const int has_left = x || avail_l;
                 const pixel l = has_left ? POS(-1, 0) : POS(0, 0);
-                if (sps->chroma_vertical_collocated_flag) {
+                if (sps->r->sps_chroma_vertical_collocated_flag) {
                     sel_luma[i] = (POS(0, -1) + l + 4 * POS(0, 0) + POS(1, 0) + POS(0, 1) + 4) >> 3;
                 } else {
                     const pixel l1 = has_left ? POS(-1, 1) : POS(0, 1);
@@ -151,7 +151,7 @@ static av_always_inline void FUNC(cclm_select_luma)(const VVCFrameContext *fc,
                 if (!vs) {
                     pred = (*l + 2 * POS(0, 0) + POS(1, 0) + 2) >> 2;
                 } else {
-                    if (sps->chroma_vertical_collocated_flag) {
+                    if (sps->r->sps_chroma_vertical_collocated_flag) {
                         const int has_top = y || avail_t;
                         const pixel t = has_top ? POS(0, -1) : POS(0, 0);
                         pred = (*l + t + 4 * POS(0, 0) + POS(1, 0) + POS(0, 1) + 4) >> 3;
@@ -310,7 +310,7 @@ static av_always_inline void FUNC(cclm_get_luma_rec_pixels)(const VVCFrameContex
             }
 
         } else {
-            if (sps->chroma_vertical_collocated_flag)  {
+            if (sps->r->sps_chroma_vertical_collocated_flag)  {
                 for (int j = 0; j < w; j++) {
                     pixel pred  = (*l + *t + 4 * POS(0, 0) + POS(1, 0) + POS(0, 1) + 4) >> 3;
                     pdsy[i * w + j] = pred;
@@ -391,8 +391,8 @@ static int FUNC(lmcs_sum_samples)(const pixel *start, ptrdiff_t stride, const in
 static int FUNC(lmcs_derive_chroma_scale)(VVCLocalContext *lc, const int x0, const int y0)
 {
     VVCFrameContext *fc = lc->fc;
-    const VVCPH *ph     = fc->ps.ph;
-    const int size_y = FFMIN(fc->ps.sps->ctb_size_y, 64);
+    const VVCLMCS *lmcs = &fc->ps.lmcs;
+    const int size_y    = FFMIN(fc->ps.sps->ctb_size_y, 64);
 
     const int x = x0 & ~(size_y - 1);
     const int y = y0 & ~(size_y - 1);
@@ -415,13 +415,13 @@ static int FUNC(lmcs_derive_chroma_scale)(VVCLocalContext *lc, const int x0, con
         else
             luma = 1 << (BIT_DEPTH - 1);
 
-        for (i = ph->lmcs_min_bin_idx; i <= ph->lmcs_max_bin_idx; i++) {
-            if (luma < ph->lmcs_pivot[i + 1])
+        for (i = lmcs->min_bin_idx; i <= lmcs->max_bin_idx; i++) {
+            if (luma < lmcs->pivot[i + 1])
                 break;
         }
         i = FFMIN(i, LMCS_MAX_BIN_SIZE - 1);
 
-        lc->lmcs.chroma_scale = ph->lmcs_chroma_scale_coeff[i];
+        lc->lmcs.chroma_scale = lmcs->chroma_scale_coeff[i];
         lc->lmcs.x_vpdu = x;
         lc->lmcs.y_vpdu = y;
     }

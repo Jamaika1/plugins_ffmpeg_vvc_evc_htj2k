@@ -14,13 +14,13 @@
 #if EN_AVX512_SUPPORT
 
 #include <immintrin.h>
-#include "common_dsp_rtcd.h"
-#include "convolve.h"
-#include "convolve_avx2.h"
+#include "../common_dsp_rtcd.h"
+#include "../convolve.h"
+#include "../ASM_AVX2/convolve_avx2.h"
 #include "convolve_avx512.h"
-#include "EbInterPrediction.h"
-#include "EbMemory_AVX2.h"
-#include "synonyms.h"
+#include "../EbInterPrediction.h"
+#include "../ASM_AVX2/EbMemory_AVX2.h"
+#include "../ASM_SSE2/synonyms.h"
 
 static INLINE __m512i sr_x_round_avx512(const __m512i src) {
     const __m512i round = _mm512_set1_epi16(34);

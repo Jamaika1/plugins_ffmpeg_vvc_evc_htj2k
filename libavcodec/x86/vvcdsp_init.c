@@ -196,14 +196,6 @@ SAO_EDGE_FILTER_FUNCS(12, avx2)
     c->sao.edge_filter[8]       = ff_vvc_sao_edge_filter_128_##bitd##_##opt;    \
 } while (0)
 
-#define LOOP_FILTER_FUNCS(bitd, opt)                                                                \
-void ff_vvc_v_loop_filter_chroma_##bitd##_##opt(uint8_t *pix, ptrdiff_t stride,                     \
-                                    int beta, int32_t tc, uint8_t no_p, uint8_t no_q, int shift,    \
-                                    int max_len_p, int max_len_q);                                  \
-
-LOOP_FILTER_FUNCS(8, avx2)
-LOOP_FILTER_FUNCS(10, avx2)
-
 #define PUT_VVC_LUMA_8_FUNC(dir, opt)                                                                         \
     void ff_vvc_put_vvc_luma_##dir##_8_##opt(int16_t *dst, const uint8_t *_src, const ptrdiff_t _src_stride,  \
     const int height, const intptr_t mx, const intptr_t my, const int width,                                  \
@@ -249,50 +241,22 @@ PUT_VVC_LUMA_FORWARD_FUNCS(12, avx512icl)
     c->inter.put[LUMA][1][1] = ff_vvc_put_vvc_luma_hv_##bitd##_##opt; \
 } while (0)
 
-#define ITX_FUNC(type, size, opt)                                               \
-void ff_vvc_inv_##type##_##size##_##opt(int *out,      ptrdiff_t out_stride,    \
-                                        const int *in, ptrdiff_t in_stride);
-
-ITX_FUNC(dct2, 2, avx2);
-ITX_FUNC(dct2, 4, avx2);
-ITX_FUNC(dct2, 8, avx2);
-ITX_FUNC(dct2, 16, avx2);
-ITX_FUNC(dct2, 32, avx2);
-ITX_FUNC(dct2, 64, avx2);
-
-#define IDCT2_INIT(opt) do {                                                    \
-    c->itx.itx[DCT2][0]         = ff_vvc_inv_dct2_2_##opt;                      \
-    c->itx.itx[DCT2][1]         = ff_vvc_inv_dct2_4_##opt;                      \
-    c->itx.itx[DCT2][2]         = ff_vvc_inv_dct2_8_##opt;                      \
-    c->itx.itx[DCT2][3]         = ff_vvc_inv_dct2_16_##opt;                     \
-    c->itx.itx[DCT2][4]         = ff_vvc_inv_dct2_32_##opt;                     \
-    c->itx.itx[DCT2][5]         = ff_vvc_inv_dct2_64_##opt;                     \
-} while(0);
-
-void ff_vvc_dsp_init_x86(VVCDSPContext *const c, const int bit_depth,
-    int extended_precision_flag)
+void ff_vvc_dsp_init_x86(VVCDSPContext *const c, const int bit_depth)
 {
     const int cpu_flags = av_get_cpu_flags();
 
-#if HAVE_AVX2_EXTERNAL
     if (EXTERNAL_AVX2(cpu_flags)) {
-        if (!extended_precision_flag) {
-            IDCT2_INIT(avx2);
-        }
-
         switch (bit_depth) {
             case 8:
                 ALF_DSP(8);
                 PUT_VVC_LUMA_INIT(8, avx2);
                 c->sao.band_filter[0] = ff_vvc_sao_band_filter_8_8_avx2;
                 c->sao.band_filter[1] = ff_vvc_sao_band_filter_16_8_avx2;
-                c->lf.filter_chroma[1] = ff_vvc_v_loop_filter_chroma_8_avx2;
                 break;
             case 10:
                 ALF_DSP(10);
                 PUT_VVC_LUMA_INIT(10, avx2);
                 c->sao.band_filter[0] = ff_vvc_sao_band_filter_8_10_avx2;
-                c->lf.filter_chroma[1] = ff_vvc_v_loop_filter_chroma_10_avx2;
                 break;
             case 12:
                 ALF_DSP(12);
@@ -319,7 +283,6 @@ void ff_vvc_dsp_init_x86(VVCDSPContext *const c, const int bit_depth,
                 break;
         }
     }
-#endif
 #if HAVE_AVX512ICL_EXTERNAL
     if (EXTERNAL_AVX512ICL(cpu_flags)) {
         switch (bit_depth) {

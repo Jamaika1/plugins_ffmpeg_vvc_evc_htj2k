@@ -15,8 +15,8 @@
 
 #include <assert.h>
 #include <immintrin.h>
-#include "common_dsp_rtcd.h"
-#include "EbInvTransforms.h"
+#include "../common_dsp_rtcd.h"
+#include "../EbInvTransforms.h"
 #include "synonyms_avx512.h"
 #include "transpose_avx512.h"
 

@@ -35,7 +35,6 @@ enum TxType {
 };
 
 enum TxSize {
-    TX_SIZE_1 = 0,
     TX_SIZE_2,
     TX_SIZE_4,
     TX_SIZE_8,
@@ -122,7 +121,7 @@ typedef struct VVCItxDSPContext {
     void (*add_residual_joint)(uint8_t *dst, const int *res, int width, int height, ptrdiff_t stride, int c_sign, int shift);
     void (*pred_residual_joint)(int *buf, int width, int height, int c_sign, int shift);
 
-    void (*itx[N_TX_TYPE][N_TX_TYPE][N_TX_SIZE][N_TX_SIZE])(int *dst, const int *coeff, int nzw, int log2_transform_range);
+    void (*itx[N_TX_TYPE][N_TX_SIZE])(int *out, ptrdiff_t out_step, const int *in, ptrdiff_t in_step);
     void (*transform_bdpcm)(int *coeffs, int width, int height, int vertical, int log2_transform_range);
 } VVCItxDSPContext;
 
@@ -136,12 +135,6 @@ typedef struct VVCLFDSPContext {
     void (*filter_luma[2 /* h, v */])(uint8_t *pix, ptrdiff_t stride, int beta, int32_t tc,
         uint8_t no_p, uint8_t no_q, uint8_t max_len_p, uint8_t max_len_q, int hor_ctu_edge);
     void (*filter_chroma[2 /* h, v */])(uint8_t *pix, ptrdiff_t stride, int beta, int32_t tc,
-        uint8_t no_p, uint8_t no_q, int shift, int max_len_p, int max_len_q);
-    // Assembly version is much simpler, requiring us to do this horrible hack
-    // Mainly - no_p, no_q can only be 0, weak filter impl. only for now
-    void (*filter_luma_c[2 /* h, v */])(uint8_t *pix, ptrdiff_t stride, int beta, int32_t tc,
-        uint8_t no_p, uint8_t no_q, uint8_t max_len_p, uint8_t max_len_q, int hor_ctu_edge);
-    void (*filter_chroma_c[2 /* h, v */])(uint8_t *pix, ptrdiff_t stride, int beta, int32_t tc,
         uint8_t no_p, uint8_t no_q, int shift, int max_len_p, int max_len_q);
 } VVCLFDSPContext;
 
@@ -179,22 +172,12 @@ typedef struct VVCDSPContext {
     VVCALFDSPContext alf;
 } VVCDSPContext;
 
-void ff_vvc_dsp_init(VVCDSPContext *hpc, int bit_depth,
-    int extended_precision_flag);
+void ff_vvc_dsp_init(VVCDSPContext *hpc, int bit_depth);
 
 extern const int8_t ff_vvc_chroma_filters[3][32][4];
 extern const int8_t ff_vvc_luma_filters[3][16][8];
 extern const int8_t ff_vvc_dmvr_filters[16][2];
 
-void ff_vvc_dsp_init_aarch64(VVCDSPContext *c, const int bit_depth,
-    int extended_precision_flag);
-void ff_vvc_dsp_init_arm(VVCDSPContext *c, const int bit_depth,
-    int extended_precision_flag);
-void ff_vvc_dsp_init_ppc(VVCDSPContext *c, const int bit_depth,
-    int extended_precision_flag);
-void ff_vvc_dsp_init_x86(VVCDSPContext *c, const int bit_depth,
-    int extended_precision_flag);
-void ff_vvc_dsp_init_mips(VVCDSPContext *c, const int bit_depth,
-    int extended_precision_flag);
+void ff_vvc_dsp_init_x86(VVCDSPContext *c, const int bit_depth);
 
 #endif /* AVCODEC_VVCDSP_H */

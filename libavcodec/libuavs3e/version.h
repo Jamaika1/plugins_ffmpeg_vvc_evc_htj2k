@@ -10,8 +10,8 @@
 #define VER_MINOR  3                // minor version number
 #define VER_BUILD  0             // build number
 
-#define VERSION_TYPE "release"
+#define VERSION_TYPE "e1ff0f3"
 #define VERSION_STR  "1.3.0"
-#define VERSION_SHA1 "ea40065"
+#define VERSION_SHA1 "e1ff0f3"
 
 #endif // __VERSION_H__

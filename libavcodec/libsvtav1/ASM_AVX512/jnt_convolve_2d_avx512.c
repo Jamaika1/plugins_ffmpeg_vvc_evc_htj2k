@@ -13,11 +13,11 @@
 
 #if EN_AVX512_SUPPORT
 #include <immintrin.h>
-#include "common_dsp_rtcd.h"
-#include "convolve.h"
-#include "convolve_avx2.h"
+#include "../common_dsp_rtcd.h"
+#include "../convolve.h"
+#include "../ASM_AVX2/convolve_avx2.h"
 #include "convolve_avx512.h"
-#include "EbMemory_SSE4_1.h"
+#include "../ASM_SSE4_1/EbMemory_SSE4_1.h"
 
 static INLINE __m512i jnt_2d_comp_avg_round_32_avx512(const __m512i src[2]) {
     const __m512i round = _mm512_set1_epi32(1 << (COMPOUND_ROUND1_BITS - 1));

@@ -13,9 +13,9 @@
 #if EN_AVX512_SUPPORT
 
 #include <immintrin.h>
-#include "EbPictureOperators_Inline_AVX2.h"
-#include "EbPictureOperators_SSE2.h"
-#include "EbMemory_AVX2.h"
+#include "../ASM_AVX2/EbPictureOperators_Inline_AVX2.h"
+#include "../ASM_SSE2/EbPictureOperators_SSE2.h"
+#include "../ASM_AVX2/EbMemory_AVX2.h"
 
 /*******************************************************************************
  * Helper function that add 32bit values from sum32 to 64bit values in sum64

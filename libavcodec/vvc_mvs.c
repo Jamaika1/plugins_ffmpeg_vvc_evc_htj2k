@@ -113,7 +113,7 @@ static int check_mvset(Mv *mvLXCol, Mv *mvCol,
 
 #define CHECK_MVSET(l)                                          \
     check_mvset(mvLXCol, temp_col.mv + l,                       \
-                colPic, fc->ps.ph->poc,                         \
+                colPic, fc->ps.ph.poc,                          \
                 refPicList, X, refIdxLx,                        \
                 refPicList_col, L ## l, temp_col.ref_idx[l])
 
@@ -126,7 +126,7 @@ int ff_vvc_no_backward_pred_flag(const VVCLocalContext *lc)
 
     for (j = 0; j < 2; j++) {
         for (i = 0; i < rpl[j].nb_refs; i++) {
-            if (rpl[j].list[i] > lc->fc->ps.ph->poc) {
+            if (rpl[j].list[i] > lc->fc->ps.ph.poc) {
                 check_diffpicount++;
                 break;
             }
@@ -171,7 +171,7 @@ static int derive_temporal_colocated_mvs(const VVCLocalContext *lc, MvField temp
                 else
                     return CHECK_MVSET(1);
             } else {
-                if (lc->sc->sh.collocated_list)
+                if (!lc->sc->sh.r->sh_collocated_from_l0_flag)
                     return CHECK_MVSET(0);
                 else
                     return CHECK_MVSET(1);
@@ -215,7 +215,7 @@ static int temporal_luma_motion_vector(const VVCLocalContext *lc,
         return 0;
     }
 
-    if (!fc->ps.ph->temporal_mvp_enabled_flag || (cu->cb_width * cu->cb_height <= 32))
+    if (!fc->ps.ph.r->ph_temporal_mvp_enabled_flag || (cu->cb_width * cu->cb_height <= 32))
         return 0;
 
     tab_mvf = ref->tab_dmvr_mvf;
@@ -284,7 +284,7 @@ static int derive_cb_prof_flag_lx(const VVCLocalContext *lc, const PredictionUni
 {
     const MotionInfo* mi    = &pu->mi;
     const Mv* cp_mv         = &mi->mv[lx][0];
-    if (lc->fc->ps.ph->prof_disabled_flag || is_fallback)
+    if (lc->fc->ps.ph.r->ph_prof_disabled_flag || is_fallback)
         return 0;
     if (mi->motion_model_idc == MOTION_4_PARAMS_AFFINE) {
         if (IS_SAME_MV(cp_mv, cp_mv + 1))
@@ -602,7 +602,7 @@ static int check_available(Neighbour *n, const VVCLocalContext *lc, const int is
 
     if (!n->checked) {
         n->checked = 1;
-        n->available = !sps->entropy_coding_sync_enabled_flag || ((n->x >> sps->ctb_log2_size_y) <= (cu->x0 >> sps->ctb_log2_size_y));
+        n->available = !sps->r->sps_entropy_coding_sync_enabled_flag || ((n->x >> sps->ctb_log2_size_y) <= (cu->x0 >> sps->ctb_log2_size_y));
         n->available &= TAB_MVF(n->x, n->y).pred_flag != PF_INTRA;
         if (!is_mvp)
             n->available &= !is_same_mer(fc, n->x, n->y, cu->x0, cu->y0);
@@ -677,13 +677,15 @@ static int mv_merge_temporal_candidate(const VVCLocalContext *lc, MvField *cand)
 {
     const VVCFrameContext *fc   = lc->fc;
     const CodingUnit *cu        = lc->cu;
+
     memset(cand, 0, sizeof(*cand));
-    if (fc->ps.ph->temporal_mvp_enabled_flag && (cu->cb_width * cu->cb_height > 32)) {
+    if (fc->ps.ph.r->ph_temporal_mvp_enabled_flag && (cu->cb_width * cu->cb_height > 32)) {
         int available_l0 = temporal_luma_motion_vector(lc, 0, cand->mv + 0, 0, 1, 0);
-        int available_l1 = (lc->sc->sh.slice_type == VVC_SLICE_TYPE_B) ?
+        int available_l1 = IS_B(lc->sc->sh.r) ?
             temporal_luma_motion_vector(lc, 0, cand->mv + 1, 1, 1, 0) : 0;
         cand->pred_flag = available_l0 + (available_l1 << 1);
     }
+
     return cand->pred_flag;
 }
 
@@ -749,20 +751,20 @@ static int mv_merge_pairwise_candidate(MvField *cand_list, const int num_cands, 
 static void mv_merge_zero_motion_candidate(const VVCLocalContext *lc, const int merge_idx,
     MvField *cand_list, int num_cands)
 {
-    const VVCSPS *sps   = lc->fc->ps.sps;
-    const VVCSH *sh     = &lc->sc->sh;
-    const int nb_refs   = (sh->slice_type == VVC_SLICE_TYPE_P) ?
-        sh->rpls[0].num_ref_entries : FFMIN(sh->rpls[0].num_ref_entries, sh->rpls[1].num_ref_entries);
-    int zero_idx        = 0;
+    const VVCSPS *sps             = lc->fc->ps.sps;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const int num_ref_idx         = IS_P(rsh) ?
+        rsh->num_ref_idx_active[L0] : FFMIN(rsh->num_ref_idx_active[L0], rsh->num_ref_idx_active[L1]);
+    int zero_idx                  = 0;
 
     while (num_cands < sps->max_num_merge_cand) {
         MvField *cand = cand_list + num_cands;
 
-        cand->pred_flag    = PF_L0 + ((sh->slice_type == VVC_SLICE_TYPE_B) << 1);
+        cand->pred_flag    = PF_L0 + (IS_B(rsh) << 1);
         AV_ZERO64(cand->mv + 0);
         AV_ZERO64(cand->mv + 1);
-        cand->ref_idx[0]   = zero_idx < nb_refs ? zero_idx : 0;
-        cand->ref_idx[1]   = zero_idx < nb_refs ? zero_idx : 0;
+        cand->ref_idx[0]   = zero_idx < num_ref_idx ? zero_idx : 0;
+        cand->ref_idx[1]   = zero_idx < num_ref_idx ? zero_idx : 0;
         cand->bcw_idx      = 0;
         cand->hpel_if_idx  = 0;
         if (merge_idx == num_cands)
@@ -789,7 +791,7 @@ static void mv_merge_mode(const VVCLocalContext *lc,  const int merge_idx, MvFie
     if (mv_merge_history_candidates(lc, merge_idx, nb_list, cand_list, &num_cands))
         return;
 
-    if (mv_merge_pairwise_candidate(cand_list, num_cands, lc->sc->sh.slice_type == VVC_SLICE_TYPE_B)) {
+    if (mv_merge_pairwise_candidate(cand_list, num_cands, IS_B(lc->sc->sh.r))) {
         if (merge_idx == num_cands)
             return;
         num_cands++;
@@ -1019,7 +1021,7 @@ static void sb_temproal_luma_motion(const VVCLocalContext *lc,
     temp_col    = TAB_MVF(x, y);
     mvLXCol     = mv + 0;
     *pred_flag = DERIVE_TEMPORAL_COLOCATED_MVS(1);
-    if (sh->slice_type == VVC_SLICE_TYPE_B) {
+    if (IS_B(sh->r)) {
         X = 1;
         mvLXCol = mv + 1;
         *pred_flag |= (DERIVE_TEMPORAL_COLOCATED_MVS(1)) << 1;
@@ -1068,7 +1070,7 @@ static int sb_temporal_merge_candidate(const VVCLocalContext* lc, NeighbourConte
     const VVCFrameContext *fc   = lc->fc;
     const CodingUnit *cu        = lc->cu;
     const VVCSPS *sps           = fc->ps.sps;
-    const VVCPH *ph             = fc->ps.ph;
+    const VVCPH *ph             = &fc->ps.ph;
     MotionInfo *mi              = &pu->mi;
     const int ctb_log2_size     = sps->ctb_log2_size_y;
     const int x0                = cu->x0;
@@ -1081,8 +1083,8 @@ static int sb_temporal_merge_candidate(const VVCLocalContext* lc, NeighbourConte
     const int y_ctb = (y0 >> ctb_log2_size) << ctb_log2_size;
 
 
-    if (!ph->temporal_mvp_enabled_flag ||
-        !sps->sbtmvp_enabled_flag ||
+    if (!ph->r->ph_temporal_mvp_enabled_flag ||
+        !sps->r->sps_sbtmvp_enabled_flag ||
         (cu->cb_width < 8 && cu->cb_height < 8))
         return 0;
 
@@ -1265,8 +1267,9 @@ static int affine_merge_const6(const MvField* c0, const MvField* c2, const int c
 static void affine_merge_zero_motion(const VVCLocalContext *lc, MotionInfo *mi)
 {
     const CodingUnit *cu = lc->cu;
+
     memset(mi, 0, sizeof(*mi));
-    mi->pred_flag    = PF_L0 + ((lc->sc->sh.slice_type == VVC_SLICE_TYPE_B) << 1);
+    mi->pred_flag    = PF_L0 + (IS_B(lc->sc->sh.r) << 1);
     mi->motion_model_idc = MOTION_4_PARAMS_AFFINE;
     mi->num_sb_x = cu->cb_width >> MIN_PU_LOG2;
     mi->num_sb_y = cu->cb_height >> MIN_PU_LOG2;
@@ -1287,7 +1290,7 @@ static int affine_merge_const_candidates(const VVCLocalContext *lc, MotionInfo *
     c1 = DERIVE_CORNER_MV(tr);
     c2 = DERIVE_CORNER_MV(bl);
 
-    if (fc->ps.sps->six_param_affine_enabled_flag) {
+    if (fc->ps.sps->r->sps_6param_affine_enabled_flag) {
         MvField corner3, *c3 = NULL;
         //Const1
         if (affine_merge_const1(c0, c1, c2, mi)) {
@@ -1297,9 +1300,9 @@ static int affine_merge_const_candidates(const VVCLocalContext *lc, MotionInfo *
         }
 
         memset(&corner3, 0, sizeof(corner3));
-        if (fc->ps.ph->temporal_mvp_enabled_flag){
+        if (fc->ps.ph.r->ph_temporal_mvp_enabled_flag){
             const int available_l0 = temporal_luma_motion_vector(lc, 0, corner3.mv + 0, 0, 0, 0);
-            const int available_l1 = (lc->sc->sh.slice_type == VVC_SLICE_TYPE_B) ?
+            const int available_l1 = (lc->sc->sh.r->sh_slice_type == VVC_SLICE_TYPE_B) ?
                 temporal_luma_motion_vector(lc, 0, corner3.mv + 1, 1, 0, 0) : 0;
 
             corner3.pred_flag = available_l0 + (available_l1 << 1);
@@ -1368,7 +1371,7 @@ static int sb_mv_merge_mode(const VVCLocalContext *lc, const int merge_subblock_
     mi->num_sb_x  = cu->cb_width >> MIN_PU_LOG2;
     mi->num_sb_y  = cu->cb_height >> MIN_PU_LOG2;
 
-    if (sps->affine_enabled_flag) {
+    if (sps->r->sps_affine_enabled_flag) {
         const NeighbourIdx ak[] = { A0, A1 };
         const NeighbourIdx bk[] = { B0, B1, B2 };
         //A

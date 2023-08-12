@@ -129,11 +129,11 @@ static int derive_weight_uni(int *denom, int *wx, int *ox,
     const VVCFrameContext *fc   = lc->fc;
     const VVCPPS *pps           = fc->ps.pps;
     const VVCSH *sh             = &lc->sc->sh;
-    const int weight_flag       = (IS_P(sh) && pps->weighted_pred_flag) ||
-                                  (IS_B(sh) && pps->weighted_bipred_flag);
+    const int weight_flag       = (IS_P(sh->r) && pps->r->pps_weighted_pred_flag) ||
+                                  (IS_B(sh->r) && pps->r->pps_weighted_bipred_flag);
     if (weight_flag) {
         const int lx                = mvf->pred_flag - PF_L0;
-        const PredWeightTable *w    = pps->wp_info_in_ph_flag ? &fc->ps.ph->pwt : &sh->pwt;
+        const PredWeightTable *w    = pps->r->pps_wp_info_in_ph_flag ? &fc->ps.ph.pwt : &sh->pwt;
 
         *denom = w->log2_denom[c_idx > 0];
         *wx = w->weight[lx][c_idx][mvf->ref_idx[lx]];
@@ -150,8 +150,8 @@ static int derive_weight(int *denom, int *w0, int *w1, int *o0, int *o1,
     const VVCPPS *pps           = fc->ps.pps;
     const VVCSH *sh             = &lc->sc->sh;
     const int bcw_idx           = mvf->bcw_idx;
-    const int weight_flag       = (IS_P(sh) && pps->weighted_pred_flag) ||
-                                  (IS_B(sh) && fc->ps.pps->weighted_bipred_flag && !dmvr_flag);
+    const int weight_flag       = (IS_P(sh->r) && pps->r->pps_weighted_pred_flag) ||
+                                  (IS_B(sh->r) && pps->r->pps_weighted_bipred_flag && !dmvr_flag);
     if ((!weight_flag && !bcw_idx) || (bcw_idx && lc->cu->ciip_flag))
         return 0;
 
@@ -162,7 +162,7 @@ static int derive_weight(int *denom, int *w0, int *w1, int *o0, int *o1,
         *o0 = *o1 = 0;
     } else {
         const VVCPPS *pps = fc->ps.pps;
-        const PredWeightTable *w = pps->wp_info_in_ph_flag ? &fc->ps.ph->pwt : &sh->pwt;
+        const PredWeightTable *w = pps->r->pps_wp_info_in_ph_flag ? &fc->ps.ph.pwt : &sh->pwt;
 
         *denom = w->log2_denom[c_idx > 0];
         *w0 = w->weight[L0][c_idx][mvf->ref_idx[L0]];
@@ -524,7 +524,7 @@ static void pred_gpm_blk(VVCLocalContext *lc)
     const uint8_t mirror_type = ff_vvc_gpm_angle_to_mirror[angle_idx];
     const uint8_t *weights;
 
-    const int c_end = fc->ps.sps->chroma_format_idc ? 3 : 1;
+    const int c_end = fc->ps.sps->r->sps_chroma_format_idc ? 3 : 1;
 
     int16_t *tmp[2] = {lc->tmp, lc->tmp1};
     const ptrdiff_t tmp_stride = MAX_PB_SIZE;
@@ -617,8 +617,8 @@ static void pred_regular_luma(VVCLocalContext *lc, const int hf_idx, const int v
     if (ciip_flag) {
         const int intra_weight = ciip_derive_intra_weight(lc, x0, y0, sbw, sbh);
         fc->vvcdsp.intra.intra_pred(lc, x0, y0, sbw, sbh, 0);
-        if (sc->sh.lmcs_used_flag)
-            fc->vvcdsp.lmcs.filter(inter, inter_stride, sbw, sbh, fc->ps.ph->lmcs_fwd_lut);
+        if (sc->sh.r->sh_lmcs_used_flag)
+            fc->vvcdsp.lmcs.filter(inter, inter_stride, sbw, sbh, fc->ps.lmcs.fwd_lut);
         fc->vvcdsp.inter.put_ciip(dst, dst_stride, sbw, sbh, inter, inter_stride, intra_weight);
 
     }
@@ -871,7 +871,7 @@ static void pred_regular_blk(VVCLocalContext *lc, const int skip_ciip)
 
             derive_sb_mv(lc, &mv, &orig_mv, &sb_bdof_flag, x0, y0, sbw, sbh);
             pred_regular_luma(lc, mi->hpel_if_idx, mi->hpel_if_idx, &mv, x0, y0, sbw, sbh, &orig_mv, sb_bdof_flag);
-            if (fc->ps.sps->chroma_format_idc)
+            if (fc->ps.sps->r->sps_chroma_format_idc)
                 pred_regular_chroma(lc, &mv, x0, y0, sbw, sbh, &orig_mv, pu->dmvr_flag);
         }
     }
@@ -926,7 +926,7 @@ static void pred_affine_blk(VVCLocalContext *lc)
                 luma_prof_bi(lc, dst0, fc->frame->linesize[0], ref[0]->frame, ref[1]->frame,
                     mv, x, y, sbw, sbh);
             }
-            if (fc->ps.sps->chroma_format_idc) {
+            if (fc->ps.sps->r->sps_chroma_format_idc) {
                 if (!av_mod_uintp2(sby, vs) && !av_mod_uintp2(sbx, hs)) {
                     MvField mvc;
                     derive_affine_mvc(&mvc, fc, mv, x, y, sbw, sbh);
@@ -954,9 +954,9 @@ static void predict_inter(VVCLocalContext *lc)
 
     if (!pu->dmvr_flag)
         fill_dmvr_info(fc, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
-    if (lc->sc->sh.lmcs_used_flag && !cu->ciip_flag) {
+    if (lc->sc->sh.r->sh_lmcs_used_flag && !cu->ciip_flag) {
         uint8_t* dst0 = POS(0, cu->x0, cu->y0);
-        fc->vvcdsp.lmcs.filter(dst0, fc->frame->linesize[LUMA], cu->cb_width, cu->cb_height, fc->ps.ph->lmcs_fwd_lut);
+        fc->vvcdsp.lmcs.filter(dst0, fc->frame->linesize[LUMA], cu->cb_width, cu->cb_height, fc->ps.lmcs.fwd_lut);
     }
 }
 

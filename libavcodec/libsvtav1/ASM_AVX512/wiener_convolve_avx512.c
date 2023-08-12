@@ -14,14 +14,14 @@
 #include <assert.h>
 #include <immintrin.h>
 
-#include "common_dsp_rtcd.h"
-#include "convolve.h"
-#include "convolve_avx2.h"
+#include "../common_dsp_rtcd.h"
+#include "../convolve.h"
+#include "../ASM_AVX2/convolve_avx2.h"
 #include "convolve_avx512.h"
-#include "synonyms.h"
-#include "synonyms_avx2.h"
+#include "../ASM_SSE2/synonyms.h"
+#include "../ASM_AVX2/synonyms_avx2.h"
 #include "synonyms_avx512.h"
-#include "wiener_convolve_avx2.h"
+#include "../ASM_AVX2/wiener_convolve_avx2.h"
 
 SIMD_INLINE __m512i wiener_clip_avx512(const __m512i s, const __m512i r, const __m512i filt_center,
                                        const __m512i round_h0, const __m512i round_h1, const __m512i clamp_high) {

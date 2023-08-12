@@ -1,7 +1,5 @@
 /*
- * VVC video Decoder
- *
- * Copyright (C) 2022 Nuo Mi
+ * Copyright (C) 2023 Nuo Mi
  *
  * This file is part of FFmpeg.
  *
@@ -19,7 +17,8 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "libavutil/avutil.h"
+#include "libavutil/internal.h"
+#include "libavutil/mem.h"
 #include "libavutil/thread.h"
 
 #include "libavcodec/executor.h"
@@ -41,49 +40,46 @@
 #endif
 
 typedef struct ThreadInfo {
-    Executor *e;
+    AVExecutor *e;
     pthread_t thread;
 } ThreadInfo;
 
-struct Executor {
-    TaskletCallbacks cb;
+struct AVExecutor {
+    AVTaskCallbacks cb;
+    int thread_count;
+
     ThreadInfo *threads;
     uint8_t *local_contexts;
-    int thread_count;
 
     pthread_mutex_t lock;
     pthread_cond_t cond;
     int die;
-    Tasklet *tasks;
+
+    AVTask *tasks;
 };
 
-static void remove_task(Tasklet **prev, Tasklet *t)
+static AVTask* remove_task(AVTask **prev, AVTask *t)
 {
     *prev  = t->next;
     t->next = NULL;
+    return t;
 }
 
-static void add_task(Tasklet **prev, Tasklet *t)
+static void add_task(AVTask **prev, AVTask *t)
 {
     t->next = *prev;
     *prev   = t;
 }
 
-static int run_one_task(Executor *e, void *lc)
+static int run_one_task(AVExecutor *e, void *lc)
 {
-    TaskletCallbacks *cb = &e->cb;
-    Tasklet **prev;
-    Tasklet *t = NULL;
+    AVTaskCallbacks *cb = &e->cb;
+    AVTask **prev;
 
-    for (prev = &e->tasks; *prev; prev = &(*prev)->next) {
-        if (cb->ready(*prev, cb->user_data)) {
-            t = *prev;
-            break;
-        }
-    }
-    if (t) {
-        //found one task
-        remove_task(prev, t);
+    for (prev = &e->tasks; *prev && !cb->ready(*prev, cb->user_data); prev = &(*prev)->next)
+        /* nothing */;
+    if (*prev) {
+        AVTask *t = remove_task(prev, *prev);
         pthread_mutex_unlock(&e->lock);
         cb->run(t, lc, cb->user_data);
         pthread_mutex_lock(&e->lock);
@@ -96,7 +92,7 @@ static int run_one_task(Executor *e, void *lc)
 static void *executor_worker_task(void *data)
 {
     ThreadInfo *ti = (ThreadInfo*)data;
-    Executor *e    = ti->e;
+    AVExecutor *e  = ti->e;
     void *lc       = e->local_contexts + (ti - e->threads) * e->cb.local_context_size;
 
     pthread_mutex_lock(&e->lock);
@@ -113,12 +109,36 @@ static void *executor_worker_task(void *data)
 }
 #endif
 
-Executor* ff_executor_alloc(const TaskletCallbacks *cb, int thread_count)
+static void executor_free(AVExecutor *e, const int has_lock, const int has_cond)
 {
-    Executor *e;
-    int i, j, ret;
+    if (e->thread_count) {
+        //signal die
+        pthread_mutex_lock(&e->lock);
+        e->die = 1;
+        pthread_cond_broadcast(&e->cond);
+        pthread_mutex_unlock(&e->lock);
+
+        for (int i = 0; i < e->thread_count; i++)
+            pthread_join(e->threads[i].thread, NULL);
+    }
+    if (has_cond)
+        pthread_cond_destroy(&e->cond);
+    if (has_lock)
+        pthread_mutex_destroy(&e->lock);
+
+    av_free(e->threads);
+    av_free(e->local_contexts);
+
+    av_free(e);
+}
+
+AVExecutor* avpriv_executor_alloc(const AVTaskCallbacks *cb, int thread_count)
+{
+    AVExecutor *e;
+    int has_lock = 0, has_cond = 0;
     if (!cb || !cb->user_data || !cb->ready || !cb->run || !cb->priority_higher)
         return NULL;
+
     e = av_calloc(1, sizeof(*e));
     if (!e)
         return NULL;
@@ -130,72 +150,39 @@ Executor* ff_executor_alloc(const TaskletCallbacks *cb, int thread_count)
 
     e->threads = av_calloc(thread_count, sizeof(*e->threads));
     if (!e->threads)
-        goto free_contexts;
-    ret = pthread_mutex_init(&e->lock, NULL);
-    if (ret)
-        goto free_threads;
+        goto free_executor;
 
-    ret = pthread_cond_init(&e->cond, NULL);
-    if (ret)
-        goto destroy_lock;
+    has_lock = !pthread_mutex_init(&e->lock, NULL);
+    has_cond = !pthread_cond_init(&e->cond, NULL);
 
-    for (i = 0; i < thread_count; i++) {
-        ThreadInfo *ti = e->threads + i;
+    if (!has_lock || !has_cond)
+        goto free_executor;
+
+    for (/* nothing */; e->thread_count < thread_count; e->thread_count++) {
+        ThreadInfo *ti = e->threads + e->thread_count;
         ti->e = e;
-        ret = pthread_create(&ti->thread, NULL, executor_worker_task, ti);
-        if (ret)
-            goto join_threads;
+        if (pthread_create(&ti->thread, NULL, executor_worker_task, ti))
+            goto free_executor;
     }
-    e->thread_count = thread_count;
     return e;
 
-join_threads:
-    pthread_mutex_lock(&e->lock);
-    e->die = 1;
-    pthread_cond_broadcast(&e->cond);
-    pthread_mutex_unlock(&e->lock);
-    for (j = 0; j < i; j++)
-        pthread_join(e->threads[j].thread, NULL);
-    pthread_cond_destroy(&e->cond);
-destroy_lock:
-    pthread_mutex_destroy(&e->lock);
-free_threads:
-    av_free(e->threads);
-free_contexts:
-    av_free(e->local_contexts);
 free_executor:
-    free(e);
+    executor_free(e, has_lock, has_cond);
     return NULL;
 }
 
-void ff_executor_free(Executor **executor)
+void avpriv_executor_free(AVExecutor **executor)
 {
-    Executor *e;
     if (!executor || !*executor)
         return;
-    e = *executor;
-
-    //singal die
-    pthread_mutex_lock(&e->lock);
-    e->die = 1;
-    pthread_cond_broadcast(&e->cond);
-    pthread_mutex_unlock(&e->lock);
-
-    for (int i = 0; i < e->thread_count; i++)
-        pthread_join(e->threads[i].thread, NULL);
-    pthread_cond_destroy(&e->cond);
-    pthread_mutex_destroy(&e->lock);
-
-    av_free(e->threads);
-    av_free(e->local_contexts);
-
-    av_freep(executor);
+    executor_free(*executor, 1, 1);
+    *executor = NULL;
 }
 
-void ff_executor_execute(Executor *e, Tasklet *t)
+void avpriv_executor_execute(AVExecutor *e, AVTask *t)
 {
-    TaskletCallbacks *cb = &e->cb;
-    Tasklet **prev;
+    AVTaskCallbacks *cb = &e->cb;
+    AVTask **prev;
 
     pthread_mutex_lock(&e->lock);
     if (t) {
