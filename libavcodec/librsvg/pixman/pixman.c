@@ -182,7 +182,7 @@ clip_general_image (pixman_region32_t * region,
 	    return FALSE;
 	}
     }
-    else if (!pixman_region32_not_empty (clip))
+    else if (pixman_region32_empty (clip))
     {
 	return FALSE;
     }
@@ -277,7 +277,7 @@ _pixman_compute_composite_region32 (pixman_region32_t * region,
 	{
 	    return FALSE;
 	}
-	if (!pixman_region32_not_empty (region))
+	if (pixman_region32_empty (region))
 	    return FALSE;
 	if (dest_image->common.alpha_map->common.have_clip_region)
 	{
