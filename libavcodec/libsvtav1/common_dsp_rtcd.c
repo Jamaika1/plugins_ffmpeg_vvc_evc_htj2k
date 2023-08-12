@@ -203,9 +203,10 @@ void svt_aom_setup_common_rtcd_internal(EbCpuFlags flags) {
 
     /* No C version, use only internal in kerneal: svt_cdef_filter_block_avx2() */
 #if defined(ARCH_X86_64) && defined(__AVX2__)
-    if (flags & HAS_AVX2)    svt_cdef_filter_block_8xn_16 = svt_cdef_filter_block_8xn_16_avx2;
 #if EN_AVX512_SUPPORT
     if (flags & HAS_AVX512F) svt_cdef_filter_block_8xn_16 = svt_cdef_filter_block_8xn_16_avx512;
+#else
+    if (flags & HAS_AVX2)    svt_cdef_filter_block_8xn_16 = svt_cdef_filter_block_8xn_16_avx2;
 #endif
 #endif
 
