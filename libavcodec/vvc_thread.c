@@ -100,7 +100,6 @@ void ff_vvc_task_init(VVCTask *task, VVCTaskType type, VVCFrameContext *fc)
     memset(task, 0, sizeof(*task));
     task->type           = type;
     task->fc             = fc;
-    task->decode_order   = fc->decode_order;
 }
 
 void ff_vvc_parse_task_init(VVCTask *t, VVCTaskType type, VVCFrameContext *fc,
@@ -124,7 +123,7 @@ VVCTask* ff_vvc_task_alloc(void)
 
 static int check_colocation_ctu(const VVCFrameContext *fc, const VVCTask *t)
 {
-    if (fc->ps.ph->temporal_mvp_enabled_flag || fc->ps.sps->sbtmvp_enabled_flag) {
+    if (fc->ps.ph.r->ph_temporal_mvp_enabled_flag || fc->ps.sps->r->sps_sbtmvp_enabled_flag) {
         //-1 to avoid we are waiting for next CTU line.
         const int y = (t->ry << fc->ps.sps->ctb_log2_size_y) - 1;
         VVCFrame *col = fc->ref->collocated_ref;
@@ -139,7 +138,7 @@ static int is_parse_ready(const VVCFrameContext *fc, const VVCTask *t)
     av_assert0(t->type == VVC_TASK_TYPE_PARSE);
     if (!check_colocation_ctu(fc, t))
         return 0;
-    if (fc->ps.sps->entropy_coding_sync_enabled_flag && t->ry != fc->ps.pps->ctb_to_row_bd[t->ry])
+    if (fc->ps.sps->r->sps_entropy_coding_sync_enabled_flag && t->ry != fc->ps.pps->ctb_to_row_bd[t->ry])
         return get_avail(fc->frame_thread, t->rx, t->ry - 1, VVC_TASK_TYPE_PARSE);
     return 1;
 }
@@ -156,9 +155,9 @@ static int is_inter_ready(const VVCFrameContext *fc, const VVCTask *t)
         const SliceContext *sc = fc->slices[slice_idx];
         const VVCSH *sh        = &sc->sh;
         CTU *ctu               = fc->tab.ctus + rs;
-        if (!IS_I(sh)) {
+        if (!IS_I(sh->r)) {
             for (int lx = 0; lx < 2; lx++) {
-                for (int i = ctu->max_y_idx[lx]; i < sh->nb_refs[lx]; i++) {
+                for (int i = ctu->max_y_idx[lx]; i < sh->r->num_ref_idx_active[lx]; i++) {
                     const int y = ctu->max_y[lx][i];
                     VVCFrame *ref = sc->rpl[lx].ref[i];
                     if (ref && y >= 0) {
@@ -228,7 +227,7 @@ static int is_alf_ready(const VVCFrameContext *fc, const VVCTask *t)
 
 typedef int (*is_ready_func)(const VVCFrameContext *fc, const VVCTask *t);
 
-int ff_vvc_task_ready(const Tasklet *_t, void *user_data)
+int ff_vvc_task_ready(const AVTask *_t, void *user_data)
 {
     const VVCTask *t            = (const VVCTask*)_t;
     VVCFrameThread *ft          = t->fc->frame_thread;
@@ -257,12 +256,12 @@ int ff_vvc_task_ready(const Tasklet *_t, void *user_data)
             return (a) < (b);               \
     } while (0)
 
-int ff_vvc_task_priority_higher(const Tasklet *_a, const Tasklet *_b)
+int ff_vvc_task_priority_higher(const AVTask *_a, const AVTask *_b)
 {
     const VVCTask *a = (const VVCTask*)_a;
     const VVCTask *b = (const VVCTask*)_b;
 
-    CHECK(a->decode_order, b->decode_order);                //decode order
+    CHECK(a->fc->decode_order, b->fc->decode_order);             //decode order
 
     if (a->type == VVC_TASK_TYPE_PARSE || b->type == VVC_TASK_TYPE_PARSE) {
         CHECK(a->type, b->type);
@@ -308,12 +307,12 @@ static int run_parse(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
         set_avail(ft, t->rx, t->ry, VVC_TASK_TYPE_PARSE);
         add_task(s, ft->tasks + rs, VVC_TASK_TYPE_INTER);
 
-        if (fc->ps.sps->entropy_coding_sync_enabled_flag && t->rx == pps->ctb_to_col_bd[t->rx]) {
+        if (fc->ps.sps->r->sps_entropy_coding_sync_enabled_flag && t->rx == pps->ctb_to_col_bd[t->rx]) {
             EntryPoint *next = ep + 1;
             if (next < sc->eps + sc->nb_eps) {
                 memcpy(next->cabac_state, ep->cabac_state, sizeof(next->cabac_state));
                 av_assert0(!next->parse_task->type);
-                ff_vvc_ep_init_stat_coeff(lc->ep, sps->bit_depth, sps->persistent_rice_adaptation_enabled_flag);
+                ff_vvc_ep_init_stat_coeff(lc->ep, sps->bit_depth, sps->r->sps_persistent_rice_adaptation_enabled_flag);
                 ff_vvc_frame_add_task(s, next->parse_task);
             }
         }
@@ -434,7 +433,7 @@ static int run_deblock_v(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
 
         if (slice_idx != -1) {
             lc->sc = fc->slices[slice_idx];
-            if (!lc->sc->sh.deblocking_filter_disabled_flag) {
+            if (!lc->sc->sh.r->sh_deblocking_filter_disabled_flag) {
                 ff_vvc_decode_neighbour(lc, x0, y0, t->rx, t->ry, rs);
                 ff_vvc_deblock_vertical(lc, x0, y0);
             }
@@ -469,7 +468,7 @@ static int run_deblock_h(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
 
         if (slice_idx != -1) {
             lc->sc = fc->slices[slice_idx];
-            if (!lc->sc->sh.deblocking_filter_disabled_flag) {
+            if (!lc->sc->sh.r->sh_deblocking_filter_disabled_flag) {
                 ff_vvc_decode_neighbour(lc, x0, y0, t->rx, t->ry, rs);
                 ff_vvc_deblock_horizontal(lc, x0, y0);
             }
@@ -522,12 +521,12 @@ static int run_sao(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
         const int x0 = t->rx * ctb_size;
         const int y0 = t->ry * ctb_size;
 
-        if (fc->ps.sps->sao_enabled_flag) {
+        if (fc->ps.sps->r->sps_sao_enabled_flag) {
             ff_vvc_decode_neighbour(lc, x0, y0, t->rx, t->ry, rs);
             ff_vvc_sao_filter(lc, x0, y0);
         }
 
-        if (fc->ps.sps->alf_enabled_flag)
+        if (fc->ps.sps->r->sps_alf_enabled_flag)
             ff_vvc_alf_copy_ctu_to_hv(lc, x0, y0);
 
         set_avail(ft, t->rx, t->ry, VVC_TASK_TYPE_SAO);
@@ -552,7 +551,7 @@ static int run_alf(VVCContext *s, VVCLocalContext *lc, VVCTask *t)
     const int x0 = t->rx * ctu_size;
     const int y0 = t->ry * ctu_size;
 
-    if (fc->ps.sps->alf_enabled_flag) {
+    if (fc->ps.sps->r->sps_alf_enabled_flag) {
         const int slice_idx = CTB(fc->tab.slice_idx, t->rx, t->ry);
         if (slice_idx != -1) {
             const int rs = t->ry * fc->ps.pps->ctb_width + t->rx;
@@ -604,7 +603,7 @@ const static char* task_name[] = {
 
 typedef int (*run_func)(VVCContext *s, VVCLocalContext *lc, VVCTask *t);
 
-int ff_vvc_task_run(Tasklet *_t, void *local_context, void *user_data)
+int ff_vvc_task_run(AVTask *_t, void *local_context, void *user_data)
 {
     VVCTask *t              = (VVCTask*)_t;
     VVCContext *s           = (VVCContext *)user_data;
@@ -637,6 +636,9 @@ int ff_vvc_task_run(Tasklet *_t, void *local_context, void *user_data)
             int zero = 0;
 #endif
             atomic_compare_exchange_strong(&ft->ret, &zero, ret);
+            av_log(s->avctx, AV_LOG_ERROR,
+                "frame %5d, %s(%3d, %3d) failed with %d\r\n",
+                (int)t->fc->decode_order, task_name[type], t->rx, t->ry, ret);
         }
     }
 
@@ -744,10 +746,8 @@ int ff_vvc_frame_thread_init(VVCFrameContext *fc)
         col->deblock_h_task.ry = 0;
     }
 
-    for (int rs = 0; rs < ft->ctu_count; rs++) {
+    for (int rs = 0; rs < ft->ctu_count; rs++)
         ft->avails[rs] = 0;
-        ft->tasks[rs].decode_order = fc->decode_order;
-    }
 
     memset(&ft->row_progress[0], 0, sizeof(ft->row_progress));
     fc->frame_thread = ft;
@@ -779,7 +779,7 @@ void ff_vvc_frame_add_task(VVCContext *s, VVCTask *t)
 
     pthread_mutex_unlock(&ft->lock);
 
-    ff_executor_execute(s->executor, &t->task);
+    avpriv_executor_execute(s->executor, &t->task);
 }
 
 int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
@@ -796,8 +796,6 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
                 atomic_uchar mask = 1 << VVC_TASK_TYPE_PARSE;
                 if (!(atomic_load(ft->avails + rs) & mask)) {
                     atomic_store(&ft->ret, AVERROR_INVALIDDATA);
-                    // maybe all thread are waiting, let us wake up one
-                    ff_executor_execute(s->executor, NULL);
                     break;
                 }
             }
@@ -808,6 +806,9 @@ int ff_vvc_frame_wait(VVCContext *s, VVCFrameContext *fc)
 
     pthread_mutex_unlock(&ft->lock);
     ff_vvc_report_frame_finished(fc->ref);
+
+    // maybe all threads are waiting, let us wake up one
+    avpriv_executor_execute(s->executor, NULL);
 
 #ifdef VVC_THREAD_DEBUG
     av_log(s->avctx, AV_LOG_DEBUG, "frame %5d done\r\n", (int)fc->decode_order);

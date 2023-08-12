@@ -112,7 +112,7 @@ static AVBufferRef *alloc_progress(void)
 
 static VVCFrame *alloc_frame(VVCContext *s, VVCFrameContext *fc)
 {
-    const VVCPPS *pps = s->ps.pps;
+    const VVCPPS *pps = fc->ps.pps;
     int i, j, ret;
     for (i = 0; i < FF_ARRAY_ELEMS(fc->DPB); i++) {
         VVCFrame *frame = &fc->DPB[i];
@@ -124,7 +124,7 @@ static VVCFrame *alloc_frame(VVCContext *s, VVCFrameContext *fc)
         if (ret < 0)
             return NULL;
 
-        frame->rpl_buf = av_buffer_allocz(fc->pkt.nb_nals * sizeof(RefPicListTab));
+        frame->rpl_buf = av_buffer_allocz(s->current_frame.nb_units * sizeof(RefPicListTab));
         if (!frame->rpl_buf)
             goto fail;
 
@@ -159,7 +159,7 @@ fail:
 
 int ff_vvc_set_new_ref(VVCContext *s, VVCFrameContext *fc, AVFrame **frame)
 {
-    const VVCPH *ph= fc->ps.ph;
+    const VVCPH *ph= &fc->ps.ph;
     const int poc = ph->poc;
     VVCFrame *ref;
     int i;
@@ -185,18 +185,18 @@ int ff_vvc_set_new_ref(VVCContext *s, VVCFrameContext *fc, AVFrame **frame)
 
     if (s->no_output_before_recovery_flag && (IS_RASL(s) || !GDR_IS_RECOVERED(s)))
         ref->flags = 0;
-    else if (ph->pic_output_flag)
+    else if (ph->r->ph_pic_output_flag)
         ref->flags = VVC_FRAME_FLAG_OUTPUT;
 
-    if (!ph->non_ref_pic_flag)
+    if (!ph->r->ph_non_ref_pic_flag)
         ref->flags |= VVC_FRAME_FLAG_SHORT_REF;
 
     ref->poc      = poc;
     ref->sequence = s->seq_decode;
-    ref->frame->crop_left   = fc->ps.pps->conf_win.left_offset;
-    ref->frame->crop_right  = fc->ps.pps->conf_win.right_offset;
-    ref->frame->crop_top    = fc->ps.pps->conf_win.top_offset;
-    ref->frame->crop_bottom = fc->ps.pps->conf_win.bottom_offset;
+    ref->frame->crop_left   = fc->ps.pps->r->pps_conf_win_left_offset;
+    ref->frame->crop_right  = fc->ps.pps->r->pps_conf_win_right_offset;
+    ref->frame->crop_top    = fc->ps.pps->r->pps_conf_win_top_offset;
+    ref->frame->crop_bottom = fc->ps.pps->r->pps_conf_win_bottom_offset;
 
     return 0;
 }
@@ -212,7 +212,7 @@ int ff_vvc_output_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *out, const 
         if (no_output_of_prior_pics_flag) {
             for (i = 0; i < FF_ARRAY_ELEMS(fc->DPB); i++) {
                 VVCFrame *frame = &fc->DPB[i];
-                if (!(frame->flags & VVC_FRAME_FLAG_BUMPING) && frame->poc != fc->ps.ph->poc &&
+                if (!(frame->flags & VVC_FRAME_FLAG_BUMPING) && frame->poc != fc->ps.ph.poc &&
                         frame->sequence == s->seq_output) {
                     ff_vvc_unref_frame(fc, frame, VVC_FRAME_FLAG_OUTPUT);
                 }
@@ -233,7 +233,7 @@ int ff_vvc_output_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *out, const 
 
         /* wait for more frames before output */
         if (!flush && s->seq_output == s->seq_decode && sps &&
-            nb_output <= sps->dpb.max_dec_pic_buffering[sps->max_sublayers - 1])
+            nb_output <= sps->r->sps_dpb_params.dpb_max_dec_pic_buffering_minus1[sps->r->sps_max_sublayers_minus1] + 1)
             return 0;
 
         if (nb_output) {
@@ -263,7 +263,7 @@ int ff_vvc_output_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *out, const 
 void ff_vvc_bump_frame(VVCContext *s, VVCFrameContext *fc)
 {
     const VVCSPS *sps = fc->ps.sps;
-    const int poc = fc->ps.ph->poc;
+    const int poc = fc->ps.ph.poc;
     int dpb = 0;
     int min_poc = INT_MAX;
     int i;
@@ -277,7 +277,7 @@ void ff_vvc_bump_frame(VVCContext *s, VVCFrameContext *fc)
         }
     }
 
-    if (sps && dpb >= sps->dpb.max_dec_pic_buffering[sps->max_sublayers - 1]) {
+    if (sps && dpb >= sps->r->sps_dpb_params.dpb_max_dec_pic_buffering_minus1[sps->r->sps_max_sublayers_minus1] + 1) {
         for (i = 0; i < FF_ARRAY_ELEMS(fc->DPB); i++) {
             VVCFrame *frame = &fc->DPB[i];
             if ((frame->flags) &&
@@ -399,32 +399,66 @@ static int init_slice_rpl(const VVCFrameContext *fc, SliceContext *sc)
     return 0;
 }
 
+static int delta_poc_st(const H266RefPicListStruct *rpls,
+    const int lx, const int i, const VVCSPS *sps)
+{
+    int abs_delta_poc_st = rpls->abs_delta_poc_st[i];
+    if (!((sps->r->sps_weighted_pred_flag ||
+        sps->r->sps_weighted_bipred_flag) && i != 0))
+        abs_delta_poc_st++;
+    return (1 - 2 * rpls->strp_entry_sign_flag[i]) * abs_delta_poc_st;
+}
+
+static int poc_lt(int *prev_delta_poc_msb, const int poc, const H266RefPicLists *ref_lists,
+    const int lx, const int j, const int max_poc_lsb)
+{
+    const H266RefPicListStruct *rpls = ref_lists->rpl_ref_list + lx;
+    int lt_poc =  rpls->ltrp_in_header_flag ? ref_lists->poc_lsb_lt[lx][j] : rpls->rpls_poc_lsb_lt[j];
+
+    if (ref_lists->delta_poc_msb_cycle_present_flag[lx][j]) {
+        const uint32_t delta = ref_lists->delta_poc_msb_cycle_lt[lx][j] + *prev_delta_poc_msb;
+        lt_poc += poc - delta * max_poc_lsb - (poc & (max_poc_lsb - 1));
+        *prev_delta_poc_msb = delta;
+    }
+    return lt_poc;
+}
+
 int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
 {
-    const VVCSH *sh = &sc->sh;
-    int i, ret = 0;
+    const VVCSPS *sps                = fc->ps.sps;
+    const H266RawPPS *pps            = fc->ps.pps->r;
+    const VVCPH *ph                  = &fc->ps.ph;
+    const H266RawSliceHeader *rsh    = sc->sh.r;
+    const int max_poc_lsb            = sps->max_pic_order_cnt_lsb;
+    const H266RefPicLists *ref_lists =
+        pps->pps_rpl_info_in_ph_flag ?  &ph->r->ph_ref_pic_lists : &rsh->sh_ref_pic_lists;
+    int ret = 0;
 
-    init_slice_rpl(fc, sc);
+    ret = init_slice_rpl(fc, sc);
+    if (ret < 0)
+        return ret;
 
-    for (i = 0; i < 2; i++) {
-        const VVCRefPicListStruct *rpls = sh->rpls + i;
-        RefPicList *rpl = sc->rpl + i;
-        int poc_base = fc->ps.ph->poc;
+    for (int lx = L0; lx <= L1; lx++) {
+        const H266RefPicListStruct *rpls = ref_lists->rpl_ref_list + lx;
+        RefPicList *rpl = sc->rpl + lx;
+        int poc_base = ph->poc;
+        int prev_delta_poc_msb = 0;
+
         rpl->nb_refs = 0;
-        for (int j = 0; j < rpls->num_ref_entries; j++) {
-            const VVCRefPicListStructEntry *ref = &rpls->entries[j];
+        for (int i = 0, j = 0; i < rpls->num_ref_entries; i++) {
             int poc;
-            if (!ref->inter_layer_ref_pic_flag) {
+            if (!rpls->inter_layer_ref_pic_flag[i]) {
                 int use_msb = 1;
                 int ref_flag;
-                if (ref->st_ref_pic_flag) {
-                    poc = poc_base + ref->delta_poc_val_st;
+                if (rpls->st_ref_pic_flag[i]) {
+                    poc = poc_base + delta_poc_st(rpls, lx, i, sps);
                     poc_base = poc;
                     ref_flag = VVC_FRAME_FLAG_SHORT_REF;
                 } else {
-                    use_msb = ref->lt_msb_flag;
-                    poc = ref->lt_poc;
+                    use_msb = ref_lists->delta_poc_msb_cycle_present_flag[lx][j];
+                    poc = poc_lt(&prev_delta_poc_msb, ph->poc, ref_lists, lx, j, max_poc_lsb);
                     ref_flag = VVC_FRAME_FLAG_LONG_REF;
+                    j++;
                 }
                 ret = add_candidate_ref(s, fc, rpl, poc, ref_flag, use_msb);
                 if (ret < 0)
@@ -435,9 +469,9 @@ int ff_vvc_slice_rpl(VVCContext *s, VVCFrameContext *fc, SliceContext *sc)
                 goto fail;
             }
         }
-        if (sh->collocated_list == i &&
-            sh->collocated_ref_idx < rpl->nb_refs)
-            fc->ref->collocated_ref = rpl->ref[sh->collocated_ref_idx];
+        if ((!rsh->sh_collocated_from_l0_flag) == lx &&
+            rsh->sh_collocated_ref_idx < rpl->nb_refs)
+            fc->ref->collocated_ref = rpl->ref[rsh->sh_collocated_ref_idx];
     }
 fail:
     return ret;

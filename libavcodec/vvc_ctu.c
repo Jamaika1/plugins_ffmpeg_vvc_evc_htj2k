@@ -146,7 +146,7 @@ static int set_qp_y(VVCLocalContext *lc, const int x0, const int y0, const int h
     CodingUnit *cu      = lc->cu;
     int cu_qp_delta     = 0;
 
-    if (!lc->fc->ps.pps->cu_qp_delta_enabled_flag) {
+    if (!lc->fc->ps.pps->r->pps_cu_qp_delta_enabled_flag) {
         ep->qp_y = lc->sc->sh.slice_qp_y;
     } else if (ep->is_first_qg || (lc->parse.cu_qg_top_left_x == x0 && lc->parse.cu_qg_top_left_y == y0)) {
         ep->qp_y = get_qp_y_pred(lc);
@@ -184,21 +184,26 @@ static void set_qp_c_tab(const VVCLocalContext *lc, const TransformUnit *tu, con
 
 static void set_qp_c(VVCLocalContext *lc)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCPPS *pps           = fc->ps.pps;
-    const VVCSH *sh             = &lc->sc->sh;
-    CodingUnit *cu              = lc->cu;
-    const int x_center          = cu->x0 + cu->cb_width  / 2;
-    const int y_center          = cu->y0 + cu->cb_height / 2;
-    const int single_tree       = cu->tree_type == SINGLE_TREE;
-    const int qp_luma           = (single_tree ? lc->ep->qp_y : ff_vvc_get_qPy(fc, x_center, y_center)) + sps->qp_bd_offset;
-    const int qp_chroma         = av_clip(qp_luma, 0, MAX_QP + sps->qp_bd_offset);
+    const VVCFrameContext *fc       = lc->fc;
+    const VVCSPS *sps               = fc->ps.sps;
+    const VVCPPS *pps               = fc->ps.pps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    CodingUnit *cu                  = lc->cu;
+    const int x_center              = cu->x0 + cu->cb_width  / 2;
+    const int y_center              = cu->y0 + cu->cb_height / 2;
+    const int single_tree           = cu->tree_type == SINGLE_TREE;
+    const int qp_luma               = (single_tree ? lc->ep->qp_y : ff_vvc_get_qPy(fc, x_center, y_center)) + sps->qp_bd_offset;
+    const int qp_chroma             = av_clip(qp_luma, 0, MAX_QP + sps->qp_bd_offset);
+    const int sh_chroma_qp_offset[] = {
+        rsh->sh_cb_qp_offset,
+        rsh->sh_cr_qp_offset,
+        rsh->sh_joint_cbcr_qp_offset,
+    };
     int qp;
 
-    for (int i = CB - 1; i < CR + sps->joint_cbcr_enabled_flag; i++) {
+    for (int i = CB - 1; i < CR + sps->r->sps_joint_cbcr_enabled_flag; i++) {
         qp = sps->chroma_qp_table[i][qp_chroma];
-        qp = qp + pps->chroma_qp_offset[i] + sh->chroma_qp_offset[i] + lc->parse.chroma_qp_offset[i];
+        qp = qp + pps->chroma_qp_offset[i] + sh_chroma_qp_offset[i] + lc->parse.chroma_qp_offset[i];
         qp = av_clip(qp, -sps->qp_bd_offset, MAX_QP) + sps->qp_bd_offset;
         cu->qp[i + 1] = qp;
     }
@@ -288,15 +293,15 @@ static uint8_t tu_y_coded_flag_decode(VVCLocalContext *lc, const int is_sbt_not_
 
 static void chroma_qp_offset_decode(VVCLocalContext *lc, const int is_128, const int is_chroma_coded)
 {
-    const VVCPPS *pps   = lc->fc->ps.pps;
-    const VVCSH *sh     = &lc->sc->sh;
+    const VVCPPS *pps               = lc->fc->ps.pps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
 
     if ((is_128 || is_chroma_coded) &&
-        sh->cu_chroma_qp_offset_enabled_flag && !lc->parse.is_cu_chroma_qp_offset_coded) {
+        rsh->sh_cu_chroma_qp_offset_enabled_flag && !lc->parse.is_cu_chroma_qp_offset_coded) {
         const int cu_chroma_qp_offset_flag = ff_vvc_cu_chroma_qp_offset_flag(lc);
         if (cu_chroma_qp_offset_flag) {
             int cu_chroma_qp_offset_idx = 0;
-            if (pps->chroma_qp_offset_list_len_minus1 > 0)
+            if (pps->r->pps_chroma_qp_offset_list_len_minus1 > 0)
                 cu_chroma_qp_offset_idx = ff_vvc_cu_chroma_qp_offset_idx(lc);
             for (int i = CB - 1; i < JCBCR; i++)
                 lc->parse.chroma_qp_offset[i] = pps->chroma_qp_offset_list[cu_chroma_qp_offset_idx][i];
@@ -321,7 +326,7 @@ static int hls_transform_unit(VVCLocalContext *lc, int x0, int y0,int tu_width, 
     const int is_isp_last_tu    = is_isp && (sub_tu_index == cu->num_intra_subpartitions - 1);
     const int is_sbt_not_coded  = cu->sbt_flag &&
         ((sub_tu_index == 0 && cu->sbt_pos_flag) || (sub_tu_index == 1 && !cu->sbt_pos_flag));
-    const int chroma_available  = tree_type != DUAL_TREE_LUMA && sps->chroma_format_idc &&
+    const int chroma_available  = tree_type != DUAL_TREE_LUMA && sps->r->sps_chroma_format_idc &&
         (!is_isp || is_isp_last_tu);
     int ret, xc, yc, wc, hc, is_chroma_coded;
 
@@ -350,7 +355,7 @@ static int hls_transform_unit(VVCLocalContext *lc, int x0, int y0,int tu_width, 
         int has_qp_delta;
         tu->coded_flag[LUMA] = tu_y_coded_flag_decode(lc, is_sbt_not_coded, sub_tu_index, is_isp, is_chroma_coded);
         has_qp_delta = (is_128 || tu->coded_flag[LUMA] || is_chroma_coded) &&
-            pps->cu_qp_delta_enabled_flag && !lc->parse.is_cu_qp_delta_coded;
+            pps->r->pps_cu_qp_delta_enabled_flag && !lc->parse.is_cu_qp_delta_coded;
         ret = set_qp_y(lc, x0, y0, has_qp_delta);
         if (ret < 0)
             return ret;
@@ -365,7 +370,7 @@ static int hls_transform_unit(VVCLocalContext *lc, int x0, int y0,int tu_width, 
             add_tb(tu, lc, xc, yc, wc >> hs, hc >> vs, CR);
         }
     }
-    if (sps->joint_cbcr_enabled_flag && ((cu->pred_mode == MODE_INTRA &&
+    if (sps->r->sps_joint_cbcr_enabled_flag && ((cu->pred_mode == MODE_INTRA &&
         (tu->coded_flag[CB] || tu->coded_flag[CR])) ||
         (tu->coded_flag[CB] && tu->coded_flag[CR])) &&
         chroma_available) {
@@ -380,7 +385,7 @@ static int hls_transform_unit(VVCLocalContext *lc, int x0, int y0,int tu_width, 
             tb->has_coeffs = tb->c_idx == CB ? 1 : !(tu->coded_flag[CB] && tu->joint_cbcr_residual_flag);
         if (tb->has_coeffs) {
             tb->ts = cu->bdpcm_flag[tb->c_idx];
-            if (sps->transform_skip_enabled_flag && !cu->bdpcm_flag[tb->c_idx] &&
+            if (sps->r->sps_transform_skip_enabled_flag && !cu->bdpcm_flag[tb->c_idx] &&
                 tb->tb_width <= sps->max_ts_size && tb->tb_height <= sps->max_ts_size &&
                 !cu->sbt_flag && (is_chroma || !is_isp)) {
                 tb->ts = ff_vvc_transform_skip_flag(lc, is_chroma);
@@ -498,7 +503,7 @@ static int skipped_transform_tree(VVCLocalContext *lc, int x0, int y0,int tu_wid
             SKIPPED_TRANSFORM_TREE(x0, y0 + trafo_height);
     } else {
         TransformUnit *tu = add_tu(fc, lc->cu, x0, y0, tu_width, tu_height);
-        const int c_end = sps->chroma_format_idc ? VVC_MAX_SAMPLE_ARRAYS : (LUMA + 1);
+        const int c_end = sps->r->sps_chroma_format_idc ? VVC_MAX_SAMPLE_ARRAYS : (LUMA + 1);
         if (!tu)
             return AVERROR_INVALIDDATA;
         for (int i = LUMA; i < c_end; i++) {
@@ -628,9 +633,9 @@ static int get_cclm_enabled(const VVCLocalContext *lc, const int x0, const int y
     const VVCSPS *sps   = fc->ps.sps;
     int enabled = 0;
 
-    if (!sps->cclm_enabled_flag)
+    if (!sps->r->sps_cclm_enabled_flag)
         return 0;
-    if (!sps->qtbtt_dual_tree_intra_flag || !IS_I(&lc->sc->sh) || sps->ctb_log2_size_y < 6)
+    if (!sps->r->sps_qtbtt_dual_tree_intra_flag || !IS_I(lc->sc->sh.r) || sps->ctb_log2_size_y < 6)
         return 1;
     else {
         const int x64 = x0 >> 6 << 6;
@@ -797,7 +802,7 @@ static int lfnst_idx_decode(VVCLocalContext *lc)
 
     memset(cu->apply_lfnst_flag, 0, sizeof(cu->apply_lfnst_flag));
 
-    if (!sps->lfnst_enabled_flag || cu->pred_mode != MODE_INTRA || FFMAX(cb_width, cb_height) > sps->max_tb_size_y)
+    if (!sps->r->sps_lfnst_enabled_flag || cu->pred_mode != MODE_INTRA || FFMAX(cb_width, cb_height) > sps->max_tb_size_y)
         return 0;
 
     while (tu) {
@@ -847,8 +852,8 @@ static MtsIdx mts_idx_decode(VVCLocalContext *lc)
         !transform_skip_flag && FFMAX(cb_width, cb_height) <= 32 &&
         cu->isp_split_type == ISP_NO_SPLIT && !cu->sbt_flag &&
         lc->parse.mts_zero_out_sig_coeff_flag && !lc->parse.mts_dc_only) {
-        if ((cu->pred_mode == MODE_INTER && sps->explicit_mts_inter_enabled_flag) ||
-            (cu->pred_mode == MODE_INTRA && sps->explicit_mts_intra_enabled_flag)) {
+        if ((cu->pred_mode == MODE_INTER && sps->r->sps_explicit_mts_inter_enabled_flag) ||
+            (cu->pred_mode == MODE_INTRA && sps->r->sps_explicit_mts_intra_enabled_flag)) {
             mts_idx = ff_vvc_mts_idx(lc);
         }
     }
@@ -866,7 +871,7 @@ static enum IntraPredMode derive_center_luma_intra_pred_mode(const VVCFrameConte
     const int intra_pred_mode_y   = SAMPLE_CTB(fc->tab.ipm, x_center, y_center);
 
     if (intra_mip_flag) {
-        if (cu->tree_type == SINGLE_TREE && sps->chroma_format_idc == CHROMA_FORMAT_444)
+        if (cu->tree_type == SINGLE_TREE && sps->r->sps_chroma_format_idc == CHROMA_FORMAT_444)
             return INTRA_INVALID;
         return INTRA_PLANAR;
     }
@@ -888,7 +893,7 @@ static void derive_chroma_intra_pred_mode(VVCLocalContext *lc,
     const int intra_mip_flag    = SAMPLE_CTB(fc->tab.imf, x_cb, y_cb);
     enum IntraPredMode luma_intra_pred_mode = SAMPLE_CTB(fc->tab.ipm, x_cb, y_cb);
 
-    if (cu->tree_type == SINGLE_TREE && sps->chroma_format_idc == CHROMA_FORMAT_444 &&
+    if (cu->tree_type == SINGLE_TREE && sps->r->sps_chroma_format_idc == CHROMA_FORMAT_444 &&
         intra_chroma_pred_mode == 4 && intra_mip_flag) {
         cu->mip_chroma_direct_flag = 1;
         cu->intra_pred_mode_c = luma_intra_pred_mode;
@@ -913,14 +918,22 @@ static void derive_chroma_intra_pred_mode(VVCLocalContext *lc,
         };
         const int modes[4] = {INTRA_PLANAR, INTRA_VERT, INTRA_HORZ, INTRA_DC};
         int idx;
-        for (idx = 0; idx < FF_ARRAY_ELEMS(modes); idx++) {
-            if (modes[idx] == luma_intra_pred_mode)
-                break;
+
+        // This workaround is necessary to have 4:4:4 video decode correctly
+        // See VVC ticket https://jvet.hhi.fraunhofer.de/trac/vvc/ticket/1602
+        // and VTM source https://vcgit.hhi.fraunhofer.de/jvet/VVCSoftware_VTM/-/blob/master/source/Lib/CommonLib/UnitTools.cpp#L736
+        if (cu->tree_type == SINGLE_TREE && sps->r->sps_chroma_format_idc == CHROMA_FORMAT_444 && intra_mip_flag) {
+            idx = 4;
+        } else {
+            for (idx = 0; idx < FF_ARRAY_ELEMS(modes); idx++) {
+                if (modes[idx] == luma_intra_pred_mode)
+                    break;
+            }
         }
 
         cu->intra_pred_mode_c = pred_mode_c[intra_chroma_pred_mode][idx];
     }
-    if (sps->chroma_format_idc == CHROMA_FORMAT_422 && cu->intra_pred_mode_c <= INTRA_VDIAG) {
+    if (sps->r->sps_chroma_format_idc == CHROMA_FORMAT_422 && cu->intra_pred_mode_c <= INTRA_VDIAG) {
         const static int mode_map_422[INTRA_VDIAG + 1] = {
              0,  1, 61, 62, 63, 64, 65, 66,  2,  3,  5,  6,  8, 10, 12, 13,
             14, 16, 18, 20, 22, 23, 24, 26, 28, 30, 31, 33, 34, 35, 36, 37,
@@ -947,12 +960,12 @@ static void intra_luma_pred_modes(VVCLocalContext *lc)
     const int cb_height             = cu->cb_height;
 
     cu->intra_luma_ref_idx  = 0;
-    if (sps->bdpcm_enabled_flag && cb_width <= sps->max_ts_size && cb_height <= sps->max_ts_size)
+    if (sps->r->sps_bdpcm_enabled_flag && cb_width <= sps->max_ts_size && cb_height <= sps->max_ts_size)
         cu->bdpcm_flag[LUMA] = ff_vvc_intra_bdpcm_luma_flag(lc);
     if (cu->bdpcm_flag[LUMA]) {
         cu->intra_pred_mode_y = ff_vvc_intra_bdpcm_luma_dir_flag(lc) ? INTRA_VERT : INTRA_HORZ;
     } else {
-        if (sps->mip_enabled_flag)
+        if (sps->r->sps_mip_enabled_flag)
             cu->intra_mip_flag = ff_vvc_intra_mip_flag(lc, fc->tab.imf);
         if (cu->intra_mip_flag) {
             int intra_mip_transposed_flag = ff_vvc_intra_mip_transposed_flag(lc);
@@ -968,9 +981,9 @@ static void intra_luma_pred_modes(VVCLocalContext *lc)
             cu->intra_pred_mode_y = intra_mip_mode;
         } else {
             int intra_subpartitions_mode_flag = 0;
-            if (sps->mrl_enabled_flag && ((y0 % sps->ctb_size_y) > 0))
+            if (sps->r->sps_mrl_enabled_flag && ((y0 % sps->ctb_size_y) > 0))
                 cu->intra_luma_ref_idx = ff_vvc_intra_luma_ref_idx(lc);
-            if (sps->isp_enabled_flag && !cu->intra_luma_ref_idx &&
+            if (sps->r->sps_isp_enabled_flag && !cu->intra_luma_ref_idx &&
                 (cb_width <= sps->max_tb_size_y && cb_height <= sps->max_tb_size_y) &&
                 (cb_width * cb_height > MIN_TU_SIZE * MIN_TU_SIZE) &&
                 !cu->act_enabled_flag)
@@ -993,7 +1006,7 @@ static void intra_chroma_pred_modes(VVCLocalContext *lc)
     const int vs        = sps->vshift[CHROMA];
 
     cu->mip_chroma_direct_flag = 0;
-    if (sps->bdpcm_enabled_flag &&
+    if (sps->r->sps_bdpcm_enabled_flag &&
         (cu->cb_width  >> hs) <= sps->max_ts_size &&
         (cu->cb_height >> vs) <= sps->max_ts_size) {
         cu->bdpcm_flag[CB] = cu->bdpcm_flag[CR] = ff_vvc_intra_bdpcm_chroma_flag(lc);
@@ -1021,26 +1034,26 @@ static PredMode pred_mode_decode(VVCLocalContext *lc,
                                  const VVCTreeType tree_type,
                                  const VVCModeType mode_type)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    CodingUnit *cu              = lc->cu;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const int ch_type = tree_type == DUAL_TREE_CHROMA ? 1 : 0;
-    const int is_4x4 = cu->cb_width == 4 && cu->cb_height == 4;
+    const VVCFrameContext *fc       = lc->fc;
+    CodingUnit *cu                  = lc->cu;
+    const VVCSPS *sps               = fc->ps.sps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const int ch_type               = tree_type == DUAL_TREE_CHROMA ? 1 : 0;
+    const int is_4x4                = cu->cb_width == 4 && cu->cb_height == 4;
     int pred_mode_flag;
     int pred_mode_ibc_flag;
     PredMode pred_mode;
 
     cu->skip_flag = 0;
-    if (!IS_I(sh) || sps->ibc_enabled_flag) {
+    if (!IS_I(rsh) || sps->r->sps_ibc_enabled_flag) {
         const int is_128 = cu->cb_width == 128 || cu->cb_height == 128;
         if (tree_type != DUAL_TREE_CHROMA &&
             ((!is_4x4 && mode_type != MODE_TYPE_INTRA) ||
-            (sps->ibc_enabled_flag && !is_128))) {
+            (sps->r->sps_ibc_enabled_flag && !is_128))) {
             cu->skip_flag = ff_vvc_cu_skip_flag(lc, fc->tab.skip);
         }
 
-        if (is_4x4 || mode_type == MODE_TYPE_INTRA || IS_I(sh)) {
+        if (is_4x4 || mode_type == MODE_TYPE_INTRA || IS_I(rsh)) {
             pred_mode_flag = 1;
         } else if (mode_type == MODE_TYPE_INTER || cu->skip_flag) {
             pred_mode_flag = 0;
@@ -1049,10 +1062,10 @@ static PredMode pred_mode_decode(VVCLocalContext *lc,
         }
         pred_mode = pred_mode_flag ? MODE_INTRA : MODE_INTER;
 
-        if (((IS_I(sh) && !cu->skip_flag) ||
-            (!IS_I(sh) && (pred_mode != MODE_INTRA ||
+        if (((IS_I(rsh) && !cu->skip_flag) ||
+            (!IS_I(rsh) && (pred_mode != MODE_INTRA ||
             ((is_4x4 || mode_type == MODE_TYPE_INTRA) && !cu->skip_flag)))) &&
-            !is_128 && mode_type != MODE_TYPE_INTER && sps->ibc_enabled_flag &&
+            !is_128 && mode_type != MODE_TYPE_INTER && sps->r->sps_ibc_enabled_flag &&
             tree_type != DUAL_TREE_CHROMA) {
             pred_mode_ibc_flag = ff_vvc_pred_mode_ibc_flag(lc, ch_type);
         } else if (cu->skip_flag && (is_4x4 || mode_type == MODE_TYPE_INTRA)) {
@@ -1060,13 +1073,13 @@ static PredMode pred_mode_decode(VVCLocalContext *lc,
         } else if (is_128 || mode_type == MODE_TYPE_INTER || tree_type == DUAL_TREE_CHROMA) {
             pred_mode_ibc_flag = 0;
         } else {
-            pred_mode_ibc_flag = (IS_I(sh)) ? sps->ibc_enabled_flag : 0;
+            pred_mode_ibc_flag = (IS_I(rsh)) ? sps->r->sps_ibc_enabled_flag : 0;
         }
         if (pred_mode_ibc_flag)
             pred_mode = MODE_IBC;
     } else {
         pred_mode_flag = is_4x4 || mode_type == MODE_TYPE_INTRA ||
-            mode_type != MODE_TYPE_INTER || IS_I(sh);
+            mode_type != MODE_TYPE_INTER || IS_I(rsh);
         pred_mode = pred_mode_flag ? MODE_INTRA : MODE_INTER;
     }
     return pred_mode;
@@ -1078,7 +1091,7 @@ static void sbt_info(VVCLocalContext *lc, const VVCSPS *sps)
     const int cb_width  = cu->cb_width;
     const int cb_height = cu->cb_height;
 
-    if (cu->pred_mode == MODE_INTER && sps->sbt_enabled_flag && !cu->ciip_flag
+    if (cu->pred_mode == MODE_INTER && sps->r->sps_sbt_enabled_flag && !cu->ciip_flag
         && cb_width <= sps->max_tb_size_y && cb_height <= sps->max_tb_size_y) {
         const int sbt_ver_h = cb_width  >= 8;
         const int sbt_hor_h = cb_height >= 8;
@@ -1241,7 +1254,7 @@ static void derive_mmvd(const VVCLocalContext *lc, MvField *mvf, const Mv *mmvd_
 
     if (mvf->pred_flag == PF_BI) {
         const RefPicList *rpl = sc->rpl;
-        const int poc = lc->fc->ps.ph->poc;
+        const int poc = lc->fc->ps.ph.poc;
         const int diff[] = {
             poc - rpl[0].list[mvf->ref_idx[0]],
             poc - rpl[1].list[mvf->ref_idx[1]]
@@ -1301,7 +1314,7 @@ static void mv_merge_refine_pred_flag(MvField *mvf, const int width, const int h
 static void merge_data_subblock(VVCLocalContext *lc)
 {
     const VVCFrameContext *fc   = lc->fc;
-    const VVCPH  *ph            = fc->ps.ph;
+    const VVCPH  *ph            = &fc->ps.ph;
     CodingUnit* cu              = lc->cu;
     PredictionUnit *pu          = &cu->pu;
     int merge_subblock_idx      = 0;
@@ -1317,20 +1330,20 @@ static void merge_data_regular(VVCLocalContext *lc)
 {
     const VVCFrameContext *fc   = lc->fc;
     const VVCSPS *sps           = fc->ps.sps;
-    const VVCPH  *ph            = fc->ps.ph;
+    const VVCPH  *ph            = &fc->ps.ph;
     const CodingUnit* cu        = lc->cu;
     PredictionUnit *pu          = &lc->cu->pu;
     int merge_idx               = 0;
     Mv mmvd_offset;
     MvField mvf;
 
-    if (sps->mmvd_enabled_flag)
+    if (sps->r->sps_mmvd_enabled_flag)
         pu->mmvd_merge_flag = ff_vvc_mmvd_merge_flag(lc);
     if (pu->mmvd_merge_flag) {
         int mmvd_cand_flag = 0;
         if (sps->max_num_merge_cand > 1)
             mmvd_cand_flag = ff_vvc_mmvd_cand_flag(lc);
-        ff_vvc_mmvd_offset_coding(lc, &mmvd_offset, ph->mmvd_fullpel_only_flag);
+        ff_vvc_mmvd_offset_coding(lc, &mmvd_offset, ph->r->ph_mmvd_fullpel_only_flag);
         merge_idx = mmvd_cand_flag;
     } else if (sps->max_num_merge_cand > 1) {
         merge_idx = ff_vvc_merge_idx(lc);
@@ -1351,7 +1364,7 @@ static int ciip_flag_decode(VVCLocalContext *lc, const int ciip_avaiable, const 
 
     if (ciip_avaiable && gpm_avaiable)
         return ff_vvc_ciip_flag(lc);
-    return sps->ciip_enabled_flag && !cu->skip_flag &&
+    return sps->r->sps_ciip_enabled_flag && !cu->skip_flag &&
             !is_128 && (cu->cb_width * cu->cb_height >= 64);
 }
 
@@ -1396,16 +1409,16 @@ static void merge_data_ciip(VVCLocalContext *lc)
 // block-based inter prediction data
 static void merge_data_block(VVCLocalContext *lc)
 {
-    const VVCFrameContext* fc   = lc->fc;
-    const VVCSPS* sps           = fc->ps.sps;
-    const VVCSH* sh             = &lc->sc->sh;
-    CodingUnit *cu              = lc->cu;
-    const int cb_width          = cu->cb_width;
-    const int cb_height         = cu->cb_height;
-    const int is_128 = cb_width == 128 || cb_height == 128;
-    const int ciip_avaiable = sps->ciip_enabled_flag &&
+    const VVCFrameContext* fc       = lc->fc;
+    const VVCSPS *sps               = fc->ps.sps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    CodingUnit *cu                  = lc->cu;
+    const int cb_width              = cu->cb_width;
+    const int cb_height             = cu->cb_height;
+    const int is_128                = cb_width == 128 || cb_height == 128;
+    const int ciip_avaiable         = sps->r->sps_ciip_enabled_flag &&
         !cu->skip_flag && (cb_width * cb_height >= 64);
-    const int gpm_avaiable  = sps->gpm_enabled_flag && IS_B(sh) &&
+    const int gpm_avaiable          = sps->r->sps_gpm_enabled_flag && IS_B(rsh) &&
         (cb_width >= 8) && (cb_height >=8) &&
         (cb_width < 8 * cb_height) && (cb_height < 8 *cb_width);
 
@@ -1427,7 +1440,7 @@ static void merge_data_block(VVCLocalContext *lc)
 static int hls_merge_data(VVCLocalContext *lc)
 {
     const VVCFrameContext *fc   = lc->fc;
-    const VVCPH  *ph            = fc->ps.ph;
+    const VVCPH  *ph            = &fc->ps.ph;
     const CodingUnit *cu        = lc->cu;
     PredictionUnit *pu          = &lc->cu->pu;
 
@@ -1475,12 +1488,12 @@ static int bcw_idx_decode(VVCLocalContext *lc, const MotionInfo *mi, const int c
     const VVCFrameContext *fc   = lc->fc;
     const VVCSPS *sps           = fc->ps.sps;
     const VVCPPS *pps           = fc->ps.pps;
-    const VVCPH  *ph            = fc->ps.ph;
+    const VVCPH  *ph            = &fc->ps.ph;
     const VVCSH *sh             = &lc->sc->sh;
-    const PredWeightTable *w    = pps->wp_info_in_ph_flag ? &ph->pwt : &sh->pwt;
+    const PredWeightTable *w    = pps->r->pps_wp_info_in_ph_flag ? &ph->pwt : &sh->pwt;
     int bcw_idx                 = 0;
 
-    if (sps->bcw_enabled_flag && mi->pred_flag == PF_BI &&
+    if (sps->r->sps_bcw_enabled_flag && mi->pred_flag == PF_BI &&
         !w->weight_flag[L0][LUMA][mi->ref_idx[0]] &&
         !w->weight_flag[L1][LUMA][mi->ref_idx[1]] &&
         !w->weight_flag[L0][CHROMA][mi->ref_idx[0]] &&
@@ -1493,9 +1506,11 @@ static int bcw_idx_decode(VVCLocalContext *lc, const MotionInfo *mi, const int c
 
 static int8_t ref_idx_decode(VVCLocalContext *lc, const VVCSH *sh, const int sym_mvd_flag, const int lx)
 {
-    int ref_idx = 0;
-    if (sh->nb_refs[lx] > 1 && !sym_mvd_flag)
-        ref_idx = ff_vvc_ref_idx_lx(lc, sh->nb_refs[lx]);
+    const H266RawSliceHeader *rsh   = sh->r;
+    int ref_idx                     = 0;
+
+    if (rsh->num_ref_idx_active[lx] > 1 && !sym_mvd_flag)
+        ref_idx = ff_vvc_ref_idx_lx(lc, rsh->num_ref_idx_active[lx]);
     else if (sym_mvd_flag)
         ref_idx = sh->ref_idx_sym[lx];
     return ref_idx;
@@ -1505,12 +1520,12 @@ static int mvds_decode(VVCLocalContext *lc, Mv mvds[2][MAX_CONTROL_POINTS],
     const int num_cp_mv, const int lx)
 {
     const VVCFrameContext *fc   = lc->fc;
-    const VVCPH *ph             = fc->ps.ph;
+    const VVCPH *ph             = &fc->ps.ph;
     const PredictionUnit *pu    = &lc->cu->pu;
     const MotionInfo *mi        = &pu->mi;
     int has_no_zero_mvd         = 0;
 
-    if (lx == L1 && ph->mvd_l1_zero_flag && mi->pred_flag == PF_BI) {
+    if (lx == L1 && ph->r->ph_mvd_l1_zero_flag && mi->pred_flag == PF_BI) {
         for (int j = 0; j < num_cp_mv; j++)
             AV_ZERO64(&mvds[lx][j]);
     } else {
@@ -1550,15 +1565,16 @@ static void mvp_add_difference(MotionInfo *mi, const int num_cp_mv,
 
 static int mvp_data(VVCLocalContext *lc)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const CodingUnit *cu        = lc->cu;
-    PredictionUnit *pu          = &lc->cu->pu;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCPH *ph             = fc->ps.ph;
-    const VVCSH *sh             = &lc->sc->sh;
-    MotionInfo *mi              = &pu->mi;
-    const int cb_width          = cu->cb_width;
-    const int cb_height         = cu->cb_height;
+    const VVCFrameContext *fc       = lc->fc;
+    const CodingUnit *cu            = lc->cu;
+    PredictionUnit *pu              = &lc->cu->pu;
+    const VVCSPS *sps               = fc->ps.sps;
+    const VVCPH *ph                 = &fc->ps.ph;
+    const VVCSH *sh                 = &lc->sc->sh;
+    const H266RawSliceHeader *rsh   = sh->r;
+    MotionInfo *mi                  = &pu->mi;
+    const int cb_width              = cu->cb_width;
+    const int cb_height             = cu->cb_height;
 
     int mvp_lx_flag[2] = {0};
     int cu_affine_type_flag = 0;
@@ -1566,17 +1582,17 @@ static int mvp_data(VVCLocalContext *lc)
     int amvr_enabled, has_no_zero_mvd = 0, amvr_shift;
     Mv mvds[2][MAX_CONTROL_POINTS];
 
-    mi->pred_flag = ff_vvc_pred_flag(lc, IS_B(sh));
-    if (sps->affine_enabled_flag && cb_width >= 16 && cb_height >= 16) {
+    mi->pred_flag = ff_vvc_pred_flag(lc, IS_B(rsh));
+    if (sps->r->sps_affine_enabled_flag && cb_width >= 16 && cb_height >= 16) {
         pu->inter_affine_flag = ff_vvc_inter_affine_flag(lc);
         set_cb_tab(lc, fc->tab.iaf, pu->inter_affine_flag);
-        if (sps->six_param_affine_enabled_flag && pu->inter_affine_flag)
+        if (sps->r->sps_6param_affine_enabled_flag && pu->inter_affine_flag)
             cu_affine_type_flag = ff_vvc_cu_affine_type_flag(lc);
     }
     mi->motion_model_idc = pu->inter_affine_flag + cu_affine_type_flag;
     num_cp_mv = mi->motion_model_idc + 1;
 
-    if (sps->smvd_enabled_flag && !ph->mvd_l1_zero_flag &&
+    if (sps->r->sps_smvd_enabled_flag && !ph->r->ph_mvd_l1_zero_flag &&
         mi->pred_flag == PF_BI && !pu->inter_affine_flag &&
         sh->ref_idx_sym[0] > -1 && sh->ref_idx_sym[1] > -1)
         pu->sym_mvd_flag = ff_vvc_sym_mvd_flag(lc);
@@ -1591,7 +1607,7 @@ static int mvp_data(VVCLocalContext *lc)
     }
 
     amvr_enabled = mi->motion_model_idc == MOTION_TRANSLATION ?
-        sps->amvr_enabled_flag : sps->affine_amvr_enabled_flag;
+        sps->r->sps_amvr_enabled_flag : sps->r->sps_affine_amvr_enabled_flag;
     amvr_enabled &= has_no_zero_mvd;
 
     amvr_shift = ff_vvc_amvr_shift(lc, pu->inter_affine_flag, cu->pred_mode, amvr_enabled);
@@ -1620,7 +1636,7 @@ static void derive_dmvr_bdof_flag(const VVCLocalContext *lc, PredictionUnit *pu)
 {
     const VVCFrameContext *fc   = lc->fc;
     const VVCPPS *pps           = fc->ps.pps;
-    const VVCPH *ph             = fc->ps.ph;
+    const VVCPH *ph             = &fc->ps.ph;
     const VVCSH *sh             = &lc->sc->sh;
     const int poc               = ph->poc;
     const RefPicList *rpl0      = lc->sc->rpl + L0;
@@ -1628,7 +1644,7 @@ static void derive_dmvr_bdof_flag(const VVCLocalContext *lc, PredictionUnit *pu)
     const int8_t *ref_idx       = pu->mi.ref_idx;
     const MotionInfo *mi        = &pu->mi;
     const CodingUnit *cu        = lc->cu;
-    const PredWeightTable *w    = pps->wp_info_in_ph_flag ? &fc->ps.ph->pwt : &sh->pwt;
+    const PredWeightTable *w    = pps->r->pps_wp_info_in_ph_flag ? &fc->ps.ph.pwt : &sh->pwt;
 
     pu->dmvr_flag = 0;
     pu->bdof_flag = 0;
@@ -1643,12 +1659,12 @@ static void derive_dmvr_bdof_flag(const VVCLocalContext *lc, PredictionUnit *pu)
         cu->cb_width >= 8 && cu->cb_height >= 8 &&
         (cu->cb_width * cu->cb_height >= 128)) {
         // fixme: for RprConstraintsActiveFlag
-        if (!ph->bdof_disabled_flag &&
+        if (!ph->r->ph_bdof_disabled_flag &&
             mi->motion_model_idc == MOTION_TRANSLATION &&
             !pu->merge_subblock_flag &&
             !pu->sym_mvd_flag)
             pu->bdof_flag = 1;
-        if (!ph->dmvr_disabled_flag &&
+        if (!ph->r->ph_dmvr_disabled_flag &&
             pu->general_merge_flag &&
             !pu->mmvd_merge_flag)
             pu->dmvr_flag = 1;
@@ -1697,13 +1713,13 @@ static int vvc_inter_data(VVCLocalContext *lc)
 static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, int cb_height,
     int cqt_depth, const VVCTreeType tree_type, VVCModeType mode_type)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const int hs                = sps->hshift[CHROMA];
-    const int vs                = sps->vshift[CHROMA];
-    const int is_128            = cb_width > 64 || cb_height > 64;
-    int pred_mode_plt_flag = 0;
+    const VVCFrameContext *fc       = lc->fc;
+    const VVCSPS *sps               = fc->ps.sps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const int hs                    = sps->hshift[CHROMA];
+    const int vs                    = sps->vshift[CHROMA];
+    const int is_128                = cb_width > 64 || cb_height > 64;
+    int pred_mode_plt_flag          = 0;
     int ret;
 
     CodingUnit *cu = add_cu(lc, x0, y0, cb_width, cb_height, cqt_depth, tree_type);
@@ -1713,11 +1729,11 @@ static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, in
 
     ff_vvc_set_neighbour_available(lc, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
 
-    if (IS_I(sh) && is_128)
+    if (IS_I(rsh) && is_128)
         mode_type = MODE_TYPE_INTRA;
     cu->pred_mode = pred_mode_decode(lc, tree_type, mode_type);
 
-    if (cu->pred_mode == MODE_INTRA && sps->palette_enabled_flag && !is_128 && !cu->skip_flag &&
+    if (cu->pred_mode == MODE_INTRA && sps->r->sps_palette_enabled_flag && !is_128 && !cu->skip_flag &&
         mode_type != MODE_TYPE_INTER && ((cb_width * cb_height) >
         (tree_type != DUAL_TREE_CHROMA ? 16 : (16 << hs << vs))) &&
         (mode_type != MODE_TYPE_INTRA || tree_type != DUAL_TREE_CHROMA)) {
@@ -1727,7 +1743,7 @@ static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, in
             return AVERROR_PATCHWELCOME;
         }
     }
-    if (cu->pred_mode == MODE_INTRA && sps->act_enabled_flag && tree_type == SINGLE_TREE) {
+    if (cu->pred_mode == MODE_INTRA && sps->r->sps_act_enabled_flag && tree_type == SINGLE_TREE) {
         avpriv_report_missing_feature(fc->avctx, "Adaptive Color Transform");
         return AVERROR_PATCHWELCOME;
     }
@@ -1741,7 +1757,7 @@ static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, in
             }
             ff_vvc_set_intra_mvf(lc);
         }
-        if ((tree_type == SINGLE_TREE || tree_type == DUAL_TREE_CHROMA) && sps->chroma_format_idc) {
+        if ((tree_type == SINGLE_TREE || tree_type == DUAL_TREE_CHROMA) && sps->r->sps_chroma_format_idc) {
             if (pred_mode_plt_flag && tree_type == DUAL_TREE_CHROMA) {
                 avpriv_report_missing_feature(lc->fc->avctx, "Palette");
                 return AVERROR_PATCHWELCOME;
@@ -1761,7 +1777,7 @@ static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, in
 
     if (cu->coded_flag) {
         sbt_info(lc, sps);
-        if (sps->act_enabled_flag && cu->pred_mode != MODE_INTRA && tree_type == SINGLE_TREE) {
+        if (sps->r->sps_act_enabled_flag && cu->pred_mode != MODE_INTRA && tree_type == SINGLE_TREE) {
             avpriv_report_missing_feature(fc->avctx, "Adaptive Color Transform");
             return AVERROR_PATCHWELCOME;
         }
@@ -1791,21 +1807,21 @@ static int hls_coding_unit(VVCLocalContext *lc, int x0, int y0, int cb_width, in
 static int derive_mode_type_condition(const VVCLocalContext *lc,
     const VVCSplitMode split, const int cb_width, const int cb_height, const VVCModeType mode_type_curr)
 {
-    const VVCSH *sh     = &lc->sc->sh;
-    const VVCSPS *sps   = lc->fc->ps.sps;
-    const int area      = cb_width * cb_height;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const VVCSPS *sps               = lc->fc->ps.sps;
+    const int area                  = cb_width * cb_height;
 
-    if ((IS_I(sh) && sps->qtbtt_dual_tree_intra_flag) ||
-        mode_type_curr != MODE_TYPE_ALL || !sps->chroma_format_idc ||
-        sps->chroma_format_idc == CHROMA_FORMAT_444)
+    if ((IS_I(rsh) && sps->r->sps_qtbtt_dual_tree_intra_flag) ||
+        mode_type_curr != MODE_TYPE_ALL || !sps->r->sps_chroma_format_idc ||
+        sps->r->sps_chroma_format_idc == CHROMA_FORMAT_444)
         return 0;
     if ((area == 64 && (split == SPLIT_QT || split == SPLIT_TT_HOR || split == SPLIT_TT_VER)) ||
         (area == 32 &&  (split == SPLIT_BT_HOR || split == SPLIT_BT_VER)))
         return 1;
-    if ((area == 64 && (split == SPLIT_BT_HOR || split == SPLIT_BT_VER) && sps->chroma_format_idc == CHROMA_FORMAT_420) ||
-        (area == 128 && (split == SPLIT_TT_HOR || split == SPLIT_TT_VER) && sps->chroma_format_idc == CHROMA_FORMAT_420) ||
+    if ((area == 64 && (split == SPLIT_BT_HOR || split == SPLIT_BT_VER) && sps->r->sps_chroma_format_idc == CHROMA_FORMAT_420) ||
+        (area == 128 && (split == SPLIT_TT_HOR || split == SPLIT_TT_VER) && sps->r->sps_chroma_format_idc == CHROMA_FORMAT_420) ||
         (cb_width == 8 && split == SPLIT_BT_VER) || (cb_width == 16 && split == SPLIT_TT_VER))
-        return 1 + !IS_I(sh);
+        return 1 + !IS_I(rsh);
 
     return 0;
 }
@@ -1997,19 +2013,20 @@ static int hls_coding_tree(VVCLocalContext *lc,
     int cb_sub_div, int cqt_depth, int mtt_depth, int depth_offset, int part_idx,
     VVCSplitMode last_split_mode, VVCTreeType tree_type_curr, VVCModeType mode_type_curr)
 {
-    VVCFrameContext *fc = lc->fc;
-    const VVCPPS *pps   = fc->ps.pps;
-    const VVCSH *sh     = &lc->sc->sh;
-    const int ch_type   = tree_type_curr == DUAL_TREE_CHROMA;
+    VVCFrameContext *fc             = lc->fc;
+    const VVCPPS *pps               = fc->ps.pps;
+    const VVCSH *sh                 = &lc->sc->sh;
+    const H266RawSliceHeader *rsh   = sh->r;
+    const int ch_type               = tree_type_curr == DUAL_TREE_CHROMA;
     int ret;
     VVCAllowedSplit allowed;
 
-    if (pps->cu_qp_delta_enabled_flag && qg_on_y && cb_sub_div <= sh->cu_qp_delta_subdiv) {
+    if (pps->r->pps_cu_qp_delta_enabled_flag && qg_on_y && cb_sub_div <= sh->cu_qp_delta_subdiv) {
         lc->parse.is_cu_qp_delta_coded = 0;
         lc->parse.cu_qg_top_left_x = x0;
         lc->parse.cu_qg_top_left_y = y0;
     }
-    if (sh->cu_chroma_qp_offset_enabled_flag && qg_on_c &&
+    if (rsh->sh_cu_chroma_qp_offset_enabled_flag && qg_on_c &&
         cb_sub_div <= sh->cu_chroma_qp_offset_subdiv) {
         lc->parse.is_cu_chroma_qp_offset_coded = 0;
         memset(lc->parse.chroma_qp_offset, 0, sizeof(lc->parse.chroma_qp_offset));
@@ -2049,9 +2066,10 @@ static int hls_coding_tree(VVCLocalContext *lc,
 static int dual_tree_implicit_qt_split(VVCLocalContext *lc,
     const int x0, const int y0, const int cb_size, const int cqt_depth)
 {
-    const VVCSH *sh     = &lc->sc->sh;
-    const VVCPPS *pps   = lc->fc->ps.pps;
-    const int cb_subdiv = 2 * cqt_depth;
+    const VVCSH *sh                 = &lc->sc->sh;
+    const H266RawSliceHeader *rsh   = sh->r;
+    const VVCPPS *pps               = lc->fc->ps.pps;
+    const int cb_subdiv             = 2 * cqt_depth;
     int ret;
 
     if (cb_size > 64) {
@@ -2063,12 +2081,12 @@ static int dual_tree_implicit_qt_split(VVCLocalContext *lc,
 
         const int x1 = x0 + (cb_size / 2);
         const int y1 = y0 + (cb_size / 2);
-        if (pps->cu_qp_delta_enabled_flag && cb_subdiv <= sh->cu_qp_delta_subdiv) {
+        if (pps->r->pps_cu_qp_delta_enabled_flag && cb_subdiv <= sh->cu_qp_delta_subdiv) {
             lc->parse.is_cu_qp_delta_coded = 0;
             lc->parse.cu_qg_top_left_x = x0;
             lc->parse.cu_qg_top_left_y = y0;
         }
-        if (sh->cu_chroma_qp_offset_enabled_flag && cb_subdiv <= sh->cu_chroma_qp_offset_subdiv) {
+        if (rsh->sh_cu_chroma_qp_offset_enabled_flag && cb_subdiv <= sh->cu_chroma_qp_offset_subdiv) {
             lc->parse.is_cu_chroma_qp_offset_coded = 0;
             memset(lc->parse.chroma_qp_offset, 0, sizeof(lc->parse.chroma_qp_offset));
         }
@@ -2109,14 +2127,14 @@ do {                                                    \
 
 static void hls_sao(VVCLocalContext *lc, const int rx, const int ry)
 {
-    VVCFrameContext *fc     = lc->fc;
-    const VVCSH *sh         = &lc->sc->sh;
-    int sao_merge_left_flag = 0;
-    int sao_merge_up_flag   = 0;
-    SAOParams *sao          = &CTB(fc->tab.sao, rx, ry);
+    VVCFrameContext *fc             = lc->fc;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    int sao_merge_left_flag         = 0;
+    int sao_merge_up_flag           = 0;
+    SAOParams *sao                  = &CTB(fc->tab.sao, rx, ry);
     int c_idx, i;
 
-    if (sh->sao_used_flag[0] || sh->sao_used_flag[1]) {
+    if (rsh->sh_sao_luma_used_flag || rsh->sh_sao_chroma_used_flag) {
         if (rx > 0) {
             if (lc->ctb_left_flag)
                 sao_merge_left_flag = ff_vvc_sao_merge_flag_decode(lc);
@@ -2127,8 +2145,9 @@ static void hls_sao(VVCLocalContext *lc, const int rx, const int ry)
         }
     }
 
-    for (c_idx = 0; c_idx < (fc->ps.sps->chroma_format_idc ? 3 : 1); c_idx++) {
-        if (!sh->sao_used_flag[c_idx]) {
+    for (c_idx = 0; c_idx < (fc->ps.sps->r->sps_chroma_format_idc ? 3 : 1); c_idx++) {
+        const int sao_used_flag = !c_idx ? rsh->sh_sao_luma_used_flag : rsh->sh_sao_chroma_used_flag;
+        if (!sao_used_flag) {
             sao->type_idx[c_idx] = SAO_NOT_APPLIED;
             continue;
         }
@@ -2177,29 +2196,30 @@ static void hls_sao(VVCLocalContext *lc, const int rx, const int ry)
 
 static void alf_params(VVCLocalContext *lc, const int rx, const int ry)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSH *sh             = &lc->sc->sh;
-    ALFParams *alf              = &CTB(fc->tab.alf, rx, ry);
+    const VVCFrameContext *fc     = lc->fc;
+    const H266RawSliceHeader *sh  = lc->sc->sh.r;
+    ALFParams *alf                = &CTB(fc->tab.alf, rx, ry);
 
     alf->ctb_flag[LUMA] = alf->ctb_flag[CB] = alf->ctb_flag[CR] = 0;
-    if (sh->alf.enabled_flag[LUMA]) {
+    if (sh->sh_alf_enabled_flag) {
         alf->ctb_flag[LUMA] = ff_vvc_alf_ctb_flag(lc, rx, ry, LUMA);
         if (alf->ctb_flag[LUMA]) {
-            int alf_use_aps_flag = 0;
-            if (sh->alf.num_aps_ids_luma > 0) {
+            uint8_t alf_use_aps_flag = 0;
+            if (sh->sh_num_alf_aps_ids_luma > 0)
                 alf_use_aps_flag = ff_vvc_alf_use_aps_flag(lc);
-            }
             if (alf_use_aps_flag) {
                 alf->ctb_filt_set_idx_y = 16;
-                if (sh->alf.num_aps_ids_luma > 1)
+                if (sh->sh_num_alf_aps_ids_luma > 1)
                     alf->ctb_filt_set_idx_y += ff_vvc_alf_luma_prev_filter_idx(lc);
             } else {
                 alf->ctb_filt_set_idx_y = ff_vvc_alf_luma_fixed_filter_idx(lc);
             }
         }
         for (int c_idx = CB; c_idx <= CR; c_idx++) {
-            if (sh->alf.enabled_flag[c_idx]) {
-                const VVCALF *aps = (VVCALF*)fc->ps.alf_list[sh->alf.aps_id_chroma]->data;
+            const uint8_t alf_enabled_flag =
+                c_idx == CB ? sh->sh_alf_cb_enabled_flag : sh->sh_alf_cr_enabled_flag;
+            if (alf_enabled_flag) {
+                const VVCALF *aps = (VVCALF*)fc->ps.alf_list[sh->sh_alf_aps_id_chroma]->data;
                 alf->ctb_flag[c_idx] = ff_vvc_alf_ctb_flag(lc, rx, ry, c_idx);
                 alf->alf_ctb_filter_alt_idx[c_idx - 1] = 0;
                 if (alf->ctb_flag[c_idx] && aps->num_chroma_filters > 1)
@@ -2207,11 +2227,15 @@ static void alf_params(VVCLocalContext *lc, const int rx, const int ry)
             }
         }
     }
-    for (int i = 0; i < 2; i++) {
-        alf->ctb_cc_idc[i] = 0;
-        if (sh->alf.cc_enabled_flag[i]) {
-            const VVCALF *aps = (VVCALF*)fc->ps.alf_list[sh->alf.cc_aps_id[i]]->data;
-            alf->ctb_cc_idc[i] = ff_vvc_alf_ctb_cc_idc(lc, rx, ry, i, aps->cc_filters_signalled[i]);
+    if (fc->ps.sps->r->sps_ccalf_enabled_flag) {
+        const uint8_t cc_enabled[] = { sh->sh_alf_cc_cb_enabled_flag, sh->sh_alf_cc_cr_enabled_flag };
+        const uint8_t cc_aps_id[]  = { sh->sh_alf_cc_cb_aps_id, sh->sh_alf_cc_cr_aps_id };
+        for (int i = 0; i < 2; i++) {
+            alf->ctb_cc_idc[i] = 0;
+            if (cc_enabled[i]) {
+                const VVCALF *aps = (VVCALF*)fc->ps.alf_list[cc_aps_id[i]]->data;
+                alf->ctb_cc_idc[i] = ff_vvc_alf_ctb_cc_idc(lc, rx, ry, i, aps->num_cc_filters[i]);
+            }
         }
     }
 }
@@ -2226,12 +2250,13 @@ static void deblock_params(VVCLocalContext *lc, const int rx, const int ry)
 static int hls_coding_tree_unit(VVCLocalContext *lc,
     const int x0, const int y0, const int ctu_idx, const int rx, const int ry)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCPPS *pps           = fc->ps.pps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const unsigned int ctb_size = sps->ctb_size_y;
-    int ret                     = 0;
+    const VVCFrameContext *fc       = lc->fc;
+    const VVCSPS *sps               = fc->ps.sps;
+    const VVCPPS *pps               = fc->ps.pps;
+    const VVCSH *sh                 = &lc->sc->sh;
+    const H266RawSliceHeader *rsh   = sh->r;
+    const unsigned int ctb_size     = sps->ctb_size_y;
+    int ret                         = 0;
 
     memset(lc->parse.chroma_qp_offset, 0, sizeof(lc->parse.chroma_qp_offset));
 
@@ -2239,7 +2264,7 @@ static int hls_coding_tree_unit(VVCLocalContext *lc,
     alf_params(lc, x0 >> sps->ctb_log2_size_y, y0 >> sps->ctb_log2_size_y);
     deblock_params(lc, x0 >> sps->ctb_log2_size_y, y0 >> sps->ctb_log2_size_y);
 
-    if (IS_I(sh) && sps->qtbtt_dual_tree_intra_flag)
+    if (IS_I(rsh) && sps->r->sps_qtbtt_dual_tree_intra_flag)
         ret = dual_tree_implicit_qt_split(lc, x0, y0, ctb_size, 0);
     else
         ret = hls_coding_tree(lc, x0, y0, ctb_size, ctb_size,
@@ -2258,7 +2283,7 @@ static int hls_coding_tree_unit(VVCLocalContext *lc,
                 if (!end_of_tile_one_bit)
                     return AVERROR_INVALIDDATA;
             } else {
-                if (fc->ps.sps->entropy_coding_sync_enabled_flag) {
+                if (fc->ps.sps->r->sps_entropy_coding_sync_enabled_flag) {
                     const int end_of_subset_one_bit = ff_vvc_end_of_subset_one_bit(lc);
                     if (!end_of_subset_one_bit)
                         return AVERROR_INVALIDDATA;
@@ -2319,16 +2344,16 @@ static void cu_get_max_y(const CodingUnit *cu, int max_y[2][VVC_MAX_REF_ENTRIES]
 
 static void pred_get_max_y(VVCLocalContext *lc, const int rs)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSH *sh             = &lc->sc->sh;
-    CTU *ctu                    = fc->tab.ctus + rs;
-    const CodingUnit *cu        = ctu->cus;
+    const VVCFrameContext *fc       = lc->fc;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    CTU *ctu                        = fc->tab.ctus + rs;
+    const CodingUnit *cu            = ctu->cus;
 
-    if (IS_I(sh))
+    if (IS_I(rsh))
         return;
 
     for (int lx = 0; lx < 2; lx++)
-        memset(ctu->max_y[lx], -1, sizeof(ctu->max_y[0][0]) * sh->nb_refs[lx]);
+        memset(ctu->max_y[lx], -1, sizeof(ctu->max_y[0][0]) * rsh->num_ref_idx_active[lx]);
 
     while (cu) {
         if (has_inter_luma(cu))

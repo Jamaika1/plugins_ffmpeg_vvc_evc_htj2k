@@ -138,10 +138,10 @@ static void derive_transform_type(const VVCFrameContext *fc, const VVCLocalConte
         return;
     }
 
-    if (sps->mts_enabled_flag) {
+    if (sps->r->sps_mts_enabled_flag) {
         if (cu->isp_split_type != ISP_NO_SPLIT ||
             (cu->sbt_flag && FFMAX(tb->tb_width, tb->tb_height) <= 32) ||
-            (!sps->explicit_mts_intra_enabled_flag && cu->pred_mode == MODE_INTRA &&
+            (!sps->r->sps_explicit_mts_intra_enabled_flag && cu->pred_mode == MODE_INTRA &&
             !cu->lfnst_idx && !cu->intra_mip_flag)) {
             implicit_mts_enabled = 1;
         }
@@ -167,7 +167,7 @@ static void add_residual_for_joint_coding_chroma(VVCLocalContext *lc,
 {
     const VVCFrameContext *fc  = lc->fc;
     const CodingUnit *cu = lc->cu;
-    const int c_sign = 1 - 2 * fc->ps.ph->joint_cbcr_sign_flag;
+    const int c_sign = 1 - 2 * fc->ps.ph.r->ph_joint_cbcr_sign_flag;
     const int shift  = tu->coded_flag[1] ^ tu->coded_flag[2];
     const int c_idx  = 1 + tu->coded_flag[1];
     const ptrdiff_t stride = fc->frame->linesize[c_idx];
@@ -272,12 +272,38 @@ static void predict_intra(VVCLocalContext *lc, const TransformUnit *tu, const in
     }
 }
 
+static void scale_clip(int *coeff, const int nzw, const int w, const int h,
+    const int shift, const int log2_transform_range)
+{
+    const int add = 1 << (shift - 1);
+    for (int y = 0; y < h; y++) {
+        int *p = coeff + y * w;
+        for (int x = 0; x < nzw; x++) {
+            *p = av_clip_intp2((*p + add) >> shift, log2_transform_range);
+            p++;
+        }
+        memset(p, 0, sizeof(*p) * (w - nzw));
+    }
+}
+
+static void scale(int *out, const int *in, const int w, const int h, const int shift)
+{
+    const int add = 1 << (shift - 1);
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            int *o = out + y * w + x;
+            const int *i = in + y * w + x;
+            *o = (*i + add) >> shift;
+        }
+    }
+}
+
 // part of 8.7.3 Scaling process for transform coefficients
 static void derive_qp(const VVCLocalContext *lc, const TransformUnit *tu, TransformBlock *tb)
 {
-    const VVCSPS *sps           = lc->fc->ps.sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const CodingUnit *cu        = lc->cu;
+    const VVCSPS *sps               = lc->fc->ps.sps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const CodingUnit *cu            = lc->cu;
     int qp, qp_act_offset;
 
     if (tb->c_idx == 0) {
@@ -291,7 +317,7 @@ static void derive_qp(const VVCLocalContext *lc, const TransformUnit *tu, Transf
         qp_act_offset = cu->act_enabled_flag ? 1 : 0;
     }
     if (tb->ts) {
-        const int qp_prime_ts_min = 4 + 6 * sps->min_qp_prime_ts;
+        const int qp_prime_ts_min = 4 + 6 * sps->r->sps_min_qp_prime_ts;
 
         tb->qp = av_clip(qp + qp_act_offset, qp_prime_ts_min, 63 + sps->qp_bd_offset);
         tb->rect_non_ts_flag = 0;
@@ -303,7 +329,7 @@ static void derive_qp(const VVCLocalContext *lc, const TransformUnit *tu, Transf
         tb->qp = av_clip(qp + qp_act_offset, 0, 63 + sps->qp_bd_offset);
         tb->rect_non_ts_flag = rect_non_ts_flag;
         tb->bd_shift = sps->bit_depth + rect_non_ts_flag + (log_sum / 2)
-                     + 10 - sps->log2_transform_range + sh->dep_quant_used_flag;
+                     + 10 - sps->log2_transform_range + rsh->sh_dep_quant_used_flag;
     }
     tb->bd_offset = (1 << tb->bd_shift) >> 1;
 }
@@ -351,29 +377,26 @@ static const uint8_t* derive_scale_m(const VVCLocalContext *lc, const TransformB
             {  1,  7, 13, 19, 25, 25 },
         }
     };
-    const VVCFrameParamSets *ps = &lc->fc->ps;
-    const VVCSPS *sps           = ps->sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const CodingUnit *cu        = lc->cu;
-    const AVBufferRef *ref;
-    const VVCScalingList *sl;
+    const VVCFrameParamSets *ps     = &lc->fc->ps;
+    const VVCSPS *sps               = ps->sps;
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const CodingUnit *cu            = lc->cu;
+    const VVCScalingList *sl        = ps->sl;
     const int id = ids[cu->pred_mode != MODE_INTRA][tb->c_idx][FFMAX(tb->log2_tb_height, tb->log2_tb_width) - 1];
     const int log2_matrix_size = (id < 2) ? 1 : (id < 8) ? 2 : 3;
     uint8_t *p = scale_m;
 
-    av_assert0(!sps->scaling_matrix_for_alternative_colour_space_disabled_flag);
+    av_assert0(!sps->r->sps_scaling_matrix_for_alternative_colour_space_disabled_flag);
 
-    if (!sh->explicit_scaling_list_used_flag || tb->ts ||
-        sps->scaling_matrix_for_lfnst_disabled_flag && cu->apply_lfnst_flag[tb->c_idx])
+    if (!rsh->sh_explicit_scaling_list_used_flag || tb->ts ||
+        sps->r->sps_scaling_matrix_for_lfnst_disabled_flag && cu->apply_lfnst_flag[tb->c_idx])
         return ff_vvc_default_scale_m;
 
-    ref = ps->scaling_list[ps->ph->scaling_list_aps_id];
-    if (!ref || !ref->data) {
-        av_log(lc->fc->avctx, AV_LOG_WARNING, "bug: no scaling list aps, id = %d", ps->ph->scaling_list_aps_id);
+    if (!sl) {
+        av_log(lc->fc->avctx, AV_LOG_WARNING, "bug: no scaling list aps, id = %d", ps->ph.r->ph_scaling_list_aps_id);
         return ff_vvc_default_scale_m;
     }
 
-    sl = (const VVCScalingList *)ref->data;
     for (int y = tb->min_scan_y; y <= tb->max_scan_y; y++) {
         const int off = y << log2_matrix_size >> tb->log2_tb_height << log2_matrix_size;
         const uint8_t *m = &sl->scaling_matrix_rec[id][off];
@@ -399,13 +422,13 @@ static av_always_inline int scale_coeff(const TransformBlock *tb, int coeff,
 static void dequant(const VVCLocalContext *lc, const TransformUnit *tu, TransformBlock *tb)
 {
     uint8_t tmp[MAX_TB_SIZE * MAX_TB_SIZE];
-    const VVCSH *sh         = &lc->sc->sh;
-    const VVCSPS *sps       = lc->fc->ps.sps;
-    const uint8_t *scale_m  = derive_scale_m(lc, tb, tmp);
+    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
+    const VVCSPS *sps               = lc->fc->ps.sps;
+    const uint8_t *scale_m          = derive_scale_m(lc, tb, tmp);
     int scale;
 
     derive_qp(lc, tu, tb);
-    scale = derive_scale(tb, sh->dep_quant_used_flag);
+    scale = derive_scale(tb, rsh->sh_dep_quant_used_flag);
 
     for (int y = tb->min_scan_y; y <= tb->max_scan_y; y++) {
         for (int x = tb->min_scan_x; x <= tb->max_scan_x; x++) {
@@ -416,6 +439,35 @@ static void dequant(const VVCLocalContext *lc, const TransformUnit *tu, Transfor
             scale_m++;
         }
     }
+}
+
+static void itx_2d(const VVCFrameContext *fc, TransformBlock *tb, const enum TxType trh, const enum TxType trv, int *temp)
+{
+    const VVCSPS *sps   = fc->ps.sps;
+    const int w         = tb->tb_width;
+    const int h         = tb->tb_height;
+    const int nzw       = tb->max_scan_x + 1;
+
+    for (int x = 0; x < nzw; x++)
+        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](temp + x, w, tb->coeffs + x, w);
+    scale_clip(temp, nzw, w, h, 7, sps->log2_transform_range);
+
+    for (int y = 0; y < h; y++)
+        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](tb->coeffs + y * w, 1, temp + y * w, 1);
+    scale(tb->coeffs, tb->coeffs, w, h, 5 + sps->log2_transform_range - sps->bit_depth);
+}
+
+static void itx_1d(const VVCFrameContext *fc, TransformBlock *tb, const enum TxType trh, const enum TxType trv, int  *temp)
+{
+    const VVCSPS *sps   = fc->ps.sps;
+    const int w         = tb->tb_width;
+    const int h         = tb->tb_height;
+
+    if (w > 1)
+        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](temp, 1, tb->coeffs, 1);
+    else
+        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](temp, 1, tb->coeffs, 1);
+    scale(tb->coeffs, temp, w, h, 6 + sps->log2_transform_range - sps->bit_depth);
 }
 
 static void transform_bdpcm(TransformBlock *tb, const VVCLocalContext *lc, const CodingUnit *cu)
@@ -448,7 +500,7 @@ static void itransform(VVCLocalContext *lc, TransformUnit *tu, const int tu_idx,
         if (ch_type == target_ch_type && tb->has_coeffs) {
             const int w             = tb->tb_width;
             const int h             = tb->tb_height;
-            const int chroma_scale  = ch_type && sh->lmcs_used_flag && fc->ps.ph->chroma_residual_scale_flag && (w * h > 4);
+            const int chroma_scale  = ch_type && sh->r->sh_lmcs_used_flag && fc->ps.ph.r->ph_chroma_residual_scale_flag && (w * h > 4);
             const ptrdiff_t stride  = fc->frame->linesize[c_idx];
             const int hs            = sps->hshift[c_idx];
             const int vs            = sps->vshift[c_idx];
@@ -459,15 +511,14 @@ static void itransform(VVCLocalContext *lc, TransformUnit *tu, const int tu_idx,
             dequant(lc, tu, tb);
             if (!tb->ts) {
                 enum TxType trh, trv;
-                int nzw;
 
                 if (cu->apply_lfnst_flag[c_idx])
                     ilfnst_transform(lc, tb);
                 derive_transform_type(fc, lc, tb, &trh, &trv);
-
-                nzw = tb->max_scan_x + 1;
-                fc->vvcdsp.itx.itx[trh][trv][tb->log2_tb_width][tb->log2_tb_height](
-                        tb->coeffs, tb->coeffs, nzw, sps->log2_transform_range);
+                if (w > 1 && h > 1)
+                    itx_2d(fc, tb, trh, trv, temp);
+                else
+                    itx_1d(fc, tb, trh, trv, temp);
             }
 
             if (chroma_scale)
@@ -485,7 +536,7 @@ static int reconstruct(VVCLocalContext *lc)
     VVCFrameContext *fc = lc->fc;
     CodingUnit *cu      = lc->cu;
     const int start     = cu->tree_type == DUAL_TREE_CHROMA;
-    const int end       = fc->ps.sps->chroma_format_idc && (cu->tree_type != DUAL_TREE_LUMA);
+    const int end       = fc->ps.sps->r->sps_chroma_format_idc && (cu->tree_type != DUAL_TREE_LUMA);
 
     for (int ch_type = start; ch_type <= end; ch_type++) {
         TransformUnit *tu = cu->tus.head;
@@ -608,7 +659,7 @@ int ff_vvc_get_top_available(const VVCLocalContext *lc, const int x, const int y
         if (!lc->ctb_up_flag)
             return 0;
         target_size = FFMIN(target_size, (lc->end_of_tiles_x >> hs) - x);
-        if (sps->entropy_coding_sync_enabled_flag)
+        if (sps->r->sps_entropy_coding_sync_enabled_flag)
             target_size = FFMIN(target_size, (end_of_ctb_x >> hs) - x);
         return target_size;
     }
