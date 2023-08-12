@@ -2,7 +2,16 @@
 #ifndef FFMPEG_CONFIG_H
 #define FFMPEG_CONFIG_H
 
-#if defined(__AVX2__)
+#if defined(__AVX512F__)
+#define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v4 -ftree-vectorize -g0 -O3 -fPIC -mgfni -mvaes -mvpclmulqdq -mavx512f -mavx512cd -mavx512dq -mavx512er -mavx512pf -mavx512bw -mavx512vl -mavx512vnni -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512vpopcntdq -mavx512bitalg " \
+                             "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_dec.o fftools/ffmpeg_demux.o fftools/ffmpeg_enc.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o "\
+                             "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 " \
+                             "-ldavs2_x64 -ldav1d_x64 -luavs3d_x64 -lxevd_x64 -laom_x64 -lkvazaar_x64 -lopenh264_x64 -lsvtav1_x64 -ltheora_x64 -lvpx_x64 -luvg266_x64 -luavs3e_x64 -lx264_0810bit_x64 -lx265_081012bit_x64 -lxavs_x64 -lxavs2_x64 -lxeve_x64 -lxvid_x64 " \
+                             "-lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -lmp3lame_x64 -lgsm_x64 -lvorbis_x64 -lfdk-aac_x64 -lshine_x64 -lsnappy_x64 -lspeex_x64 -ltwolame_x64 " \
+                             "-ljxl_x64 -lpng_x64 -lwebp_x64 -lopenjpeg_x64 -llcms2_x64 -logg_x64 -lpthread_x64 " \
+                             "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:opencl_x64.a " \
+                             "-L. -lcfgmgr32 -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lopengl32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+#elif defined(__AVX2__)
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v3 -ftree-vectorize -g0 -O3 -fPIC -mavx2 -mpclmul -maes -mbmi2 -mfma -mf16c " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_dec.o fftools/ffmpeg_demux.o fftools/ffmpeg_enc.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o "\
                              "-Llib -lavdevice_x64 -lavfilter_x64 -lavformat_x64 -lavcodec_x64 -lswresample_x64 -lswscale_x64 -lavutil_x64 -lpostproc_x64 " \
@@ -10,7 +19,7 @@
                              "-lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -lmp3lame_x64 -lgsm_x64 -lvorbis_x64 -lfdk-aac_x64 -lshine_x64 -lsnappy_x64 -lspeex_x64 -ltwolame_x64 " \
                              "-ljxl_x64 -lpng_x64 -lwebp_x64 -lopenjpeg_x64 -llcms2_x64 -logg_x64 -lpthread_x64 " \
                              "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:opencl_x64.a " \
-                             "-L. -lcfgmgr32 -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+                             "-L. -lcfgmgr32 -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lopengl32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #else
 #define FFMPEG_CONFIGURATION "-std=gnu++11 -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes " \
                              "-o lib/ffmpeg.exe fftools/ffmpeg.o fftools/ffmpeg_dec.o fftools/ffmpeg_demux.o fftools/ffmpeg_enc.o fftools/ffmpeg_filter.o fftools/ffmpeg_hw.o fftools/ffmpeg_mux.o fftools/ffmpeg_mux_init.o fftools/ffmpeg_opt.o fftools/cmdutils.o fftools/objpool.o fftools/opt_common.o fftools/sync_queue.o fftools/thread_queue.o "\
@@ -19,13 +28,19 @@
                              "-lcelt_opus_silk_x64 -lcelt_x64 -lcodec2_x64 -lmp3lame_x64 -lgsm_x64 -lvorbis_x64 -lfdk-aac_x64 -lshine_x64 -lsnappy_x64 -lspeex_x64 -ltwolame_x64 " \
                              "-ljxl_x64 -lpng_x64 -lwebp_x64 -lopenjpeg_x64 -llcms2_x64 -logg_x64 -lpthread_x64 " \
                              "-lrsvgdec_x64 -lcairo_pixman_x64 -lass_x64 -l:fontconfig_x64.a -l:freetype_x64.a -l:fribidi_x64.a -l:harfbuzz_x64.a -lxml2_x64 -l:zlib_x64.a -l:bzip2_x64.a -l:lzma_x64.a -l:opencl_x64.a " \
-                             "-L. -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
+                             "-L. -lcfgmgr32 -ldnsapi -ldwrite -lbcrypt -liphlpapi -lgdi32 -lopengl32 -lole32 -loleaut32 -lshlwapi -lstrmiids -luuid -lvfw32 -lws2_32"
 #endif
 #define FFMPEG_LICENSE "nonfree and unredistributable"
 #define CONFIG_THIS_YEAR 2023
 #define FFMPEG_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
 #define AVCONV_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
-#define CC_IDENT "GCC: (GNU) " __VERSION__
+#if defined(__AVX512VPOPCNTDQ__)
+#define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX512VPOPCNTDQ"
+#elif defined(__AVX2__)
+#define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX2"
+#else
+#define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX"
+#endif
 #define av_restrict restrict
 #define EXTERN_PREFIX ""
 #define EXTERN_ASM
@@ -83,7 +98,11 @@
 #else
 #define HAVE_AVX2 0
 #endif
+#if defined(__AVX512F__)
+#define HAVE_AVX512 1
+#else
 #define HAVE_AVX512 0
+#endif
 #if defined(__FMA__)
 #define HAVE_FMA3 1
 #else
@@ -133,11 +152,15 @@
 #define HAVE_AMD3DNOWEXT_EXTERNAL 0
 #define HAVE_AVX_EXTERNAL 1
 #if defined(__AVX2__)
-#define HAVE_AVX2_EXTERNAL 0
+#define HAVE_AVX2_EXTERNAL 1
 #else
 #define HAVE_AVX2_EXTERNAL 0
 #endif
+#if defined(__AVX512F__)
+#define HAVE_AVX512_EXTERNAL 1
+#else
 #define HAVE_AVX512_EXTERNAL 0
+#endif
 #define HAVE_AVX512ICL_EXTERNAL 0
 #if defined(__FMA__)
 #define HAVE_FMA3_EXTERNAL 1
@@ -220,9 +243,13 @@
 #define HAVE_FAST_CLZ 1
 #define HAVE_FAST_CMOV 1
 #define HAVE_LOCAL_ALIGNED 1
-#define HAVE_SIMD_ALIGN_16 1
-#define HAVE_SIMD_ALIGN_32 1
+#if defined(__AVX512F__)
 #define HAVE_SIMD_ALIGN_64 1
+#elif defined(__AVX2__)
+#define HAVE_SIMD_ALIGN_32 1
+#else
+#define HAVE_SIMD_ALIGN_16 1
+#endif
 #define HAVE_ATOMIC_CAS_PTR 0
 #define HAVE_MACHINE_RW_BARRIER 0
 #define HAVE_MEMORYBARRIER 1
@@ -260,7 +287,7 @@
 #define HAVE_MACHINE_IOCTL_METEOR_H 0
 #define HAVE_MALLOC_H 0
 #define HAVE_OPENCV2_CORE_CORE_C_H 0
-#define HAVE_OPENGL_GL3_H 1
+#define HAVE_OPENGL_GL3_H 0
 #define HAVE_POLL_H 0
 #define HAVE_SYS_PARAM_H 1
 #define HAVE_SYS_RESOURCE_H 0
