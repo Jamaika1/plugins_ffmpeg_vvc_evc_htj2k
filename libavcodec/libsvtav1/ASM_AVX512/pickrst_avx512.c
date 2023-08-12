@@ -14,15 +14,15 @@
 #if EN_AVX512_SUPPORT
 
 #include <immintrin.h> // AVX2
-#include "synonyms.h"
-#include "aom_dsp_rtcd.h"
-#include "EbPictureOperators_Inline_AVX2.h"
-#include "EbRestoration.h"
-#include "EbUtility.h"
-#include "pickrst_avx2.h"
+#include "../ASM_SSE2/synonyms.h"
+#include "../aom_dsp_rtcd.h"
+#include "../ASM_AVX2/EbPictureOperators_Inline_AVX2.h"
+#include "../EbRestoration.h"
+#include "../EbUtility.h"
+#include "../ASM_AVX2/pickrst_avx2.h"
 #include "synonyms_avx512.h"
-#include "transpose_sse2.h"
-#include "transpose_avx2.h"
+#include "../ASM_SSE2/transpose_sse2.h"
+#include "../ASM_AVX2/transpose_avx2.h"
 
 static INLINE int32_t hadd32_avx512(const __m512i src) {
     const __m256i src_l = _mm512_castsi512_si256(src);

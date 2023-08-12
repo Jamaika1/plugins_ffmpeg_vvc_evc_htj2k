@@ -13,9 +13,9 @@
 
 #if EN_AVX512_SUPPORT
 #include <immintrin.h>
-#include "EbHighbdIntraPrediction_SSE2.h"
-#include "common_dsp_rtcd.h"
-#include "EbIntraPrediction_AVX2.h"
+#include "../ASM_SSE2/EbHighbdIntraPrediction_SSE2.h"
+#include "../common_dsp_rtcd.h"
+#include "../ASM_AVX2/EbIntraPrediction_AVX2.h"
 #include "synonyms_avx512.h"
 
 #define FOUR 4U

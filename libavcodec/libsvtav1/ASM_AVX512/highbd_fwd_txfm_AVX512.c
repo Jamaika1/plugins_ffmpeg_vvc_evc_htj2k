@@ -13,8 +13,8 @@
 
 #if EN_AVX512_SUPPORT
 #include <assert.h>
-#include "aom_dsp_rtcd.h"
-#include "EbTransforms.h"
+#include "../aom_dsp_rtcd.h"
+#include "../EbTransforms.h"
 #include <immintrin.h>
 #include "transpose_encoder_avx512.h"
 

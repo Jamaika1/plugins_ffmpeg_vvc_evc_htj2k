@@ -13,12 +13,12 @@
 
 #if EN_AVX512_SUPPORT
 #include <assert.h>
-#include "EbComputeSAD_AVX2.h"
+#include "../ASM_AVX2/EbComputeSAD_AVX2.h"
 #include <immintrin.h>
-#include "EbMemory_AVX2.h"
-#include "transpose_avx2.h"
-#include "EbUtility.h"
-#include "EbComputeSAD_C.h"
+#include "../ASM_AVX2/EbMemory_AVX2.h"
+#include "../ASM_AVX2/transpose_avx2.h"
+#include "../EbUtility.h"
+#include "../EbComputeSAD_C.h"
 
 static INLINE void sad64_kernel_avx512(const __m512i s, const uint8_t *const ref, __m512i *const sum) {
     const __m512i r = _mm512_loadu_si512((__m512i *)ref);

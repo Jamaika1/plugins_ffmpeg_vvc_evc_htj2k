@@ -13,11 +13,11 @@
 
 #if EN_AVX512_SUPPORT
 #include <immintrin.h>
-#include "common_dsp_rtcd.h"
-#include "convolve.h"
-#include "convolve_avx2.h"
+#include "../common_dsp_rtcd.h"
+#include "../convolve.h"
+#include "../ASM_AVX2/convolve_avx2.h"
 #include "convolve_avx512.h"
-#include "EbMemory_SSE4_1.h"
+#include "../ASM_SSE4_1/EbMemory_SSE4_1.h"
 
 // TODO: When calculating conv_params->dst using AVX512 (such as those jnt
 // convolve functions themselves and svt_av1_warp_affine etc.), always leave
