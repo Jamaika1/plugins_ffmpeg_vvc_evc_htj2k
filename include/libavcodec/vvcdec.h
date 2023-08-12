@@ -24,11 +24,13 @@
 #ifndef AVCODEC_VVCDEC_H
 #define AVCODEC_VVCDEC_H
 
-#include "libavcodec/executor.h"
-#include "libavcodec/h2645_parse.h"
-#include "libavcodec/threadframe.h"
-#include "libavcodec/videodsp.h"
-#include "libavcodec/vvc.h"
+#include "cbs.h"
+#include "cbs_h266.h"
+#include "h2645_parse.h"
+#include "threadframe.h"
+#include "videodsp.h"
+#include "vvc.h"
+#include "executor.h"
 
 #include "vvc_ps.h"
 #include "vvcdsp.h"
@@ -195,9 +197,6 @@ struct VVCFrameContext {
 
     uint64_t decode_order;
 
-    AVPacket *avpkt;
-    H2645Packet pkt;
-
     AVBufferPool *tab_dmvr_mvf_pool;
     AVBufferPool *rpl_tab_pool;
 
@@ -276,10 +275,13 @@ typedef struct VVCContext {
     const AVClass *c;       // needed by private avoptions
     AVCodecContext *avctx;
 
+    CodedBitstreamContext *cbc;
+    CodedBitstreamFragment current_frame;
+
     VVCParamSets ps;
 
     int temporal_id;        ///< temporal_id_plus1 - 1
-    int pocTid0;
+    int poc_tid0;
 
     int eos;                ///< current packet contains an EOS/EOB NAL
     int last_eos;           ///< last packet contains an EOS/EOB NAL
@@ -302,7 +304,7 @@ typedef struct VVCContext {
     int apply_defdispwin;
     int nal_length_size;    ///< Number of bytes used for nal length (1, 2 or 4)
 
-    Executor *executor;
+    AVExecutor *executor;
 
     VVCFrameContext *fcs;
     int nb_fcs;

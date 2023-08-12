@@ -25,10 +25,6 @@
 
 #include "vvcdec.h"
 
-#define INV_POC INT_MIN
-#define GDR_IS_RECOVERED(s)  (s->gdr_recovery_point_poc == INV_POC)
-#define GDR_SET_RECOVERED(s) (s->gdr_recovery_point_poc =  INV_POC)
-
 int ff_vvc_output_frame(VVCContext *s, VVCFrameContext *fc, AVFrame *out, int no_output_of_prior_pics_flag, int flush);
 void ff_vvc_bump_frame(VVCContext *s, VVCFrameContext *fc);
 int ff_vvc_set_new_ref(VVCContext *s, VVCFrameContext *fc, AVFrame **frame);
