@@ -34,8 +34,8 @@
 #define CONFIG_THIS_YEAR 2023
 #define FFMPEG_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
 #define AVCONV_DATADIR "/home/ffmpegBuild/build/ffmepg-6.1.0/share/ffmpeg"
-#if defined(__AVX512VPOPCNTDQ__)
-#define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX512VPOPCNTDQ"
+#if defined(__AVX512VNNI__)
+#define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX512ICL"
 #elif defined(__AVX2__)
 #define CC_IDENT "GCC: (GNU) " __VERSION__ " (SIMD) AVX2"
 #else
@@ -103,6 +103,11 @@
 #else
 #define HAVE_AVX512 0
 #endif
+#if defined(__AVX512VNNI__)
+#define HAVE_AVX512ICL 1
+#else
+#define HAVE_AVX512ICL 0
+#endif
 #if defined(__FMA__)
 #define HAVE_FMA3 1
 #else
@@ -161,7 +166,11 @@
 #else
 #define HAVE_AVX512_EXTERNAL 0
 #endif
+#if defined(__AVX512VNNI__)
+#define HAVE_AVX512ICL_EXTERNAL 1
+#else
 #define HAVE_AVX512ICL_EXTERNAL 0
+#endif
 #if defined(__FMA__)
 #define HAVE_FMA3_EXTERNAL 1
 #else
@@ -245,7 +254,7 @@
 #define HAVE_LOCAL_ALIGNED 1
 #if defined(__AVX512F__)
 #define HAVE_SIMD_ALIGN_64 1
-#elif defined(__AVX2__)
+#elif defined(__AVX__)
 #define HAVE_SIMD_ALIGN_32 1
 #else
 #define HAVE_SIMD_ALIGN_16 1

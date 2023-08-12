@@ -9,7 +9,7 @@
 * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
-#include "EbDefinitions.h"
+#include "../EbDefinitions.h"
 
 #if EN_AVX512_SUPPORT
 #include <assert.h>

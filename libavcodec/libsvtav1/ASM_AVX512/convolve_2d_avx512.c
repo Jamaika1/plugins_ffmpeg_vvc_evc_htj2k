@@ -9,11 +9,11 @@
 * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
-#include "EbDefinitions.h"
+#include "../EbDefinitions.h"
 
 #if EN_AVX512_SUPPORT
 
-#include "EbMemory_SSE4_1.h"
+#include "../ASM_SSE4_1/EbMemory_SSE4_1.h"
 #include "../common_dsp_rtcd.h"
 #include "../convolve.h"
 #include "../ASM_AVX2/convolve_avx2.h"
