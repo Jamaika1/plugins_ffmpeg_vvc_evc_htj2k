@@ -8,7 +8,7 @@
  *********************************************************************/
 
 /* We're building the pthreads-win32 library */
-#define PTW32_BUILD
+#define PTW32_STATIC_LIB 1
 
 /* CPU affinity */
 #define HAVE_CPU_AFFINITY
