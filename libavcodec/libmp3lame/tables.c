@@ -22,7 +22,7 @@
 /* $Id: tables.c,v 1.29 2011/05/07 16:05:17 rbrito Exp $ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 #include "machine.h"
@@ -511,7 +511,7 @@ const uint32_t table56[4 * 4] = {
 
 
 
-/* 
+/*
  * 0: MPEG-2 LSF
  * 1: MPEG-1
  * 2: MPEG-2.5 LSF FhG extention                  (1995-07-11 shn)

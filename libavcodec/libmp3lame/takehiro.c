@@ -23,7 +23,7 @@
 /* $Id: takehiro.c,v 1.80 2017/09/06 15:07:30 robert Exp $ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 
@@ -92,9 +92,9 @@ static const struct {
 
 
 /*********************************************************************
- * nonlinear quantization of xr 
+ * nonlinear quantization of xr
  * More accurate formula than the ISO formula.  Takes into account
- * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
+ * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be
  * as close as possible to x^4/3.  (taking the nearest int would mean
  * ix is as close as possible to xr, which is different.)
  *
@@ -203,16 +203,16 @@ quantize_lines_xrpow(unsigned int l, FLOAT istep, const FLOAT * xp, int *pi)
 #else
 
 /*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.  
+ * XRPOW_FTOI is a macro to convert floats to ints.
  * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
  *                                         ROUNDFAC= -0.0946
  *
- * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]
  *                                   ROUNDFAC=0.4054
  *
  * Note: using floor() or (int) is extremely slow. On machines where
  * the TAKEHIRO_IEEE754_HACK code above does not work, it is worthwile
- * to write some ASM for XRPOW_FTOI().  
+ * to write some ASM for XRPOW_FTOI().
  *********************************************************************/
 #define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #define QUANTFAC(rx)  adj43[rx]
@@ -299,8 +299,8 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
 
 
     /* Reusing previously computed data does not seems to work if global gain
-       is changed. Finding why it behaves this way would allow to use a cache of 
-       previously computed values (let's 10 cached values per sfb) that would 
+       is changed. Finding why it behaves this way would allow to use a cache of
+       previously computed values (let's 10 cached values per sfb) that would
        probably provide a noticeable speedup */
     prev_data_use = (prev_noise && (cod_info->global_gain == prev_noise->global_gain));
 
@@ -382,7 +382,7 @@ quantize_xrpow(const FLOAT * xp, int *pi, FLOAT istep, gr_info const *const cod_
 
             if (l <= 0) {
                 /*  rh: 20040215
-                 *  may happen due to "prev_data_use" optimization 
+                 *  may happen due to "prev_data_use" optimization
                  */
                 if (accumulate01) {
                     quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
@@ -569,7 +569,7 @@ count_bit_noESC_from3(const int *ix, const int *end, int max, unsigned int * s)
     }
     *s += sum1;
 
-    return t;  
+    return t;
 }
 
 
@@ -595,8 +595,8 @@ static int count_bit_null(const int* ix, const int* end, int max, unsigned int* 
 }
 
 typedef int (*count_fnc)(const int* ix, const int* end, int max, unsigned int* s);
-  
-static const count_fnc count_fncs[] = 
+
+static const count_fnc count_fncs[] =
 { &count_bit_null
 , &count_bit_noESC
 , &count_bit_noESC_from2
@@ -1041,8 +1041,8 @@ best_scalefac_store(const lame_internal_flags * gfc,
         }
         if (l == j)
             gi->scalefac[sfb] = recalc = -2; /* anything goes. */
-        /*  only best_scalefac_store and calc_scfsi 
-         *  know--and only they should know--about the magic number -2. 
+        /*  only best_scalefac_store and calc_scfsi
+         *  know--and only they should know--about the magic number -2.
          */
     }
 

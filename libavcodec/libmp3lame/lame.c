@@ -4,7 +4,7 @@
  *
  *      Copyright (c) 1999-2000 Mark Taylor
  *      Copyright (c) 2000-2005 Takehiro Tominaga
- *      Copyright (c) 2000-2017 Robert Hegemann
+ *      Copyright (c) 2000-2019 Robert Hegemann
  *      Copyright (c) 2000-2005 Gabriel Bouvigne
  *      Copyright (c) 2000-2004 Alexander Leidinger
  *
@@ -24,10 +24,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* $Id: lame.c,v 1.377 2017/09/26 12:14:02 robert Exp $ */
+/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 
@@ -105,7 +105,7 @@ static void
 lame_init_params_ppflt(lame_internal_flags * gfc)
 {
     SessionConfig_t *const cfg = &gfc->cfg;
-    
+
     /***************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
     /***************************************************************/
@@ -545,11 +545,11 @@ lame_init_params(lame_global_flags * gfp)
     lame_internal_flags *gfc;
     SessionConfig_t *cfg;
 
-    if (!is_lame_global_flags_valid(gfp)) 
+    if (!is_lame_global_flags_valid(gfp))
         return -1;
 
     gfc = gfp->internal_flags;
-    if (gfc == 0) 
+    if (gfc == 0)
         return -1;
 
     if (is_lame_internal_flags_valid(gfc))
@@ -1230,7 +1230,7 @@ lame_init_params(lame_global_flags * gfp)
         cfg->adjust_sfb21_db += cfg->adjust_treble_db;
     }
 
-    /* Setting up the PCM input data transform matrix, to apply 
+    /* Setting up the PCM input data transform matrix, to apply
      * user defined re-scaling, and or two-to-one channel downmix.
      */
     {
@@ -1676,7 +1676,7 @@ calcNeeded(SessionConfig_t const * cfg)
     mf_needed = Max(mf_needed, 512 + pcm_samples_per_frame - 32);
 
     assert(MFSIZE >= mf_needed);
-    
+
     return mf_needed;
 }
 
@@ -1766,13 +1766,13 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
         /* update mfbuf[] counters */
         esv->mf_size += n_out;
         assert(esv->mf_size <= MFSIZE);
-        
+
         /* lame_encode_flush may have set gfc->mf_sample_to_encode to 0
          * so we have to reinitialize it here when that happened.
          */
         if (esv->mf_samples_to_encode < 1) {
             esv->mf_samples_to_encode = ENCDELAY + POSTDELAY;
-        }        
+        }
         esv->mf_samples_to_encode += n_out;
 
 
@@ -1810,7 +1810,7 @@ lame_encode_buffer_sample_t(lame_internal_flags * gfc,
     return mp3size;
 }
 
-enum PCMSampleType 
+enum PCMSampleType
 {   pcm_short_type
 ,   pcm_int_type
 ,   pcm_long_type
@@ -1819,7 +1819,7 @@ enum PCMSampleType
 };
 
 static void
-lame_copy_inbuffer(lame_internal_flags* gfc, 
+lame_copy_inbuffer(lame_internal_flags* gfc,
                    void const* l, void const* r, int nsamples,
                    enum PCMSampleType pcm_type, int jump, FLOAT s)
 {
@@ -1852,7 +1852,7 @@ lame_copy_inbuffer(lame_internal_flags* gfc,
     } \
 }
     switch ( pcm_type ) {
-    case pcm_short_type: 
+    case pcm_short_type:
         COPY_AND_TRANSFORM(short int);
         break;
     case pcm_int_type:
@@ -2082,6 +2082,29 @@ lame_init_bitstream(lame_global_flags * gfp)
     return -3;
 }
 
+static int
+calc_mp3buffer_size_remaining( int mp3buffer_size, int mp3count)
+{
+    /* if user specifed buffer size = 0, dont check size */
+    if (mp3buffer_size == 0)
+        return INT_MAX;
+    else if (mp3buffer_size > 0 && mp3count >= 0 ) {
+        int const mp3buffer_size_remaining = mp3buffer_size - mp3count;
+        if (mp3buffer_size_remaining > 0) {
+            return mp3buffer_size_remaining;
+        }
+        assert(mp3buffer_size_remaining >= 0);
+        /* we reached the end of the output buffer, set to -1
+           because we have to distinguish this case from the case above,
+           where the caller did not specify any buffer size
+         */
+        return -1;
+    }
+    else {
+        /* values are invalid, block writing into output buffer */
+        return -1;
+    }
+}
 
 /*****************************************************************/
 /* flush internal PCM sample buffers, then mp3 buffers           */
@@ -2116,7 +2139,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     }
     cfg = &gfc->cfg;
     esv = &gfc->sv_enc;
-    
+
     /* Was flush already called? */
     if (esv->mf_samples_to_encode < 1) {
         return 0;
@@ -2139,7 +2162,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
     if (end_padding < 576)
         end_padding += pcm_samples_per_frame;
     gfc->ov_enc.encoder_padding = end_padding;
-    
+
     frames_left = (samples_to_encode + end_padding) / pcm_samples_per_frame;
     while (frames_left > 0 && imp3 >= 0) {
         int const frame_num = gfc->ov_enc.frame_number;
@@ -2149,20 +2172,17 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         if (bunch > 1152) bunch = 1152;
         if (bunch < 1) bunch = 1;
 
-        mp3buffer_size_remaining = mp3buffer_size - mp3count;
-
-        /* if user specifed buffer size = 0, dont check size */
-        if (mp3buffer_size == 0)
-            mp3buffer_size_remaining = 0;
+        mp3buffer_size_remaining = calc_mp3buffer_size_remaining(mp3buffer_size, mp3count);
 
         /* send in a frame of 0 padding until all internal sample buffers
          * are flushed
          */
         imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], bunch,
                                   mp3buffer, mp3buffer_size_remaining);
-
-        mp3buffer += imp3;
-        mp3count += imp3;
+        if (imp3 > 0) {
+            mp3buffer += imp3;
+            mp3count += imp3;
+        }
         {   /* even a single pcm sample can produce several frames!
              * for example: 1 Hz input file resampled to 8 kHz mpeg2.5
              */
@@ -2181,10 +2201,7 @@ lame_encode_flush(lame_global_flags * gfp, unsigned char *mp3buffer, int mp3buff
         return imp3;
     }
 
-    mp3buffer_size_remaining = mp3buffer_size - mp3count;
-    /* if user specifed buffer size = 0, dont check size */
-    if (mp3buffer_size == 0)
-        mp3buffer_size_remaining = INT_MAX;
+    mp3buffer_size_remaining = calc_mp3buffer_size_remaining(mp3buffer_size, mp3count);
 
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
     flush_bitstream(gfc);

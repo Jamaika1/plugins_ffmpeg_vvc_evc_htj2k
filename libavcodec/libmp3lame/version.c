@@ -32,7 +32,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 
@@ -79,7 +79,7 @@ get_lame_version(void)
 /*!
   It's mainly for inclusion into the MP3 stream.
 
-  \param void   
+  \param void
   \return a pointer to the short version of the LAME version string.
 */
 const char *
@@ -109,7 +109,7 @@ get_lame_short_version(void)
 /*!
   It's used in the LAME VBR tag only.
 
-  \param void   
+  \param void
   \return a pointer to the short version of the LAME version string.
 */
 const char *
@@ -141,7 +141,7 @@ get_lame_very_short_version(void)
   It's used in the LAME VBR tag only, limited to 9 characters max.
   Due to some 3rd party HW/SW decoders, it has to start with LAME.
 
-  \param void   
+  \param void
   \return a pointer to the short version of the LAME version string.
  */
 const char*
@@ -198,7 +198,7 @@ get_lame_url(void)
   Writes the numerical representation of the version of LAME and
   GPSYCHO into lvp.
 
-  \param lvp    
+  \param lvp
 */
 void
 get_lame_version_numerical(lame_version_t * lvp)

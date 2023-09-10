@@ -22,7 +22,7 @@
 /* $Id: reservoir.c,v 1.45 2011/05/07 16:05:17 rbrito Exp $ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 
@@ -145,7 +145,7 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
         esv->ResvMax = resvLimit;
     if (esv->ResvMax < 0 || cfg->disable_reservoir)
         esv->ResvMax = 0;
-    
+
     fullFrameBits = meanBits * cfg->mode_gr + Min(esv->ResvSize, esv->ResvMax);
 
     if (fullFrameBits > maxmp3buf)

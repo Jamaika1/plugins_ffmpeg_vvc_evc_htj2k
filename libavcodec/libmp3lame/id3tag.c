@@ -32,7 +32,7 @@
 /* $Id: id3tag.c,v 1.80 2017/08/28 15:39:51 robert Exp $ */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #ifdef STDC_HEADERS
@@ -185,12 +185,12 @@ static void
 debug_tag_spec_flags(lame_internal_flags * gfc, const char* info)
 {
     MSGF(gfc, "%s\n", info);
-    MSGF(gfc, "CHANGED_FLAG  : %d\n", test_tag_spec_flags(gfc, CHANGED_FLAG )); 
-    MSGF(gfc, "ADD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, ADD_V2_FLAG  )); 
-    MSGF(gfc, "V1_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V1_ONLY_FLAG )); 
-    MSGF(gfc, "V2_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V2_ONLY_FLAG )); 
-    MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG)); 
-    MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  )); 
+    MSGF(gfc, "CHANGED_FLAG  : %d\n", test_tag_spec_flags(gfc, CHANGED_FLAG ));
+    MSGF(gfc, "ADD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, ADD_V2_FLAG  ));
+    MSGF(gfc, "V1_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V1_ONLY_FLAG ));
+    MSGF(gfc, "V2_ONLY_FLAG  : %d\n", test_tag_spec_flags(gfc, V2_ONLY_FLAG ));
+    MSGF(gfc, "SPACE_V1_FLAG : %d\n", test_tag_spec_flags(gfc, SPACE_V1_FLAG));
+    MSGF(gfc, "PAD_V2_FLAG   : %d\n", test_tag_spec_flags(gfc, PAD_V2_FLAG  ));
 }
 #endif
 
@@ -1230,7 +1230,7 @@ local_strcasecmp(const char *s1, const char *s2)
 }
 
 
-static 
+static
 const char* nextUpperAlpha(const char* p, char x)
 {
     char c;
@@ -1270,7 +1270,7 @@ sloppyCompared(const char* p, const char* q)
 }
 
 
-static int 
+static int
 sloppySearchGenre(const char *genre)
 {
     int i;
@@ -1748,7 +1748,7 @@ lame_get_id3v2_tag(lame_t gfp, unsigned char *buffer, size_t size)
             *p++ = 0;
             /* calculate and set tag size = total size - header size */
             adjusted_tag_size = tag_size - 10;
-            /* encode adjusted size into four bytes where most significant 
+            /* encode adjusted size into four bytes where most significant
              * bit is clear in each byte, for 28-bit total */
             *p++ = (unsigned char) ((adjusted_tag_size >> 21) & 0x7fu);
             *p++ = (unsigned char) ((adjusted_tag_size >> 14) & 0x7fu);

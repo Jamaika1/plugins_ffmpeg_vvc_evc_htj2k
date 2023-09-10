@@ -20,10 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* $Id: set_get.c,v 1.104 2017/09/06 15:07:30 robert Exp $ */
+/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 #include "lame.h"
@@ -134,7 +134,7 @@ lame_get_scale(const lame_global_flags * gfp)
 }
 
 
-/* scale the channel 0 (left) input by this amount before 
+/* scale the channel 0 (left) input by this amount before
    encoding (not used for decoding) */
 int
 lame_set_scale_left(lame_global_flags * gfp, float scale)
@@ -157,7 +157,7 @@ lame_get_scale_left(const lame_global_flags * gfp)
 }
 
 
-/* scale the channel 1 (right) input by this amount before 
+/* scale the channel 1 (right) input by this amount before
    encoding (not used for decoding) */
 int
 lame_set_scale_right(lame_global_flags * gfp, float scale)
@@ -340,7 +340,7 @@ lame_get_ogg(const lame_global_flags * gfp)
  * Internal algorithm selection.
  * True quality is determined by the bitrate but this variable will effect
  * quality by selecting expensive or cheap algorithms.
- * quality=0..9.  0=best (very slow).  9=worst.  
+ * quality=0..9.  0=best (very slow).  9=worst.
  * recommended:  3     near-best quality, not too slow
  *               5     good quality, fast
  *               7     ok quality, really fast
@@ -528,7 +528,7 @@ lame_get_findReplayGain(const lame_global_flags * gfp)
 }
 
 
-/* Decode on the fly. Find the peak sample. If ReplayGain analysis is 
+/* Decode on the fly. Find the peak sample. If ReplayGain analysis is
    enabled then perform it on the decoded data. */
 int
 lame_set_decode_on_the_fly(lame_global_flags * gfp, int decode_on_the_fly)
@@ -934,7 +934,7 @@ lame_get_strict_ISO(const lame_global_flags * gfp)
 
 
 /********************************************************************
- * quantization/noise shaping 
+ * quantization/noise shaping
  ***********************************************************************/
 
 /* Disable the bit reservoir. For testing only. */
@@ -1125,7 +1125,7 @@ lame_get_VBR(const lame_global_flags * gfp)
 /*
  * VBR quality level.
  *  0 = highest
- *  9 = lowest 
+ *  9 = lowest
  */
 int
 lame_set_VBR_q(lame_global_flags * gfp, int VBR_q)
@@ -1389,7 +1389,7 @@ lame_get_highpasswidth(const lame_global_flags * gfp)
 
 
 /*
- * psycho acoustics and other arguments which you should not change 
+ * psycho acoustics and other arguments which you should not change
  * unless you know what you are doing
  */
 
@@ -1963,7 +1963,7 @@ lame_get_emphasis(const lame_global_flags * gfp)
 /* MPEG version.
  *  0 = MPEG-2
  *  1 = MPEG-1
- * (2 = MPEG-2.5)    
+ * (2 = MPEG-2.5)
  */
 int
 lame_get_version(const lame_global_flags * gfp)
@@ -2131,7 +2131,7 @@ lame_get_totalframes(const lame_global_flags * gfp)
         lame_internal_flags const *const gfc = gfp->internal_flags;
         if (is_lame_internal_flags_valid(gfc)) {
             SessionConfig_t const *const cfg = &gfc->cfg;
-            unsigned long const pcm_samples_per_frame = 576 * cfg->mode_gr;
+            unsigned long const pcm_samples_per_frame = 576ul * cfg->mode_gr;
             unsigned long pcm_samples_to_encode = gfp->num_samples;
             unsigned long end_padding = 0;
             int frames = 0;
@@ -2242,13 +2242,13 @@ lame_get_write_id3tag_automatic(lame_global_flags const *gfp)
 
 UNDOCUMENTED, experimental settings.  These routines are not prototyped
 in lame.h.  You should not use them, they are experimental and may
-change.  
+change.
 
 */
 
 
 /*
- *  just another daily changing developer switch  
+ *  just another daily changing developer switch
  */
 void CDECL lame_set_tune(lame_global_flags *, float);
 

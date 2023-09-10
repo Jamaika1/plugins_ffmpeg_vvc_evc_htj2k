@@ -26,7 +26,7 @@
 /* $Id: encoder.c,v 1.114 2017/08/26 10:54:57 robert Exp $ */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 
@@ -277,7 +277,7 @@ FFT's                    <---------1024---------->
     encoder acts on inbuf[ch][0], but output is delayed by MDCTDELAY
     so the MDCT coefficints are from inbuf[ch][-MDCTDELAY]
 
-    psy-model FFT has a 1 granule delay, so we feed it data for the 
+    psy-model FFT has a 1 granule delay, so we feed it data for the
     next granule.
     FFT is centered over granule:  224+576+224
     So FFT starts at:   576-224-MDCTDELAY
@@ -337,7 +337,7 @@ lame_encode_mp3_frame(       /* Output */
 
 
     /********************** padding *****************************/
-    /* padding method as described in 
+    /* padding method as described in
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
      * by Martin Sieler, Ralph Sperschneider
      *
@@ -470,7 +470,7 @@ lame_encode_mp3_frame(       /* Output */
                 gfc->pinfo->blocktype[gr][ch] = gfc->l3_side.tt[gr][ch].block_type;
                 gfc->pinfo->pe[gr][ch] = pe_use[gr][ch];
                 memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr[0], sizeof(FLOAT) * 576);
-                /* in psymodel, LR and MS data was stored in pinfo.  
+                /* in psymodel, LR and MS data was stored in pinfo.
                    switch to MS data: */
                 if (gfc->ov_enc.mode_ext == MPG_MD_MS_LR) {
                     gfc->pinfo->ers[gr][ch] = gfc->pinfo->ers[gr][ch + 2];
