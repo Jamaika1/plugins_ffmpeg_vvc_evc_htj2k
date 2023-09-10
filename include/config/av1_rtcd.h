@@ -719,33 +719,33 @@ int av1_denoiser_filter_sse2(const uint8_t* sig,
 #endif // CONFIG_AV1_TEMPORAL_DENOISING
 
 int64_t av1_calc_frame_error_c(const uint8_t *const ref,
-                               int stride,
+                               int ref_stride,
                                const uint8_t *const dst,
+                               int dst_stride,
                                int p_width,
-                               int p_height,
-                               int p_stride);
+                               int p_height);
 #if HAVE_SIMD
 #if defined(__SSE2__)
 int64_t av1_calc_frame_error_sse2(const uint8_t *const ref,
-                               int stride,
-                               const uint8_t *const dst,
-                               int p_width,
-                               int p_height,
-                               int p_stride);
+                                  int ref_stride,
+                                  const uint8_t *const dst,
+                                  int dst_stride,
+                                  int p_width,
+                                  int p_height);
 RTCD_EXTERN int64_t (*av1_calc_frame_error)(const uint8_t *const ref,
-                               int stride,
-                               const uint8_t *const dst,
-                               int p_width,
-                               int p_height,
-                               int p_stride);
+                                  int ref_stride,
+                                  const uint8_t *const dst,
+                                  int dst_stride,
+                                  int p_width,
+                                  int p_height);
 #endif
 #if defined(__AVX2__)
 int64_t av1_calc_frame_error_avx2(const uint8_t *const ref,
-                               int stride,
-                               const uint8_t *const dst,
-                               int p_width,
-                               int p_height,
-                               int p_stride);
+                                  int ref_stride,
+                                  const uint8_t *const dst,
+                                  int dst_stride,
+                                  int p_width,
+                                  int p_height);
 #endif
 #else
 #define av1_calc_frame_error av1_calc_frame_error_c
@@ -753,13 +753,41 @@ int64_t av1_calc_frame_error_avx2(const uint8_t *const ref,
 
 #if CONFIG_AV1_HIGHBITDEPTH
 int64_t av1_calc_highbd_frame_error_c(const uint16_t *const ref,
-                                    int stride,
-                                    const uint16_t *const dst,
-                                    int p_width,
-                                    int p_height,
-                                    int p_stride,
-                                    int bd);
+                                      int ref_stride,
+                                      const uint16_t *const dst,
+                                      int dst_stride,
+                                      int p_width,
+                                      int p_height,
+                                      int bd);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+int64_t av1_calc_highbd_frame_error_sse2(const uint16_t *const ref,
+                                      int ref_stride,
+                                      const uint16_t *const dst,
+                                      int dst_stride,
+                                      int p_width,
+                                      int p_height,
+                                      int bd);
+RTCD_EXTERN int64_t (*av1_calc_highbd_frame_error)(const uint16_t *const ref,
+                                      int ref_stride,
+                                      const uint16_t *const dst,
+                                      int dst_stride,
+                                      int p_width,
+                                      int p_height,
+                                      int bd);
+#endif
+#if defined(__AVX2__)
+int64_t av1_calc_highbd_frame_error_avx2(const uint16_t *const ref,
+                                      int ref_stride,
+                                      const uint16_t *const dst,
+                                      int dst_stride,
+                                      int p_width,
+                                      int p_height,
+                                      int bd);
+#endif
+#else
 #define av1_calc_highbd_frame_error av1_calc_highbd_frame_error_c
+#endif
 #endif
 
 void av1_dist_wtd_convolve_2d_c(const uint8_t* src,
@@ -5607,6 +5635,7 @@ static void setup_rtcd_internal(void) {
 #endif
 #if defined(__SSE2__) && HAVE_SIMD
   av1_highbd_block_error = av1_highbd_block_error_sse2;
+  av1_calc_highbd_frame_error = av1_calc_highbd_frame_error_sse2;
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
   if (flags & HAS_SSSE3) av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_ssse3;
@@ -5630,6 +5659,7 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1) av1_highbd_convolve_2d_scale = av1_highbd_convolve_2d_scale_sse4_1;
 #endif
 #if defined(__AVX2__) && HAVE_SIMD
+  if (flags & HAS_AVX2) av1_calc_highbd_frame_error = av1_calc_highbd_frame_error_avx2;
   if (flags & HAS_AVX2) av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_avx2;
   if (flags & HAS_AVX2) av1_highbd_dr_prediction_z1 = av1_highbd_dr_prediction_z1_avx2;
   if (flags & HAS_AVX2) av1_highbd_dr_prediction_z2 = av1_highbd_dr_prediction_z2_avx2;
