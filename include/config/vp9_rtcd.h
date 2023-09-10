@@ -20,7 +20,9 @@ struct macroblockd;
 
 /* Encoder forward decls */
 struct macroblock;
+struct macroblock_plane;
 struct vp9_sad_table;
+struct ScanOrder;
 struct search_site_config;
 struct mv;
 union int_mv;
@@ -155,39 +157,39 @@ int64_t vp9_block_error_fp_avx2(const tran_low_t *coeff, const tran_low_t *dqcoe
 int64_t vp9_highbd_block_error_c(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz, int bd);
 #if HAVE_SIMD
 int64_t vp9_highbd_block_error_sse2(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz, int bd);
-#define vp9_block_error_fp vp9_block_error_fp_sse2
+#define vp9_highbd_block_error vp9_highbd_block_error_sse2
 #else
-#define vp9_block_error_fp vp9_block_error_fp_c
+#define vp9_highbd_block_error vp9_highbd_block_error_c
 #endif
 #endif
 
-void vp9_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if HAVE_SIMD
 #if defined(__SSE2__)
-int64_t vp9_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-RTCD_EXTERN int64_t (*vp9_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
+RTCD_EXTERN int64_t (*vp9_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #if defined(__SSSE3__)
-int64_t vp9_quantize_fp_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #if defined(__AVX2__)
-int64_t vp9_quantize_fp_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #else
 #define vp9_quantize_fp vp9_quantize_fp_c
 #endif
 
-void vp9_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if HAVE_SIMD
 #if defined(__SSE2__)
-int64_t vp9_quantize_fp_32x32_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
-RTCD_EXTERN int64_t (*vp9_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_32x32_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
+RTCD_EXTERN int64_t (*vp9_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #if defined(__SSSE3__)
-int64_t vp9_quantize_fp_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_32x32_ssse3(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #if defined(__AVX2__)
-int64_t vp9_quantize_fp_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+int64_t vp9_quantize_fp_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #else
 #define vp9_quantize_fp_32x32 vp9_quantize_fp_32x32_c
@@ -256,21 +258,21 @@ RTCD_EXTERN void (*vp9_highbd_apply_temporal_filter)(const uint16_t *y_src, int 
 #define vp9_highbd_apply_temporal_filter vp9_highbd_apply_temporal_filter_c
 #endif
 
-void vp9_highbd_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_highbd_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if HAVE_SIMD
-RTCD_EXTERN void (*vp9_highbd_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+RTCD_EXTERN void (*vp9_highbd_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if defined(__AVX2__)
-void vp9_highbd_quantize_fp_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_highbd_quantize_fp_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #else
 #define vp9_highbd_quantize_fp vp9_highbd_quantize_fp_c
 #endif
 
-void vp9_highbd_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_highbd_quantize_fp_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if HAVE_SIMD
-RTCD_EXTERN void (*vp9_highbd_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+RTCD_EXTERN void (*vp9_highbd_quantize_fp_32x32)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if defined(__AVX2__)
-void vp9_highbd_quantize_fp_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const int16_t *round_ptr, const int16_t *quant_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
+void vp9_highbd_quantize_fp_32x32_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #endif
 #else
 #define vp9_highbd_quantize_fp_32x32 vp9_highbd_quantize_fp_32x32_c
