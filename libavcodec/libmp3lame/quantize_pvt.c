@@ -24,7 +24,7 @@
 
 /* $Id: quantize_pvt.c,v 1.175 2017/09/06 15:07:30 robert Exp $ */
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include "config.h"
 #endif
 
 
@@ -90,7 +90,7 @@ const int pretab[SBMAX_l] = {
 
 /*
   Here are MPEG1 Table B.8 and MPEG2 Table B.1
-  -- Layer III scalefactor bands. 
+  -- Layer III scalefactor bands.
   Index into this using a method such as:
     idx  = fr_ps->header->sampling_frequency
            + (fr_ps->header->version * 3)
@@ -179,8 +179,8 @@ FLOAT   adj43asm[PRECALC_SIZE];
 FLOAT   adj43[PRECALC_SIZE];
 #endif
 
-/* 
-compute the ATH for each scalefactor band 
+/*
+compute the ATH for each scalefactor band
 cd range:  0..96db
 
 Input:  3.3kHz signal  32767 amplitude  (3.3kHz is where ATH is smallest = -5db)
@@ -189,18 +189,18 @@ shortblocks: sfb=5           -9db              0db
 
 Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
 longblocks:  amp=1      sfb=12   en0/bw=-103 db      max_en0 = -92db
-            amp=32767   sfb=12           -12 db                 -1.4db 
+            amp=32767   sfb=12           -12 db                 -1.4db
 
 Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
-shortblocks: amp=1      sfb=5   en0/bw= -99                    -86 
-            amp=32767   sfb=5           -9  db                  4db 
+shortblocks: amp=1      sfb=5   en0/bw= -99                    -86
+            amp=32767   sfb=5           -9  db                  4db
 
 
 MAX energy of largest wave at 3.3kHz = 1db
 AVE energy of largest wave at 3.3kHz = -11db
-Let's take AVE:  -11db = maximum signal in sfb=12.  
-Dynamic range of CD: 96db.  Therefor energy of smallest audible wave 
-in sfb=12  = -11  - 96 = -107db = ATH at 3.3kHz.  
+Let's take AVE:  -11db = maximum signal in sfb=12.
+Dynamic range of CD: 96db.  Therefor energy of smallest audible wave
+in sfb=12  = -11  - 96 = -107db = ATH at 3.3kHz.
 
 ATH formula for this wave: -5db.  To adjust to LAME scaling, we need
 ATH = ATH_formula  - 103  (db)
@@ -322,11 +322,11 @@ compute_ath(lame_internal_flags const* gfc)
 }
 
 
-static float const payload_long[2][4] = 
+static float const payload_long[2][4] =
 { {-0.000f, -0.000f, -0.000f, +0.000f}
 , {-0.500f, -0.250f, -0.025f, +0.500f}
 };
-static float const payload_short[2][4] = 
+static float const payload_short[2][4] =
 { {-0.000f, -0.000f, -0.000f, +0.000f}
 , {-2.000f, -1.000f, -0.050f, +0.500f}
 };
@@ -443,7 +443,7 @@ on_pe(lame_internal_flags * gfc, const FLOAT pe[][2], int targ_bits[2], int mean
 
     for (bits = 0, ch = 0; ch < cfg->channels_out; ++ch) {
         /******************************************************************
-         * allocate bits for each channel 
+         * allocate bits for each channel
          ******************************************************************/
         targ_bits[ch] = Min(MAX_BITS_PER_CHANNEL, tbits / cfg->channels_out);
 
@@ -499,7 +499,7 @@ reduce_side(int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits, int max_bits)
     assert(max_bits <= MAX_BITS_PER_GRANULE);
     assert(targ_bits[0] + targ_bits[1] <= MAX_BITS_PER_GRANULE);
 
-    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
+    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33
      *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
     /* 75/25 split is fac=.5 */
     /* float fac = .50*(.5-ms_ener_ratio[gr])/.5; */
@@ -691,7 +691,7 @@ calc_xmin(lame_internal_flags const *gfc,
 
         tmpATH = athAdjust(ATH->adjust_factor, ATH->s[sfb], ATH->floor, cfg->ATHfixpoint);
         tmpATH *= gfc->sv_qnt.shortfact[sfb];
-        
+
         width = cod_info->width[gsfb];
         for (b = 0; b < 3; b++) {
             FLOAT   en0 = 0.0, xmin = tmpATH;
@@ -711,7 +711,7 @@ calc_xmin(lame_internal_flags const *gfc,
             }
             if (en0 > tmpATH)
                 ath_over++;
-            
+
             if (en0 < tmpATH) {
                 rh3 = en0;
             }
@@ -924,9 +924,9 @@ calc_noise(gr_info const *const cod_info,
  *
  *  set_pinfo()
  *
- *  updates plotting data    
+ *  updates plotting data
  *
- *  Mark Taylor 2000-??-??                
+ *  Mark Taylor 2000-??-??
  *
  *  Robert Hegemann: moved noise/distortion calc into it
  *
@@ -1036,9 +1036,9 @@ set_pinfo(lame_internal_flags const *gfc,
  *
  *  set_frame_pinfo()
  *
- *  updates plotting data for a whole frame  
+ *  updates plotting data for a whole frame
  *
- *  Robert Hegemann 2000-10-21                          
+ *  Robert Hegemann 2000-10-21
  *
  ************************************************************************/
 
@@ -1057,7 +1057,7 @@ set_frame_pinfo(lame_internal_flags * gfc, const III_psy_ratio ratio[2][2])
             int     scalefac_sav[SFBMAX];
             memcpy(scalefac_sav, cod_info->scalefac, sizeof(scalefac_sav));
 
-            /* reconstruct the scalefactors in case SCFSI was used 
+            /* reconstruct the scalefactors in case SCFSI was used
              */
             if (gr == 1) {
                 int     sfb;

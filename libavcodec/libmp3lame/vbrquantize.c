@@ -23,7 +23,7 @@
 /* $Id: vbrquantize.c,v 1.142 2012/02/07 13:36:35 robert Exp $ */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include "config.h"
 #endif
 
 
@@ -86,7 +86,7 @@ typedef VOLATILE union {
 #else
 #define DOUBLEX FLOAT
 #endif
- 
+
 #define MAGIC_FLOAT_def (65536*(128))
 #define MAGIC_INT_def    0x4b000000
 
@@ -467,7 +467,7 @@ block_sf(algo_t * that, const FLOAT l3_xmin[SFBMAX], int vbrsf[SFBMAX], int vbrs
         }
         vbrsf[sfb] = m2;
         ++sfb;
-        j += w;        
+        j += w;
     }
     for (; sfb < SFBMAX; ++sfb) {
         vbrsf[sfb] = maxsf;
@@ -525,7 +525,7 @@ quantize_x34(const algo_t * that)
         assert(cod_info->width[sfb] >= 0);
         j += w;
         ++sfb;
-        
+
         i = (w <= m) ? w : m;
         remaining = (i & 0x03u);
         i >>= 2u;
@@ -1307,7 +1307,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
                 bitcount(that);
             }
             else {
-                /*  xr contains no energy 
+                /*  xr contains no energy
                  *  l3_enc, our encoding data, will be quantized to zero
                  *  continue with next channel
                  */
@@ -1326,7 +1326,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
                 (void) quantizeAndCountBits(that);
             }
             else {
-                /*  xr contains no energy 
+                /*  xr contains no energy
                  *  l3_enc, our encoding data, will be quantized to zero
                  *  continue with next channel
                  */
@@ -1365,7 +1365,7 @@ VBR_encode_frame(lame_internal_flags * gfc, const FLOAT xr34orig[2][2][576],
             return use_nbits_fr;
         }
     }
-    
+
     /* OK, we are in trouble and have to define how many bits are
      * to be used for each granule
      */

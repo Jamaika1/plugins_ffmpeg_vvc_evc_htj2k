@@ -257,7 +257,7 @@ extern  "C" {
         sample_t *blackfilt[2 * BPC + 1];
 
         FLOAT   pefirbuf[19];
-
+        
         /* used for padding */
         int     frac_SpF;
         int     slot_lag;
@@ -439,7 +439,7 @@ extern  "C" {
         int     ATHonly;     /* only use ATH                         */
         int     ATHshort;    /* only use ATH for short blocks        */
         int     noATH;       /* disable ATH                          */
-
+        
         float   ATHfixpoint;
 
         float   adjust_alto_db;
@@ -560,16 +560,13 @@ extern  "C" {
     extern int FindNearestBitrate(int, int, int);
     extern int map2MP3Frequency(int freq);
     extern int SmpFrqIndex(int, int *const);
-    extern int nearestBitrateFullIndex(uint16_t brate);
+    extern int nearestBitrateFullIndex(uint16_t bitrate);
     extern FLOAT ATHformula(SessionConfig_t const *cfg, FLOAT freq);
     extern FLOAT freq2bark(FLOAT freq);
     void    disable_FPE(void);
 
 /* log/log10 approximations */
     extern void init_log_table(void);
-#ifndef HAVE_IEEE754_FLOAT32_T
-	typedef float ieee754_float32_t;
-#endif
     extern ieee754_float32_t fast_log2(ieee754_float32_t x);
 
     int     isResamplingNecessary(SessionConfig_t const* cfg);
@@ -610,8 +607,9 @@ extern  "C" {
 #define MSGF    lame_msgf
 
     int     is_lame_internal_flags_valid(const lame_internal_flags * gfp);
-
+    
     extern void hip_set_pinfo(hip_t hip, plotting_data* pinfo);
+    extern void hip_finish_pinfo(hip_t hip);
 
 #ifdef __cplusplus
 }

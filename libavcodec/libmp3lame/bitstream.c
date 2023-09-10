@@ -24,7 +24,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #include <stdlib.h>
@@ -109,7 +109,7 @@ get_max_frame_buffer_size_by_constraint(SessionConfig_t const * cfg, int constra
         else {
             max_kbps = bitrate_table[cfg->version][14];
         }
-        switch (constraint) 
+        switch (constraint)
         {
         default:
         case MDB_DEFAULT:
