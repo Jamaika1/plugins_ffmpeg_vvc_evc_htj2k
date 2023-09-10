@@ -1067,7 +1067,7 @@ void *enc_pic_thread(enc_pic_t *ep, pic_thd_param_t *p)
         }
         uavs3e_threadpool_set_priority(ep->wpp_threads_pool, THREAD_PRIORITY_NORMAL);
     }
-    printf("\n");
+    //printf("\n");
 
     if (info->sqh.alf_enable) {
         double lambda = 1.43631 * pow(2.0, (p->total_qp * 1.0 / info->f_lcu - 16.0) / 4.0);
