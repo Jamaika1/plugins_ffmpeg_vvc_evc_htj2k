@@ -1,4 +1,5 @@
-/* * Copyright © 2011  Google, Inc.
+/*
+ * Copyright © 2011  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -40,13 +41,13 @@ HB_BEGIN_DECLS
  *
  * The major component of the library version available at compile-time.
  */
-#define HB_VERSION_MAJOR 7
+#define HB_VERSION_MAJOR 8
 /**
  * HB_VERSION_MINOR:
  *
  * The minor component of the library version available at compile-time.
  */
-#define HB_VERSION_MINOR 3
+#define HB_VERSION_MINOR 2
 /**
  * HB_VERSION_MICRO:
  *
@@ -59,7 +60,7 @@ HB_BEGIN_DECLS
  *
  * A string literal containing the library version available at compile-time.
  */
-#define HB_VERSION_STRING "7.3.0-a77f282"
+#define HB_VERSION_STRING "8.2.0-3745741"
 
 /**
  * HB_VERSION_ATLEAST:
