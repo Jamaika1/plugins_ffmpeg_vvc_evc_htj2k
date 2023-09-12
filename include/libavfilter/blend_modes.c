@@ -20,10 +20,10 @@
 
 #include "libavutil/common.h"
 #include "libavutil/intfloat.h"
-#include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
-#include "libavfilter/video.h"
-#include "libavfilter/blend.h"
+#include "avfilter.h"
+#include "internal.h"
+#include "video.h"
+#include "blend.h"
 
 #undef PIXEL
 #undef MAX
@@ -93,8 +93,8 @@ static void fn0(NAME)(const uint8_t *_top, ptrdiff_t top_linesize, \
      ptrdiff_t width, ptrdiff_t height,                       \
      FilterParams *param, double *values, int starty)         \
 {                                                                                   \
-    const PIXEL *top = (PIXEL *)_top;                                               \
-    const PIXEL *bottom = (PIXEL *)_bottom;                                         \
+    const PIXEL *top = (const PIXEL *)_top;                                         \
+    const PIXEL *bottom = (const PIXEL *)_bottom;                                   \
     PIXEL *dst = (PIXEL *)_dst;                                                     \
     const float opacity = param->opacity;                                           \
                                                                                     \
