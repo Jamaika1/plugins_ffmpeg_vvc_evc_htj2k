@@ -192,6 +192,7 @@ static const AVInputFormat * const demuxer_list[] = {
 &ff_obu_demuxer,
 &ff_ogg_demuxer,
 &ff_oma_demuxer,
+&ff_osq_demuxer,
 &ff_paf_demuxer,
 &ff_pcm_alaw_demuxer,
 &ff_pcm_mulaw_demuxer,

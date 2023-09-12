@@ -29,6 +29,7 @@
 #include <float.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #include "libavformat/avformat.h"
 #include "libavformat/matroska.h"

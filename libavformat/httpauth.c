@@ -26,7 +26,6 @@
 #include "libavutil/random_seed.h"
 #include "libavutil/md5.h"
 #include "libavformat/urldecode.h"
-#include "libavformat/avformat.h"
 
 static void handle_basic_params(HTTPAuthState *state, const char *key,
                                 int key_len, char **dest, int *dest_len)

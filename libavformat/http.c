@@ -22,6 +22,7 @@
 #include "libavutil/config.h"
 #include "libavcodec/config_components.h"
 
+#include <time.h>
 #if CONFIG_ZLIB
 #include <zlib.h>
 #endif /* CONFIG_ZLIB */

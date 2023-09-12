@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavutil/stereo3d.h"
-
 #include "libavformat/matroska.h"
 
 /* If you add a tag here that is not in ff_codec_bmp_tags[]
@@ -91,8 +89,6 @@ const CodecTags ff_mkv_codec_tags[]={
     {"V_MPEG4/ISO/SP"   , AV_CODEC_ID_MPEG4},
     {"V_MPEG4/ISO/AVC"  , AV_CODEC_ID_H264},
     {"V_MPEGH/ISO/HEVC" , AV_CODEC_ID_HEVC},
-    {"V_MPEGI/ISO/VVC"  , AV_CODEC_ID_VVC},
-    {"V_MPEGI/ISO/EVC"  , AV_CODEC_ID_EVC},
     {"V_MPEG4/MS/V3"    , AV_CODEC_ID_MSMPEG4V3},
     {"V_PRORES"         , AV_CODEC_ID_PRORES},
     {"V_REAL/RV10"      , AV_CODEC_ID_RV10},
@@ -147,65 +143,3 @@ const char * const ff_matroska_video_stereo_mode[MATROSKA_VIDEO_STEREOMODE_TYPE_
     "block_lr",
     "block_rl",
 };
-
-const char * const ff_matroska_video_stereo_plane[MATROSKA_VIDEO_STEREO_PLANE_COUNT] = {
-    "left",
-    "right",
-    "background",
-};
-
-int ff_mkv_stereo3d_conv(AVStream *st, MatroskaVideoStereoModeType stereo_mode)
-{
-    AVStereo3D *stereo;
-    int ret;
-
-    stereo = av_stereo3d_alloc();
-    if (!stereo)
-        return AVERROR(ENOMEM);
-
-    // note: the missing breaks are intentional
-    switch (stereo_mode) {
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_MONO:
-        stereo->type = AV_STEREO3D_2D;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_RIGHT_LEFT:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_LEFT_RIGHT:
-        stereo->type = AV_STEREO3D_SIDEBYSIDE;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_BOTTOM_TOP:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_TOP_BOTTOM:
-        stereo->type = AV_STEREO3D_TOPBOTTOM;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_CHECKERBOARD_RL:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_CHECKERBOARD_LR:
-        stereo->type = AV_STEREO3D_CHECKERBOARD;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_ROW_INTERLEAVED_RL:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_ROW_INTERLEAVED_LR:
-        stereo->type = AV_STEREO3D_LINES;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_COL_INTERLEAVED_RL:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_COL_INTERLEAVED_LR:
-        stereo->type = AV_STEREO3D_COLUMNS;
-        break;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_BOTH_EYES_BLOCK_RL:
-        stereo->flags |= AV_STEREO3D_FLAG_INVERT;
-    case MATROSKA_VIDEO_STEREOMODE_TYPE_BOTH_EYES_BLOCK_LR:
-        stereo->type = AV_STEREO3D_FRAMESEQUENCE;
-        break;
-    }
-
-    ret = av_stream_add_side_data(st, AV_PKT_DATA_STEREO3D, (uint8_t *)stereo,
-                                  sizeof(*stereo));
-    if (ret < 0) {
-        av_freep(&stereo);
-        return ret;
-    }
-
-    return 0;
-}

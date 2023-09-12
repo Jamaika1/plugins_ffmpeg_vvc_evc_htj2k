@@ -30,6 +30,7 @@
 #include "libavformat/avformat.h"
 #include "libavformat/id3v2.h"
 #include "libavformat/internal.h"
+#include "libavformat/url.h"
 
 
 /**

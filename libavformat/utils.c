@@ -37,6 +37,7 @@
 #if CONFIG_NETWORK
 #include "libavformat/network.h"
 #endif
+#include "libavformat/os_support.h"
 
 static AVMutex avformat_mutex = AV_MUTEX_INITIALIZER;
 
