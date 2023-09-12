@@ -83,7 +83,7 @@
 #define F_OK    0       /* Test for existence.  */
 #endif
 
-//typedef int mode_t;
+typedef int mode_t;
 #endif /* !HAVE_UNISTD_H */
 
 #if !defined (HAVE_MKOSTEMP) && !defined(HAVE_MKSTEMP) && !defined(HAVE__MKTEMP_S)
@@ -228,8 +228,9 @@ FcRandom(void)
 #elif HAVE_LRAND48
     result = lrand48 ();
 #elif HAVE_RAND_R
-    static unsigned int seed = time (NULL);
+    static unsigned int seed;
 
+    seed = time (NULL);
     result = rand_r (&seed);
 #elif HAVE_RAND
     static FcBool initialized = FcFalse;

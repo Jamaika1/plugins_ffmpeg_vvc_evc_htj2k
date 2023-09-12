@@ -46,7 +46,7 @@
 #if 0
 
 
-#elif !defined(FC_NO_MT) && defined(_MSC_VER) || defined(__MINGW32__)
+/*#elif !defined(FC_NO_MT) && (defined(_MSC_VER) || defined(__MINGW32__))
 
 #include "fcwindows.h"
 typedef CRITICAL_SECTION fc_mutex_impl_t;
@@ -54,12 +54,13 @@ typedef CRITICAL_SECTION fc_mutex_impl_t;
 #define fc_mutex_impl_init(M)	InitializeCriticalSection (M)
 #define fc_mutex_impl_lock(M)	EnterCriticalSection (M)
 #define fc_mutex_impl_unlock(M)	LeaveCriticalSection (M)
-#define fc_mutex_impl_finish(M)	DeleteCriticalSection (M)
+#define fc_mutex_impl_finish(M)	DeleteCriticalSection (M)*/
 
 
 #elif !defined(FC_NO_MT) && (defined(HAVE_PTHREAD) || defined(__APPLE__))
 
-#include <pthread.h>
+//#include <pthread.h>
+#include "../../libpthread_win32/pthread.h"
 typedef pthread_mutex_t fc_mutex_impl_t;
 #define FC_MUTEX_IMPL_INIT	PTHREAD_MUTEX_INITIALIZER
 #define fc_mutex_impl_init(M)	pthread_mutex_init (M, NULL)
