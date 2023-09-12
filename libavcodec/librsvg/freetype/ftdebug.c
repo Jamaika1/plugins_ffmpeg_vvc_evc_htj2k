@@ -2,7 +2,7 @@
  *
  * ftdebug.c
  *
- *   Debugging and logging component (body).
+ *   Debugging and logging component for Win32 (body).
  *
  * Copyright (C) 1996-2023 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
@@ -93,6 +93,38 @@
 
 #ifdef FT_DEBUG_LEVEL_ERROR
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+
+#ifdef _WIN32_WCE
+
+  FT_LOACAL_DEF( void )
+  OutputDebugStringA( LPCSTR lpOutputString )
+  {
+    int            len;
+    LPWSTR         lpOutputStringW;
+
+
+    /* allocate memory space for converted string */
+    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                               lpOutputString, -1, NULL, 0 );
+
+    lpOutputStringW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
+
+    if ( !len || !lpOutputStringW )
+      return;
+
+    /* now it is safe to do the translation */
+    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
+                         lpOutputString, -1, lpOutputStringW, len );
+
+    OutputDebugStringW( lpOutputStringW );
+  }
+
+#endif /* _WIN32_WCE */
+
+
   /* documentation is in ftdebug.h */
 
   FT_BASE_DEF( void )
@@ -104,6 +136,17 @@
 
     va_start( ap, fmt );
     vfprintf( stderr, fmt, ap );
+#if ( defined( _WIN32_WINNT ) && _WIN32_WINNT >= 0x0400 ) || \
+    ( defined( _WIN32_WCE )   && _WIN32_WCE   >= 0x0600 )
+    if ( IsDebuggerPresent() )
+    {
+      static char  buf[1024];
+
+
+      vsnprintf( buf, sizeof buf, fmt, ap );
+      OutputDebugStringA( buf );
+    }
+#endif
     va_end( ap );
   }
 
@@ -119,6 +162,17 @@
 
     va_start( ap, fmt );
     vfprintf( stderr, fmt, ap );
+#if ( defined( _WIN32_WINNT ) && _WIN32_WINNT >= 0x0400 ) || \
+    ( defined( _WIN32_WCE )   && _WIN32_WCE   >= 0x0600 )
+    if ( IsDebuggerPresent() )
+    {
+      static char  buf[1024];
+
+
+      vsnprintf( buf, sizeof buf, fmt, ap );
+      OutputDebugStringA( buf );
+    }
+#endif
     va_end( ap );
 
     exit( EXIT_FAILURE );
