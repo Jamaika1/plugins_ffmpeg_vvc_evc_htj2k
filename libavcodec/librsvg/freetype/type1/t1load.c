@@ -1773,7 +1773,7 @@
        */
 
       FT_TRACE0(( "parse_subrs: adjusting number of subroutines"
-                  " (from %d to %ld)\n",
+                  " (from %d to %zu)\n",
                   num_subrs,
                   ( parser->root.limit - parser->root.cursor ) >> 3 ));
       num_subrs = ( parser->root.limit - parser->root.cursor ) >> 3;
@@ -1948,7 +1948,7 @@
     if ( num_glyphs > ( limit - cur ) >> 3 )
     {
       FT_TRACE0(( "parse_charstrings: adjusting number of glyphs"
-                  " (from %d to %ld)\n",
+                  " (from %d to %zu)\n",
                   num_glyphs, ( limit - cur ) >> 3 ));
       num_glyphs = ( limit - cur ) >> 3;
     }
@@ -2284,7 +2284,7 @@
                        T1_FIELD_DICT_PRIVATE )
 #endif
 
-    { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0, 0 }
+    T1_FIELD_ZERO
   };
 
 
@@ -2392,18 +2392,13 @@
           T1_Field  keyword = (T1_Field)t1_keywords;
 
 
-          for (;;)
+          while ( keyword->len )
           {
-            FT_Byte*  name;
+            FT_Byte*  name = (FT_Byte*)keyword->ident;
 
 
-            name = (FT_Byte*)keyword->ident;
-            if ( !name )
-              break;
-
-            if ( cur[0] == name[0]                      &&
-                 len == ft_strlen( (const char *)name ) &&
-                 ft_memcmp( cur, name, len ) == 0       )
+            if ( keyword->len == len              &&
+                 ft_memcmp( cur, name, len ) == 0 )
             {
               /* We found it -- run the parsing callback!     */
               /* We record every instance of every field      */
