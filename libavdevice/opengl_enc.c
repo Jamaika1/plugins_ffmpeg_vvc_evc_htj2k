@@ -30,7 +30,6 @@
 #include "libavutil/config.h"
 
 #if HAVE_WINDOWS_H
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 #if HAVE_OPENGL_GL3_H
@@ -50,6 +49,7 @@
 #endif
 
 #include "libavutil/common.h"
+#include "libavutil/frame.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
@@ -152,7 +152,7 @@ typedef struct FFOpenGLFunctions {
 {\
     GLenum err_code; \
     if ((err_code = glGetError()) != GL_NO_ERROR) { \
-        av_log(ctx, AV_LOG_ERROR, "OpenGL error occurred in '%s', line %d: %d\n", __FUNCTION__, __LINE__, err_code); \
+        av_log(ctx, AV_LOG_ERROR, "OpenGL error occurred in '%s', line %d: %d\n", __func__, __LINE__, err_code); \
         goto fail; \
     } \
 }\
