@@ -499,6 +499,24 @@
   {
     if ( **d == 30 )
       return cff_parse_real( *d, parser->limit, scaling, NULL );
+    else if ( **d == 255 )
+    {
+      FT_Fixed val = ( ( ( (FT_UInt32)*( d[0] + 1 ) << 24 ) |
+                         ( (FT_UInt32)*( d[0] + 2 ) << 16 ) |
+                         ( (FT_UInt32)*( d[0] + 3 ) <<  8 ) |
+                           (FT_UInt32)*( d[0] + 4 )         ) );
+
+      if ( scaling )
+      {
+        if ( FT_ABS( val ) > power_ten_limits[scaling] )
+        {
+           FT_TRACE4(( "!!!OVERFLOW:!!!" ));
+           return val > 0 ? 0x7FFFFFFFL : -0x7FFFFFFFL;
+        }
+        val *= power_tens[scaling];
+      }
+      return val;
+    }
     else
     {
       FT_Long  val = cff_parse_integer( *d, parser->limit );
@@ -506,7 +524,7 @@
 
       if ( scaling )
       {
-        if ( FT_ABS( val ) > power_ten_limits[scaling] )
+        if ( ( FT_ABS( val ) << 16 ) > power_ten_limits[scaling] )
         {
           val = val > 0 ? 0x7FFFFFFFL : -0x7FFFFFFFL;
           goto Overflow;
@@ -536,7 +554,7 @@
 
 
   /* read a floating point number, either integer or real */
-  static FT_Fixed
+  FT_LOCAL_DEF( FT_Fixed )
   cff_parse_fixed( CFF_Parser  parser,
                    FT_Byte**   d )
   {
@@ -1046,7 +1064,7 @@
             code | CFFCODE,               \
             FT_FIELD_OFFSET( name ),      \
             FT_FIELD_SIZE( name ),        \
-            0, 0, 0                       \
+            NULL, 0, 0                    \
           },
 
 #define CFF_FIELD_DELTA( code, name, max, id ) \
@@ -1055,7 +1073,7 @@
             code | CFFCODE,                    \
             FT_FIELD_OFFSET( name ),           \
             FT_FIELD_SIZE_DELTA( name ),       \
-            0,                                 \
+            NULL,                              \
             max,                               \
             FT_FIELD_OFFSET( num_ ## name )    \
           },
@@ -1065,7 +1083,7 @@
 
 #include "cfftoken.h"
 
-    { 0, 0, 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0, NULL, 0, 0 }
   };
 
 
@@ -1099,7 +1117,7 @@
             code | CFFCODE,               \
             FT_FIELD_OFFSET( name ),      \
             FT_FIELD_SIZE( name ),        \
-            0, 0, 0,                      \
+            NULL, 0, 0,                   \
             id                            \
           },
 
@@ -1109,7 +1127,7 @@
             code | CFFCODE,                    \
             FT_FIELD_OFFSET( name ),           \
             FT_FIELD_SIZE_DELTA( name ),       \
-            0,                                 \
+            NULL,                              \
             max,                               \
             FT_FIELD_OFFSET( num_ ## name ),   \
             id                                 \
@@ -1120,7 +1138,7 @@
 
 #include "cfftoken.h"
 
-    { 0, 0, 0, 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0, NULL, 0, 0, NULL }
   };
 
 
