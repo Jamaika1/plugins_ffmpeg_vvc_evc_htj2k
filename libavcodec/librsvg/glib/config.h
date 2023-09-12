@@ -70,7 +70,7 @@
 /* Define the gettext package to be used */
 #define GETTEXT_PACKAGE "glib20"
 /* Define to the GLIB binary age */
-#define GLIB_BINARY_AGE 7800
+#define GLIB_BINARY_AGE 7701
 /* Byte contents of gmutex */
 /* #undef GLIB_BYTE_CONTENTS_GMUTEX */
 /* Define to the GLIB interface age */
@@ -292,11 +292,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.78.0"
+#define PACKAGE_STRING "glib 2.78.0-8af4f49"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.78.0"
+#define PACKAGE_VERSION "2.78.0-8af4f49"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */

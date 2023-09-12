@@ -2411,8 +2411,8 @@ g_strchomp (gchar *string)
  * to represent empty elements, you'll need to check for the empty string
  * before calling g_strsplit().
  *
- * Returns: a newly-allocated %NULL-terminated array of strings. Use
- *    g_strfreev() to free it.
+ * Returns: (transfer full): a newly-allocated %NULL-terminated array of
+ *    strings. Use g_strfreev() to free it.
  */
 gchar**
 g_strsplit (const gchar *string,
@@ -2492,8 +2492,8 @@ g_strsplit (const gchar *string,
  * Note that this function works on bytes not characters, so it can't be used
  * to delimit UTF-8 strings for anything but ASCII characters.
  *
- * Returns: a newly-allocated %NULL-terminated array of strings. Use
- *    g_strfreev() to free it.
+ * Returns: (transfer full): a newly-allocated %NULL-terminated array of
+ *    strings. Use g_strfreev() to free it.
  *
  * Since: 2.4
  **/
@@ -2768,7 +2768,7 @@ g_strjoin (const gchar *separator,
  *
  * Searches the string @haystack for the first occurrence
  * of the string @needle, limiting the length of the search
- * to @haystack_len.
+ * to @haystack_len or a nul terminator byte (whichever is reached first).
  *
  * Returns: a pointer to the found occurrence, or
  *    %NULL if not found.
