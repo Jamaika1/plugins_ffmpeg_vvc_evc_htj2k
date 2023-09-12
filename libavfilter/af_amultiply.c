@@ -89,7 +89,6 @@ static int activate(AVFilterContext *ctx)
                                      plane_samples);
             }
         }
-        emms_c();
 
         av_frame_free(&s->frames[0]);
         av_frame_free(&s->frames[1]);

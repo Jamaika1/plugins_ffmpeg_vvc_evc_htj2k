@@ -53,6 +53,7 @@
 #include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 #include "libavutil/common.h"
+#include "libavutil/emms.h"
 #include "libavutil/file_open.h"
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
