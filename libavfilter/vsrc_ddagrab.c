@@ -22,7 +22,6 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0A00
 #endif
-#define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 
@@ -1076,8 +1075,7 @@ static int ddagrab_request_frame(AVFilterLink *outlink)
         goto fail;
     }
 
-    av_frame_unref(dda->last_frame);
-    ret = av_frame_ref(dda->last_frame, frame);
+    ret = av_frame_replace(dda->last_frame, frame);
     if (ret < 0)
         return ret;
 
