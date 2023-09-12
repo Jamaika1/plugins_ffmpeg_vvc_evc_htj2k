@@ -21,7 +21,8 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
-#include "dirac_dwt.h"
+#include "libavutil/log.h"
+#include "libavcodec/dirac_dwt.h"
 
 #define TEMPLATE_8bit
 #include "extra/dirac_dwt_template.c"

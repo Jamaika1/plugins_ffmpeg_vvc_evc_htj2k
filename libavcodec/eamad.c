@@ -30,17 +30,17 @@
 
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "bytestream.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "aandcttab.h"
-#include "eaidct.h"
-#include "mpeg12data.h"
-#include "mpeg12vlc.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/aandcttab.h"
+#include "libavcodec/eaidct.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/mpeg12vlc.h"
 
 #define EA_PREAMBLE_SIZE    8
 #define MADk_TAG MKTAG('M', 'A', 'D', 'k')    /* MAD I-frame */
@@ -317,8 +317,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
     *got_frame = 1;
 
     if (chunk_type != MADe_TAG) {
-        av_frame_unref(s->last_frame);
-        if ((ret = av_frame_ref(s->last_frame, frame)) < 0)
+        if ((ret = av_frame_replace(s->last_frame, frame)) < 0)
             return ret;
     }
 

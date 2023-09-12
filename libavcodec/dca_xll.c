@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 #include "libavutil/channel_layout.h"
-#include "dcadec.h"
-#include "dcadata.h"
-#include "dcamath.h"
-#include "dca_syncwords.h"
-#include "decode.h"
-#include "unary.h"
+#include "libavcodec/dcadec.h"
+#include "libavcodec/dcadata.h"
+#include "libavcodec/dcamath.h"
+#include "libavcodec/dca_syncwords.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/unary.h"
 
 static int get_linear(GetBitContext *gb, int n)
 {
@@ -1446,11 +1446,11 @@ int ff_dca_xll_filter_frame(DCAXllDecoder *s, AVFrame *frame)
     }
 
     if (s->x_imax_syncword_present) {
-        avctx->profile = FF_PROFILE_DTS_HD_MA_X_IMAX;
+        avctx->profile = AV_PROFILE_DTS_HD_MA_X_IMAX;
     } else if (s->x_syncword_present) {
-        avctx->profile = FF_PROFILE_DTS_HD_MA_X;
+        avctx->profile = AV_PROFILE_DTS_HD_MA_X;
     } else {
-        avctx->profile = FF_PROFILE_DTS_HD_MA;
+        avctx->profile = AV_PROFILE_DTS_HD_MA;
     }
 
     avctx->bits_per_raw_sample = p->storage_bit_res;

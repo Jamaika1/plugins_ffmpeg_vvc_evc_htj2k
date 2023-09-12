@@ -19,14 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "bytestream.h"
-#include "lossless_videoencdsp.h"
-#include "png.h"
-#include "apng.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/lossless_videoencdsp.h"
+#include "libavcodec/png.h"
+#include "libavcodec/apng.h"
+#include "libavcodec/zlib_wrapper.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/crc.h"
@@ -1059,8 +1059,7 @@ static int encode_apng(AVCodecContext *avctx, AVPacket *pkt,
             }
         }
 
-        av_frame_unref(s->last_frame);
-        ret = av_frame_ref(s->last_frame, pict);
+        ret = av_frame_replace(s->last_frame, pict);
         if (ret < 0)
             return ret;
 
