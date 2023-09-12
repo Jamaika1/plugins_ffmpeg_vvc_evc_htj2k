@@ -482,6 +482,7 @@ static const FFCodec * const codec_list[] = {
 &ff_on2avc_decoder,
 &ff_opus_encoder,
 &ff_opus_decoder,
+&ff_osq_decoder,
 &ff_paf_audio_decoder,
 &ff_qcelp_decoder,
 &ff_qdm2_decoder,
