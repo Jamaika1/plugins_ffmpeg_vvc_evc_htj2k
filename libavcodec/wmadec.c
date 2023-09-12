@@ -33,16 +33,16 @@
  * should be 4 extra bytes for v1 data and 6 extra bytes for v2 data.
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/ffmath.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "internal.h"
-#include "wma.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/wma.h"
 
 #define EXPVLCBITS 8
 #define EXPMAX     ((19 + EXPVLCBITS - 1) / EXPVLCBITS)
@@ -119,7 +119,7 @@ static av_cold int wma_decode_init(AVCodecContext *avctx)
     }
 
     if (s->use_noise_coding) {
-        ret = ff_init_vlc_from_lengths(&s->hgain_vlc, HGAINVLCBITS,
+        ret = ff_vlc_init_from_lengths(&s->hgain_vlc, HGAINVLCBITS,
                                        FF_ARRAY_ELEMS(ff_wma_hgain_hufftab),
                                        &ff_wma_hgain_hufftab[0][1], 2,
                                        &ff_wma_hgain_hufftab[0][0], 2, 1,
@@ -130,7 +130,7 @@ static av_cold int wma_decode_init(AVCodecContext *avctx)
 
     if (s->use_exp_vlc) {
         // FIXME move out of context
-        ret = init_vlc(&s->exp_vlc, EXPVLCBITS, sizeof(ff_aac_scalefactor_bits),
+        ret = vlc_init(&s->exp_vlc, EXPVLCBITS, sizeof(ff_aac_scalefactor_bits),
                        ff_aac_scalefactor_bits, 1, 1,
                        ff_aac_scalefactor_code, 4, 4, 0);
         if (ret < 0)

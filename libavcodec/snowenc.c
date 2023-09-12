@@ -18,25 +18,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/emms.h"
 #include "libavutil/intmath.h"
 #include "libavutil/libm.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h" //For AVCodecInternal.recon_frame
-#include "me_cmp.h"
-#include "packet_internal.h"
-#include "snow_dwt.h"
-#include "snow.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h" //For AVCodecInternal.recon_frame
+#include "libavcodec/me_cmp.h"
+#include "libavcodec/packet_internal.h"
+#include "libavcodec/snow_dwt.h"
+#include "libavcodec/snow.h"
 
-#include "rangecoder.h"
-#include "mathops.h"
+#include "libavcodec/rangecoder.h"
+#include "libavcodec/mathops.h"
 
-#include "mpegvideo.h"
-#include "h263enc.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/h263enc.h"
 
 static av_cold int encode_init(AVCodecContext *avctx)
 {
@@ -1886,8 +1887,7 @@ redo_frame:
                                    (s->avctx->flags&AV_CODEC_FLAG_PSNR) ? SNOW_MAX_PLANES : 0,
                                    s->current_picture->pict_type);
     if (s->avctx->flags & AV_CODEC_FLAG_RECON_FRAME) {
-        av_frame_unref(avci->recon_frame);
-        av_frame_ref(avci->recon_frame, s->current_picture);
+        av_frame_replace(avci->recon_frame, s->current_picture);
     }
 
     pkt->size = ff_rac_terminate(c, 0);

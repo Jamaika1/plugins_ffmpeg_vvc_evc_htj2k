@@ -29,11 +29,11 @@
 #include "libavutil/thread.h"
 #include "libavutil/tx.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
 typedef struct QDMCTone {
     uint8_t mode;
@@ -172,9 +172,9 @@ static av_cold void qdmc_init_static_data(void)
         static VLCElem vlc_buffer[13698];
         vtable[i].table           = &vlc_buffer[offset];
         vtable[i].table_allocated = FF_ARRAY_ELEMS(vlc_buffer) - offset;
-        ff_init_vlc_from_lengths(&vtable[i], huff_bits[i], huff_sizes[i],
+        ff_vlc_init_from_lengths(&vtable[i], huff_bits[i], huff_sizes[i],
                                  &hufftab[0][1], 2, &hufftab[0][0], 2, 1, -1,
-                                 INIT_VLC_LE | INIT_VLC_STATIC_OVERLONG, NULL);
+                                 VLC_INIT_LE | VLC_INIT_STATIC_OVERLONG, NULL);
         hufftab += huff_sizes[i];
         offset  += vtable[i].table_size;
     }

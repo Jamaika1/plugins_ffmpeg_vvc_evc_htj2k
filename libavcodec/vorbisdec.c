@@ -34,15 +34,15 @@
 #include "libavutil/tx.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "internal.h"
-#include "vorbis.h"
-#include "vorbisdsp.h"
-#include "vorbis_data.h"
-#include "xiph.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/vorbis.h"
+#include "libavcodec/vorbisdsp.h"
+#include "libavcodec/vorbis_data.h"
+#include "libavcodec/xiph.h"
 
 #define V_NB_BITS 8
 #define V_NB_BITS2 11
@@ -210,7 +210,7 @@ static void vorbis_free(vorbis_context *vc)
     if (vc->codebooks)
         for (i = 0; i < vc->codebook_count; ++i) {
             av_freep(&vc->codebooks[i].codevectors);
-            ff_free_vlc(&vc->codebooks[i].vlc);
+            ff_vlc_free(&vc->codebooks[i].vlc);
         }
     av_freep(&vc->codebooks);
 
@@ -454,11 +454,11 @@ static int vorbis_parse_setup_hdr_codebooks(vorbis_context *vc)
 
         codebook_setup->maxdepth = (codebook_setup->maxdepth+codebook_setup->nb_bits - 1) / codebook_setup->nb_bits;
 
-        if ((ret = init_vlc(&codebook_setup->vlc, codebook_setup->nb_bits,
+        if ((ret = vlc_init(&codebook_setup->vlc, codebook_setup->nb_bits,
                             entries, tmp_vlc_bits, sizeof(*tmp_vlc_bits),
                             sizeof(*tmp_vlc_bits), tmp_vlc_codes,
                             sizeof(*tmp_vlc_codes), sizeof(*tmp_vlc_codes),
-                            INIT_VLC_LE))) {
+                            VLC_INIT_LE))) {
             av_log(vc->avctx, AV_LOG_ERROR, " Error generating vlc tables. \n");
             goto error;
         }

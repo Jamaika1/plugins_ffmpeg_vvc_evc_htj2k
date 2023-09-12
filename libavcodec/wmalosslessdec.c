@@ -28,13 +28,13 @@
 #include "libavutil/avassert.h"
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "put_bits.h"
-#include "lossless_audiodsp.h"
-#include "wma_common.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/lossless_audiodsp.h"
+#include "libavcodec/wma_common.h"
 
 /** current decoder limitations */
 #define WMALL_MAX_CHANNELS      8                       ///< max number of handled channels
@@ -1334,7 +1334,11 @@ const FFCodec ff_wmalossless_decoder = {
     .close          = decode_close,
     FF_CODEC_DECODE_CB(decode_packet),
     .flush          = flush,
-    .p.capabilities = AV_CODEC_CAP_SUBFRAMES | AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY,
+    .p.capabilities =
+#if FF_API_SUBFRAMES
+                      AV_CODEC_CAP_SUBFRAMES |
+#endif
+                      AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY,
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
     .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
                                                       AV_SAMPLE_FMT_S32P,

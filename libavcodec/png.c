@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 #include "libavutil/mem.h"
-#include "png.h"
+#include "libavcodec/png.h"
 
 /* Mask to determine which y pixels are valid in a pass */
 const uint8_t ff_png_pass_ymask[NB_PASSES] = {

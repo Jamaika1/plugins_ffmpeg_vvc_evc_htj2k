@@ -24,10 +24,10 @@
  * QPEG codec.
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 typedef struct QpegContext{
     AVCodecContext *avctx;
@@ -297,11 +297,17 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *p,
     }
 
     /* make the palette available on the way out */
-    p->palette_has_changed = ff_copy_palette(a->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
+    p->palette_has_changed =
+#endif
+    ff_copy_palette(a->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     memcpy(p->data[1], a->pal, AVPALETTE_SIZE);
 
-    av_frame_unref(ref);
-    if ((ret = av_frame_ref(ref, p)) < 0)
+    if ((ret = av_frame_replace(ref, p)) < 0)
         return ret;
 
     if (intra)
