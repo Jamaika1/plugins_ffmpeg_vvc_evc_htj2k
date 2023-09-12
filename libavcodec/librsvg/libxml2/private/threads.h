@@ -5,7 +5,8 @@
 
 #ifdef LIBXML_THREAD_ENABLED
   #ifdef HAVE_PTHREAD_H
-    #include <pthread.h>
+    //#include <pthread.h>
+    #include "../../../libpthread_win32/pthread.h"
     #define HAVE_POSIX_THREADS
   #elif defined(_WIN32)
     #define WIN32_LEAN_AND_MEAN
