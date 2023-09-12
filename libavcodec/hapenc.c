@@ -37,12 +37,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "hap.h"
-#include "texturedsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/hap.h"
+#include "libavcodec/texturedsp.h"
 
 #define HAP_MAX_CHUNKS 64
 

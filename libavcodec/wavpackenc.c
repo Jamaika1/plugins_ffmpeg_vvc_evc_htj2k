@@ -23,13 +23,14 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "put_bits.h"
-#include "bytestream.h"
-#include "wavpackenc.h"
-#include "wavpack.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/wavpackenc.h"
+#include "libavcodec/wavpack.h"
+
 
 #define UPDATE_WEIGHT(weight, delta, source, result) \
     if ((source) && (result)) { \
@@ -2592,7 +2593,16 @@ static int wavpack_encode_block(WavPackEncodeContext *s,
         s->avctx->ch_layout.u.mask != AV_CH_LAYOUT_STEREO) {
         put_metadata_block(&pb, WP_ID_CHANINFO, 5);
         bytestream2_put_byte(&pb, s->avctx->ch_layout.nb_channels);
-        bytestream2_put_le32(&pb, s->avctx->ch_layout.u.mask);
+        if (s->avctx->ch_layout.u.mask >> 32)
+            bytestream2_put_le32(&pb, 0);
+        else
+            bytestream2_put_le32(&pb, s->avctx->ch_layout.u.mask);
+        bytestream2_put_byte(&pb, 0);
+    } else if (s->flags & WV_INITIAL_BLOCK &&
+               s->avctx->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC) {
+        put_metadata_block(&pb, WP_ID_CHANINFO, 5);
+        bytestream2_put_byte(&pb, s->avctx->ch_layout.nb_channels);
+        bytestream2_put_le32(&pb, 0);
         bytestream2_put_byte(&pb, 0);
     }
 
@@ -2824,7 +2834,7 @@ static void fill_buffer(WavPackEncodeContext *s,
 
     switch (s->avctx->sample_fmt) {
     case AV_SAMPLE_FMT_U8P:
-        COPY_SAMPLES(int8_t, 0x80, 0);
+        COPY_SAMPLES(uint8_t, 0x80, 0);
         break;
     case AV_SAMPLE_FMT_S16P:
         COPY_SAMPLES(int16_t, 0, 0);

@@ -18,8 +18,9 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "faanidct.h"
+#include "libavcodec/faanidct.h"
 #include "libavutil/common.h"
+#include "libavutil/emms.h"
 
 /* To allow switching to double. */
 typedef float FLOAT;

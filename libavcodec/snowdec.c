@@ -18,16 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/emms.h"
 #include "libavutil/intmath.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "snow_dwt.h"
-#include "snow.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/snow_dwt.h"
+#include "libavcodec/snow.h"
 
-#include "rangecoder.h"
-#include "mathops.h"
+#include "libavcodec/rangecoder.h"
+#include "libavcodec/mathops.h"
 
 static av_always_inline void predict_slice_buffered(SnowContext *s, slice_buffer * sb, IDWTELEM * old_buffer, int plane_index, int add, int mb_y){
     Plane *p= &s->plane[plane_index];

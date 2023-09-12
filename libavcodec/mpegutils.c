@@ -21,13 +21,14 @@
 #include <stdint.h>
 
 #include "libavutil/common.h"
+#include "libavutil/emms.h"
 #include "libavutil/frame.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/motion_vector.h"
 #include "libavutil/avassert.h"
 
-#include "avcodec.h"
-#include "mpegutils.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/mpegutils.h"
 
 static int add_mb(AVMotionVector *mb, uint32_t mb_type,
                   int dst_x, int dst_y,
