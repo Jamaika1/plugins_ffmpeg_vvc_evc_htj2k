@@ -21,13 +21,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <string.h>
+
 #include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
+#include "libavutil/error.h"
 #include "libavutil/mem.h"
 
-#include "libavformat/avformat.h"
 #include "libavformat/avio_internal.h"
 #include "libavformat/url.h"
 

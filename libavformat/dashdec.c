@@ -20,6 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "../libavcodec/librsvg/libxml2/parser.h"
+#include <time.h>
 #include "libavutil/bprint.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
@@ -28,6 +29,7 @@
 #include "libavformat/avio_internal.h"
 #include "libavformat/dash.h"
 #include "libavformat/demux.h"
+#include "libavformat/url.h"
 
 #define INITIAL_BUFFER_SIZE 32768
 
