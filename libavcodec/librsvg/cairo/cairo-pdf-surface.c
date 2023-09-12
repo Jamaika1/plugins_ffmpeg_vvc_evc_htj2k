@@ -2534,6 +2534,7 @@ _cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t       *surface,
 	    _cairo_pdf_surface_open_stream (surface,
 					    resource,
 					    surface->compress_streams,
+					    "%s",
 					    str);
 	free (str);
 	free (data);

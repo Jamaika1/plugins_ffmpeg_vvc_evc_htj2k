@@ -252,7 +252,6 @@ cairo_font_options_status (cairo_font_options_t *options)
     else
 	return CAIRO_STATUS_SUCCESS;
 }
-slim_hidden_def (cairo_font_options_status);
 
 /**
  * cairo_font_options_merge:
@@ -318,7 +317,6 @@ cairo_font_options_merge (cairo_font_options_t       *options,
         memcpy (options->custom_palette, other->custom_palette, sizeof (cairo_palette_color_t) * options->custom_palette_size);
     }
 }
-slim_hidden_def (cairo_font_options_merge);
 
 /**
  * cairo_font_options_equal:
@@ -362,7 +360,6 @@ cairo_font_options_equal (const cairo_font_options_t *options,
               memcmp (options->custom_palette, other->custom_palette,
                       sizeof (cairo_palette_color_t) * options->custom_palette_size) == 0)));
 }
-slim_hidden_def (cairo_font_options_equal);
 
 /**
  * cairo_font_options_hash:
@@ -398,7 +395,6 @@ cairo_font_options_hash (const cairo_font_options_t *options)
 	    (options->hint_metrics << 16) |
             (options->color_mode << 20)) ^ hash;
 }
-slim_hidden_def (cairo_font_options_hash);
 
 /**
  * cairo_font_options_set_antialias:
@@ -419,7 +415,6 @@ cairo_font_options_set_antialias (cairo_font_options_t *options,
 
     options->antialias = antialias;
 }
-slim_hidden_def (cairo_font_options_set_antialias);
 
 /**
  * cairo_font_options_get_antialias:
@@ -462,7 +457,6 @@ cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 
     options->subpixel_order = subpixel_order;
 }
-slim_hidden_def (cairo_font_options_set_subpixel_order);
 
 /**
  * cairo_font_options_get_subpixel_order:
@@ -578,7 +572,6 @@ cairo_font_options_set_hint_style (cairo_font_options_t *options,
 
     options->hint_style = hint_style;
 }
-slim_hidden_def (cairo_font_options_set_hint_style);
 
 /**
  * cairo_font_options_get_hint_style:
@@ -621,7 +614,6 @@ cairo_font_options_set_hint_metrics (cairo_font_options_t *options,
 
     options->hint_metrics = hint_metrics;
 }
-slim_hidden_def (cairo_font_options_set_hint_metrics);
 
 /**
  * cairo_font_options_get_hint_metrics:
@@ -877,4 +869,3 @@ cairo_font_options_get_custom_palette_color (cairo_font_options_t *options,
 
     return CAIRO_STATUS_INVALID_INDEX;
 }
-slim_hidden_def (cairo_font_options_get_custom_palette_color);

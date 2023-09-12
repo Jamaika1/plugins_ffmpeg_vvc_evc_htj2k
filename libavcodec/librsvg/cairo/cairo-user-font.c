@@ -734,7 +734,6 @@ cairo_user_font_face_create (void)
 
     return &font_face->base;
 }
-slim_hidden_def(cairo_user_font_face_create);
 
 /* User-font method setters */
 
@@ -775,7 +774,6 @@ cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_fac
     }
     user_font_face->scaled_font_methods.init = init_func;
 }
-slim_hidden_def(cairo_user_font_face_set_init_func);
 
 /**
  * cairo_user_font_face_set_render_color_glyph_func:
@@ -826,7 +824,6 @@ cairo_user_font_face_set_render_color_glyph_func (cairo_font_face_t             
     user_font_face->scaled_font_methods.render_color_glyph = render_glyph_func;
     user_font_face->has_color = render_glyph_func ? TRUE : FALSE;
 }
-slim_hidden_def(cairo_user_font_face_set_render_color_glyph_func);
 
 /**
  * cairo_user_font_face_set_render_glyph_func:
@@ -876,7 +873,6 @@ cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                   
     }
     user_font_face->scaled_font_methods.render_glyph = render_glyph_func;
 }
-slim_hidden_def(cairo_user_font_face_set_render_glyph_func);
 
 /**
  * cairo_user_font_face_set_text_to_glyphs_func:
@@ -950,7 +946,6 @@ cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t               
     }
     user_font_face->scaled_font_methods.unicode_to_glyph = unicode_to_glyph_func;
 }
-slim_hidden_def(cairo_user_font_face_set_unicode_to_glyph_func);
 
 /* User-font method getters */
 

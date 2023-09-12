@@ -50,13 +50,24 @@
 # define CAIRO_END_DECLS
 #endif
 
-#ifndef cairo_public
-# if defined (_MSC_VER) && ! defined (CAIRO_WIN32_STATIC_BUILD)
-#  define cairo_public __declspec(dllimport)
-# else
-#  define cairo_public
-# endif
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(CAIRO_WIN32_STATIC_BUILD)
+# define _cairo_export __declspec(dllexport)
+# define _cairo_import __declspec(dllimport)
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+# define _cairo_export __attribute__((__visibility__("default")))
+# define _cairo_import
+#else
+# define _cairo_export
+# define _cairo_import
 #endif
+
+#ifdef CAIRO_COMPILATION
+# define _cairo_api _cairo_export
+#else
+# define _cairo_api _cairo_import
+#endif
+
+#define cairo_public _cairo_api extern
 
 CAIRO_BEGIN_DECLS
 
@@ -72,7 +83,7 @@ CAIRO_BEGIN_DECLS
 
 
 #define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
-	#major"."#minor"."#micro"-0560aa5"
+	#major"."#minor"."#micro"-7a06f65"
 #define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
 	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
 

@@ -183,8 +183,6 @@ typedef struct _cairo_recording_region_array {
     cairo_list_t link;
 } cairo_recording_regions_array_t;
 
-slim_hidden_proto (cairo_recording_surface_create);
-
 cairo_private cairo_int_status_t
 _cairo_recording_surface_get_path (cairo_surface_t	 *surface,
 				   cairo_path_fixed_t *path);
