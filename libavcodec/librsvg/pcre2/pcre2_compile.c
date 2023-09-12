@@ -9407,14 +9407,19 @@ for (;; pptr++)
     pptr += 3 + SIZEOFFSET;
     break;
 
-    /* Only some escapes consume a character. Of those, \R and \X are never
-    allowed because they might match more than character. \C is allowed only in
-    32-bit and non-UTF 8/16-bit modes. */
+    /* Only some escapes consume a character. Of those, \R can match one or two
+    characters, but \X is never allowed because it matches an unknown number of
+    characters. \C is allowed only in 32-bit and non-UTF 8/16-bit modes. */
 
     case META_ESCAPE:
     escape = META_DATA(*pptr);
-    if (escape == ESC_R || escape == ESC_X) return -1;
-    if (escape > ESC_b && escape < ESC_Z)
+    if (escape == ESC_X) return -1;
+    if (escape == ESC_R)
+      {
+      itemminlength = 1;
+      itemlength = 2;
+      }
+    else if (escape > ESC_b && escape < ESC_Z)
       {
 #if PCRE2_CODE_UNIT_WIDTH != 32
       if ((cb->external_options & PCRE2_UTF) != 0 && escape == ESC_C)
@@ -9653,8 +9658,8 @@ for (;; pptr++)
     if (max != REPEAT_UNLIMITED)
       {
       if (lastitemlength != 0 &&  /* Should not occur, but just in case */
-          min != 0 &&
-          INT_MAX/lastitemlength < max - 1)
+          max != 0 &&
+          (INT_MAX - branchlength)/lastitemlength < max - 1)
         {
         *errcodeptr = ERR87;  /* Integer overflow; lookbehind too big */
         return -1;
