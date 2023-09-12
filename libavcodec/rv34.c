@@ -30,23 +30,23 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "decode.h"
-#include "error_resilience.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodec.h"
-#include "golomb.h"
-#include "mathops.h"
-#include "mpeg_er.h"
-#include "qpeldsp.h"
-#include "rectangle.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/rectangle.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
 
-#include "rv34vlc.h"
-#include "rv34data.h"
-#include "rv34.h"
+#include "libavcodec/rv34vlc.h"
+#include "libavcodec/rv34data.h"
+#include "libavcodec/rv34.h"
 
 static inline void ZERO8x2(void* dst, int stride)
 {
@@ -113,10 +113,10 @@ static void rv34_gen_vlc(const uint8_t *bits, int size, VLC *vlc, const uint8_t 
 
     vlc->table           = &table_data[*offset];
     vlc->table_allocated = FF_ARRAY_ELEMS(table_data) - *offset;
-    ff_init_vlc_sparse(vlc, FFMIN(maxbits, 9), size,
+    ff_vlc_init_sparse(vlc, FFMIN(maxbits, 9), size,
                        bits, 1, 1,
                        cw,    2, 2,
-                       syms, !!syms, !!syms, INIT_VLC_STATIC_OVERLONG);
+                       syms, !!syms, !!syms, VLC_INIT_STATIC_OVERLONG);
     *offset += vlc->table_size;
 }
 

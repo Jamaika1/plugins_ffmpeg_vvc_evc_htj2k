@@ -30,28 +30,29 @@
  * Theora decoder by Alex Beregszaszi
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <stddef.h>
 #include <string.h>
 
+#include "libavutil/emms.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "hpeldsp.h"
-#include "jpegquanttables.h"
-#include "mathops.h"
-#include "thread.h"
-#include "threadframe.h"
-#include "videodsp.h"
-#include "vp3data.h"
-#include "vp4data.h"
-#include "vp3dsp.h"
-#include "xiph.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/hpeldsp.h"
+#include "libavcodec/jpegquanttables.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
+#include "libavcodec/videodsp.h"
+#include "libavcodec/vp3data.h"
+#include "libavcodec/vp4data.h"
+#include "libavcodec/vp3dsp.h"
+#include "libavcodec/xiph.h"
 
 #define VP3_MV_VLC_BITS     6
 #define VP4_MV_VLC_BITS     6
@@ -360,19 +361,19 @@ static av_cold int vp3_decode_end(AVCodecContext *avctx)
     av_frame_free(&s->golden_frame.f);
 
     for (i = 0; i < FF_ARRAY_ELEMS(s->coeff_vlc); i++)
-        ff_free_vlc(&s->coeff_vlc[i]);
+        ff_vlc_free(&s->coeff_vlc[i]);
 
-    ff_free_vlc(&s->superblock_run_length_vlc);
-    ff_free_vlc(&s->fragment_run_length_vlc);
-    ff_free_vlc(&s->mode_code_vlc);
-    ff_free_vlc(&s->motion_vector_vlc);
+    ff_vlc_free(&s->superblock_run_length_vlc);
+    ff_vlc_free(&s->fragment_run_length_vlc);
+    ff_vlc_free(&s->mode_code_vlc);
+    ff_vlc_free(&s->motion_vector_vlc);
 
     for (j = 0; j < 2; j++)
         for (i = 0; i < 7; i++)
-            ff_free_vlc(&s->vp4_mv_vlc[j][i]);
+            ff_vlc_free(&s->vp4_mv_vlc[j][i]);
 
     for (i = 0; i < 2; i++)
-        ff_free_vlc(&s->block_pattern_vlc[i]);
+        ff_vlc_free(&s->block_pattern_vlc[i]);
     return 0;
 }
 
@@ -2438,7 +2439,7 @@ static av_cold int vp3_decode_init(AVCodecContext *avctx)
         /* init VLC tables */
         bias_tabs = CONFIG_VP4_DECODER && s->version >= 2 ? vp4_bias : vp3_bias;
         for (int i = 0; i < FF_ARRAY_ELEMS(s->coeff_vlc); i++) {
-            ret = ff_init_vlc_from_lengths(&s->coeff_vlc[i], 11, 32,
+            ret = ff_vlc_init_from_lengths(&s->coeff_vlc[i], 11, 32,
                                            &bias_tabs[i][0][1], 2,
                                            &bias_tabs[i][0][0], 2, 1,
                                            0, 0, avctx);
@@ -2449,7 +2450,7 @@ static av_cold int vp3_decode_init(AVCodecContext *avctx)
         for (i = 0; i < FF_ARRAY_ELEMS(s->coeff_vlc); i++) {
             const HuffTable *tab = &s->huffman_table[i];
 
-            ret = ff_init_vlc_from_lengths(&s->coeff_vlc[i], 11, tab->nb_entries,
+            ret = ff_vlc_init_from_lengths(&s->coeff_vlc[i], 11, tab->nb_entries,
                                            &tab->entries[0].len, sizeof(*tab->entries),
                                            &tab->entries[0].sym, sizeof(*tab->entries), 1,
                                            0, 0, avctx);
@@ -2458,25 +2459,25 @@ static av_cold int vp3_decode_init(AVCodecContext *avctx)
         }
     }
 
-    ret = ff_init_vlc_from_lengths(&s->superblock_run_length_vlc, SUPERBLOCK_VLC_BITS, 34,
+    ret = ff_vlc_init_from_lengths(&s->superblock_run_length_vlc, SUPERBLOCK_VLC_BITS, 34,
                                    superblock_run_length_vlc_lens, 1,
                                    NULL, 0, 0, 1, 0, avctx);
     if (ret < 0)
         return ret;
 
-    ret = ff_init_vlc_from_lengths(&s->fragment_run_length_vlc, 5, 30,
+    ret = ff_vlc_init_from_lengths(&s->fragment_run_length_vlc, 5, 30,
                                    fragment_run_length_vlc_len, 1,
                                    NULL, 0, 0, 0, 0, avctx);
     if (ret < 0)
         return ret;
 
-    ret = ff_init_vlc_from_lengths(&s->mode_code_vlc, 3, 8,
+    ret = ff_vlc_init_from_lengths(&s->mode_code_vlc, 3, 8,
                                    mode_code_vlc_len, 1,
                                    NULL, 0, 0, 0, 0, avctx);
     if (ret < 0)
         return ret;
 
-    ret = ff_init_vlc_from_lengths(&s->motion_vector_vlc, VP3_MV_VLC_BITS, 63,
+    ret = ff_vlc_init_from_lengths(&s->motion_vector_vlc, VP3_MV_VLC_BITS, 63,
                                    &motion_vector_vlc_table[0][1], 2,
                                    &motion_vector_vlc_table[0][0], 2, 1,
                                    -31, 0, avctx);
@@ -2486,7 +2487,7 @@ static av_cold int vp3_decode_init(AVCodecContext *avctx)
 #if CONFIG_VP4_DECODER
     for (j = 0; j < 2; j++)
         for (i = 0; i < 7; i++) {
-            ret = ff_init_vlc_from_lengths(&s->vp4_mv_vlc[j][i], VP4_MV_VLC_BITS, 63,
+            ret = ff_vlc_init_from_lengths(&s->vp4_mv_vlc[j][i], VP4_MV_VLC_BITS, 63,
                                            &vp4_mv_vlc[j][i][0][1], 2,
                                            &vp4_mv_vlc[j][i][0][0], 2, 1, -31,
                                            0, avctx);
@@ -2496,7 +2497,7 @@ static av_cold int vp3_decode_init(AVCodecContext *avctx)
 
     /* version >= 2 */
     for (i = 0; i < 2; i++)
-        if ((ret = init_vlc(&s->block_pattern_vlc[i], 3, 14,
+        if ((ret = vlc_init(&s->block_pattern_vlc[i], 3, 14,
                             &vp4_block_pattern_vlc[i][0][1], 2, 1,
                             &vp4_block_pattern_vlc[i][0][0], 2, 1, 0)) < 0)
             return ret;

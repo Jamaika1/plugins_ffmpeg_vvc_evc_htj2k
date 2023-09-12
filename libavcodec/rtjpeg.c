@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "libavutil/common.h"
-#include "get_bits.h"
-#include "rtjpeg.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/rtjpeg.h"
 
 #define PUT_COEFF(c) \
     i = scan[coeff--]; \
@@ -167,7 +167,7 @@ void ff_rtjpeg_decode_init(RTJpegContext *c, int width, int height,
     c->h = height;
 }
 
-void ff_rtjpeg_init(RTJpegContext *c, AVCodecContext *avctx)
+void ff_rtjpeg_init(RTJpegContext *c, struct AVCodecContext *avctx)
 {
     int i;
 

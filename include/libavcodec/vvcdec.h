@@ -30,7 +30,7 @@
 #include "threadframe.h"
 #include "videodsp.h"
 #include "vvc.h"
-#include "executor.h"
+#include "libavutil/executor.h"
 
 #include "vvc_ps.h"
 #include "vvcdsp.h"

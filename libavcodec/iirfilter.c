@@ -26,10 +26,14 @@
 
 #include <math.h>
 
+#include "libavutil/config.h"
+
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
+#include "libavutil/log.h"
+#include "libavutil/mem.h"
 
-#include "iirfilter.h"
+#include "libavcodec/iirfilter.h"
 
 /**
  * IIR filter global parameters

@@ -26,6 +26,7 @@
  */
 
 #include "libavutil/avassert.h"
+#include "libavutil/emms.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/get_bits.h"
 #include "libavcodec/golomb.h"

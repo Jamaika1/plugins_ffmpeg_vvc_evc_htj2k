@@ -28,15 +28,15 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/lfg.h"
 #include "libavutil/thread.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "mpegaudiodsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/mpegaudiodsp.h"
 
-#include "mpc.h"
-#include "mpc8data.h"
-#include "mpc8huff.h"
+#include "libavcodec/mpc.h"
+#include "libavcodec/mpc8data.h"
+#include "libavcodec/mpc8huff.h"
 
 static VLC band_vlc, scfi_vlc[2], dscf_vlc[2], res_vlc[2];
 static VLC q1_vlc, q2_vlc[2], q3_vlc[2], quant_vlc[4][2], q9up_vlc;
@@ -103,8 +103,8 @@ static av_cold void build_vlc(VLC *vlc, unsigned *buf_offset,
         for (unsigned tmp = num + codes_counts[i - 1]; num < tmp; num++)
             len[num] = i;
 
-    ff_init_vlc_from_lengths(vlc, FFMIN(len[0], 9), num, len, 1,
-                             *syms, 1, 1, offset, INIT_VLC_STATIC_OVERLONG, NULL);
+    ff_vlc_init_from_lengths(vlc, FFMIN(len[0], 9), num, len, 1,
+                             *syms, 1, 1, offset, VLC_INIT_STATIC_OVERLONG, NULL);
     *buf_offset += vlc->table_size;
     *syms       += num;
 }

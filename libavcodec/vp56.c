@@ -23,13 +23,13 @@
  * VP5 and VP6 compatible video decoder (common features)
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "decode.h"
-#include "h264chroma.h"
-#include "vp56.h"
-#include "vp56data.h"
-#include "vpx_rac.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/h264chroma.h"
+#include "libavcodec/vp56.h"
+#include "libavcodec/vp56data.h"
+#include "libavcodec/vpx_rac.h"
 
 
 void ff_vp56_init_dequant(VP56Context *s, int quantizer)
@@ -607,8 +607,7 @@ int ff_vp56_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
     }
 
     if (avctx->pix_fmt == AV_PIX_FMT_YUVA420P) {
-        av_frame_unref(s->alpha_context->frames[VP56_FRAME_CURRENT]);
-        if ((ret = av_frame_ref(s->alpha_context->frames[VP56_FRAME_CURRENT], p)) < 0) {
+        if ((ret = av_frame_replace(s->alpha_context->frames[VP56_FRAME_CURRENT], p)) < 0) {
             av_frame_unref(p);
             if (res == VP56_SIZE_CHANGE)
                 ff_set_dimensions(avctx, 0, 0);
@@ -764,8 +763,7 @@ static int ff_vp56_decode_mbs(AVCodecContext *avctx, void *data,
 
 next:
     if ((p->flags & AV_FRAME_FLAG_KEY) || s->golden_frame) {
-        av_frame_unref(s->frames[VP56_FRAME_GOLDEN]);
-        if ((res = av_frame_ref(s->frames[VP56_FRAME_GOLDEN], p)) < 0)
+        if ((res = av_frame_replace(s->frames[VP56_FRAME_GOLDEN], p)) < 0)
             return res;
     }
 

@@ -24,17 +24,17 @@
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "bytestream.h"
-#include "bswapdsp.h"
-#include "hpeldsp.h"
-#include "idctdsp.h"
-#include "thread.h"
-#include "threadframe.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/hpeldsp.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/threadframe.h"
 
 #define MIMIC_HEADER_SIZE   20
 #define MIMIC_VLC_BITS      11
@@ -120,7 +120,7 @@ static av_cold int mimic_decode_end(AVCodecContext *avctx)
 
 static av_cold void mimic_init_static(void)
 {
-    INIT_VLC_STATIC_FROM_LENGTHS(&block_vlc, MIMIC_VLC_BITS, FF_ARRAY_ELEMS(huffbits),
+    VLC_INIT_STATIC_FROM_LENGTHS(&block_vlc, MIMIC_VLC_BITS, FF_ARRAY_ELEMS(huffbits),
                                  huffbits, 1, huffsyms, 1, 1, 0, 0, 4368);
 }
 

@@ -25,7 +25,8 @@
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include "faandct.h"
+#include "libavcodec/faandct.h"
+#include "libavutil/emms.h"
 #include "libavutil/internal.h"
 #include "libavutil/libm.h"
 

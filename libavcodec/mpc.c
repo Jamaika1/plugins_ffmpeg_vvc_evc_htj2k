@@ -27,11 +27,11 @@
  */
 
 #include <string.h>
-#include "libavutil/intmath.h"
-#include "mpegaudiodsp.h"
+#include "libavutil/common.h"
+#include "libavcodec/mpegaudiodsp.h"
 
-#include "mpc.h"
-#include "mpcdata.h"
+#include "libavcodec/mpc.h"
+#include "libavcodec/mpcdata.h"
 
 /**
  * Process decoded Musepack data and produce PCM

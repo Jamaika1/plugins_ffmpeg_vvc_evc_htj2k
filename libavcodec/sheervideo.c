@@ -23,11 +23,11 @@
 #define SHEER_VLC_BITS 12
 
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "thread.h"
-#include "sheervideodata.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/sheervideodata.h"
 
 typedef struct SheerVideoContext {
     unsigned format;
@@ -1796,8 +1796,8 @@ static av_cold int build_vlc(VLC *vlc, const SheerTable *table)
             lens[count]  = len;
     }
 
-    ff_free_vlc(vlc);
-    return ff_init_vlc_from_lengths(vlc, SHEER_VLC_BITS, count,
+    ff_vlc_free(vlc);
+    return ff_vlc_init_from_lengths(vlc, SHEER_VLC_BITS, count,
                                     lens, sizeof(*lens), NULL, 0, 0, 0, 0, NULL);
 }
 
@@ -1992,8 +1992,8 @@ static av_cold int decode_end(AVCodecContext *avctx)
 {
     SheerVideoContext *s = avctx->priv_data;
 
-    ff_free_vlc(&s->vlc[0]);
-    ff_free_vlc(&s->vlc[1]);
+    ff_vlc_free(&s->vlc[0]);
+    ff_vlc_free(&s->vlc[1]);
 
     return 0;
 }

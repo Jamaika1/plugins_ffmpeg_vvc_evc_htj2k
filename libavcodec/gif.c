@@ -31,12 +31,12 @@
  */
 
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "lzw.h"
-#include "gif.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/lzw.h"
+#include "libavcodec/gif.h"
 
 #define DEFAULT_TRANSPARENCY_INDEX 0x1f
 
@@ -503,8 +503,7 @@ static int gif_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     }
 
     if (!s->image) {
-        av_frame_unref(s->last_frame);
-        ret = av_frame_ref(s->last_frame, pict);
+        ret = av_frame_replace(s->last_frame, pict);
         if (ret < 0)
             return ret;
     }

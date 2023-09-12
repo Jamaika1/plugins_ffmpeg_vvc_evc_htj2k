@@ -23,7 +23,7 @@
 #ifndef AVCODEC_VVC_PS_H
 #define AVCODEC_VVC_PS_H
 
-#include "libavcodec/vvc.h"
+#include "vvc.h"
 
 #define IS_IDR(s)  ((s)->vcl_unit_type == VVC_IDR_W_RADL || (s)->vcl_unit_type == VVC_IDR_N_LP)
 #define IS_CRA(s)  ((s)->vcl_unit_type == VVC_CRA_NUT)
@@ -47,9 +47,6 @@
 #define LMCS_MAX_BIN_SIZE   16
 #define LADF_MAX_INTERVAL   5
 
-#define MAX_CTU_WIDTH       (VVC_MAX_WIDTH  / (1 << 5) + 1)
-#define MAX_CTU_HEIGHT      (VVC_MAX_HEIGHT / (1 << 5) + 1)
-
 enum {
     CHROMA_FORMAT_MONO,
     CHROMA_FORMAT_420,
@@ -64,11 +61,11 @@ typedef struct VVCSPS {
     //derived values
     uint16_t    width;
     uint16_t    height;
-    int         hshift[VVC_MAX_SAMPLE_ARRAYS];
-    int         vshift[VVC_MAX_SAMPLE_ARRAYS];
+    uint8_t     hshift[VVC_MAX_SAMPLE_ARRAYS];
+    uint8_t     vshift[VVC_MAX_SAMPLE_ARRAYS];
     uint32_t    max_pic_order_cnt_lsb;                             ///< MaxPicOrderCntLsb
 
-    int         pixel_shift;
+    uint8_t     pixel_shift;
     enum AVPixelFormat pix_fmt;
 
     uint8_t     bit_depth;                                          ///< BitDepth
@@ -86,12 +83,12 @@ typedef struct VVCSPS {
     uint32_t    ladf_interval_lower_bound[LADF_MAX_INTERVAL];       ///< SpsLadfIntervalLowerBound[]
     uint8_t     log2_parallel_merge_level;                          ///< sps_log2_parallel_merge_level_minus2 + 2;
     uint8_t     log2_transform_range;                               ///< Log2TransformRange
-    int         chroma_qp_table[3][VVC_MAX_POINTS_IN_QP_TABLE];
+    int8_t      chroma_qp_table[3][VVC_MAX_POINTS_IN_QP_TABLE];     ///< ChromaQpTable
 } VVCSPS;
 
 typedef struct DBParams {
-    int beta_offset[VVC_MAX_SAMPLE_ARRAYS];
-    int tc_offset[VVC_MAX_SAMPLE_ARRAYS];
+    int8_t beta_offset[VVC_MAX_SAMPLE_ARRAYS];
+    int8_t tc_offset[VVC_MAX_SAMPLE_ARRAYS];
 } DBParams;
 
 typedef struct VVCPPS {
@@ -105,26 +102,26 @@ typedef struct VVCPPS {
     uint16_t width;
     uint16_t height;
 
-    uint16_t slice_start_offset  [VVC_MAX_SLICES];
-    uint16_t num_ctus_in_slice   [VVC_MAX_SLICES];
+    uint16_t slice_start_offset[VVC_MAX_SLICES];
+    uint16_t num_ctus_in_slice [VVC_MAX_SLICES];
 
     uint16_t min_cb_width;
     uint16_t min_cb_height;
 
     uint16_t ctb_width;
     uint16_t ctb_height;
-    int      ctb_count;
+    uint32_t ctb_count;
 
     uint16_t min_pu_width;
     uint16_t min_pu_height;
     uint16_t min_tu_width;
     uint16_t min_tu_height;
 
-    uint32_t ctb_addr_in_slice[MAX_CTU_WIDTH * MAX_CTU_HEIGHT];           ///< CtbAddrInCurrSlice for entire picture
-    uint16_t col_bd[VVC_MAX_TILE_COLUMNS];
-    uint16_t row_bd[VVC_MAX_TILE_ROWS];
-    uint16_t ctb_to_col_bd[MAX_CTU_WIDTH];
-    uint16_t ctb_to_row_bd[MAX_CTU_HEIGHT];
+    uint32_t *ctb_addr_in_slice;            ///< CtbAddrInCurrSlice for entire picture
+    uint16_t *col_bd;
+    uint16_t *row_bd;
+    uint16_t *ctb_to_col_bd;
+    uint16_t *ctb_to_row_bd;
 
     uint16_t width32;                       ///< width  in 32 pixels
     uint16_t height32;                      ///< height in 32 pixels
@@ -137,13 +134,13 @@ typedef struct VVCPPS {
 
 #define MAX_WEIGHTS 15
 typedef struct PredWeightTable {
-    int log2_denom[2];                                          ///< luma_log2_weight_denom, ChromaLog2WeightDenom
+    uint8_t log2_denom[2];                                      ///< luma_log2_weight_denom, ChromaLog2WeightDenom
 
-    int nb_weights[2];                                          ///< num_l0_weights, num_l1_weights
-    int weight_flag[2][2][MAX_WEIGHTS];                         ///< luma_weight_l0_flag, chroma_weight_l0_flag,
+    uint8_t nb_weights[2];                                      ///< num_l0_weights, num_l1_weights
+    uint8_t weight_flag[2][2][MAX_WEIGHTS];                     ///< luma_weight_l0_flag, chroma_weight_l0_flag,
                                                                 ///< luma_weight_l1_flag, chroma_weight_l1_flag,
-    int weight[2][VVC_MAX_SAMPLE_ARRAYS][MAX_WEIGHTS];          ///< LumaWeightL0, LumaWeightL1, ChromaWeightL0, ChromaWeightL1
-    int offset[2][VVC_MAX_SAMPLE_ARRAYS][MAX_WEIGHTS];          ///< luma_offset_l0, luma_offset_l1, ChromaOffsetL0, ChromaOffsetL1
+    int16_t weight[2][VVC_MAX_SAMPLE_ARRAYS][MAX_WEIGHTS];      ///< LumaWeightL0, LumaWeightL1, ChromaWeightL0, ChromaWeightL1
+    int16_t offset[2][VVC_MAX_SAMPLE_ARRAYS][MAX_WEIGHTS];      ///< luma_offset_l0, luma_offset_l1, ChromaOffsetL0, ChromaOffsetL1
 } PredWeightTable;
 
 typedef struct VVCPH {
@@ -151,15 +148,23 @@ typedef struct VVCPH {
     const H266RawPictureHeader *r;
 
     //derived values
-    unsigned int max_num_subblock_merge_cand;   ///< MaxNumSubblockMergeCand
-    int     poc;                                ///< PicOrderCntVal
-
+    uint32_t max_num_subblock_merge_cand;           ///< MaxNumSubblockMergeCand
+    int32_t  poc;                                   ///< PicOrderCntVal
     PredWeightTable pwt;
 } VVCPH;
 
 #define VVC_MAX_ALF_COUNT        8
 #define VVC_MAX_LMCS_COUNT       4
 #define VVC_MAX_SL_COUNT         8
+
+typedef struct VVCParamSets {
+    AVBufferRef *vps_list[VVC_MAX_VPS_COUNT];
+    AVBufferRef *sps_list[VVC_MAX_SPS_COUNT];
+    AVBufferRef *pps_list[VVC_MAX_PPS_COUNT];
+    AVBufferRef *alf_list[VVC_MAX_ALF_COUNT];
+    AVBufferRef *lmcs_list[VVC_MAX_LMCS_COUNT];
+    AVBufferRef *scaling_list[VVC_MAX_SL_COUNT];
+} VVCParamSets;
 
 #define ALF_NUM_FILTERS_LUMA    25
 #define ALF_NUM_FILTERS_CHROMA   8
@@ -168,12 +173,6 @@ typedef struct VVCPH {
 #define ALF_NUM_COEFF_LUMA      12
 #define ALF_NUM_COEFF_CHROMA     6
 #define ALF_NUM_COEFF_CC         7
-
-enum {
-    APS_ALF,
-    APS_LMCS,
-    APS_SCALING,
-};
 
 typedef struct VVCALF {
     AVBufferRef *rref;
@@ -189,21 +188,6 @@ typedef struct VVCALF {
     int16_t cc_coeff[2][ALF_NUM_FILTERS_CC][ALF_NUM_COEFF_CC];
 } VVCALF;
 
-typedef struct VVCLMCS {
-    int      min_bin_idx;
-    int      max_bin_idx;
-
-    //*2 for high depth
-    uint8_t  fwd_lut[LMCS_MAX_LUT_SIZE * 2];
-    uint8_t  inv_lut[LMCS_MAX_LUT_SIZE * 2];
-
-    int      pivot[LMCS_MAX_BIN_SIZE + 1];
-    int      chroma_scale_coeff[LMCS_MAX_BIN_SIZE];
-} VVCLMCS;
-
-#define SL_MAX_ID          28
-#define SL_MAX_MATRIX_SIZE 8
-
 enum {
   SL_START_2x2    = 0,
   SL_START_4x4    = 2,
@@ -211,7 +195,10 @@ enum {
   SL_START_16x16  = 14,
   SL_START_32x32  = 20,
   SL_START_64x64  = 26,
+  SL_MAX_ID       = 28,
 };
+
+#define SL_MAX_MATRIX_SIZE 8
 
 typedef struct VVCScalingList {
     AVBufferRef *rref;
@@ -220,14 +207,17 @@ typedef struct VVCScalingList {
     uint8_t scaling_matrix_dc_rec[SL_MAX_ID - SL_START_16x16];                       ///< ScalingMatrixDcRec[refId − 14]
 } VVCScalingList;
 
-typedef struct VVCParamSets {
-    AVBufferRef *vps_list[VVC_MAX_VPS_COUNT];
-    AVBufferRef *sps_list[VVC_MAX_SPS_COUNT];
-    AVBufferRef *pps_list[VVC_MAX_PPS_COUNT];
-    AVBufferRef *alf_list[VVC_MAX_ALF_COUNT];
-    AVBufferRef *lmcs_list[VVC_MAX_LMCS_COUNT];
-    AVBufferRef *scaling_list[VVC_MAX_SL_COUNT];
-} VVCParamSets;
+typedef struct VVCLMCS {
+    uint8_t  min_bin_idx;
+    uint8_t  max_bin_idx;
+
+    //*2 for high depth
+    uint8_t  fwd_lut[LMCS_MAX_LUT_SIZE * 2];
+    uint8_t  inv_lut[LMCS_MAX_LUT_SIZE * 2];
+
+    uint16_t pivot[LMCS_MAX_BIN_SIZE + 1];
+    uint16_t chroma_scale_coeff[LMCS_MAX_BIN_SIZE];
+} VVCLMCS;
 
 typedef struct VVCFrameParamSets {
     AVBufferRef            *sps_buf;
@@ -248,7 +238,7 @@ typedef struct VVCSH {
 
     // derived values
     // ctu address
-    int             num_ctus_in_curr_slice;                 ///< NumCtusInCurrSlice
+    uint32_t        num_ctus_in_curr_slice;                 ///< NumCtusInCurrSlice
     const uint32_t* ctb_addr_in_curr_slice;                 ///< CtbAddrInCurrSlice
 
     // inter

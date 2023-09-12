@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "g722dsp.h"
-#include "mathops.h"
+#include "libavcodec/g722dsp.h"
+#include "libavcodec/mathops.h"
 
 /*
  * quadrature mirror filter (QMF) coefficients (ITU-T G.722 Table 11) inlined
@@ -71,6 +71,8 @@ av_cold void ff_g722dsp_init(G722DSPContext *c)
 
 #if ARCH_ARM
     ff_g722dsp_init_arm(c);
+#elif ARCH_RISCV
+    ff_g722dsp_init_riscv(c);
 #elif ARCH_X86
     ff_g722dsp_init_x86(c);
 #endif

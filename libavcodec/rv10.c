@@ -30,20 +30,20 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/thread.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "error_resilience.h"
-#include "h263.h"
-#include "h263data.h"
-#include "h263dec.h"
-#include "mpeg_er.h"
-#include "mpegutils.h"
-#include "mpegvideo.h"
-#include "mpegvideodec.h"
-#include "mpeg4video.h"
-#include "mpegvideodata.h"
-#include "rv10dec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/error_resilience.h"
+#include "libavcodec/h263.h"
+#include "libavcodec/h263data.h"
+#include "libavcodec/h263dec.h"
+#include "libavcodec/mpeg_er.h"
+#include "libavcodec/mpegutils.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/mpegvideodec.h"
+#include "libavcodec/mpeg4video.h"
+#include "libavcodec/mpegvideodata.h"
+#include "libavcodec/rv10dec.h"
 
 #define RV_GET_MAJOR_VER(x)  ((x) >> 28)
 #define RV_GET_MINOR_VER(x) (((x) >> 20) & 0xFF)
@@ -334,8 +334,8 @@ static av_cold void rv10_build_vlc(VLC *vlc, const uint16_t len_count[15],
         for (unsigned tmp = nb_lens + len_count[i]; nb_lens < tmp; nb_lens++)
             lens[nb_lens] = i + 2;
     av_assert1(nb_lens == nb_syms);
-    ff_init_vlc_from_lengths(vlc, DC_VLC_BITS, nb_lens, lens, 1,
-                             syms, 2, 2, 0, INIT_VLC_STATIC_OVERLONG, NULL);
+    ff_vlc_init_from_lengths(vlc, DC_VLC_BITS, nb_lens, lens, 1,
+                             syms, 2, 2, 0, VLC_INIT_STATIC_OVERLONG, NULL);
 }
 
 static av_cold void rv10_init_static(void)

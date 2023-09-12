@@ -37,11 +37,11 @@
 #include <string.h>
 
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "mathops.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mathops.h"
 
 #define FLI_256_COLOR 4
 #define FLI_DELTA     7
@@ -79,7 +79,7 @@ typedef struct FlicDecodeContext {
 static av_cold int flic_decode_init(AVCodecContext *avctx)
 {
     FlicDecodeContext *s = avctx->priv_data;
-    unsigned char *fli_header = (unsigned char *)avctx->extradata;
+    uint8_t *fli_header = avctx->extradata;
     int depth;
 
     if (avctx->extradata_size != 0 &&
@@ -473,7 +473,11 @@ static int flic_decode_frame_8BPP(AVCodecContext *avctx,
     /* make the palette available on the way out */
     memcpy(s->frame->data[1], s->palette, AVPALETTE_SIZE);
     if (s->new_palette) {
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
         s->frame->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
         s->new_palette = 0;
     }
 

@@ -24,8 +24,8 @@
  * PNG parser
  */
 
-#include "parser.h"
-#include "png.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/png.h"
 
 typedef struct PNGParseContext {
     ParseContext pc;
