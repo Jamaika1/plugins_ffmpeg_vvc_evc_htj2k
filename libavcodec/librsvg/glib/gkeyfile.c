@@ -573,7 +573,8 @@ static void                  g_key_file_remove_key_value_pair_node (GKeyFile    
 
 static void                  g_key_file_add_key_value_pair     (GKeyFile               *key_file,
                                                                 GKeyFileGroup          *group,
-                                                                GKeyFileKeyValuePair   *pair);
+                                                                GKeyFileKeyValuePair   *pair,
+                                                                GList                  *sibling);
 static void                  g_key_file_add_key                (GKeyFile               *key_file,
 								GKeyFileGroup          *group,
 								const gchar            *key,
@@ -1447,7 +1448,8 @@ g_key_file_parse_key_value_pair (GKeyFile     *key_file,
       pair->key = g_steal_pointer (&key);
       pair->value = g_strndup (value_start, value_len);
 
-      g_key_file_add_key_value_pair (key_file, key_file->current_group, pair);
+      g_key_file_add_key_value_pair (key_file, key_file->current_group, pair,
+                                     key_file->current_group->key_value_pairs);
     }
 
   g_free (key);
@@ -3858,8 +3860,12 @@ g_key_file_add_group (GKeyFile    *key_file,
     {
       /* separate groups by a blank line if we don't keep comments or group is created */
       GKeyFileGroup *next_group = key_file->groups->next->data;
+      GKeyFileKeyValuePair *pair;
+      if (next_group->key_value_pairs != NULL)
+        pair = next_group->key_value_pairs->data;
+
       if (next_group->key_value_pairs == NULL ||
-          ((GKeyFileKeyValuePair *) next_group->key_value_pairs->data)->key != NULL)
+          (pair->key != NULL && !g_strstr_len (pair->value, -1, "\n")))
         {
           GKeyFileKeyValuePair *pair = g_new (GKeyFileKeyValuePair, 1);
           pair->key = NULL;
@@ -4030,10 +4036,11 @@ g_key_file_remove_group (GKeyFile     *key_file,
 static void
 g_key_file_add_key_value_pair (GKeyFile             *key_file,
                                GKeyFileGroup        *group,
-                               GKeyFileKeyValuePair *pair)
+                               GKeyFileKeyValuePair *pair,
+                               GList                *sibling)
 {
   g_hash_table_replace (group->lookup_map, pair->key, pair);
-  group->key_value_pairs = g_list_prepend (group->key_value_pairs, pair);
+  group->key_value_pairs = g_list_insert_before (group->key_value_pairs, sibling, pair);
 }
 
 static void
@@ -4043,12 +4050,18 @@ g_key_file_add_key (GKeyFile      *key_file,
 		    const gchar   *value)
 {
   GKeyFileKeyValuePair *pair;
+  GList *lp;
 
   pair = g_new (GKeyFileKeyValuePair, 1);
   pair->key = g_strdup (key);
   pair->value = g_strdup (value);
 
-  g_key_file_add_key_value_pair (key_file, group, pair);
+  /* skip group comment */
+  lp = group->key_value_pairs;
+  while (lp != NULL && ((GKeyFileKeyValuePair *) lp->data)->key == NULL)
+    lp = lp->next;
+
+  g_key_file_add_key_value_pair (key_file, group, pair, lp);
 }
 
 /**
@@ -4300,7 +4313,10 @@ g_key_file_parse_value_as_string (GKeyFile     *key_file,
 				  GError      **error)
 {
   gchar *string_value, *q0, *q;
+  GSList *tmp_pieces = NULL;
   const gchar *p;
+
+  g_assert (pieces == NULL || *pieces == NULL);
 
   string_value = g_new (gchar, strlen (value) + 1);
 
@@ -4335,11 +4351,12 @@ g_key_file_parse_value_as_string (GKeyFile     *key_file,
               break;
 
 	    case '\0':
+              g_clear_error (error);
 	      g_set_error_literal (error, G_KEY_FILE_ERROR,
                                    G_KEY_FILE_ERROR_INVALID_VALUE,
                                    _("Key file contains escape character "
                                      "at end of line"));
-	      break;
+              goto error;
 
             default:
 	      if (pieces && *p == key_file->list_separator)
@@ -4357,24 +4374,39 @@ g_key_file_parse_value_as_string (GKeyFile     *key_file,
 		      sequence[1] = *p;
 		      sequence[2] = '\0';
 		      
+                      /* FIXME: This should be a fatal error, but there was a
+                       * bug which prevented that being reported for a long
+                       * time, so a lot of applications and in-the-field key
+                       * files use invalid escape sequences without anticipating
+                       * problems. For now (GLib 2.78), message about it; in
+                       * future, the behaviour may become fatal again.
+                       *
+                       * The previous behaviour was to set the #GError but not
+                       * return failure from the function, so the caller could
+                       * explicitly check for invalid escapes, but also ignore
+                       * the error if they want. This is not how #GError is
+                       * meant to be used, but the #GKeyFile code is very old.
+                       *
+                       * See https://gitlab.gnome.org/GNOME/glib/-/issues/3098 */
+                      g_clear_error (error);
 		      g_set_error (error, G_KEY_FILE_ERROR,
 				   G_KEY_FILE_ERROR_INVALID_VALUE,
 				   _("Key file contains invalid escape "
 				     "sequence “%s”"), sequence);
-		    }
-		}
+                    }
+                }
               break;
             }
         }
       else
-	{
-	  *q = *p;
-	  if (pieces && (*p == key_file->list_separator))
-	    {
-	      *pieces = g_slist_prepend (*pieces, g_strndup (q0, q - q0));
-	      q0 = q + 1; 
-	    }
-	}
+        {
+          *q = *p;
+          if (pieces && (*p == key_file->list_separator))
+            {
+              tmp_pieces = g_slist_prepend (tmp_pieces, g_strndup (q0, q - q0));
+              q0 = q + 1;
+            }
+        }
 
       if (*p == '\0')
 	break;
@@ -4385,13 +4417,19 @@ g_key_file_parse_value_as_string (GKeyFile     *key_file,
 
   *q = '\0';
   if (pieces)
-  {
-    if (q0 < q)
-      *pieces = g_slist_prepend (*pieces, g_strndup (q0, q - q0));
-    *pieces = g_slist_reverse (*pieces);
-  }
+    {
+      if (q0 < q)
+        tmp_pieces = g_slist_prepend (tmp_pieces, g_strndup (q0, q - q0));
+      *pieces = g_slist_reverse (tmp_pieces);
+    }
 
   return string_value;
+
+error:
+  g_free (string_value);
+  g_slist_free_full (tmp_pieces, g_free);
+
+  return NULL;
 }
 
 static gchar *

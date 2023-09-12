@@ -3596,29 +3596,27 @@ g_main_context_release (GMainContext *context)
     context = g_main_context_default ();
 
   LOCK_CONTEXT (context);
-
-#ifndef G_DISABLE_CHECKS
-  if (G_UNLIKELY (context->owner != G_THREAD_SELF || context->owner_count == 0))
-    {
-      GThread *context_owner = context->owner;
-      guint context_owner_count = context->owner_count;
-
-      UNLOCK_CONTEXT (context);
-
-      g_critical ("g_main_context_release() called on a context (%p, owner %p, "
-                  "owner count %u) which is not acquired by the current thread",
-                  context, context_owner, context_owner_count);
-    }
-#endif  /* !G_DISABLE_CHECKS */
-
   g_main_context_release_unlocked (context);
-
   UNLOCK_CONTEXT (context);
 }
 
 static void
 g_main_context_release_unlocked (GMainContext *context)
 {
+  /* NOTE: We should also have the following assert here:
+   * g_return_if_fail (context->owner == G_THREAD_SELF);
+   * However, this breaks NetworkManager, which has been (non-compliantly but
+   * apparently safely) releasing a #GMainContext from a thread which didn’t
+   * acquire it.
+   * Breaking that would be quite disruptive, so we won’t do that now. However,
+   * GLib reserves the right to add that assertion in future, if doing so would
+   * allow for optimisations or refactorings. By that point, NetworkManager will
+   * have to have reworked its use of #GMainContext.
+   *
+   * See: https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3513
+   */
+  g_return_if_fail (context->owner_count > 0);
+
   context->owner_count--;
   if (context->owner_count == 0)
     {
@@ -5909,24 +5907,37 @@ g_child_watch_dispatch (GSource    *source,
         };
 
         /* Get the exit status */
-        if (waitid (P_PIDFD, child_watch_source->poll.fd, &child_info, WEXITED | WNOHANG) >= 0 &&
-            child_info.si_pid != 0)
+        if (waitid (P_PIDFD, child_watch_source->poll.fd, &child_info, WEXITED | WNOHANG) >= 0)
           {
-            /* waitid() helpfully provides the wait status in a decomposed
-             * form which is quite useful. Unfortunately we have to report it
-             * to the #GChildWatchFunc as a waitpid()-style platform-specific
-             * wait status, so that the user code in #GChildWatchFunc can then
-             * call WIFEXITED() (etc.) on it. That means re-composing the
-             * status information. */
-            wait_status = siginfo_t_to_wait_status (&child_info);
+            if (child_info.si_pid != 0)
+              {
+                /* waitid() helpfully provides the wait status in a decomposed
+                 * form which is quite useful. Unfortunately we have to report it
+                 * to the #GChildWatchFunc as a waitpid()-style platform-specific
+                 * wait status, so that the user code in #GChildWatchFunc can then
+                 * call WIFEXITED() (etc.) on it. That means re-composing the
+                 * status information. */
+                wait_status = siginfo_t_to_wait_status (&child_info);
+                child_exited = TRUE;
+              }
+            else
+              {
+                g_debug (G_STRLOC ": pidfd signaled but pid %" G_PID_FORMAT " didn't exit",
+                         child_watch_source->pid);
+                return TRUE;
+              }
           }
         else
           {
-            /* Unknown error. We got signaled that the process might be exited,
-             * but now we failed to reap it? Assume the process is gone and proceed. */
-            g_warning (G_STRLOC ": pidfd signaled ready but failed");
+            int errsv = errno;
+
+            g_warning (G_STRLOC ": waitid(pid:%" G_PID_FORMAT ", pidfd=%d) failed: %s (%d). %s",
+                       child_watch_source->pid, child_watch_source->poll.fd, g_strerror (errsv), errsv,
+                       "See documentation of g_child_watch_source_new() for possible causes.");
+
+            /* Assume the process is gone and proceed. */
+            child_exited = TRUE;
           }
-        child_exited = TRUE;
       }
 #endif /* HAVE_PIDFD*/
 
@@ -5943,6 +5954,9 @@ g_child_watch_dispatch (GSource    *source,
 
         pid = waitpid (child_watch_source->pid, &wstatus, WNOHANG);
 
+        if (G_UNLIKELY (pid < 0 && errno == EINTR))
+          goto waitpid_again;
+
         if (pid == 0)
           {
             /* Not exited yet. Wait longer. */
@@ -5951,13 +5965,15 @@ g_child_watch_dispatch (GSource    *source,
 
         if (pid > 0)
           wait_status = wstatus;
-        else if (errno == ECHILD)
-          g_warning ("GChildWatchSource: Exit status of a child process was requested but ECHILD was received by waitpid(). See the documentation of g_child_watch_source_new() for possible causes.");
-        else if (errno == EINTR)
-          goto waitpid_again;
         else
           {
-            /* Unexpected error. Whatever happened, we are done waiting for this child. */
+            int errsv = errno;
+
+            g_warning (G_STRLOC ": waitpid(pid:%" G_PID_FORMAT ") failed: %s (%d). %s",
+                       child_watch_source->pid, g_strerror (errsv), errsv,
+                       "See documentation of g_child_watch_source_new() for possible causes.");
+
+            /* Assume the process is gone and proceed. */
           }
       }
   }
