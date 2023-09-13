@@ -34,13 +34,13 @@
 #endif
 #endif
 #if HAVE_VIRTUALALLOC
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 #include "libavutil/cpu.h"
+#include "libavutil/emms.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/libm.h"
@@ -54,7 +54,6 @@
 #include "libavutil/x86/asm.h"
 #include "libavutil/x86/cpu.h"
 #include "libavutil/loongarch/cpu.h"
-
 #include "libswscale/rgb2rgb.h"
 #include "libswscale/swscale.h"
 #include "libswscale/swscale_internal.h"
