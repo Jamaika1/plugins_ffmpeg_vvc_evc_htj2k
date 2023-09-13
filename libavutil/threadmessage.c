@@ -19,6 +19,9 @@
  */
 
 #include <limits.h>
+#include <stddef.h>
+
+#include "libavutil/error.h"
 #include "libavutil/fifo.h"
 #include "libavutil/mem.h"
 #include "libavutil/threadmessage.h"

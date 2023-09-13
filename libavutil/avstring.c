@@ -32,7 +32,6 @@
 #include "libavutil/bprint.h"
 #include "libavutil/error.h"
 #include "libavutil/macros.h"
-#include "libavutil/version.h"
 
 int av_strstart(const char *str, const char *pfx, const char **ptr)
 {

@@ -17,6 +17,7 @@
  */
 
 #include "libavutil/config.h"
+#include "libavutil/error.h"
 #include "libavutil/file.h"
 #include "libavutil/file_open.h"
 #include "libavutil/internal.h"

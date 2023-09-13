@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include "libavutil/mem.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/murmur3.h"
