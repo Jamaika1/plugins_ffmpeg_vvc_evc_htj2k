@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <pthread.h>
 #include "../libpthread_win32/pthread.h"
 
 #include "cabac.h"

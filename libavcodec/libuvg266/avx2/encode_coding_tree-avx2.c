@@ -413,7 +413,7 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
     }
 
     if (sig_coeffgroup_nzs[cg_blk_pos]) {
-      int32_t pattern_sig_ctx = uvg_context_get_sig_coeff_group(sig_coeffgroup_nzs,
+      int32_t pattern_sig_ctx = uvg_context_calc_pattern_sig_ctx(sig_coeffgroup_nzs,
                                                              cg_pos_x, cg_pos_y, width);
 
       // A mask with the first 16-bit word unmasked (bits set ie. 0xffff)
@@ -538,11 +538,11 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
       int32_t shiftamt = (be_valid && sign_hidden) ? 1 : 0;
       int32_t nnz = num_non_zero - shiftamt;
       coeff_signs >>= shiftamt;
-      /*if (!cabac->only_count) {
+      if (!cabac->only_count) {
         if (encoder->cfg.crypto_features & UVG_CRYPTO_TRANSF_COEFF_SIGNS) {
           coeff_signs ^= uvg_crypto_get_key(state->crypto_hdl, nnz);
         }
-      }*/
+      }
       CABAC_BINS_EP(cabac, coeff_signs, nnz, "coeff_sign_flag");
       if (cabac->only_count) bits += nnz;
 
@@ -581,12 +581,12 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
           uint16_t curr_abs_coeff = abs_coeff[idx];
 
           if (!(dont_encode_curr & 2)) {
-            /*uint16_t level_diff = curr_abs_coeff - base_level;
+            uint16_t level_diff = curr_abs_coeff - base_level;
             if (!cabac->only_count && (encoder->cfg.crypto_features & UVG_CRYPTO_TRANSF_COEFFS)) {
-              uvg_cabac_write_coeff_remain_encry(state, cabac, level_diff, go_rice_param, 5, base_level);
+              uvg_cabac_write_coeff_remain_encry(state, cabac, level_diff, go_rice_param, base_level);
             } else {
-              bits += uvg_cabac_write_coeff_remain(cabac, level_diff, go_rice_param, 5);
-            }*/
+              bits += uvg_cabac_write_coeff_remain(cabac, level_diff, go_rice_param);
+            }
 
             if (curr_abs_coeff > 3 * (1 << go_rice_param)) {
               go_rice_param = MIN(go_rice_param + 1, 4);
