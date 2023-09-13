@@ -11,7 +11,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include "./vpx_config.h"
+#include "vpx_config.h"
 #include "vpx_dsp/bitwriter_buffer.h"
 
 size_t vpx_wb_bytes_written(const struct vpx_write_bit_buffer *wb) {
