@@ -42,10 +42,9 @@
 #include "../strategyselector.h"
 #include "../missing-intel-intrinsics.h"
 
-
  /**
  * \brief Generate angular predictions.
- * \param log2_width    Log2 of width, range 2..5.
+ * \param cu_loc        CU locationand size data.
  * \param intra_mode    Angular mode in range 2..34.
  * \param channel_type  Color channel.
  * \param in_ref_above  Pointer to -1 index of above reference, length=width*2+1.
@@ -54,20 +53,28 @@
  * \param multi_ref_idx Reference line index for use with MRL.
  */
 static void uvg_angular_pred_avx2(
-  const int_fast8_t log2_width,
+  const cu_loc_t* const cu_loc,
   const int_fast8_t intra_mode,
   const int_fast8_t channel_type,
   const uvg_pixel *const in_ref_above,
   const uvg_pixel *const in_ref_left,
   uvg_pixel *const dst,
-  const uint8_t multi_ref_idx)
+  const uint8_t multi_ref_idx,
+  const uint8_t isp_mode,
+  const int cu_dim)
 {
+  // ISP_TODO: non-square block implementation, height is passed but not used
+  const int width = channel_type == COLOR_Y ? cu_loc->width : cu_loc->chroma_width;
+  const int height = channel_type == COLOR_Y ? cu_loc->height : cu_loc->chroma_height;
+  const int log2_width =  uvg_g_convert_to_log2[width];
+  const int log2_height = uvg_g_convert_to_log2[height];
 
-  assert(log2_width >= 2 && log2_width <= 5);
+  assert((log2_width >= 2 && log2_width <= 5) && (log2_height >= 2 && log2_height <= 5));
   assert(intra_mode >= 2 && intra_mode <= 66);
 
   // TODO: implement handling of MRL
   uint8_t multi_ref_index = channel_type == COLOR_Y ? multi_ref_idx : 0;
+  uint8_t isp = isp_mode;
 
   __m256i p_shuf_01 = _mm256_setr_epi8(
     0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04,
@@ -142,7 +149,6 @@ static void uvg_angular_pred_avx2(
   //uvg_pixel tmp_ref[2 * 128 + 3 + 33 * MAX_REF_LINE:IDX] = { 0 };
   uvg_pixel temp_main[2 * 128 + 3 + 33 * MAX_REF_LINE_IDX] = { 0 };
   uvg_pixel temp_side[2 * 128 + 3 + 33 * MAX_REF_LINE_IDX] = { 0 };
-  const int_fast32_t width = 1 << log2_width;
 
   int32_t pred_mode = intra_mode; // ToDo: handle WAIP
 
@@ -166,8 +172,10 @@ static void uvg_angular_pred_avx2(
   // Set ref_main and ref_side such that, when indexed with 0, they point to
   // index 0 in block coordinates.
   if (sample_disp < 0) {
-    memcpy(&temp_main[width], vertical_mode ? in_ref_above : in_ref_left, sizeof(uvg_pixel) * (width + 1 + multi_ref_index + 1));
-    memcpy(&temp_side[width], vertical_mode ? in_ref_left : in_ref_above, sizeof(uvg_pixel) * (width + 1 + multi_ref_index + 1));
+    for (int i = 0; i <= width + 1 + multi_ref_index; i++) {
+      temp_main[width + i] = (vertical_mode ? in_ref_above[i] : in_ref_left[i]);
+      temp_side[width + i] = (vertical_mode ? in_ref_left[i] : in_ref_above[i]);
+    }
 
     ref_main = temp_main + width;
     ref_side = temp_side + width;
@@ -212,14 +220,18 @@ static void uvg_angular_pred_avx2(
   }
   else {
 
-    memcpy(temp_main, vertical_mode ? in_ref_above : in_ref_left, sizeof(uvg_pixel)* (width * 2 + multi_ref_index + 1));
-    memcpy(temp_side, vertical_mode ? in_ref_left : in_ref_above, sizeof(uvg_pixel)* (width * 2 + multi_ref_index + 1));
+    for (int i = 0; i <= (width << 1) + multi_ref_index; i++) {
+      temp_main[i] = (vertical_mode ? in_ref_above[i] : in_ref_left[i]);
+      temp_side[i] = (vertical_mode ? in_ref_left[i] : in_ref_above[i]);
+    }
 
     const int s = 0;
     const int max_index = (multi_ref_index << s) + 2;
     const int ref_length = width << 1;
     const uvg_pixel val = temp_main[ref_length + multi_ref_index];
-    memset(temp_main + ref_length + multi_ref_index, val, max_index + 1);
+    for (int j = 0; j <= max_index; j++) {
+      temp_main[ref_length + multi_ref_index + j] = val;
+    }
 
     ref_main = temp_main;
     ref_side = temp_side;
@@ -239,28 +251,12 @@ static void uvg_angular_pred_avx2(
   ref_main += multi_ref_index;
   ref_side += multi_ref_index;
 
-  static const int uvg_intra_hor_ver_dist_thres[8] = { 24, 24, 24, 14, 2, 0, 0, 0 };
-  int filter_threshold = uvg_intra_hor_ver_dist_thres[log2_width];
-  int dist_from_vert_or_hor = MIN(abs((int32_t)pred_mode - 50), abs((int32_t)pred_mode - 18));
-
-  bool use_cubic = true; // Default to cubic filter
-  if (dist_from_vert_or_hor > filter_threshold) {
-    if ((abs(sample_disp) & 0x1F) != 0)
-    {
-      use_cubic = false;
-    }
-  }
-  // Cubic must be used if ref line != 0
-  if (multi_ref_index) {
-    use_cubic = true;
-  }
-
   if (sample_disp != 0) {
     // The mode is not horizontal or vertical, we have to do interpolation.
 
     int_fast32_t delta_pos = sample_disp * multi_ref_index;
-    int64_t delta_int[4] = { 0 };
-    int16_t delta_fract[4] = { 0 };
+    int_fast32_t delta_int[4] = { 0 };
+    int_fast32_t delta_fract[4] = { 0 };
     for (int_fast32_t y = 0; y + 3 < width; y += 4) {
 
       for (int yy = 0; yy < 4; ++yy) {
@@ -274,26 +270,37 @@ static void uvg_angular_pred_avx2(
         // Luma Channel
         if (channel_type == 0) {
 
+          int64_t ref_main_index[4] = { 0 };
           int16_t f[4][4] = { { 0 } };
-          if (use_cubic) {
-            memcpy(f[0], cubic_filter[delta_fract[0]], 8);
-            memcpy(f[1], cubic_filter[delta_fract[1]], 8);
-            memcpy(f[2], cubic_filter[delta_fract[2]], 8);
-            memcpy(f[3], cubic_filter[delta_fract[3]], 8);
-          }
-          else {
-            for(int yy = 0; yy < 4; ++yy) {
-              const int16_t offset = (delta_fract[yy] >> 1);
-              f[yy][0] = 16 - offset;
-              f[yy][1] = 32 - offset;
-              f[yy][2] = 16 + offset;
-              f[yy][3] = offset;
+
+          for (int yy = 0; yy < 4; ++yy) {
+
+            ref_main_index[yy] = delta_int[yy];
+            bool use_cubic = true; // Default to cubic filter
+            static const int uvg_intra_hor_ver_dist_thres[8] = { 24, 24, 24, 14, 2, 0, 0, 0 };
+            int filter_threshold = uvg_intra_hor_ver_dist_thres[log2_width];
+            int dist_from_vert_or_hor = MIN(abs((int32_t)pred_mode - 50), abs((int32_t)pred_mode - 18));
+            if (dist_from_vert_or_hor > filter_threshold) {
+              static const int16_t modedisp2sampledisp[32] = { 0,    1,    2,    3,    4,    6,     8,   10,   12,   14,   16,   18,   20,   23,   26,   29,   32,   35,   39,  45,  51,  57,  64,  73,  86, 102, 128, 171, 256, 341, 512, 1024 };
+              const int_fast8_t mode_disp = (pred_mode >= 34) ? pred_mode - 50 : 18 - pred_mode;
+              const int_fast8_t sample_disp = (mode_disp < 0 ? -1 : 1) * modedisp2sampledisp[abs(mode_disp)];
+              if ((abs(sample_disp) & 0x1F) != 0)
+              {
+                use_cubic = false;
+              }
             }
+            // Cubic must be used if ref line != 0 or if isp mode != 0
+            if (multi_ref_index || isp) {
+              use_cubic = true;
+            }
+            const int16_t filter_coeff[4] = { 16 - (delta_fract[yy] >> 1), 32 - (delta_fract[yy] >> 1), 16 + (delta_fract[yy] >> 1), delta_fract[yy] >> 1 };
+            const int16_t *temp_f = use_cubic ? cubic_filter[delta_fract[yy]] : filter_coeff;
+            memcpy(f[yy], temp_f, 4 * sizeof(*temp_f));
           }
 
           // Do 4-tap intra interpolation filtering
           uvg_pixel *p = (uvg_pixel*)ref_main;
-          __m256i vidx = _mm256_loadu_si256((__m256i *)delta_int);
+          __m256i vidx = _mm256_loadu_si256((__m256i *)ref_main_index);
           __m256i all_weights = _mm256_loadu_si256((__m256i *)f);
           __m256i w01 = _mm256_shuffle_epi8(all_weights, w_shuf_01);
           __m256i w23 = _mm256_shuffle_epi8(all_weights, w_shuf_23);
@@ -345,13 +352,13 @@ static void uvg_angular_pred_avx2(
 
 
       // PDPC
-      bool PDPC_filter = (width >= 4 || channel_type != 0);
+      bool PDPC_filter = ((width >= TR_MIN_WIDTH && height >= TR_MIN_WIDTH) || channel_type != 0);
       if (pred_mode > 1 && pred_mode < 67) {
         if (mode_disp < 0 || multi_ref_index) { // Cannot be used with MRL.
           PDPC_filter = false;
         }
         else if (mode_disp > 0) {
-          PDPC_filter = (scale >= 0);
+          PDPC_filter &= (scale >= 0);
         }
       }
       if(PDPC_filter) {
@@ -497,20 +504,27 @@ static void uvg_angular_pred_avx2(
 
 /**
  * \brief Generate planar prediction.
- * \param log2_width    Log2 of width, range 2..5.
+ * \param cu_loc        CU location and size data.
+ * \param color         Color channel.
  * \param in_ref_above  Pointer to -1 index of above reference, length=width*2+1.
  * \param in_ref_left   Pointer to -1 index of left reference, length=width*2+1.
  * \param dst           Buffer of size width*width.
  */
 static void uvg_intra_pred_planar_avx2(
-  const int_fast8_t log2_width,
+  const cu_loc_t* const cu_loc,
+  color_t color,
   const uint8_t *const ref_top,
   const uint8_t *const ref_left,
   uint8_t *const dst)
 {
-  assert(log2_width >= 2 && log2_width <= 5);
+  // ISP_TODO: non-square block implementation, height is passed but not used
+  const int width = color == COLOR_Y ? cu_loc->width : cu_loc->chroma_width;
+  const int height = color == COLOR_Y ? cu_loc->height : cu_loc->chroma_height;
+  const int log2_width =  uvg_g_convert_to_log2[width];
+  const int log2_height = uvg_g_convert_to_log2[height];
 
-  const int_fast8_t width = 1 << log2_width;
+  assert((log2_width >= 2 && log2_width <= 5) && (log2_height >= 2 && log2_height <= 5));
+
   const uint8_t top_right = ref_top[width + 1];
   const uint8_t bottom_left = ref_left[width + 1];
 
@@ -964,12 +978,17 @@ static void uvg_intra_pred_filtered_dc_avx2(
 */
 static void uvg_pdpc_planar_dc_avx2(
   const int mode,
-  const int width,
-  const int log2_width,
+  const cu_loc_t* const cu_loc,
+  const color_t color,
   const uvg_intra_ref *const used_ref,
   uvg_pixel *const dst)
 {
+  // ISP_TODO: non-square block implementation, height is passed but not used
   assert(mode == 0 || mode == 1);  // planar or DC
+  const int width = color == COLOR_Y ? cu_loc->width : cu_loc->chroma_width;
+  const int height = color == COLOR_Y ? cu_loc->height : cu_loc->chroma_height;
+  const int log2_width =  uvg_g_convert_to_log2[width];
+  const int log2_height = uvg_g_convert_to_log2[height];
 
   __m256i shuf_mask_byte = _mm256_setr_epi8(
     0, -1, 0, -1, 0, -1, 0, -1,
@@ -1057,10 +1076,10 @@ int uvg_strategy_register_intra_avx2(void* opaque, uint8_t bitdepth)
 #if COMPILE_INTEL_AVX2 && defined X86_64
 #if UVG_BIT_DEPTH == 8
   if (bitdepth == 8) {
-    success &= uvg_strategyselector_register(opaque, "angular_pred", "avx2", 40, &uvg_angular_pred_avx2);
-    success &= uvg_strategyselector_register(opaque, "intra_pred_planar", "avx2", 40, &uvg_intra_pred_planar_avx2);
-    success &= uvg_strategyselector_register(opaque, "intra_pred_filtered_dc", "avx2", 40, &uvg_intra_pred_filtered_dc_avx2);
-    success &= uvg_strategyselector_register(opaque, "pdpc_planar_dc", "avx2", 40, &uvg_pdpc_planar_dc_avx2);
+    //success &= uvg_strategyselector_register(opaque, "angular_pred", "avx2", 40, &uvg_angular_pred_avx2);
+    //success &= uvg_strategyselector_register(opaque, "intra_pred_planar", "avx2", 40, &uvg_intra_pred_planar_avx2);
+    //success &= uvg_strategyselector_register(opaque, "intra_pred_filtered_dc", "avx2", 40, &uvg_intra_pred_filtered_dc_avx2);
+    //success &= uvg_strategyselector_register(opaque, "pdpc_planar_dc", "avx2", 40, &uvg_pdpc_planar_dc_avx2);
   }
 #endif //UVG_BIT_DEPTH == 8
 #endif //COMPILE_INTEL_AVX2 && defined X86_64
