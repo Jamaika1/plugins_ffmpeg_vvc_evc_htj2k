@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include "vpx/vpx_integer.h"
 #include "vpx/internal/vpx_codec_internal.h"
-#include "config/vpx_version.h"
+#include <config/vpx_version.h>
 
 #define SAVE_STATUS(ctx, var) (ctx ? (ctx->err = var) : var)
 
