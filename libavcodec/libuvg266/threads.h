@@ -40,6 +40,7 @@
 
 #include "global.h" // IWYU pragma: keep
 
+//#include <pthread.h>
 #include "../libpthread_win32/pthread.h"
 
 #if defined(__GNUC__) && !defined(__MINGW32__)
@@ -114,6 +115,7 @@ static INLINE void uvg_sem_destroy(uvg_sem_t *sem)
 
 #else
 // Use POSIX semaphores.
+//#include <semaphore.h>
 #include "../libpthread_win32/semaphore.h"
 
 typedef sem_t uvg_sem_t;

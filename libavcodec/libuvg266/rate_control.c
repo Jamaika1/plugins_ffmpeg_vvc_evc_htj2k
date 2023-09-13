@@ -36,6 +36,7 @@
 
 #include "encoder.h"
 #include "uvg266.h"
+//#include <pthread.h>
 #include "../libpthread_win32/pthread.h"
 
 
