@@ -44,8 +44,12 @@
 #include <unistd.h>
 #endif
 #include <stddef.h>
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 #include <time.h>
 #include "fontconfig.h"
 #include "fcprivate.h"

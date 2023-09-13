@@ -25,8 +25,12 @@
 #ifndef _FONTCONFIG_H_
 #define _FONTCONFIG_H_
 
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 #include <stdarg.h>
 #include <limits.h>
 
