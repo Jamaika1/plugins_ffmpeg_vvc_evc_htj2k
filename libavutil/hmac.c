@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "libavutil/attributes.h"
+#include "libavutil/error.h"
 #include "libavutil/hmac.h"
 #include "libavutil/md5.h"
 #include "libavutil/sha.h"

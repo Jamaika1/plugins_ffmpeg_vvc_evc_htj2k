@@ -19,6 +19,7 @@
  */
 
 #include "libavutil/avstring.h"
+#include "libavutil/macros.h"
 #include "libavutil/mem.h"
 #include "libavutil/spherical.h"
 

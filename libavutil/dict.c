@@ -18,13 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <inttypes.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/dict.h"
 #include "libavutil/dict_internal.h"
-#include "libavutil/internal.h"
+#include "libavutil/error.h"
 #include "libavutil/mem.h"
 #include "libavutil/time_internal.h"
 #include "libavutil/bprint.h"

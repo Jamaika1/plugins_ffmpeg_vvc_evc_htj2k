@@ -31,9 +31,11 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "libavutil/bswap.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/macros.h"
 #include "libavutil/mem.h"
 #include "libavutil/md5.h"
 
