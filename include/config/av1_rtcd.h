@@ -1131,14 +1131,16 @@ RTCD_EXTERN void (*av1_filter_intra_edge)(uint8_t* p, int sz, int strength);
 #define av1_filter_intra_edge av1_filter_intra_edge_c
 #endif
 
-void av1_filter_intra_edge_high_c(uint16_t* p, int sz, int strength);
+#if CONFIG_AV1_HIGHBITDEPTH
+void av1_highbd_filter_intra_edge_c(uint16_t* p, int sz, int strength);
 #if defined(__SSE4_1__) && HAVE_SIMD
-void av1_filter_intra_edge_high_sse4_1(uint16_t* p, int sz, int strength);
-RTCD_EXTERN void (*av1_filter_intra_edge_high)(uint16_t* p,
+void av1_highbd_filter_intra_edge_sse4_1(uint16_t* p, int sz, int strength);
+RTCD_EXTERN void (*av1_highbd_filter_intra_edge)(uint16_t* p,
                                                int sz,
                                                int strength);
 #else
-#define av1_filter_intra_edge_high av1_filter_intra_edge_high_c
+#define av1_highbd_filter_intra_edge av1_highbd_filter_intra_edge_c
+#endif
 #endif
 
 void av1_filter_intra_predictor_c(uint8_t* dst,
@@ -2398,12 +2400,14 @@ RTCD_EXTERN void (*av1_upsample_intra_edge)(uint8_t* p, int sz);
 #define av1_upsample_intra_edge av1_upsample_intra_edge_c
 #endif
 
-void av1_upsample_intra_edge_high_c(uint16_t* p, int sz, int bd);
+#if CONFIG_AV1_HIGHBITDEPTH
+void av1_highbd_upsample_intra_edge_c(uint16_t* p, int sz, int bd);
 #if defined(__SSE4_1__) && HAVE_SIMD
-void av1_upsample_intra_edge_high_sse4_1(uint16_t* p, int sz, int bd);
-RTCD_EXTERN void (*av1_upsample_intra_edge_high)(uint16_t* p, int sz, int bd);
+void av1_highbd_upsample_intra_edge_sse4_1(uint16_t* p, int sz, int bd);
+RTCD_EXTERN void (*av1_highbd_upsample_intra_edge)(uint16_t* p, int sz, int bd);
 #else
-#define av1_upsample_intra_edge_high av1_upsample_intra_edge_high_c
+#define av1_highbd_upsample_intra_edge av1_highbd_upsample_intra_edge_c
+#endif
 #endif
 
 void av1_warp_affine_c(const int32_t* mat,
@@ -5228,7 +5232,6 @@ static void setup_rtcd_internal(void) {
   av1_dr_prediction_z1 = av1_dr_prediction_z1_c;
   av1_dr_prediction_z2 = av1_dr_prediction_z2_c;
   av1_dr_prediction_z3 = av1_dr_prediction_z3_c;
-  av1_filter_intra_edge_high = av1_filter_intra_edge_high_c;
   av1_filter_intra_edge = av1_filter_intra_edge_c;
   av1_filter_intra_predictor = av1_filter_intra_predictor_c;
   av1_fwd_txfm2d_16x16 = av1_fwd_txfm2d_16x16_c;
@@ -5270,7 +5273,6 @@ static void setup_rtcd_internal(void) {
   av1_selfguided_restoration = av1_selfguided_restoration_c;
   av1_txb_init_levels = av1_txb_init_levels_c;
   av1_upsample_intra_edge = av1_upsample_intra_edge_c;
-  av1_upsample_intra_edge_high = av1_upsample_intra_edge_high_c;
   av1_warp_affine = av1_warp_affine_c;
   av1_estimate_noise_from_single_plane = av1_estimate_noise_from_single_plane_c;
   cfl_get_luma_subsampling_420_lbd = cfl_get_luma_subsampling_420_lbd_c;
@@ -5389,8 +5391,6 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1)
     av1_filter_intra_edge = av1_filter_intra_edge_sse4_1;
   if (flags & HAS_SSE4_1)
-    av1_filter_intra_edge_high = av1_filter_intra_edge_high_sse4_1;
-  if (flags & HAS_SSE4_1)
     av1_filter_intra_predictor = av1_filter_intra_predictor_sse4_1;
   if (flags & HAS_SSE4_1)
     av1_fwd_txfm2d_16x16 = av1_fwd_txfm2d_16x16_sse4_1;
@@ -5454,8 +5454,6 @@ static void setup_rtcd_internal(void) {
     av1_txb_init_levels = av1_txb_init_levels_sse4_1;
   if (flags & HAS_SSE4_1)
     av1_upsample_intra_edge = av1_upsample_intra_edge_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_upsample_intra_edge_high = av1_upsample_intra_edge_high_sse4_1;
   if (flags & HAS_SSE4_1)
     av1_warp_affine = av1_warp_affine_sse4_1;
   if (flags & HAS_SSE4_1)
@@ -5612,6 +5610,8 @@ static void setup_rtcd_internal(void) {
 
 #if CONFIG_AV1_HIGHBITDEPTH
 #if HAVE_SIMD
+  av1_highbd_filter_intra_edge = av1_highbd_filter_intra_edge_c;
+  av1_highbd_upsample_intra_edge = av1_highbd_upsample_intra_edge_c;
   av1_highbd_convolve_horiz_rs = av1_highbd_convolve_horiz_rs_c;
   av1_highbd_wiener_convolve_add_src = av1_highbd_wiener_convolve_add_src_c;
   av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_c;
@@ -5649,6 +5649,8 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) av1_highbd_wiener_convolve_add_src = av1_highbd_wiener_convolve_add_src_ssse3;
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
+  if (flags & HAS_SSE4_1) av1_highbd_filter_intra_edge = av1_highbd_filter_intra_edge_sse4_1;
+  if (flags & HAS_SSE4_1) av1_highbd_upsample_intra_edge = av1_highbd_upsample_intra_edge_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_convolve_horiz_rs = av1_highbd_convolve_horiz_rs_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_quantize_fp = av1_highbd_quantize_fp_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_warp_affine = av1_highbd_warp_affine_sse4_1;
