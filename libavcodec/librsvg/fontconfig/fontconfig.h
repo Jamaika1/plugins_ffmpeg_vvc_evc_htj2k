@@ -25,6 +25,10 @@
 #ifndef _FONTCONFIG_H_
 #define _FONTCONFIG_H_
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
