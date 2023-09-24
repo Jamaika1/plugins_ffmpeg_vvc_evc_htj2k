@@ -191,7 +191,7 @@ cd libvorbis
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -static -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_CONFIG_H=1 -DUSE_MEMORY_H=1 -DNHAVE_ERRNO_H -DHAVE_STDINT_H=1 -DPTW32_STATIC_LIB=1 -c %%f -o %%~nf.o
 cd ..
 cd libcodec2
-for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -static -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DFIXED_POINT=1 -DNUSE_SIMD -DUSE_KISS_FFT="" -c %%f -o %%~nf.o
+for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -static -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -UFIXED_POINT -DNUSE_SIMD -DUSE_KISS_FFT="" -c %%f -o %%~nf.o
 cd ..
 cd libspeex
 for %%f in ("%~dp1*.c") do gcc.exe -std=gnu11 -static -march=x86-64-v2 -ftree-vectorize -g0 -O3 -fPIC -mavx -mxsave -mpclmul -maes -DHAVE_CONFIG_H=1 -DFIXED_POINT=1 -DNUSE_SIMD -DUSE_KISS_FFT="" -c %%f -o %%~nf.o
