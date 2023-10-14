@@ -140,7 +140,7 @@
 #define CONFIG_EXT_RECUR_PARTITIONS 1 //NUMBER
   //AV2 Fully recursive partitions including H partitions experiment flag
 #define CONFIG_ERP_TFLITE 0 //NUMBER //Build ERP with TFLite
-#define CONFIG_UNEVEN_4WAY 1 //NUMBER
+#define CONFIG_UNEVEN_4WAY 0 //NUMBER
                    //AV2 uneven 4-way partition experiment flag
 #define CONFIG_COMPOUND_WARP_SAMPLES 1 //NUMBER
                    //AV2 compound warped motion samples experiment flag
@@ -209,7 +209,7 @@
 #define CONFIG_SKIP_MODE_ENHANCEMENT 1
                    //AV2 experiment flag to enable skip mode enhancement.
 #define CONFIG_TIP 1 //Enable temporal interpolated prediction (TIP)
-#define CONFIG_OUTPUT_FRAME_BASED_ON_ORDER_HINT 0
+#define CONFIG_OUTPUT_FRAME_BASED_ON_ORDER_HINT 1
                    //Enable frame output order derivation from order hint
 #define CONFIG_OPTFLOW_ON_TIP 1
                    //Enable optical flow refinement on top of TIP
@@ -245,6 +245,10 @@
 
 #define CONFIG_CWG_D067_IMPROVED_WARP 1
                    //Improvement of warp motions
+#define CONFIG_ADST_TUNED 1
+                   //AV2 experiment to replace the ADST 4, 8 and 16 basis
+#define CONFIG_TX_PARTITION_CTX 1
+                   //Enable to optimize txfm partition context
 
 // This is an encode-only change.
 #define CONFIG_MV_SEARCH_RANGE 1
@@ -275,6 +279,10 @@
 
 #define CONFIG_MF_IMPROVEMENT 1
                    //Enable to improve temporal motion projection
+#define CONFIG_MRSSE 0 //Enable MRSSE
+
+#define CONFIG_IST_SET_FLAG 1
+                   //AV2 experiment flag to signal Secondary Tx set ID.
 #define INLINE inline
 
 #endif  // AOM_CONFIG_H_

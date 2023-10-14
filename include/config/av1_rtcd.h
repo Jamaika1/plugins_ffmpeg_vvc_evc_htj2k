@@ -574,6 +574,19 @@ void av1_convolve_2d_sr_avx2(const uint8_t* src,
 #define av1_convolve_2d_sr av1_convolve_2d_sr_c
 #endif
 
+void av1_convolve_2d_sr_intrabc_c(const uint8_t *src,
+                                  int src_stride,
+                                  uint8_t *dst,
+                                  int dst_stride,
+                                  int w,
+                                  int h,
+                                  const InterpFilterParams *filter_params_x,
+                                  const InterpFilterParams *filter_params_y,
+                                  const int subpel_x_qn,
+                                  const int subpel_y_qn,
+                                  ConvolveParams *conv_params);
+#define av1_convolve_2d_sr_intrabc av1_convolve_2d_sr_intrabc_c
+
 void av1_convolve_horiz_rs_c(const uint8_t* src,
                              int src_stride,
                              uint8_t* dst,

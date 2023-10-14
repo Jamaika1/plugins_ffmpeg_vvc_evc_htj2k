@@ -67,6 +67,10 @@ typedef void (*cfl_predict_hbd_fn)(const int16_t* src,
                                    int alpha_q3,
                                    int bd);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void av1_highbd_convolve_horiz_rs_c(const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride, int w, int h, const int16_t *x_filters, int x0_qn, int x_step_qn, int bd);
 #if defined(__SSE4_1__) && HAVE_SIMD
 RTCD_EXTERN void (*av1_highbd_convolve_horiz_rs)(const uint16_t *src, int src_stride, uint16_t *dst, int dst_stride, int w, int h, const int16_t *x_filters, int x0_qn, int x_step_qn, int bd);
@@ -198,8 +202,8 @@ int av1_opfl_mv_refinement_nxn_highbd_sse4_1(const uint16_t *p0, int pstride0, c
 #endif
 int av1_opfl_mv_refinement_nxn_interp_grad_c( const int16_t *pdiff, int pstride,const int16_t *gx, const int16_t *gy, int gstride, int bw, int bh, int n,int d0, int d1, int grad_prec_bits,int mv_prec_bits, int *vx0, int *vy0,int *vx1, int *vy1);
 #if defined(__SSE4_1__) && HAVE_SIMD
-RTCD_EXTERN int (*av1_opfl_mv_refinement_nxn_interp_grad)(const uint16_t *p0, int pstride0, const uint16_t *p1, int pstride1, const int16_t *gx0, const int16_t *gy0, const int16_t *gx1, const int16_t *gy1, int gstride, int bw, int bh, int n, int d0, int d1, int grad_prec_bits, int mv_prec_bits, int *vx0, int *vy0, int *vx1, int *vy1);
-int av1_opfl_mv_refinement_nxn_interp_grad_sse4_1(const uint16_t *p0, int pstride0, const uint16_t *p1, int pstride1, const int16_t *gx0, const int16_t *gy0, const int16_t *gx1, const int16_t *gy1, int gstride, int bw, int bh, int n, int d0, int d1, int grad_prec_bits, int mv_prec_bits, int *vx0, int *vy0, int *vx1, int *vy1);
+RTCD_EXTERN int (*av1_opfl_mv_refinement_nxn_interp_grad)( const int16_t *pdiff, int pstride,const int16_t *gx, const int16_t *gy, int gstride, int bw, int bh, int n,int d0, int d1, int grad_prec_bits,int mv_prec_bits, int *vx0, int *vy0,int *vx1, int *vy1);
+int av1_opfl_mv_refinement_nxn_interp_grad_sse4_1( const int16_t *pdiff, int pstride,const int16_t *gx, const int16_t *gy, int gstride, int bw, int bh, int n,int d0, int d1, int grad_prec_bits,int mv_prec_bits, int *vx0, int *vy0,int *vx1, int *vy1);
 #else
 #define av1_opfl_mv_refinement_nxn_interp_grad av1_opfl_mv_refinement_nxn_interp_grad_c
 #endif
@@ -883,7 +887,7 @@ void av1_cnn_batchnorm_c(float **image, int channels, int width, int height, int
 // hard to support, so optimizations for this target are disabled.
 
 int cdef_find_dir_c(const uint16_t *img, int stride, int32_t *var, int coeff_shift);
-#if HAVE_SIMD && !defined(__MSVCRT__)
+#if HAVE_SIMD //&& !defined(__MSVCRT__)
   RTCD_EXTERN int (*cdef_find_dir)(const uint16_t *img, int stride, int32_t *var, int coeff_shift);
   int cdef_find_dir_sse2(const uint16_t *img, int stride, int32_t *var, int coeff_shift);
 #if defined(__SSSE3__)
@@ -899,7 +903,7 @@ int cdef_find_dir_c(const uint16_t *img, int stride, int32_t *var, int coeff_shi
   #define cdef_find_dir cdef_find_dir_c
 #endif
 void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride, const uint16_t *in, int pri_strength, int sec_strength, int dir, int pri_damping, int sec_damping, int bsize, int coeff_shift);
-#if HAVE_SIMD && !defined(__MSVCRT__)
+#if HAVE_SIMD //&& !defined(__MSVCRT__)
   RTCD_EXTERN void (*cdef_filter_block)(uint8_t *dst8, uint16_t *dst16, int dstride, const uint16_t *in, int pri_strength, int sec_strength, int dir, int pri_damping, int sec_damping, int bsize, int coeff_shift);
   void cdef_filter_block_sse2(uint8_t *dst8, uint16_t *dst16, int dstride, const uint16_t *in, int pri_strength, int sec_strength, int dir, int pri_damping, int sec_damping, int bsize, int coeff_shift);
 #if defined(__SSSE3__)
@@ -916,7 +920,7 @@ void cdef_filter_block_c(uint8_t *dst8, uint16_t *dst16, int dstride, const uint
 #endif
 
 void cdef_copy_rect8_16bit_to_16bit_c(uint16_t *dst, int dstride, const uint16_t *src, int sstride, int v, int h);
-#if HAVE_SIMD && !defined(__MSVCRT__)
+#if HAVE_SIMD //&& !defined(__MSVCRT__)
   RTCD_EXTERN void (*cdef_copy_rect8_16bit_to_16bit)(uint16_t *dst, int dstride, const uint16_t *src, int sstride, int v, int h);
   void cdef_copy_rect8_16bit_to_16bit_sse2(uint16_t *dst, int dstride, const uint16_t *src, int sstride, int v, int h);
 #if defined(__SSSE3__)
@@ -1012,7 +1016,7 @@ void av1_highbd_warp_affine_avx2(const int32_t *mat, const uint16_t *ref, int wi
 #define av1_highbd_warp_affine av1_highbd_warp_affine_c
 #endif
 
-#if CONFIG_AV1_ENCODER
+//#if CONFIG_AV1_ENCODER
   double av1_compute_cross_correlation_c(unsigned char *im1, int stride1, int x1, int y1, unsigned char *im2, int stride2, int x2, int y2);
 #if HAVE_SIMD
 #if defined(__SSE4_1__)
@@ -1025,7 +1029,7 @@ void av1_highbd_warp_affine_avx2(const int32_t *mat, const uint16_t *ref, int wi
 #else
   #define av1_compute_cross_correlation av1_compute_cross_correlation_c
 #endif
-#endif
+//#endif
 
 // LOOP_RESTORATION functions
 
@@ -1328,9 +1332,9 @@ static void setup_rtcd_internal(void) {
   highbd_filt_vert_pred = highbd_filt_vert_pred_c;
 #endif
   av1_highbd_warp_affine = av1_highbd_warp_affine_c;
-#if CONFIG_AV1_ENCODER
+//#if CONFIG_AV1_ENCODER
   av1_compute_cross_correlation = av1_compute_cross_correlation_c;
-#endif
+//#endif
   av1_apply_selfguided_restoration = av1_apply_selfguided_restoration_c;
   av1_selfguided_restoration = av1_selfguided_restoration_c;
   av1_highbd_dist_wtd_convolve_2d = av1_highbd_dist_wtd_convolve_2d_c;
@@ -1357,21 +1361,21 @@ static void setup_rtcd_internal(void) {
   av1_wedge_sse_from_residuals = av1_wedge_sse_from_residuals_sse2;
   av1_wedge_sign_from_residuals = av1_wedge_sign_from_residuals_sse2;
   av1_wedge_compute_delta_squares = av1_wedge_compute_delta_squares_sse2;
-#if !defined(__MSVCRT__)
+//#if !defined(__MSVCRT__)
   cdef_find_dir = cdef_find_dir_sse2;
   cdef_filter_block = cdef_filter_block_sse2;
   cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_sse2;
-#endif
+//#endif
   cfl_get_subtract_average_fn = cfl_get_subtract_average_fn_sse2;
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
   if (flags & HAS_SSSE3) av1_highbd_wiener_convolve_add_src = av1_highbd_wiener_convolve_add_src_ssse3;
   if (flags & HAS_SSSE3) av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_ssse3;
-#if !defined(__MSVCRT__)
+//#if !defined(__MSVCRT__)
   if (flags & HAS_SSSE3) cdef_find_dir = cdef_find_dir_ssse3;
   if (flags & HAS_SSSE3) cdef_filter_block = cdef_filter_block_ssse3;
   if (flags & HAS_SSSE3) cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_ssse3;
-#endif
+//#endif
   if (flags & HAS_SSSE3) av1_highbd_convolve_2d_sr = av1_highbd_convolve_2d_sr_ssse3;
   if (flags & HAS_SSSE3) av1_highbd_convolve_x_sr = av1_highbd_convolve_x_sr_ssse3;
   if (flags & HAS_SSSE3) av1_highbd_convolve_y_sr = av1_highbd_convolve_y_sr_ssse3;
@@ -1431,15 +1435,15 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1) av1_highbd_pixel_proj_error = av1_highbd_pixel_proj_error_sse4_1;
   if (flags & HAS_SSE4_1) av1_get_horver_correlation_full = av1_get_horver_correlation_full_sse4_1;
 #endif
-#if !defined(__MSVCRT__)
+//#if !defined(__MSVCRT__)
   if (flags & HAS_SSE4_1) cdef_find_dir = cdef_find_dir_sse4_1;
   if (flags & HAS_SSE4_1) cdef_filter_block = cdef_filter_block_sse4_1;
   if (flags & HAS_SSE4_1) cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_sse4_1;
-#endif
+//#endif
   if (flags & HAS_SSE4_1) av1_highbd_warp_affine = av1_highbd_warp_affine_sse4_1;
-#if CONFIG_AV1_ENCODER
+//#if CONFIG_AV1_ENCODER
   if (flags & HAS_SSE4_1) av1_compute_cross_correlation = av1_compute_cross_correlation_sse4_1;
-#endif
+//#endif
   if (flags & HAS_SSE4_1) av1_apply_selfguided_restoration = av1_apply_selfguided_restoration_sse4_1;
   if (flags & HAS_SSE4_1) av1_selfguided_restoration = av1_selfguided_restoration_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_dist_wtd_convolve_2d = av1_highbd_dist_wtd_convolve_2d_sse4_1;
