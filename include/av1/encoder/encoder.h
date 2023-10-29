@@ -1442,6 +1442,8 @@ typedef struct RD_COUNTS {
 
 typedef struct ThreadData {
   MACROBLOCK mb;
+  MvCosts *mv_costs_alloc;
+  IntraBCMVCosts *dv_costs_alloc;
   RD_COUNTS rd_counts;
   FRAME_COUNTS *counts;
   PC_TREE_SHARED_BUFFERS shared_coeff_buf;
@@ -1476,8 +1478,8 @@ typedef struct ThreadData {
   // store source variance and log of source variance of each 4x4 sub-block
   // for subsequent retrieval.
   Block4x4VarInfo *src_var_info_of_4x4_sub_blocks;
-  // The pc tree root for RTC non-rd case.
-  PC_TREE *rt_pc_root;
+  // Pointer to pc tree root.
+  PC_TREE *pc_root;
 } ThreadData;
 
 struct EncWorkerData;
@@ -1533,6 +1535,13 @@ typedef struct {
    * error in order to abort the processing of other worker threads.
    */
   bool row_mt_exit;
+
+  /*!
+   * Initialized to false, set to true during first pass encoding by the worker
+   * thread that encounters an error in order to abort the processing of other
+   * worker threads.
+   */
+  bool firstpass_mt_exit;
 
 #if CONFIG_MULTITHREAD
   /*!
@@ -2946,6 +2955,11 @@ typedef struct AV1_COMP {
   TemporalFilterCtx tf_ctx;
 
   /*!
+   * Pointer to CDEF search context.
+   */
+  CdefSearchCtx *cdef_search_ctx;
+
+  /*!
    * Variables related to forcing integer mv decisions for the current frame.
    */
   ForceIntegerMVInfo force_intpel_info;
@@ -3371,6 +3385,11 @@ typedef struct AV1_COMP {
    * in a scale of 8x8 block.
    */
   uint8_t *consec_zero_mv;
+
+  /*!
+   * Allocated memory size for |consec_zero_mv|.
+   */
+  int consec_zero_mv_alloc_size;
 
   /*!
    * Block size of first pass encoding
