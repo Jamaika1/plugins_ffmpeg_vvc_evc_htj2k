@@ -16,7 +16,7 @@
 #define ARCH_MIPS 0 //Enables MIPS architecture.
 #define ARCH_PPC 0 //Enables PPC architecture.
 #define ARCH_X86 0 //Enables X86 architecture.
-#define ARCH_X86_64 1 //Enables X86_64 architecture.
+//#define ARCH_X86_64 1 //Enables X86_64 architecture.
 
 // ARM feature flags.
 #define HAVE_NEON 0 //Enables NEON intrinsics optimizations.
@@ -64,7 +64,7 @@
 #define CONFIG_GCC 0 //Building with GCC (detect).
 #define CONFIG_GCOV 0 //Enable gcov support.
 #define CONFIG_GPROF 0 //Enable gprof support.
-#define CONFIG_LIBYUV 1 //Enables libyuv scaling/conversion support.
+#define CONFIG_LIBYUV 0 //Enables libyuv scaling/conversion support.
 
 #define CONFIG_MULTITHREAD 1 //Multithread support.
 #define CONFIG_OS_SUPPORT 0 //Internal flag.
@@ -132,6 +132,8 @@
 #define CONFIG_ATC 1 //AV2 enable adaptive transform coding.
 #define CONFIG_ATC_REDUCED_TXSET 1
                    //AV2 enable reduced transform set.
+#define CONFIG_CHROMA_TX_COEFF_CODING 1
+  //AV2 experiment flag to enable improved chroma transform coefficient coding
 #define CONFIG_ATC_DCTX_ALIGNED 1
   //AV2 TX signaling restriction for DC blocks with EOB alignment.
 #define CONFIG_BYPASS_IMPROVEMENT 1
@@ -139,8 +141,11 @@
 #define CONFIG_EXT_DIR 1 //AV2 extended intra prediction angles.
 #define CONFIG_EXT_RECUR_PARTITIONS 1 //NUMBER
   //AV2 Fully recursive partitions including H partitions experiment flag
+#define CONFIG_BLOCK_256 1 //NUMBER //AV2 BLOCK_256 experiment flag
+#define CONFIG_FLEX_PARTITION 1 //NUMBER
+                   //AV2 Flexible partition experiment flag
 #define CONFIG_ERP_TFLITE 0 //NUMBER //Build ERP with TFLite
-#define CONFIG_UNEVEN_4WAY 0 //NUMBER
+#define CONFIG_UNEVEN_4WAY 1 //NUMBER
                    //AV2 uneven 4-way partition experiment flag
 #define CONFIG_COMPOUND_WARP_SAMPLES 1 //NUMBER
                    //AV2 compound warped motion samples experiment flag
@@ -222,7 +227,11 @@
 #define CONFIG_PAR_HIDING 1
                    //Enable parity hiding for coefficients coding. (PH)
 #define CONFIG_BAWP 1 //Enable block adaptive weighted prediction
+#define CONFIG_EXPLICIT_BAWP 0
+                   //Explicit signaling for block adaptive weighted prediction
 #define CONFIG_WARPMV 1 //Enable warpmv modes
+#define CONFIG_BAWP_CHROMA 1
+                   //Enable block adaptive weighted prediction for Chroma
 #define CONFIG_IMPROVED_ANGULAR_INTRA 1
                    //Improved angular intra prediction mode
 #define CONFIG_D071_IMP_MSK_BLD 1
@@ -253,6 +262,8 @@
 // This is an encode-only change.
 #define CONFIG_MV_SEARCH_RANGE 1
                    //Enable a sufficient MV search range.
+#define CONFIG_LARGE_TF_BLOCK 1
+                   //Enable large adaptively selected temporal filter blocks.
 #define CONFIG_FIX_CDEF_SYNTAX 1
                    //AV2 experiment flag to fix CDEF syntax.
 #define CONFIG_IMPROVED_CFL 1
@@ -283,6 +294,8 @@
 
 #define CONFIG_IST_SET_FLAG 1
                    //AV2 experiment flag to signal Secondary Tx set ID.
+#define CONFIG_SCC_DETERMINATION 1
+                   //Enable the screen content tools determination improvement./
 #define INLINE inline
 
 #endif  // AOM_CONFIG_H_

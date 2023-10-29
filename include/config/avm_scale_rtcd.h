@@ -14,7 +14,7 @@ struct yv12_buffer_config;
 extern "C" {
 #endif
 
-#if CONFIG_SPATIAL_RESAMPLING
+//#if CONFIG_SPATIAL_RESAMPLING
 void aom_horizontal_line_5_4_scale_c(const unsigned char* source,
                                      unsigned int source_width,
                                      unsigned char* dest,
@@ -60,7 +60,7 @@ void aom_vertical_band_2_1_scale_i_c(unsigned char* source,
                                      int dest_pitch,
                                      unsigned int dest_width);
 #define aom_vertical_band_2_1_scale_i aom_vertical_band_2_1_scale_i_c
-#endif
+//#endif
 
 int aom_yv12_realloc_with_new_border_c(struct yv12_buffer_config* ybf,
                                        int new_border,
