@@ -1028,9 +1028,10 @@ static AOM_INLINE void write_intra_prediction_modes(const AV1_COMMON *cm,
     write_intra_uv_mode(ec_ctx, uv_mode, mode, is_cfl_allowed(xd), w);
     if (uv_mode == UV_CFL_PRED)
       write_cfl_alphas(ec_ctx, mbmi->cfl_alpha_idx, mbmi->cfl_alpha_signs, w);
-    if (use_angle_delta && av1_is_directional_mode(get_uv_mode(uv_mode))) {
+    const PREDICTION_MODE equiv_mode = get_uv_mode(uv_mode);
+    if (use_angle_delta && av1_is_directional_mode(equiv_mode)) {
       write_angle_delta(w, mbmi->angle_delta[PLANE_TYPE_UV],
-                        ec_ctx->angle_delta_cdf[uv_mode - V_PRED]);
+                        ec_ctx->angle_delta_cdf[equiv_mode - V_PRED]);
     }
   }
 
@@ -3364,7 +3365,7 @@ uint32_t av1_write_obu_header(AV1LevelParams *const level_params,
   aom_wb_write_literal(&wb, 0, 1);  // forbidden bit.
   aom_wb_write_literal(&wb, (int)obu_type, 4);
   aom_wb_write_literal(&wb, obu_extension ? 1 : 0, 1);
-  aom_wb_write_literal(&wb, 1, 1);  // obu_has_payload_length_field
+  aom_wb_write_literal(&wb, 1, 1);  // obu_has_size_field
   aom_wb_write_literal(&wb, 0, 1);  // reserved
 
   if (obu_extension) {
