@@ -33,6 +33,7 @@ void av1_init_layer_context(AV1_COMP *const cpi) {
   svc->force_zero_mode_spatial_ref = 1;
   svc->num_encoded_top_layer = 0;
   svc->use_flexible_mode = 0;
+  svc->has_lower_quality_layer = 0;
 
   for (int sl = 0; sl < svc->number_spatial_layers; ++sl) {
     for (int tl = 0; tl < svc->number_temporal_layers; ++tl) {
@@ -69,7 +70,7 @@ void av1_init_layer_context(AV1_COMP *const cpi) {
         lc->actual_num_seg1_blocks = 0;
         lc->actual_num_seg2_blocks = 0;
         lc->counter_encode_maxq_scene_change = 0;
-        if (lc->map) aom_free(lc->map);
+        aom_free(lc->map);
         CHECK_MEM_ERROR(cm, lc->map,
                         aom_calloc(mi_rows * mi_cols, sizeof(*lc->map)));
       }
@@ -155,7 +156,7 @@ void av1_update_layer_context_change_config(AV1_COMP *const cpi,
         lc->actual_num_seg1_blocks = 0;
         lc->actual_num_seg2_blocks = 0;
         lc->counter_encode_maxq_scene_change = 0;
-        if (lc->map) aom_free(lc->map);
+        aom_free(lc->map);
         CHECK_MEM_ERROR(cm, lc->map,
                         aom_calloc(mi_rows * mi_cols, sizeof(*lc->map)));
       }
@@ -245,7 +246,8 @@ void av1_restore_layer_context(AV1_COMP *const cpi) {
   // This is to skip searching mv for that reference if it was last
   // refreshed (i.e., buffer slot holding that reference was refreshed) on the
   // previous spatial layer(s) at the same time (current_superframe).
-  if (rtc_ref->set_ref_frame_config && svc->force_zero_mode_spatial_ref) {
+  if (rtc_ref->set_ref_frame_config && svc->force_zero_mode_spatial_ref &&
+      cpi->sf.rt_sf.use_nonrd_pick_mode) {
     if (check_ref_is_low_spatial_res_super_frame(LAST_FRAME, svc, rtc_ref)) {
       svc->skip_mvsearch_last = 1;
     }
@@ -357,7 +359,8 @@ void av1_free_svc_cyclic_refresh(AV1_COMP *const cpi) {
     for (int tl = 0; tl < svc->number_temporal_layers; ++tl) {
       int layer = LAYER_IDS_TO_IDX(sl, tl, svc->number_temporal_layers);
       LAYER_CONTEXT *const lc = &svc->layer_context[layer];
-      if (lc->map) aom_free(lc->map);
+      aom_free(lc->map);
+      lc->map = NULL;
     }
   }
 }
@@ -395,6 +398,16 @@ void av1_one_pass_cbr_svc_start_layer(AV1_COMP *const cpi) {
   int width = 0, height = 0;
   lc = &svc->layer_context[svc->spatial_layer_id * svc->number_temporal_layers +
                            svc->temporal_layer_id];
+  // Set the lower quality layer flag.
+  svc->has_lower_quality_layer = 0;
+  if (cpi->svc.spatial_layer_id > 0) {
+    const LAYER_CONTEXT *lc_prev =
+        &svc->layer_context[(svc->spatial_layer_id - 1) *
+                                svc->number_temporal_layers +
+                            svc->temporal_layer_id];
+    if (lc_prev->scaling_factor_den == 1 && lc_prev->scaling_factor_num == 1)
+      svc->has_lower_quality_layer = 1;
+  }
   av1_get_layer_resolution(cpi->oxcf.frm_dim_cfg.width,
                            cpi->oxcf.frm_dim_cfg.height, lc->scaling_factor_num,
                            lc->scaling_factor_den, &width, &height);

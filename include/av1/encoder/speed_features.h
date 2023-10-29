@@ -92,6 +92,8 @@ enum {
                             (1 << NEAREST_NEWMV) | (1 << NEW_NEARESTMV) |
                             (1 << NEW_NEARMV) | (1 << NEAR_NEWMV) |
                             (1 << NEAR_NEARMV),
+  INTER_SINGLE_ALL =
+      (1 << NEARESTMV) | (1 << NEARMV) | (1 << GLOBALMV) | (1 << NEWMV),
 };
 
 enum {
@@ -240,11 +242,14 @@ enum {
 } UENUM1BYTE(PRUNE_NEARMV_LEVEL);
 
 enum {
-  // Default Transform search case - used in evaluation of compound type mode
-  // and best inter candidates
+  // Default transform search used in evaluation of best inter candidates
+  // (MODE_EVAL stage) and motion mode winner processing (WINNER_MODE_EVAL
+  // stage).
   TX_SEARCH_DEFAULT = 0,
-  // Transform search in motion mode rd
+  // Transform search in motion mode rd during MODE_EVAL stage.
   TX_SEARCH_MOTION_MODE,
+  // Transform search in compound type mode rd during MODE_EVAL stage.
+  TX_SEARCH_COMP_TYPE_MODE,
   // All transform search cases
   TX_SEARCH_CASES
 } UENUM1BYTE(TX_SEARCH_CASE);
@@ -592,9 +597,10 @@ typedef struct PARTITION_SPEED_FEATURES {
   // Used if partition_search_type = FIXED_PARTITION
   BLOCK_SIZE fixed_partition_size;
 
-  // Prune extended partition types search
-  // Can take values 0 - 2, 0 referring to no pruning, and 1 - 2 increasing
-  // aggressiveness of pruning in order.
+  // Prune extended partition types search based on the current best partition
+  // and the combined rdcost of the subblocks estimated from previous
+  // partitions. Can take values 0 - 2, 0 referring to no pruning, and 1 - 2
+  // increasing aggressiveness of pruning in order.
   int prune_ext_partition_types_search_level;
 
   // Prune part4 based on block size
@@ -679,8 +685,9 @@ typedef struct PARTITION_SPEED_FEATURES {
   // 2: Prune none, split and rectangular partitions
   int intra_cnn_based_part_prune_level;
 
-  // Disable extended partition search for lower block sizes.
-  int ext_partition_eval_thresh;
+  // Disable extended partition search if the current bsize is greater than the
+  // threshold. Must be a square block size BLOCK_8X8 or higher.
+  BLOCK_SIZE ext_partition_eval_thresh;
 
   // Use best partition decision so far to tune 'ext_partition_eval_thresh'
   int ext_part_eval_based_on_cur_best;
@@ -688,7 +695,8 @@ typedef struct PARTITION_SPEED_FEATURES {
   // Disable rectangular partitions for larger block sizes.
   int rect_partition_eval_thresh;
 
-  // prune extended partition search
+  // Prune extended partition search based on whether the split/rect partitions
+  // provided an improvement in the previous search.
   // 0 : no pruning
   // 1 : prune 1:4 partition search using winner info from split partitions
   // 2 : prune 1:4 and AB partition search using split and HORZ/VERT info
@@ -850,6 +858,9 @@ typedef struct MV_SPEED_FEATURES {
   // Accurate full pixel motion search based on TPL stats.
   int full_pixel_search_level;
 
+  // Allow intrabc motion search
+  int use_intrabc;
+
   // Whether to downsample the rows in sad calculation during motion search.
   // This is only active when there are at least 16 rows. When this sf is
   // active, if there is a large discrepancy in the SAD values for the final
@@ -927,6 +938,12 @@ typedef struct INTER_MODE_SPEED_FEATURES {
   // 1 prune inter modes w.r.t ALTREF2 and ALTREF reference frames
   // 2 prune inter modes w.r.t BWDREF, ALTREF2 and ALTREF reference frames
   int alt_ref_search_fp;
+
+  // Prune reference frames for single prediction modes based on temporal
+  // distance and pred MV SAD. Feasible values are 0, 1, 2. The feature is
+  // disabled for 0. An increasing value indicates more aggressive pruning
+  // threshold.
+  int prune_single_ref;
 
   // Prune compound reference frames
   // 0 no pruning

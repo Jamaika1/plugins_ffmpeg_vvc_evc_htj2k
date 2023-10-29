@@ -13,8 +13,8 @@
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 7
 #define VERSION_PATCH 0
-#define VERSION_EXTRA "b8a534d"
+#define VERSION_EXTRA "eccfc28"
 #define VERSION_PACKED \
   ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))
-#define VERSION_STRING_NOSP "v3.7.0-b8a534d"
-#define VERSION_STRING " v3.7.0-b8a534d"
+#define VERSION_STRING_NOSP "v3.7.0-eccfc28"
+#define VERSION_STRING " v3.7.0-eccfc28"
