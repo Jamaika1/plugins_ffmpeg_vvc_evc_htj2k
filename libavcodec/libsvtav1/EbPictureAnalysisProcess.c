@@ -1503,11 +1503,7 @@ static void sub_sample_luma_generate_pixel_intensity_histogram_bins(SequenceCont
                                              scs->picture_analysis_number_of_regions_per_height - 1)
                 ? input_pic->height - (scs->picture_analysis_number_of_regions_per_height * region_height)
                 : 0;
-
-            uint8_t decim_step = scs->static_config.scene_change_detection
-                ? 1
-                : 4; // scs->vq_ctrls.sharpness_ctrls.scene_transition
-
+            uint8_t  decim_step           = scs->static_config.scene_change_detection ? 1 : 4;
             // Y Histogram
             calculate_histogram(
                 &input_pic->buffer_y[(input_pic->org_x + region_in_picture_width_index * region_width) +
@@ -1579,7 +1575,7 @@ void svt_aom_gathering_picture_statistics(SequenceControlSet *scs, PictureParent
                                           EbPictureBufferDesc *sixteenth_decimated_picture_ptr) {
     pcs->avg_luma = INVALID_LUMA;
     // Histogram bins
-    if (scs->static_config.scene_change_detection || scs->vq_ctrls.sharpness_ctrls.scene_transition) {
+    if (scs->calc_hist) {
         // Use 1/16 Luma for Histogram generation
         // 1/16 input ready
         sub_sample_luma_generate_pixel_intensity_histogram_bins(

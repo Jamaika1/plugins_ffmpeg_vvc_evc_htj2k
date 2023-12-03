@@ -971,8 +971,8 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_c(
     // Larger noise -> larger filtering weight.
     int32_t idx_32x32 = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
 
-    //double distance_threshold = (double)AOMMAX(me_ctx->min_frame_size * TF_SEARCH_DISTANCE_THRESHOLD, 1);
-    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->min_frame_size << 16) / 10, 1 << 16);
+    //double distance_threshold = (double)AOMMAX(me_ctx->tf_mv_dist_th * TF_SEARCH_DISTANCE_THRESHOLD, 1);
+    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->tf_mv_dist_th << 16) / 10, 1 << 16);
 
     //Calculation for every quarter
     uint32_t  d_factor_fp8[4];
@@ -1054,12 +1054,9 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint32_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
-        // int32_t avg_err_fp12 = ((int64_t)(combined_error_fp16) * d_factor_fp16[subblock_idx])>>20;
-        FP_ASSERT((((int64_t)combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3)) <
-                  ((int64_t)1 << 31));
+        uint64_t avg_err_fp10  = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
-        uint32_t scaled_diff16 = AOMMIN(
+        uint32_t scaled_diff16 = (uint32_t) AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
         //int adjusted_weight = (int)(expf((float)(-scaled_diff)) * TF_WEIGHT_SCALE);
         uint32_t adjusted_weight = (expf_tab_fp16[scaled_diff16] * TF_WEIGHT_SCALE) >> 16;
@@ -1155,8 +1152,8 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
     // Larger noise -> larger filtering weight.
     int idx_32x32    = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
     int shift_factor = ((encoder_bit_depth - 8) * 2);
-    //const double distance_threshold = (double)AOMMAX(me_ctx->min_frame_size * TF_SEARCH_DISTANCE_THRESHOLD, 1);
-    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->min_frame_size << 16) / 10, 1 << 16);
+    //const double distance_threshold = (double)AOMMAX(me_ctx->tf_mv_dist_th * TF_SEARCH_DISTANCE_THRESHOLD, 1);
+    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->tf_mv_dist_th << 16) / 10, 1 << 16);
 
     //Calculation for every quarter
     uint32_t  d_factor_fp8[4];
@@ -1247,13 +1244,9 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_c(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint32_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
-        // int32_t avg_err_fp12 = ((int64_t)(combined_error_fp16) * d_factor_fp16[subblock_idx])>>20;
-        FP_ASSERT((((int64_t)combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3)) <
-                  ((int64_t)1 << 31));
-
+        uint64_t avg_err_fp10  = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
         //double scaled_diff = AOMMIN(combined_error * d_factor[subblock_idx] / (FP2FLOAT(tf_decay_factor_fp16)), 7);
-        uint32_t scaled_diff16 = AOMMIN(
+        uint32_t scaled_diff16 = (uint32_t) AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor_fp16 >> 10), 1), 7 * 16);
         //int adjusted_weight = (int)(expf((float)(-scaled_diff)) * TF_WEIGHT_SCALE);
         uint32_t adjusted_weight = (expf_tab_fp16[scaled_diff16] * TF_WEIGHT_SCALE) >> 16;
@@ -3996,6 +3989,26 @@ static void convert_64x64_info_to_32x32_info(
         }
     }
 }
+static void set_hme_search_params_mctf(MeContext *ctx, uint8_t hme_search_level) {
+
+    switch (hme_search_level) {
+    case 0:
+        ctx->hme_l0_sa.sa_min.width  = ctx->hme_l0_sa_default_tf.sa_min.width;
+        ctx->hme_l0_sa.sa_min.height = ctx->hme_l0_sa_default_tf.sa_min.height;
+        ctx->hme_l0_sa.sa_max.width  = ctx->hme_l0_sa_default_tf.sa_max.width;
+        ctx->hme_l0_sa.sa_max.height = ctx->hme_l0_sa_default_tf.sa_max.height;
+        break;
+    case 1:
+        ctx->hme_l0_sa.sa_min.width  = ctx->hme_l0_sa_default_tf.sa_min.width  << 1;
+        ctx->hme_l0_sa.sa_min.height = ctx->hme_l0_sa_default_tf.sa_min.height << 1;
+        ctx->hme_l0_sa.sa_max.width  = ctx->hme_l0_sa_default_tf.sa_max.width  << 2;
+        ctx->hme_l0_sa.sa_max.height = ctx->hme_l0_sa_default_tf.sa_max.height << 2;
+        break;
+
+    default: assert(0); break;
+    }
+
+}
 // Produce the filtered alt-ref picture
 // - core function
 static EbErrorType produce_temporally_filtered_pic(
@@ -4087,16 +4100,29 @@ static EbErrorType produce_temporally_filtered_pic(
                 input_picture_ptr_central->stride_bit_inc_cr +
             (input_picture_ptr_central->org_x >> ss_x),
     };
-    int decay_control;
+    int decay_control[COLOR_CHANNELS];
     if (scs->vq_ctrls.sharpness_ctrls.tf && centre_pcs->is_noise_level && scs->calculate_variance && centre_pcs->pic_avg_variance < VQ_PIC_AVG_VARIANCE_TH) {
-        decay_control = 1;
+
+        decay_control[C_Y] = 1;
+        decay_control[C_U] = 1;
+        decay_control[C_V] = 1;
     }
     else {
-        // Hyper-parameter for filter weight adjustment.
-        decay_control =  3;
-        // Decrease the filter strength for low QPs
-        if (scs->static_config.qp <= ALT_REF_QP_THRESH)
-            decay_control--;
+        decay_control[C_Y] = 3;
+        decay_control[C_U] = 6;
+        decay_control[C_V] = 6;
+
+
+        if (centre_pcs->slice_type != I_SLICE) {
+
+            int ratio = noise_levels_log1p_fp16[0]
+                ? (centre_pcs->filt_to_unfilt_diff * 100) / noise_levels_log1p_fp16[0]
+                : 0;
+
+            if (ratio > 150) {
+                decay_control[C_Y] += 1;
+            }
+        }
     }
     // Adjust filtering based on q.
     // Larger q -> stronger filtering -> larger weight.
@@ -4138,37 +4164,32 @@ static EbErrorType produce_temporally_filtered_pic(
         q = active_best_quality;
 
         FP_ASSERT(q < (1 << 20));
-        //double q_decay = pow((double)q / TF_Q_DECAY_THRESHOLD, 2);
-
-        //TODO: FIX1 uint32_t???
-        int32_t  q_treshold_fp8 = (q * ((int32_t)1 << 8)) / TF_Q_DECAY_THRESHOLD;
-        uint32_t q_decay_fp8 = (q_treshold_fp8 * q_treshold_fp8) >> 8;
-
-        //  q_decay_fp8 = ((q_decay_fp8) < (1) ? (1) : (q_decay_fp8) > (1<<8) ? (1<<8) : (q_decay_fp8));
-        q_decay_fp8 = CLIP(q_decay_fp8, 1, 1 << 8);
+        // Max q_factor is 255, therefore the upper bound of q_decay is 8.
+        // We do not need a clip here.
+        //q_decay = 0.5 * pow((double)q / 64, 2);
+        FP_ASSERT(q < (1 << 15));
+        uint32_t q_decay_fp8 = 256;
         if (q >= TF_QINDEX_CUTOFF) {
-            // Max q_factor is 255, therefore the upper bound of q_decay is 8.
-            // We do not need a clip here.
-            //q_decay = 0.5 * pow((double)q / 64, 2);
-            FP_ASSERT(q < (1 << 15));
             q_decay_fp8 = (q * q) >> 5;
+        }
+        else {
+            q_decay_fp8 = MAX(q << 2, 1);
         }
         const int32_t const_0dot7_fp16 = 45875; //0.7
         /*Calculation of log and dceay_factor possible to move to estimate_noise() and calculate one time for GOP*/
         //decay_control * (0.7 + log1p(noise_levels[C_Y]))
-        int32_t n_decay_fp10 = (decay_control * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_Y])) /
+        int32_t n_decay_fp10 = (decay_control[C_Y] * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_Y])) /
             ((int32_t)1 << 6);
         //2 * n_decay * n_decay * q_decay * (s_decay always is 1);
         ctx->tf_decay_factor_fp16[C_Y] = (uint32_t)(
             (((((int64_t)n_decay_fp10) * ((int64_t)n_decay_fp10))) * q_decay_fp8) >> 11);
 
         if (ctx->tf_chroma) {
-            n_decay_fp10 = (decay_control * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_U])) /
+            n_decay_fp10 = (decay_control[C_U] * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_U])) /
                 ((int32_t)1 << 6);
             ctx->tf_decay_factor_fp16[C_U] = (uint32_t)(
                 (((((int64_t)n_decay_fp10) * ((int64_t)n_decay_fp10))) * q_decay_fp8) >> 11);
-
-            n_decay_fp10 = (decay_control * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_V])) /
+            n_decay_fp10 = (decay_control[C_V] * (const_0dot7_fp16 + noise_levels_log1p_fp16[C_V])) /
                 ((int32_t)1 << 6);
             ctx->tf_decay_factor_fp16[C_V] = (uint32_t)(
                 (((((int64_t)n_decay_fp10) * ((int64_t)n_decay_fp10))) * q_decay_fp8) >> 11);
@@ -4241,6 +4262,14 @@ static EbErrorType produce_temporally_filtered_pic(
 
             for (int segment_idx = 0; segment_idx < 3; segment_idx++)
                 for (int frame_index = start_frame_index[segment_idx]; frame_index <= end_frame_index[segment_idx]; frame_index = frame_index+ me_context_ptr->me_ctx->tf_ctrls.ref_frame_factor) {
+                // Use ahd-error to central/avg to identify/skip outlier ref-frame(s)
+                if (frame_index != index_center) {
+                    uint32_t low_ahd_err = centre_pcs->aligned_width * centre_pcs->aligned_height;
+                    uint8_t th = (centre_pcs->slice_type == I_SLICE) ? 10 : 20;
+                    if (pcs_list[frame_index]->tf_ahd_error_to_central > low_ahd_err && // error to central high enough
+                       ((int) (((int) pcs_list[frame_index]->tf_ahd_error_to_central - (int) centre_pcs->tf_avg_ahd_error) * 100)) > (th * (int) centre_pcs->tf_avg_ahd_error)) // ahd_error_to_central higher than tf_avg_ahd_error by x%
+                        continue;
+                }
                 // ------------
                 // Step 1: motion estimation + compensation
                 // ------------
@@ -4284,12 +4313,22 @@ static EbErrorType produce_temporally_filtered_pic(
                         centre_pcs->tf_ctrls.subpel_early_exit;
                     // Perform ME - context_ptr will store the outputs (MVs, buffers, etc)
                     // Block-based MC using open-loop HME + refinement
+                    // set default hme search params
+                    set_hme_search_params_mctf(ctx,0);
+                    // Increase HME-Level0 search-area if tf_active_region_present
+                    if (centre_pcs->tf_ctrls.hme_me_level <= 1) {
+                        if (pcs_list[frame_index]->tf_active_region_present) {
+                            set_hme_search_params_mctf(ctx,1);
+                        }
+                    }
                     svt_aom_motion_estimation_b64(centre_pcs,
                         (uint32_t)blk_row * blk_cols + blk_col,
                         (uint32_t)blk_col * BW, // x block
                         (uint32_t)blk_row * BH, // y block
                         ctx,
                         input_picture_ptr_central); // source picture
+
+
                     if (ctx->tf_use_pred_64x64_only_th &&
                         (ctx->tf_use_pred_64x64_only_th == (uint8_t)~0 ||
                          tf_use_64x64_pred(ctx))) {
@@ -5230,9 +5269,7 @@ EbErrorType svt_av1_init_temporal_filtering(
         }
     }
     svt_release_mutex(centre_pcs->temp_filt_mutex);
-    me_context_ptr->me_ctx->min_frame_size = MIN(
-        centre_pcs->aligned_height,
-        centre_pcs->aligned_width);
+    me_context_ptr->me_ctx->tf_mv_dist_th = CLIP3(64, 450, (int)((int) MIN(centre_pcs->aligned_height,centre_pcs->aligned_width) - 150));
     // index of the central source frame
     // index_center = centre_pcs->past_altref_nframes;
     // populate source frames picture buffer list

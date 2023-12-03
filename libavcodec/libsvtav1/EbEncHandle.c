@@ -82,6 +82,10 @@
   **************************************/
 #define EB_EncodeInstancesTotalCount                    1
 #define EB_ComputeSegmentInitCount                      1
+#if FTR_RES_ON_FLY
+// Config Set Initial Count
+#define EB_SequenceControlSetPoolInitCount              10
+#endif
 // Process Instantiation Initial Counts
 #define EB_ResourceCoordinationProcessInitCount         1
 #define EB_PictureDecisionProcessInitCount              1
@@ -139,6 +143,7 @@ static const char *get_asm_level_name_str(EbCpuFlags cpu_flags) {
         EbCpuFlags flags;
     } param_maps[] = {
         {"c",       0},
+#ifdef ARCH_X86_64
         {"mmx",     EB_CPU_FLAGS_MMX},
         {"sse",     EB_CPU_FLAGS_SSE},
         {"sse2",    EB_CPU_FLAGS_SSE2},
@@ -148,7 +153,10 @@ static const char *get_asm_level_name_str(EbCpuFlags cpu_flags) {
         {"sse4_2",  EB_CPU_FLAGS_SSE4_2},
         {"avx",     EB_CPU_FLAGS_AVX},
         {"avx2",    EB_CPU_FLAGS_AVX2},
-        {"avx512",  EB_CPU_FLAGS_AVX512F}
+        {"avx512",  EB_CPU_FLAGS_AVX512F},
+#elif defined(ARCH_AARCH64)
+        {"neon",    EB_CPU_FLAGS_NEON}
+#endif
     };
     const uint32_t para_map_size = sizeof(param_maps) / sizeof(param_maps[0]);
     int32_t i;
@@ -395,37 +403,14 @@ static uint32_t get_max_wavefronts(uint32_t width, uint32_t height, uint32_t blk
 static Bool is_pic_width_single_sb(uint32_t sb_size, uint16_t pic_width) {
     return ((pic_width + (sb_size >> 1)) / sb_size) == 1;
 }
-static EbErrorType load_default_buffer_configuration_settings(
-    SequenceControlSet       *scs) {
-    EbErrorType           return_error = EB_ErrorNone;
-    unsigned int lp_count   = get_num_processors();
-    unsigned int core_count = lp_count;
+#if FTR_RES_ON_FLY6
+/*********************************************************************************
+* set_segments_numbers: Set the segment numbers for difference processes
+***********************************************************************************/
+void set_segments_numbers(SequenceControlSet    *scs) {
+
     uint32_t me_seg_h, me_seg_w;
-#if defined(_WIN32) || defined(__linux__)
-    if (scs->static_config.target_socket != -1)
-        core_count /= num_groups;
-#endif
-    if (scs->static_config.logical_processors != 0)
-        core_count = scs->static_config.logical_processors < core_count ?
-            scs->static_config.logical_processors: core_count;
-
-#ifdef _WIN32
-    //Handle special case on Windows
-    //by default, on Windows an application is constrained to a single group
-    if (scs->static_config.target_socket == -1 &&
-        scs->static_config.logical_processors == 0)
-        core_count /= num_groups;
-
-    //Affininty can only be set by group on Windows.
-    //Run on both sockets if -lp is larger than logical processor per group.
-    if (scs->static_config.target_socket == -1 &&
-        scs->static_config.logical_processors > lp_count / num_groups)
-        core_count = lp_count;
-#endif
-    int32_t return_ppcs = set_parent_pcs(&scs->static_config,
-        core_count, scs->input_resolution);
-    if (return_ppcs == -1)
-        return EB_ErrorInsufficientResources;
+    unsigned int core_count = scs->core_count;
 
     uint32_t enc_dec_seg_h = (core_count == SINGLE_CORE_COUNT || is_pic_width_single_sb(scs->super_block_size, scs->max_input_luma_width)) ? 1 :
         (scs->super_block_size == 128) ?
@@ -436,20 +421,10 @@ static EbErrorType load_default_buffer_configuration_settings(
         ((scs->max_input_luma_width + 64) / 128) :
         ((scs->max_input_luma_width + 32) / 64);
 
-    if (scs->static_config.rate_control_mode != SVT_AV1_RC_MODE_CQP_OR_CRF)
-    {
-        me_seg_h = (core_count == SINGLE_CORE_COUNT) ? 1 :
-            (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 8;
-        me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
-            (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 6;
-
-    }
-    else {
-        me_seg_h = (core_count == SINGLE_CORE_COUNT) ? 1 :
-            (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 2;
-        me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
-            (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 3;
-    }
+    me_seg_h = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 8;
+    me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 6;
     // ME segments
     scs->me_segment_row_count_array[0] = me_seg_h;
     scs->me_segment_row_count_array[1] = me_seg_h;
@@ -511,8 +486,138 @@ static EbErrorType load_default_buffer_configuration_settings(
     scs->tpl_segment_row_count_array = tpl_seg_h;
     scs->tpl_segment_col_count_array = tpl_seg_w;
 
-    scs->cdef_segment_column_count = me_seg_w;
-    scs->cdef_segment_row_count    = me_seg_h;
+    scs->cdef_segment_row_count = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 2;
+    scs->cdef_segment_column_count = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 3;
+
+    //since restoration unit size is same for Luma and Chroma, Luma segments and chroma segments do not correspond to the same area!
+    //to keep proper processing, segments have to be configured based on chroma resolution.
+    uint32_t unit_size = 256;
+    uint32_t rest_seg_w = MAX((scs->max_input_luma_width / 2 + (unit_size >> 1)) / unit_size, 1);
+    uint32_t rest_seg_h = MAX((scs->max_input_luma_height / 2 + (unit_size >> 1)) / unit_size, 1);
+    scs->rest_segment_column_count = MIN(rest_seg_w, 6);
+    scs->rest_segment_row_count = MIN(rest_seg_h, 4);
+
+    scs->tf_segment_column_count = me_seg_w;
+    scs->tf_segment_row_count = me_seg_h;
+}
+#endif
+static EbErrorType load_default_buffer_configuration_settings(
+    SequenceControlSet       *scs) {
+    EbErrorType           return_error = EB_ErrorNone;
+    unsigned int lp_count   = get_num_processors();
+    unsigned int core_count = lp_count;
+    uint32_t me_seg_h, me_seg_w;
+#if defined(_WIN32) || defined(__linux__)
+    if (scs->static_config.target_socket != -1)
+        core_count /= num_groups;
+#endif
+    if (scs->static_config.logical_processors != 0)
+        core_count = scs->static_config.logical_processors < core_count ?
+            scs->static_config.logical_processors: core_count;
+
+#ifdef _WIN32
+    //Handle special case on Windows
+    //by default, on Windows an application is constrained to a single group
+    if (scs->static_config.target_socket == -1 &&
+        scs->static_config.logical_processors == 0)
+        core_count /= num_groups;
+
+    //Affininty can only be set by group on Windows.
+    //Run on both sockets if -lp is larger than logical processor per group.
+    if (scs->static_config.target_socket == -1 &&
+        scs->static_config.logical_processors > lp_count / num_groups)
+        core_count = lp_count;
+#endif
+    int32_t return_ppcs = set_parent_pcs(&scs->static_config,
+        core_count, scs->input_resolution);
+    if (return_ppcs == -1)
+        return EB_ErrorInsufficientResources;
+#if FTR_RES_ON_FLY6
+    scs->core_count = core_count;
+    set_segments_numbers(scs);
+    me_seg_h = scs->me_segment_row_count_array[0];
+    me_seg_w = scs->me_segment_column_count_array[0];
+#else
+    uint32_t enc_dec_seg_h = (core_count == SINGLE_CORE_COUNT || is_pic_width_single_sb(scs->super_block_size, scs->max_input_luma_width)) ? 1 :
+        (scs->super_block_size == 128) ?
+        ((scs->max_input_luma_height + 64) / 128) :
+        ((scs->max_input_luma_height + 32) / 64);
+    uint32_t enc_dec_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (scs->super_block_size == 128) ?
+        ((scs->max_input_luma_width + 64) / 128) :
+        ((scs->max_input_luma_width + 32) / 64);
+
+    me_seg_h = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 8;
+    me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 6;
+    // ME segments
+    scs->me_segment_row_count_array[0] = me_seg_h;
+    scs->me_segment_row_count_array[1] = me_seg_h;
+    scs->me_segment_row_count_array[2] = me_seg_h;
+    scs->me_segment_row_count_array[3] = me_seg_h;
+    scs->me_segment_row_count_array[4] = me_seg_h;
+    scs->me_segment_row_count_array[5] = me_seg_h;
+
+    scs->me_segment_column_count_array[0] = me_seg_w;
+    scs->me_segment_column_count_array[1] = me_seg_w;
+    scs->me_segment_column_count_array[2] = me_seg_w;
+    scs->me_segment_column_count_array[3] = me_seg_w;
+    scs->me_segment_column_count_array[4] = me_seg_w;
+    scs->me_segment_column_count_array[5] = me_seg_w;
+
+    // Jing:
+    // A tile group can be consisted by 1 tile or NxM tiles.
+    // Segments will be parallelized within a tile group
+    // We can use tile group to control the threads/parallelism in ED stage
+    // NOTE:1 col will have better perf for segments for large resolutions
+    //by default, do not use tile prallel. to enable, one can set one tile-group per tile.
+    uint8_t tile_group_col_count = 1;
+    uint8_t tile_group_row_count = 1;
+    scs->tile_group_col_count_array[0] = tile_group_col_count;
+    scs->tile_group_col_count_array[1] = tile_group_col_count;
+    scs->tile_group_col_count_array[2] = tile_group_col_count;
+    scs->tile_group_col_count_array[3] = tile_group_col_count;
+    scs->tile_group_col_count_array[4] = tile_group_col_count;
+    scs->tile_group_col_count_array[5] = tile_group_col_count;
+
+    scs->tile_group_row_count_array[0] = tile_group_row_count;
+    scs->tile_group_row_count_array[1] = tile_group_row_count;
+    scs->tile_group_row_count_array[2] = tile_group_row_count;
+    scs->tile_group_row_count_array[3] = tile_group_row_count;
+    scs->tile_group_row_count_array[4] = tile_group_row_count;
+    scs->tile_group_row_count_array[5] = tile_group_row_count;
+    // EncDec segments
+    scs->enc_dec_segment_row_count_array[0] = enc_dec_seg_h;
+    scs->enc_dec_segment_row_count_array[1] = enc_dec_seg_h;
+    scs->enc_dec_segment_row_count_array[2] = enc_dec_seg_h;
+    scs->enc_dec_segment_row_count_array[3] = enc_dec_seg_h;
+    scs->enc_dec_segment_row_count_array[4] = enc_dec_seg_h;
+    scs->enc_dec_segment_row_count_array[5] = enc_dec_seg_h;
+
+    scs->enc_dec_segment_col_count_array[0] = enc_dec_seg_w;
+    scs->enc_dec_segment_col_count_array[1] = enc_dec_seg_w;
+    scs->enc_dec_segment_col_count_array[2] = enc_dec_seg_w;
+    scs->enc_dec_segment_col_count_array[3] = enc_dec_seg_w;
+    scs->enc_dec_segment_col_count_array[4] = enc_dec_seg_w;
+    scs->enc_dec_segment_col_count_array[5] = enc_dec_seg_w;
+
+    // TPL processed in 64x64 blocks, so check width against 64x64 block size (even if SB is 128x128)
+    uint32_t tpl_seg_h = (core_count == SINGLE_CORE_COUNT || is_pic_width_single_sb(64, scs->max_input_luma_width)) ? 1 :
+        ((scs->max_input_luma_height + 32) / 64);
+
+    uint32_t tpl_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        ((scs->max_input_luma_width + 32) / 64);
+
+    scs->tpl_segment_row_count_array = tpl_seg_h;
+    scs->tpl_segment_col_count_array = tpl_seg_w;
+
+    scs->cdef_segment_row_count = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 2;
+    scs->cdef_segment_column_count = (core_count == SINGLE_CORE_COUNT) ? 1 :
+        (((scs->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 3;
 
     //since restoration unit size is same for Luma and Chroma, Luma segments and chroma segments do not correspond to the same area!
     //to keep proper processing, segments have to be configured based on chroma resolution.
@@ -524,6 +629,7 @@ static EbErrorType load_default_buffer_configuration_settings(
 
     scs->tf_segment_column_count = me_seg_w;
     scs->tf_segment_row_count = me_seg_h;
+#endif
 
     // adjust buffer count for superres
     uint32_t superres_count = (scs->static_config.superres_mode == SUPERRES_AUTO &&
@@ -805,7 +911,7 @@ static EbErrorType load_default_buffer_configuration_settings(
             scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(50, 1, max_me_proc));
             scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(max_tpl_proc, 1, max_tpl_proc));
             scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(max_mdc_proc, 1, max_mdc_proc));
-            scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(150, scs->picture_control_set_pool_init_count_child, max_md_proc));
+            scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(50, scs->picture_control_set_pool_init_count_child, max_md_proc));
             scs->total_process_init_count += (scs->entropy_coding_process_init_count = clamp(max_ec_proc, 1, max_ec_proc));
             scs->total_process_init_count += (scs->dlf_process_init_count = clamp(max_dlf_proc, 1, max_dlf_proc));
             scs->total_process_init_count += (scs->cdef_process_init_count = clamp(max_cdef_proc, 1, max_cdef_proc));
@@ -819,7 +925,7 @@ static EbErrorType load_default_buffer_configuration_settings(
                 scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(50, 1, max_me_proc));
                 scs->total_process_init_count += (scs->tpl_disp_process_init_count = clamp(max_tpl_proc, 1, max_tpl_proc));
                 scs->total_process_init_count += (scs->mode_decision_configuration_process_init_count = clamp(max_mdc_proc, 1, max_mdc_proc));
-                scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(200, scs->picture_control_set_pool_init_count_child, max_md_proc));
+                scs->total_process_init_count += (scs->enc_dec_process_init_count = clamp(50, scs->picture_control_set_pool_init_count_child, max_md_proc));
                 scs->total_process_init_count += (scs->entropy_coding_process_init_count = clamp(max_ec_proc, 1, max_ec_proc));
                 scs->total_process_init_count += (scs->dlf_process_init_count = clamp(max_dlf_proc, 1, max_dlf_proc));
                 scs->total_process_init_count += (scs->cdef_process_init_count = clamp(max_cdef_proc, 1, max_cdef_proc));
@@ -849,7 +955,7 @@ static EbErrorType load_default_buffer_configuration_settings(
         /******************************************************************
         * Platform detection, limit cpu flags to hardware available CPU
         ******************************************************************/
-#ifdef ARCH_X86_64
+#if defined ARCH_X86_64 || defined ARCH_AARCH64
         const EbCpuFlags cpu_flags = svt_aom_get_cpu_flags();
         const EbCpuFlags cpu_flags_to_use = svt_aom_get_cpu_flags_to_use();
         scs->static_config.use_cpu_flags &= cpu_flags_to_use;
@@ -1042,6 +1148,9 @@ static void svt_enc_handle_dctor(EbPtr p)
     EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
     svt_enc_handle_stop_threads(enc_handle_ptr);
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
+#if FTR_RES_ON_FLY
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->scs_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+#endif
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->me_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -1123,6 +1232,10 @@ static EbErrorType svt_enc_handle_ctor(
     enc_handle_ptr->app_callback_ptr_array[0]->error_handler = lib_svt_encoder_send_error_exit;
     enc_handle_ptr->app_callback_ptr_array[0]->handle = ebHandlePtr;
 
+#if FTR_RES_ON_FLY
+    // Config Set Count
+    enc_handle_ptr->scs_pool_total_count = EB_SequenceControlSetPoolInitCount;
+#endif
     // Initialize Sequence Control Set Instance Array
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->scs_instance_array, enc_handle_ptr->encode_instance_total_count);
     EB_NEW(enc_handle_ptr->scs_instance_array[0], svt_sequence_control_set_instance_ctor);
@@ -1513,6 +1626,23 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
     svt_av1_init_me_luts();
     init_fn_ptr();
     svt_av1_init_wedge_masks();
+#if FTR_RES_ON_FLY
+    /************************************
+     * Sequence Control Set
+     ************************************/
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->scs_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+    for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
+        EB_NEW(
+            enc_handle_ptr->scs_pool_ptr_array[instance_index],
+            svt_system_resource_ctor,
+            enc_handle_ptr->scs_pool_total_count,
+            1,
+            0,
+            svt_aom_scs_set_creator,
+            NULL,
+            NULL);
+    }
+#endif
     /************************************
     * Picture Control Set: Parent
     ************************************/
@@ -1571,8 +1701,13 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
             input_data.picture_width, input_data.picture_height);
         input_data.enable_adaptive_quantization = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.enable_adaptive_quantization;
         input_data.calculate_variance = enc_handle_ptr->scs_instance_array[instance_index]->scs->calculate_variance;
-        input_data.scene_change_detection = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.scene_change_detection ||
-                                            enc_handle_ptr->scs_instance_array[instance_index]->scs->vq_ctrls.sharpness_ctrls.scene_transition;
+        input_data.calc_hist = enc_handle_ptr->scs_instance_array[instance_index]->scs->calc_hist =
+            (enc_handle_ptr->scs_instance_array[instance_index]->scs->list0_only_base_ctrls.enabled && enc_handle_ptr->scs_instance_array[instance_index]->scs->list0_only_base_ctrls.list0_only_base_th <= 100) ||
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.scene_change_detection ||
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->vq_ctrls.sharpness_ctrls.scene_transition ||
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->tf_params_per_type[0].enabled ||
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->tf_params_per_type[1].enabled ||
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->tf_params_per_type[2].enabled;
         input_data.tpl_lad_mg = enc_handle_ptr->scs_instance_array[instance_index]->scs->tpl_lad_mg;
         input_data.input_resolution = enc_handle_ptr->scs_instance_array[instance_index]->scs->input_resolution;
         input_data.is_scale = enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.superres_mode > SUPERRES_NONE ||
@@ -2125,12 +2260,12 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
     {
         // Initialize the various Picture types
         instance_index = 0;
+
         EB_NEW(
             enc_handle_ptr->picture_decision_context_ptr,
             svt_aom_picture_decision_context_ctor,
             enc_handle_ptr,
-            enc_handle_ptr->scs_instance_array[instance_index]->scs->static_config.scene_change_detection ||
-            enc_handle_ptr->scs_instance_array[instance_index]->scs->vq_ctrls.sharpness_ctrls.scene_transition);
+            enc_handle_ptr->scs_instance_array[instance_index]->scs->calc_hist);
     }
 
     // Motion Analysis Context
@@ -2200,13 +2335,13 @@ EB_API EbErrorType svt_av1_enc_init(EbComponentType *svt_enc_component)
                     enc_dec_port_lookup(ENCDEC_INPUT_PORT_MDC, process_index));
             }
         }
-
+#if !FTR_RES_ON_FLY
         uint32_t max_picture_width = 0;
         for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
             if (max_picture_width < enc_handle_ptr->scs_instance_array[instance_index]->scs->max_input_luma_width)
                 max_picture_width = enc_handle_ptr->scs_instance_array[instance_index]->scs->max_input_luma_width;
         }
-
+#endif
         // EncDec Contexts
         EB_ALLOC_PTR_ARRAY(enc_handle_ptr->enc_dec_context_ptr_array, enc_handle_ptr->scs_instance_array[0]->scs->enc_dec_process_init_count);
         for (process_index = 0; process_index < enc_handle_ptr->scs_instance_array[0]->scs->enc_dec_process_init_count; ++process_index) {
@@ -2586,9 +2721,7 @@ uint8_t svt_aom_tf_max_ref_per_struct(uint32_t hierarchical_levels, uint8_t type
     if (type == 0) // I_SLICE
         max_ref_per = 1 << hierarchical_levels;
     else if (type == 1) // BASE
-        max_ref_per = hierarchical_levels < 5
-        ? TF_MAX_BASE_REF_PICS_SUB_6L
-        : TF_MAX_BASE_REF_PICS_6L;
+        max_ref_per = TF_MAX_BASE_REF_PICS;
     else // L1
         max_ref_per = hierarchical_levels < 5
         ? TF_MAX_L1_REF_PICS_SUB_6L
@@ -2789,7 +2922,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 1;
+        scs->tf_params_per_type[1].modulate_pics = 2;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 1;
@@ -2858,7 +2991,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 1;
+        scs->tf_params_per_type[1].modulate_pics = 2;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 2;
@@ -2927,7 +3060,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 2;
+        scs->tf_params_per_type[1].modulate_pics = 3;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 2;
@@ -2996,7 +3129,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 2;
+        scs->tf_params_per_type[1].modulate_pics = 3;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 2;
@@ -3044,7 +3177,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 2;
+        scs->tf_params_per_type[1].modulate_pics = 3;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 2;
@@ -3092,7 +3225,7 @@ void tf_controls(SequenceControlSet* scs, uint8_t tf_level) {
         scs->tf_params_per_type[1].enabled = 1;
         scs->tf_params_per_type[1].num_past_pics = 1;
         scs->tf_params_per_type[1].num_future_pics = 1;
-        scs->tf_params_per_type[1].modulate_pics = 3;
+        scs->tf_params_per_type[1].modulate_pics = 4;
         scs->tf_params_per_type[1].max_num_past_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 0));
         scs->tf_params_per_type[1].max_num_future_pics = MIN((1 << scs->static_config.hierarchical_levels), svt_aom_tf_max_ref_per_struct(scs->static_config.hierarchical_levels, 1, 1));
         scs->tf_params_per_type[1].hme_me_level = 2;
@@ -3210,7 +3343,7 @@ static void derive_vq_params(SequenceControlSet* scs) {
  * Derive TF Params
  */
 static void derive_tf_params(SequenceControlSet *scs) {
-
+    const EbInputResolution resolution = scs->input_resolution;
     // Do not perform TF if LD or 1 Layer or 1st pass
     Bool do_tf = scs->static_config.enable_tf && scs->static_config.hierarchical_levels >= 1 && scs->static_config.pass != ENC_FIRST_PASS;
     const EncMode enc_mode = scs->static_config.enc_mode;
@@ -3222,27 +3355,23 @@ static void derive_tf_params(SequenceControlSet *scs) {
         else
             tf_level = scs->static_config.screen_content_mode == 1 ? 0 :
             (enc_mode <= ENC_M9 ) ? 1 : enc_mode <= ENC_M13 && (scs->input_resolution >= INPUT_SIZE_720p_RANGE) ? 2 : 0;
-
         tf_ld_controls(scs, tf_level);
         return;
     }
     if (do_tf == 0) {
         tf_level = 0;
     }
-    else if (enc_mode <= ENC_M2) {
+    else if (enc_mode <= ENC_M1) {
         tf_level = 1;
     }
     else if (enc_mode <= ENC_M5) {
         tf_level = 2;
     }
-    else if (enc_mode <= ENC_M7) {
+    else if (enc_mode <= ENC_M6) {
         tf_level = 4;
     }
     else if (enc_mode <= ENC_M8) {
-        if (hierarchical_levels <= 4)
-            tf_level = 4;
-        else
-            tf_level = 5;
+        tf_level = resolution <= INPUT_SIZE_720p_RANGE && hierarchical_levels <= 4 ? 4 : 5;
     }
     else if (enc_mode <= ENC_M10) {
         tf_level = 6;
@@ -3255,138 +3384,229 @@ static void derive_tf_params(SequenceControlSet *scs) {
     }
     tf_controls(scs, tf_level);
 }
+
+
+/*
+ * Derive List0-only @ BASE Params
+ */
+static void set_list0_only_base(SequenceControlSet* scs, uint8_t list0_only_base) {
+    List0OnlyBase* ctrls = &scs->list0_only_base_ctrls;
+
+    switch (list0_only_base) {
+    case 0:
+        ctrls->enabled = 0;
+        break;
+    case 1:
+        ctrls->enabled = 1;
+        ctrls->list0_only_base_th = 35;
+        break;
+    case 2:
+        ctrls->enabled = 1;
+        ctrls->list0_only_base_th = 40;
+        break;
+    case 3:
+        ctrls->enabled = 1;
+        ctrls->list0_only_base_th = 50;
+        break;
+    case 4:
+        ctrls->enabled = 1;
+        ctrls->list0_only_base_th = 100;
+        break;
+    default: assert(0); break;
+    }
+}
 /*
  * Set the MRP control
  */
 static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
     MrpCtrls* mrp_ctrl = &scs->mrp_ctrls;
+
     switch (mrp_level)
     {
     case 0:
-        mrp_ctrl->referencing_scheme          = 0;
-        mrp_ctrl->sc_base_ref_list0_count     = 1;
-        mrp_ctrl->sc_base_ref_list1_count     = 1;
+        mrp_ctrl->referencing_scheme = 0;
+        mrp_ctrl->sc_base_ref_list0_count = 1;
+        mrp_ctrl->sc_base_ref_list1_count = 1;
         mrp_ctrl->sc_non_base_ref_list0_count = 1;
         mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 1;
-        mrp_ctrl->base_ref_list1_count        = 1;
-        mrp_ctrl->non_base_ref_list0_count    = 1;
-        mrp_ctrl->non_base_ref_list1_count    = 1;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 0;
-        mrp_ctrl->pme_ref0_only               = 0;
-        mrp_ctrl->use_best_references         = 0;
+        mrp_ctrl->base_ref_list0_count = 1;
+        mrp_ctrl->base_ref_list1_count = 1;
+        mrp_ctrl->non_base_ref_list0_count = 1;
+        mrp_ctrl->non_base_ref_list1_count = 1;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 0;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 0;
         break;
 
     case 1:
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
         mrp_ctrl->sc_non_base_ref_list0_count = 2;
         mrp_ctrl->sc_non_base_ref_list1_count = 2;
-        mrp_ctrl->base_ref_list0_count        = 4;
-        mrp_ctrl->base_ref_list1_count        = 3;
-        mrp_ctrl->non_base_ref_list0_count    = 4;
-        mrp_ctrl->non_base_ref_list1_count    = 3;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 0;
-        mrp_ctrl->pme_ref0_only               = 0;
-        mrp_ctrl->use_best_references         = 0;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 1;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 0;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 0;
         break;
 
     case 2:
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
         mrp_ctrl->sc_non_base_ref_list0_count = 2;
         mrp_ctrl->sc_non_base_ref_list1_count = 2;
-        mrp_ctrl->base_ref_list0_count        = 4;
-        mrp_ctrl->base_ref_list1_count        = 3;
-        mrp_ctrl->non_base_ref_list0_count    = 4;
-        mrp_ctrl->non_base_ref_list1_count    = 3;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 0;
-        mrp_ctrl->use_best_references         = 0;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 1;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 0;
         break;
 
-    case 3:
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
-        mrp_ctrl->sc_non_base_ref_list0_count = 1;
-        mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 4;
-        mrp_ctrl->base_ref_list1_count        = 3;
-        mrp_ctrl->non_base_ref_list0_count    = 4;
-        mrp_ctrl->non_base_ref_list1_count    = 3;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 0;
-        mrp_ctrl->use_best_references         = 0;
-        break;
-    case 4: //M4
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
-        mrp_ctrl->sc_non_base_ref_list0_count = 1;
-        mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 4;
-        mrp_ctrl->base_ref_list1_count        = 3;
-        mrp_ctrl->non_base_ref_list0_count    = 4;
-        mrp_ctrl->non_base_ref_list1_count    = 3;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+    case 3://new
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
+        mrp_ctrl->sc_non_base_ref_list0_count = 2;
+        mrp_ctrl->sc_non_base_ref_list1_count = 2;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 1;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 1;
         break;
 
-    case 5: //M5
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
+
+    case 4:
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
         mrp_ctrl->sc_non_base_ref_list0_count = 1;
         mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 3;
-        mrp_ctrl->base_ref_list1_count        = 2;
-        mrp_ctrl->non_base_ref_list0_count    = 3;
-        mrp_ctrl->non_base_ref_list1_count    = 2;
-        mrp_ctrl->safe_limit_nref             = 0;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 1;
         break;
-    case 6: //M7
-        mrp_ctrl->referencing_scheme          = 1;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
+
+    case 5: //new
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
         mrp_ctrl->sc_non_base_ref_list0_count = 1;
         mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 3;
-        mrp_ctrl->base_ref_list1_count        = 2;
-        mrp_ctrl->non_base_ref_list0_count    = 3;
-        mrp_ctrl->non_base_ref_list1_count    = 2;
-        mrp_ctrl->safe_limit_nref             = 1;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 0;
+        mrp_ctrl->safe_limit_zz_th = 0;
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 0;
+        mrp_ctrl->use_best_references = 2;
         break;
+
+    case 6:
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
+        mrp_ctrl->sc_non_base_ref_list0_count = 1;
+        mrp_ctrl->sc_non_base_ref_list1_count = 1;
+        mrp_ctrl->base_ref_list0_count = 4;
+        mrp_ctrl->base_ref_list1_count = 3;
+        mrp_ctrl->non_base_ref_list0_count = 4;
+        mrp_ctrl->non_base_ref_list1_count = 3;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 1;
+        mrp_ctrl->safe_limit_zz_th = 60000;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
+        break;
+
     case 7:
-        mrp_ctrl->referencing_scheme = 0;
-        mrp_ctrl->sc_base_ref_list0_count     = 2;
-        mrp_ctrl->sc_base_ref_list1_count     = 2;
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
         mrp_ctrl->sc_non_base_ref_list0_count = 1;
         mrp_ctrl->sc_non_base_ref_list1_count = 1;
-        mrp_ctrl->base_ref_list0_count        = 3;
-        mrp_ctrl->base_ref_list1_count        = 2;
-        mrp_ctrl->non_base_ref_list0_count    = 3;
-        mrp_ctrl->non_base_ref_list1_count    = 2;
-        mrp_ctrl->safe_limit_nref             = 1;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->base_ref_list0_count = 3;
+        mrp_ctrl->base_ref_list1_count = 2;
+        mrp_ctrl->non_base_ref_list0_count = 3;
+        mrp_ctrl->non_base_ref_list1_count = 2;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 1;
+        mrp_ctrl->safe_limit_zz_th = 60000;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
         break;
     case 8:
+        mrp_ctrl->referencing_scheme = 1;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
+        mrp_ctrl->sc_non_base_ref_list0_count = 1;
+        mrp_ctrl->sc_non_base_ref_list1_count = 1;
+        mrp_ctrl->base_ref_list0_count = 3;
+        mrp_ctrl->base_ref_list1_count = 2;
+        mrp_ctrl->non_base_ref_list0_count = 3;
+        mrp_ctrl->non_base_ref_list1_count = 2;
+        mrp_ctrl->more_5L_refs = 0;
+
+        mrp_ctrl->safe_limit_nref = 2;
+        mrp_ctrl->safe_limit_zz_th = 0;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
+        break;
+    case 9:
+        mrp_ctrl->referencing_scheme = 0;
+        mrp_ctrl->sc_base_ref_list0_count = 2;
+        mrp_ctrl->sc_base_ref_list1_count = 2;
+        mrp_ctrl->sc_non_base_ref_list0_count = 1;
+        mrp_ctrl->sc_non_base_ref_list1_count = 1;
+        mrp_ctrl->base_ref_list0_count = 3;
+        mrp_ctrl->base_ref_list1_count = 2;
+        mrp_ctrl->non_base_ref_list0_count = 3;
+        mrp_ctrl->non_base_ref_list1_count = 2;
+        mrp_ctrl->more_5L_refs = 0;
+        mrp_ctrl->safe_limit_nref = 2;
+        mrp_ctrl->safe_limit_zz_th = 0;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
+        break;
+    case 10:
         mrp_ctrl->referencing_scheme = 2;
         mrp_ctrl->sc_base_ref_list0_count = 2;
         mrp_ctrl->sc_base_ref_list1_count = 2;
@@ -3396,13 +3616,17 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->base_ref_list1_count = 2;
         mrp_ctrl->non_base_ref_list0_count = 2;
         mrp_ctrl->non_base_ref_list1_count = 2;
-        mrp_ctrl->safe_limit_nref             = 1;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->more_5L_refs = 0;
+
+        mrp_ctrl->safe_limit_nref = 2;
+        mrp_ctrl->safe_limit_zz_th = 0;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
         break;
 
-    case 9:
+    case 11:
         mrp_ctrl->referencing_scheme = 2;
         mrp_ctrl->sc_base_ref_list0_count = 2;
         mrp_ctrl->sc_base_ref_list1_count = 2;
@@ -3412,12 +3636,16 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->base_ref_list1_count = 2;
         mrp_ctrl->non_base_ref_list0_count = 1;
         mrp_ctrl->non_base_ref_list1_count = 1;
-        mrp_ctrl->safe_limit_nref             = 1;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->more_5L_refs = 0;
+
+        mrp_ctrl->safe_limit_nref = 2;
+        mrp_ctrl->safe_limit_zz_th = 0;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
         break;
-    case 10:
+    case 12:
         mrp_ctrl->referencing_scheme = 0;
         mrp_ctrl->sc_base_ref_list0_count = 2;
         mrp_ctrl->sc_base_ref_list1_count = 2;
@@ -3427,10 +3655,14 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->base_ref_list1_count = 2;
         mrp_ctrl->non_base_ref_list0_count = 1;
         mrp_ctrl->non_base_ref_list1_count = 1;
-        mrp_ctrl->safe_limit_nref             = 1;
-        mrp_ctrl->only_l_bwd                  = 1;
-        mrp_ctrl->pme_ref0_only               = 1;
-        mrp_ctrl->use_best_references         = 1;
+        mrp_ctrl->more_5L_refs = 0;
+
+        mrp_ctrl->safe_limit_nref = 2;
+        mrp_ctrl->safe_limit_zz_th = 0;
+
+        mrp_ctrl->only_l_bwd = 1;
+        mrp_ctrl->pme_ref0_only = 1;
+        mrp_ctrl->use_best_references = 3;
         break;
     default:
         assert(0);
@@ -3443,6 +3675,7 @@ static void set_mrp_ctrl(SequenceControlSet* scs, uint8_t mrp_level) {
         mrp_ctrl->base_ref_list1_count = 0;
         mrp_ctrl->non_base_ref_list1_count = 0;
         mrp_ctrl->referencing_scheme = 0;
+        mrp_ctrl->more_5L_refs                = 0;
         mrp_ctrl->safe_limit_nref             = 0;
         mrp_ctrl->only_l_bwd                  = 0;
         mrp_ctrl->pme_ref0_only               = 0;
@@ -3548,13 +3781,17 @@ static uint8_t get_tpl_level(int8_t enc_mode, int32_t pass, int32_t lap_rc, uint
         SVT_WARN("TPL will be disabled when reference scalings (resize) is enabled!\n");
         tpl_level = 0;
     }
-    else if (enc_mode <= ENC_M4)
+    else if (enc_mode <= ENC_M3)
         tpl_level = 1;
+    else if (enc_mode <= ENC_M6)
+        tpl_level = 2;
     else if (enc_mode <= ENC_M8)
-        tpl_level = 4;
+        tpl_level = 3;
     else if (enc_mode <= ENC_M10)
-        tpl_level = 5;
+        tpl_level = 4;
     else if (enc_mode <= ENC_M11)
+        tpl_level = 6;
+    else if (enc_mode <= ENC_M12)
         tpl_level = 7;
     else
         tpl_level = 8;
@@ -3739,10 +3976,16 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     } else {
         scs->max_input_pad_bottom = 0;
     }
-
+#if !FTR_RES_ON_FLY
     scs->max_input_chroma_width = scs->max_input_luma_width >> subsampling_x;
     scs->max_input_chroma_height = scs->max_input_luma_height >> subsampling_y;
-
+#endif
+#if FTR_RES_ON_FLY4
+    scs->max_initial_input_luma_width   = scs->max_input_luma_width;
+    scs->max_initial_input_luma_height  = scs->max_input_luma_height;
+    scs->max_initial_input_pad_bottom   = scs->max_input_pad_right;
+    scs->max_initial_input_pad_right    = scs->max_input_pad_bottom;
+#endif
     scs->chroma_width = scs->max_input_luma_width >> subsampling_x;
     scs->chroma_height = scs->max_input_luma_height >> subsampling_y;
     scs->static_config.source_width = scs->max_input_luma_width;
@@ -4012,7 +4255,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->over_boundary_block_mode = scs->over_bndry_blk;
     if (scs->static_config.pass == ENC_FIRST_PASS)
         scs->over_boundary_block_mode = 0;
-
+#if FTR_RES_ON_FLY6
+    svt_aom_set_mfmv_config(scs);
+#else
     if (scs->static_config.enable_mfmv == DEFAULT) {
         if (scs->static_config.enc_mode <= ENC_M5)
             scs->mfmv_enabled = 1;
@@ -4027,6 +4272,20 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->mfmv_enabled = 0;
     } else
         scs->mfmv_enabled = scs->static_config.enable_mfmv;
+#endif
+
+    uint8_t list0_only_base_lvl = 0;
+    if (scs->static_config.enc_mode <= ENC_M4)
+        list0_only_base_lvl = 0;
+    else if (scs->static_config.enc_mode <= ENC_M5)
+        list0_only_base_lvl = 1;
+    else if (scs->static_config.enc_mode <= ENC_M6)
+        list0_only_base_lvl = 2;
+    else if (scs->static_config.enc_mode <= ENC_M10)
+        list0_only_base_lvl = 3;
+    else
+        list0_only_base_lvl = 4;
+    set_list0_only_base(scs, list0_only_base_lvl);
 
     if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ||
         scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
@@ -4047,35 +4306,30 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     // MRP level
     uint8_t mrp_level;
+
     if (scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.enc_mode <= ENC_M10) {
-            mrp_level = 8;
+            mrp_level = 10;
         }
         else {
-            mrp_level = 9;
+            mrp_level = 11;
         }
     }
     else {
-        if (scs->static_config.enc_mode <= ENC_M1) {
+        if (scs->static_config.enc_mode <= ENC_M2) {
             mrp_level = 2;
         }
         else if (scs->static_config.enc_mode <= ENC_M3) {
-            mrp_level = 3;
-        }
-        else if (scs->static_config.enc_mode <= ENC_M4) {
-            mrp_level = 4;
-        }
-        else if (scs->static_config.enc_mode <= ENC_M5) {
             mrp_level = 5;
         }
-        else if (scs->static_config.enc_mode <= ENC_M7) {
+        else if (scs->static_config.enc_mode <= ENC_M6) {
             mrp_level = 6;
         }
         else if (scs->static_config.enc_mode <= ENC_M12) {
-            mrp_level = 7;
+            mrp_level = 9;
         }
         else if (scs->static_config.enc_mode <= ENC_M13) {
-            mrp_level = 10;
+            mrp_level = 12;
         }
         else {
             mrp_level = 0;
@@ -4089,7 +4343,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.scene_change_detection == 1       ||
         scs->vq_ctrls.sharpness_ctrls.tf == 1)
         scs->calculate_variance = 1;
-    else if (scs->static_config.enc_mode <= ENC_M10)
+    else if (scs->static_config.enc_mode <= ENC_M9)
         scs->calculate_variance = 1;
     else
         scs->calculate_variance = 0;
@@ -4383,6 +4637,7 @@ static void copy_api_from_app(
             2 :
             scs->static_config.fast_decode == 1 ||
             scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR || scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR ||
+            (input_resolution >= INPUT_SIZE_1080p_RANGE && scs->static_config.enc_mode >= ENC_M9) ||
             !(scs->static_config.enc_mode <= ENC_M12) || input_resolution >= INPUT_SIZE_4K_RANGE
                 ? 4
                 : 5;
@@ -4905,17 +5160,27 @@ static EbErrorType copy_frame_buffer(
         uint16_t     luma_stride = input_pic->stride_y << is_16bit_input;
         uint16_t     chroma_stride = input_pic->stride_cb << is_16bit_input;
         uint16_t     luma_height = (uint16_t)(input_pic->height - scs->max_input_pad_bottom);
-
+#if FTR_RES_ON_FLY5
+        uint16_t     luma_width = (uint16_t)(input_pic->width - scs->max_input_pad_right);
+#endif
         uint16_t     source_luma_stride = (uint16_t)(input_ptr->y_stride);
         uint16_t     source_cr_stride = (uint16_t)(input_ptr->cr_stride);
         uint16_t     source_cb_stride = (uint16_t)(input_ptr->cb_stride);
         uint16_t source_chroma_height =
             (luma_height >> (input_pic->color_format == EB_YUV420));
+#if FTR_RES_ON_FLY5
+        uint16_t source_chroma_width =
+            (luma_width >> (input_pic->color_format == EB_YUV420));
+#endif
 
         uint8_t *src = input_ptr->luma;
         uint8_t *dst = y8b_input_picture_ptr->buffer_y + luma_buffer_offset;
         for (unsigned i = 0; i < luma_height; i++) {
+#if FTR_RES_ON_FLY5
+            svt_memcpy(dst, src, luma_width);
+#else
             svt_memcpy(dst, src, source_luma_stride);
+#endif
             src += source_luma_stride;
             dst += luma_stride;
         }
@@ -4925,7 +5190,11 @@ static EbErrorType copy_frame_buffer(
             src = input_ptr->cb;
             dst = input_pic->buffer_cb + chroma_buffer_offset;
             for (unsigned i = 0; i < source_chroma_height; i++) {
+#if FTR_RES_ON_FLY5
+                svt_memcpy(dst, src, source_chroma_width);
+#else
                 svt_memcpy(dst, src, source_cb_stride);
+#endif
                 src += source_cb_stride;
                 dst += chroma_stride;
             }
@@ -4933,7 +5202,11 @@ static EbErrorType copy_frame_buffer(
             src = input_ptr->cr;
             dst = input_pic->buffer_cr + chroma_buffer_offset;
             for (unsigned i = 0; i < source_chroma_height; i++) {
+#if FTR_RES_ON_FLY5// anaghdin 10 bit support to be added
+                svt_memcpy(dst, src, source_chroma_width);
+#else
                 svt_memcpy(dst, src, source_cr_stride);
+#endif
                 src += source_cr_stride;
                 dst += chroma_stride;
             }
@@ -5025,7 +5298,97 @@ static EbErrorType copy_private_data_list(EbBufferHeaderType* dst, EbBufferHeade
     dst->p_app_private = p_first_node;
     return return_error;
 }
+#if FTR_RES_ON_FLY4
+/**************************************
+* svt_input_buffer_header_update: update the parameters in input_buffer_header for changing the resolution on the fly
+**************************************/
+EbErrorType svt_input_buffer_header_update(
+    EbBufferHeaderType* input_buffer,
+    SequenceControlSet       *scs,
+    Bool                   noy8b) {
 
+    EbPictureBufferDescInitData input_pic_buf_desc_init_data;
+    EbSvtAv1EncConfiguration   * config = &scs->static_config;
+    uint8_t is_16bit = config->encoder_bit_depth > 8 ? 1 : 0;
+
+    input_pic_buf_desc_init_data.max_width =
+        !(scs->max_input_luma_width % 8) ?
+        scs->max_input_luma_width :
+        scs->max_input_luma_width + (scs->max_input_luma_width % 8);
+
+    input_pic_buf_desc_init_data.max_height =
+        !(scs->max_input_luma_height % 8) ?
+        scs->max_input_luma_height :
+        scs->max_input_luma_height + (scs->max_input_luma_height % 8);
+
+    input_pic_buf_desc_init_data.bit_depth = (EbBitDepth)config->encoder_bit_depth;
+    input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
+
+    input_pic_buf_desc_init_data.left_padding = scs->left_padding;
+    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
+    input_pic_buf_desc_init_data.top_padding = scs->top_padding;
+    input_pic_buf_desc_init_data.bot_padding = scs->bot_padding;
+
+    input_pic_buf_desc_init_data.split_mode = is_16bit ? TRUE : FALSE;
+
+    input_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
+    input_pic_buf_desc_init_data.is_16bit_pipeline = 0;
+
+    // Enhanced Picture Buffer
+    if (!noy8b) {
+        svt_picture_buffer_desc_update(
+            (EbPictureBufferDesc*)input_buffer->p_buffer,
+            (EbPtr)&input_pic_buf_desc_init_data);
+    }
+    else {
+        svt_picture_buffer_desc_noy8b_update(
+            (EbPictureBufferDesc*)input_buffer->p_buffer,
+            (EbPtr)&input_pic_buf_desc_init_data);
+    }
+
+    return EB_ErrorNone;
+}
+/**************************************
+* svt_input_y8b_update: update the parameters in input_y8b for changing the resolution on the fly
+**************************************/
+EbErrorType svt_input_y8b_update(
+    EbBufferHeaderType* input_buffer,
+    SequenceControlSet       *scs)
+{
+    EbPictureBufferDescInitData input_pic_buf_desc_init_data;
+    EbSvtAv1EncConfiguration   * config = &scs->static_config;
+    uint8_t is_16bit = 0;
+
+    input_pic_buf_desc_init_data.max_width =
+        !(scs->max_input_luma_width % 8) ?
+        scs->max_input_luma_width :
+        scs->max_input_luma_width + (scs->max_input_luma_width % 8);
+
+    input_pic_buf_desc_init_data.max_height =
+        !(scs->max_input_luma_height % 8) ?
+        scs->max_input_luma_height :
+        scs->max_input_luma_height + (scs->max_input_luma_height % 8);
+    input_pic_buf_desc_init_data.bit_depth = EB_EIGHT_BIT;
+    input_pic_buf_desc_init_data.color_format = (EbColorFormat)config->encoder_color_format;
+
+    input_pic_buf_desc_init_data.left_padding = scs->left_padding;
+    input_pic_buf_desc_init_data.right_padding = scs->right_padding;
+    input_pic_buf_desc_init_data.top_padding = scs->top_padding;
+    input_pic_buf_desc_init_data.bot_padding = scs->bot_padding;
+
+    input_pic_buf_desc_init_data.split_mode = is_16bit ? TRUE : FALSE;
+
+    input_pic_buf_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_LUMA_MASK; //allocate for 8bit Luma only
+    input_pic_buf_desc_init_data.is_16bit_pipeline = 0;
+
+    // Enhanced Picture Buffer
+    svt_picture_buffer_desc_update(
+        (EbPictureBufferDesc*)input_buffer->p_buffer,
+        (EbPtr)&input_pic_buf_desc_init_data);
+
+    return EB_ErrorNone;
+}
+#endif
 /*
  Copy the input buffer header content
 from the sample application to the library buffers
@@ -5070,6 +5433,123 @@ static void copy_input_buffer(SequenceControlSet* scs, EbBufferHeaderType* dst,
     else
         dst->p_app_private = NULL;
 }
+#if FTR_RES_ON_FLY6
+// Update the input picture definitions: resolution of the sequence
+static EbErrorType validate_on_the_fly_settings(EbBufferHeaderType *input_ptr, SequenceControlSet *scs, EbHandle config_mutex) {
+    EbPrivDataNode     *node = (EbPrivDataNode *)input_ptr->p_app_private;
+    while (node) {
+        if (node->node_type == RES_CHANGE_EVENT) {
+            SvtAv1InputPicDef  *node_data = (SvtAv1InputPicDef *)node->data;
+            if (input_ptr->pic_type != EB_AV1_KEY_PICTURE) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly not supported for non key frames\n");
+                return EB_ErrorBadParameter;
+            }
+            else if ((node_data->input_luma_height > scs->max_initial_input_luma_height) ||
+                (node_data->input_luma_width > scs->max_initial_input_luma_width)) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution cannot be changed to anything greater than the original picture width and height\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.superres_mode > SUPERRES_NONE) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported when Super-Resolution mode is on\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.resize_mode != RESIZE_NONE) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported when Reference Scaling mode is on\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.pred_structure != SVT_AV1_PRED_LOW_DELAY_B) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is only supported for Low-Delay mode\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.pass != ENC_SINGLE_PASS) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is only supported for single pass encoding\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.tile_rows || scs->static_config.tile_columns) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported when tiles are being used\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.enable_adaptive_quantization == 1) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for segment based adaptive quantization (--aq-mode == 1)\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (node_data->input_luma_width < 64) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for luma width less than 64\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (node_data->input_luma_height < 64) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for luma height less than 64\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (node_data->input_luma_width % 2) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for an odd source width for YUV_420 colorspace\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (node_data->input_luma_height % 2) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for an odd source height for YUV_420 colorspace\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (scs->static_config.encoder_bit_depth == EB_TEN_BIT) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("Resolution change on the fly is not supported for 10-bit encoding\n");
+                return EB_ErrorBadParameter;
+            }
+            else if (input_ptr->pic_type == EB_AV1_KEY_PICTURE) {
+                svt_aom_assert_err(node->size == sizeof(SvtAv1InputPicDef) && node->data,
+                    "invalide private data of type RES_CHANGE_EVENT");
+                SvtAv1InputPicDef  *input_pic_def = (SvtAv1InputPicDef *)node->data;
+                svt_block_on_mutex(config_mutex);
+                // Check if a resolution change occured
+                scs->max_input_luma_width = input_pic_def->input_luma_width;
+                scs->max_input_luma_height = input_pic_def->input_luma_height;
+                scs->max_input_pad_right = input_pic_def->input_pad_right;
+                scs->max_input_pad_bottom = input_pic_def->input_pad_bottom;
+                svt_release_mutex(config_mutex);
+            }
+        }
+        else if (node->node_type == RATE_CHANGE_EVENT) {
+            SvtAv1RateInfo  *node_data = (SvtAv1RateInfo *)node->data;
+            if (input_ptr->pic_type != EB_AV1_KEY_PICTURE) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("QP/TBR change on the fly not supported for non key frames\n");
+                return EB_ErrorBadParameter;
+            }
+            if ((scs->static_config.target_bit_rate != node_data->target_bit_rate) &&
+                !((scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) && (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR))) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("TBR change on the fly not supported for any mode other than Low-Delay CBR\n");
+                return EB_ErrorBadParameter;
+            }
+            if (node_data->seq_qp != 0) {
+                if (node_data->seq_qp > MAX_QP_VALUE) {
+                    input_ptr->flags = EB_BUFFERFLAG_EOS;
+                    SVT_ERROR("QP change on the fly requires a QP value less than or equal to 63\n");
+                    return EB_ErrorBadParameter;
+                }
+            }
+            if (node_data->target_bit_rate > 100000000) {
+                input_ptr->flags = EB_BUFFERFLAG_EOS;
+                SVT_ERROR("TBR change on the fly requires that the target bit rate must be between [0, 100000] kbps\n");
+                return EB_ErrorBadParameter;
+            }
+        }
+        node = node->next;
+    }
+    return EB_ErrorNone;
+}
+#endif
 /**********************************
 * Empty This Buffer
 **********************************/
@@ -5077,6 +5557,9 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     EbComponentType      *svt_enc_component,
     EbBufferHeaderType   *p_buffer)
 {
+#if FTR_RES_ON_FLY6
+    EbErrorType     return_val = EB_ErrorNone;
+#endif
     EbEncHandle          *enc_handle_ptr = (EbEncHandle*)svt_enc_component->p_component_private;
     EbObjectWrapper      *eb_wrapper_ptr;
     EbBufferHeaderType   *app_hdr = p_buffer;
@@ -5087,6 +5570,18 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     svt_get_empty_object(
         enc_handle_ptr->input_y8b_buffer_producer_fifo_ptr,
         &y8b_wrapper);
+#if FTR_RES_ON_FLY6
+    // Update the input picture definitions: resolution of the sequence
+    if(validate_on_the_fly_settings(p_buffer, enc_handle_ptr->scs_instance_array[0]->scs, enc_handle_ptr->scs_instance_array[0]->config_mutex)){
+        return_val = EB_ErrorBadParameter;
+        enc_handle_ptr->eos_received = 1;
+    }
+#endif
+#if FTR_RES_ON_FLY5
+    // if resolution has changed, and the y8b_wrapper settings do not match scs settings, update y8b_wrapper settings
+    if (buffer_update_needed((EbBufferHeaderType*)y8b_wrapper->object_ptr, enc_handle_ptr->scs_instance_array[0]->scs))
+        svt_input_y8b_update((EbBufferHeaderType*)y8b_wrapper->object_ptr, enc_handle_ptr->scs_instance_array[0]->scs);
+#endif
     //set live count to 1 to be decremented at the end of the encode in RC
     svt_object_inc_live_count(y8b_wrapper, 1);
 
@@ -5095,6 +5590,11 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     svt_get_empty_object(
         enc_handle_ptr->input_buffer_producer_fifo_ptr,
         &eb_wrapper_ptr);
+#if FTR_RES_ON_FLY5
+    // if resolution has changed, and the input_buffer settings do not match scs settings, update input_buffer settings
+    if (buffer_update_needed((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, enc_handle_ptr->scs_instance_array[0]->scs))
+        svt_input_buffer_header_update((EbBufferHeaderType*)eb_wrapper_ptr->object_ptr, enc_handle_ptr->scs_instance_array[0]->scs, TRUE);
+#endif
 
      //set live count to 1 to be decremented at the end of the encode in RC, and released
      //this would also allow low delay TF to retain pictures
@@ -5125,8 +5625,11 @@ EB_API EbErrorType svt_av1_enc_send_picture(
     input_cmd_obj->y8b_wrapper = y8b_wrapper;
     //Send to Lib
     svt_post_full_object(input_cmd_wrp);
-
+#if FTR_RES_ON_FLY6
+    return return_val;
+#else
     return EB_ErrorNone;
+#endif
 }
 static void copy_output_recon_buffer(
     EbBufferHeaderType   *dst,

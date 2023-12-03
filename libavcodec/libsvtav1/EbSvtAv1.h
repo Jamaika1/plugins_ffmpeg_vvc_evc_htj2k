@@ -24,7 +24,7 @@ struct SvtMetadataArray;
 
 // API Version
 #define SVT_AV1_VERSION_MAJOR 1
-#define SVT_AV1_VERSION_MINOR 6
+#define SVT_AV1_VERSION_MINOR 7
 #define SVT_AV1_VERSION_PATCHLEVEL 0
 
 #define SVT_AV1_CHECK_VERSION(major, minor, patch)                                                               \
@@ -294,6 +294,12 @@ typedef enum {
     //FILM_GRAIN_PARAM,        // passing film grain parameters per picture
     REF_FRAME_SCALING_EVENT, // reference frame scaling data per picture
     ROI_MAP_EVENT, // ROI map data per picture
+#if FTR_RES_ON_FLY6
+    RES_CHANGE_EVENT, // resolution change data per picture (KF only)
+#endif
+#if FTR_RATE_ON_FLY
+    RATE_CHANGE_EVENT, // Rate change data per picture (KF only)
+#endif
     PRIVATE_DATA_TYPES // end of private data types
 } PrivDataType;
 typedef struct EbPrivDataNode {
@@ -321,10 +327,26 @@ typedef struct SvtAv1RoiMap {
     int16_t         *qp_map;
     char            *buf;
 } SvtAv1RoiMap;
+#if FTR_RES_ON_FLY6
+typedef struct SvtAv1InputPicDef {
+    uint16_t input_luma_width; // input luma width aligned to 8, this is used during encoding
+    uint16_t input_luma_height; // input luma height aligned to 8, this is used during encoding
+    uint16_t input_pad_bottom;
+    uint16_t input_pad_right;
+} SvtAv1InputPicDef;
+#endif
+#if FTR_RATE_ON_FLY
+typedef struct SvtAv1RateInfo {
+    // Sequence QP used in CRF/CQP algorithm. Over writes the sequence QP.
+    uint32_t seq_qp;
+    uint32_t target_bit_rate;
+} SvtAv1RateInfo;
+#endif
 /**
 CPU FLAGS
 */
 typedef uint64_t EbCpuFlags;
+#ifdef ARCH_X86_64
 #define EB_CPU_FLAGS_MMX (1 << 0)
 #define EB_CPU_FLAGS_SSE (1 << 1)
 #define EB_CPU_FLAGS_SSE2 (1 << 2)
@@ -341,8 +363,11 @@ typedef uint64_t EbCpuFlags;
 #define EB_CPU_FLAGS_AVX512PF (1 << 13)
 #define EB_CPU_FLAGS_AVX512BW (1 << 14)
 #define EB_CPU_FLAGS_AVX512VL (1 << 15)
-#define EB_CPU_FLAGS_ALL ((EB_CPU_FLAGS_AVX512VL << 1) - 1)
+#elif defined(ARCH_AARCH64)
+#define EB_CPU_FLAGS_NEON (1 << 0)
+#endif
 #define EB_CPU_FLAGS_INVALID (1ULL << (sizeof(EbCpuFlags) * 8ULL - 1ULL))
+#define EB_CPU_FLAGS_ALL ((EB_CPU_FLAGS_INVALID >> 1) - 1)
 
 #ifdef __cplusplus
 }
