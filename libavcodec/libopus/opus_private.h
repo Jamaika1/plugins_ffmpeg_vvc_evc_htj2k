@@ -44,7 +44,7 @@ struct OpusRepacketizer {
    int framesize;
 };
 
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
 typedef struct {
    int id;
    int frame;
@@ -157,7 +157,7 @@ opus_int32 opus_encode_native(OpusEncoder *st, const opus_val16 *pcm, int frame_
 
 int opus_decode_native(OpusDecoder *st, const unsigned char *data, opus_int32 len,
       opus_val16 *pcm, int frame_size, int decode_fec, int self_delimited,
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
       opus_int32 *packet_offset, int soft_clip, const OpusDRED *dred, opus_int32 dred_offset);
 #else
       opus_int32 *packet_offset, int soft_clip);
@@ -175,7 +175,7 @@ static OPUS_INLINE int align(int i)
     return ((i + alignment - 1) / alignment) * alignment;
 }
 
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
 /* More than that is ridiculous for now (3 * max frames per packet)*/
 opus_int32 skip_extension(const unsigned char **data, opus_int32 len, opus_int32 *header_size);
 #endif
@@ -183,7 +183,7 @@ opus_int32 skip_extension(const unsigned char **data, opus_int32 len, opus_int32
 int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       int self_delimited, unsigned char *out_toc,
       const unsigned char *frames[48], opus_int16 size[48],
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
       int *payload_offset, opus_int32 *packet_offset,
       const unsigned char **padding, opus_int32 *padding_len);
 #else
@@ -191,7 +191,7 @@ int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
 #endif
 
 opus_int32 opus_repacketizer_out_range_impl(OpusRepacketizer *rp, int begin, int end,
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
       unsigned char *data, opus_int32 maxlen, int self_delimited, int pad,
       const opus_extension_data *extensions, int nb_extensions);
 #else
@@ -226,7 +226,7 @@ int opus_multistream_decode_native(
   void *user_data
 );
 
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
 opus_int32 opus_packet_extensions_parse(const unsigned char *data, opus_int32 len, opus_extension_data *extensions, opus_int32 *nb_extensions);
 
 opus_int32 opus_packet_extensions_generate(unsigned char *data, opus_int32 len, const opus_extension_data  *extensions, int nb_extensions, int pad);
