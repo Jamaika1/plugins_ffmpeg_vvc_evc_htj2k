@@ -85,15 +85,15 @@
 #define WORDS_BIGENDIAN         0
 
 /* others */
-#define HAVE_STDINT_H           1
+#define HAVE_STDINT_H           0
 #define HAVE_VECTOREXT          0
 #define HAVE_LOG2F              1
-#define HAVE_SWSCALE            1
-#define HAVE_LAVF               1
-#define HAVE_FFMS               1
+#define HAVE_SWSCALE            0
+#define HAVE_LAVF               0
+#define HAVE_FFMS               0
 #define HAVE_GPAC               0
 #define HAVE_GF_MALLOC          0
-#define HAVE_AVS                1
+#define HAVE_AVS                0
 
 #endif
 #endif // XAVS2_CONFIGW_H
