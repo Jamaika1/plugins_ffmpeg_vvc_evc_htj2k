@@ -1077,6 +1077,7 @@ static vpx_codec_err_t ctrl_set_rtc_external_ratectrl(vpx_codec_alg_priv_t *ctx,
     cpi->compute_frame_low_motion_onepass = 0;
     cpi->rc.constrain_gf_key_freq_onepass_vbr = 0;
     cpi->cyclic_refresh->content_mode = 0;
+    cpi->disable_scene_detection_rtc_ratectrl = 1;
   }
   return VPX_CODEC_OK;
 }
@@ -1152,7 +1153,7 @@ static vpx_codec_err_t encoder_destroy(vpx_codec_alg_priv_t *ctx) {
 
 static void pick_quickcompress_mode(vpx_codec_alg_priv_t *ctx,
                                     unsigned long duration,
-                                    unsigned long deadline) {
+                                    vpx_enc_deadline_t deadline) {
   MODE new_mode = BEST;
 
 #if CONFIG_REALTIME_ONLY
@@ -1297,7 +1298,7 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
                                       vpx_codec_pts_t pts_val,
                                       unsigned long duration,
                                       vpx_enc_frame_flags_t enc_flags,
-                                      unsigned long deadline) {
+                                      vpx_enc_deadline_t deadline) {
   volatile vpx_codec_err_t res = VPX_CODEC_OK;
   volatile vpx_enc_frame_flags_t flags = enc_flags;
   volatile vpx_codec_pts_t pts = pts_val;
@@ -1960,7 +1961,8 @@ static vpx_codec_err_t ctrl_set_external_rate_control(vpx_codec_alg_priv_t *ctx,
     ratectrl_config.frame_width = frame_info->frame_width;
     ratectrl_config.frame_height = frame_info->frame_height;
     ratectrl_config.show_frame_count = cpi->twopass.first_pass_info.num_frames;
-
+    ratectrl_config.max_gf_interval = oxcf->max_gf_interval;
+    ratectrl_config.min_gf_interval = oxcf->min_gf_interval;
     // TODO(angiebird): Double check whether this is the proper way to set up
     // target_bitrate and frame_rate.
     ratectrl_config.target_bitrate_kbps = (int)(oxcf->target_bandwidth / 1000);
