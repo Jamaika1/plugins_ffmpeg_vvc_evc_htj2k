@@ -58,7 +58,7 @@
 
 struct _GDBusDaemon
 {
-  GFreedesktopDBusSkeleton parent_instance;
+  _GFreedesktopDBusSkeleton parent_instance;
 
   gchar *address;
   guint timeout;
@@ -73,7 +73,7 @@ struct _GDBusDaemon
 
 struct _GDBusDaemonClass
 {
-  GFreedesktopDBusSkeletonClass parent_class;
+  _GFreedesktopDBusSkeletonClass parent_class;
 };
 
 enum {
@@ -91,12 +91,12 @@ static guint g_dbus_daemon_signals[NR_SIGNALS];
 
 
 static void initable_iface_init      (GInitableIface         *initable_iface);
-static void g_dbus_daemon_iface_init (GFreedesktopDBusIface *iface);
+static void g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface);
 
 #define g_dbus_daemon_get_type _g_dbus_daemon_get_type
-G_DEFINE_TYPE_WITH_CODE (GDBusDaemon, g_dbus_daemon, G_TYPE_FREEDESKTOP_DBUS_SKELETON,
+G_DEFINE_TYPE_WITH_CODE (GDBusDaemon, g_dbus_daemon, _G_TYPE_FREEDESKTOP_DBUS_SKELETON,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
-			 G_IMPLEMENT_INTERFACE (G_TYPE_FREEDESKTOP_DBUS, g_dbus_daemon_iface_init))
+			 G_IMPLEMENT_INTERFACE (_G_TYPE_FREEDESKTOP_DBUS, g_dbus_daemon_iface_init))
 
 typedef struct {
   GDBusDaemon *daemon;
@@ -950,7 +950,7 @@ connection_closed (GDBusConnection *connection,
 }
 
 static gboolean
-handle_add_match (GFreedesktopDBus *object,
+handle_add_match (_GFreedesktopDBus *object,
 		  GDBusMethodInvocation *invocation,
 		  const gchar *arg_rule)
 {
@@ -966,25 +966,25 @@ handle_add_match (GFreedesktopDBus *object,
   else
     {
       client->matches = g_list_prepend (client->matches, match);
-      //_g_freedesktop_dbus_complete_add_match (object, invocation);
+      _g_freedesktop_dbus_complete_add_match (object, invocation);
     }
   return TRUE;
 }
 
 static gboolean
-handle_get_connection_selinux_security_context (GFreedesktopDBus *object,
+handle_get_connection_selinux_security_context (_GFreedesktopDBus *object,
 						GDBusMethodInvocation *invocation,
 						const gchar *arg_name)
 {
   g_dbus_method_invocation_return_error (invocation,
 					 G_DBUS_ERROR, G_DBUS_ERROR_SELINUX_SECURITY_CONTEXT_UNKNOWN,
 					 "selinux context not supported");
-  //_g_freedesktop_dbus_complete_get_connection_selinux_security_context (object, invocation, "");
+  _g_freedesktop_dbus_complete_get_connection_selinux_security_context (object, invocation, "");
   return TRUE;
 }
 
 static gboolean
-handle_get_connection_unix_process_id (GFreedesktopDBus *object,
+handle_get_connection_unix_process_id (_GFreedesktopDBus *object,
 				       GDBusMethodInvocation *invocation,
 				       const gchar *arg_name)
 {
@@ -995,7 +995,7 @@ handle_get_connection_unix_process_id (GFreedesktopDBus *object,
 }
 
 static gboolean
-handle_get_connection_unix_user (GFreedesktopDBus *object,
+handle_get_connection_unix_user (_GFreedesktopDBus *object,
 				 GDBusMethodInvocation *invocation,
 				 const gchar *arg_name)
 {
@@ -1006,17 +1006,17 @@ handle_get_connection_unix_user (GFreedesktopDBus *object,
 }
 
 static gboolean
-handle_get_id (GFreedesktopDBus *object,
+handle_get_id (_GFreedesktopDBus *object,
 	       GDBusMethodInvocation *invocation)
 {
   GDBusDaemon *daemon = G_DBUS_DAEMON (object);
-  /*_g_freedesktop_dbus_complete_get_id (object, invocation,
-				       daemon->guid);*/
+  _g_freedesktop_dbus_complete_get_id (object, invocation,
+				       daemon->guid);
   return TRUE;
 }
 
 static gboolean
-handle_get_name_owner (GFreedesktopDBus *object,
+handle_get_name_owner (_GFreedesktopDBus *object,
 		       GDBusMethodInvocation *invocation,
 		       const gchar *arg_name)
 {
@@ -1025,7 +1025,7 @@ handle_get_name_owner (GFreedesktopDBus *object,
 
   if (strcmp (arg_name, DBUS_SERVICE_NAME) == 0)
     {
-      //_g_freedesktop_dbus_complete_get_name_owner (object, invocation, DBUS_SERVICE_NAME);
+      _g_freedesktop_dbus_complete_get_name_owner (object, invocation, DBUS_SERVICE_NAME);
       return TRUE;
     }
 
@@ -1036,7 +1036,7 @@ handle_get_name_owner (GFreedesktopDBus *object,
 					       G_DBUS_ERROR, G_DBUS_ERROR_NAME_HAS_NO_OWNER,
 					       "Could not get owner of name '%s': no such name", arg_name);
       else
-	//_g_freedesktop_dbus_complete_get_name_owner (object, invocation, arg_name);
+	_g_freedesktop_dbus_complete_get_name_owner (object, invocation, arg_name);
       return TRUE;
     }
 
@@ -1049,16 +1049,16 @@ handle_get_name_owner (GFreedesktopDBus *object,
       return TRUE;
     }
 
-  //_g_freedesktop_dbus_complete_get_name_owner (object, invocation, name->owner->client->id);
+  _g_freedesktop_dbus_complete_get_name_owner (object, invocation, name->owner->client->id);
   return TRUE;
 }
 
 static gboolean
-handle_hello (GFreedesktopDBus *object,
+handle_hello (_GFreedesktopDBus *object,
 	      GDBusMethodInvocation *invocation)
 {
   Client *client = g_object_get_data (G_OBJECT (g_dbus_method_invocation_get_connection (invocation)), "client");
-  //_g_freedesktop_dbus_complete_hello (object, invocation, client->id);
+  _g_freedesktop_dbus_complete_hello (object, invocation, client->id);
 
   g_dbus_connection_emit_signal (client->connection,
 				 NULL, "/org/freedesktop/DBus",
@@ -1070,19 +1070,19 @@ handle_hello (GFreedesktopDBus *object,
 }
 
 static gboolean
-handle_list_activatable_names (GFreedesktopDBus *object,
+handle_list_activatable_names (_GFreedesktopDBus *object,
 			       GDBusMethodInvocation *invocation)
 {
   const char *names[] = { NULL };
 
-  /*_g_freedesktop_dbus_complete_list_activatable_names (object,
+  _g_freedesktop_dbus_complete_list_activatable_names (object,
 						       invocation,
-						       names);*/
+						       names);
   return TRUE;
 }
 
 static gboolean
-handle_list_names (GFreedesktopDBus *object,
+handle_list_names (_GFreedesktopDBus *object,
 		   GDBusMethodInvocation *invocation)
 {
   GDBusDaemon *daemon = G_DBUS_DAEMON (object);
@@ -1097,15 +1097,15 @@ handle_list_names (GFreedesktopDBus *object,
 
   g_ptr_array_add (array, NULL);
 
-  /*_g_freedesktop_dbus_complete_list_names (object,
+  _g_freedesktop_dbus_complete_list_names (object,
 					   invocation,
-					   (const gchar * const*)array->pdata);*/
+					   (const gchar * const*)array->pdata);
   g_ptr_array_free (array, TRUE);
   return TRUE;
 }
 
 static gboolean
-handle_list_queued_owners (GFreedesktopDBus *object,
+handle_list_queued_owners (_GFreedesktopDBus *object,
 			   GDBusMethodInvocation *invocation,
 			   const gchar *arg_name)
 {
@@ -1129,15 +1129,15 @@ handle_list_queued_owners (GFreedesktopDBus *object,
 
   g_ptr_array_add (array, NULL);
 
-  /*_g_freedesktop_dbus_complete_list_queued_owners (object,
+  _g_freedesktop_dbus_complete_list_queued_owners (object,
 						   invocation,
-						   (const gchar * const*)array->pdata);*/
+						   (const gchar * const*)array->pdata);
   g_ptr_array_free (array, TRUE);
   return TRUE;
 }
 
 static gboolean
-handle_name_has_owner (GFreedesktopDBus *object,
+handle_name_has_owner (_GFreedesktopDBus *object,
 		       GDBusMethodInvocation *invocation,
 		       const gchar *arg_name)
 {
@@ -1148,13 +1148,13 @@ handle_name_has_owner (GFreedesktopDBus *object,
   name = name_lookup (daemon, arg_name);
   client = g_hash_table_lookup (daemon->clients, arg_name);
 
-  /*_g_freedesktop_dbus_complete_name_has_owner (object, invocation,
-					       name != NULL || client != NULL);*/
+  _g_freedesktop_dbus_complete_name_has_owner (object, invocation,
+					       name != NULL || client != NULL);
   return TRUE;
 }
 
 static gboolean
-handle_release_name (GFreedesktopDBus *object,
+handle_release_name (_GFreedesktopDBus *object,
 		     GDBusMethodInvocation *invocation,
 		     const gchar *arg_name)
 {
@@ -1201,20 +1201,20 @@ handle_release_name (GFreedesktopDBus *object,
   else
     result = DBUS_RELEASE_NAME_REPLY_NOT_OWNER;
 
-  //_g_freedesktop_dbus_complete_release_name (object, invocation, result);
+  _g_freedesktop_dbus_complete_release_name (object, invocation, result);
   return TRUE;
 }
 
 static gboolean
-handle_reload_config (GFreedesktopDBus *object,
+handle_reload_config (_GFreedesktopDBus *object,
 		      GDBusMethodInvocation *invocation)
 {
-  //_g_freedesktop_dbus_complete_reload_config (object, invocation);
+  _g_freedesktop_dbus_complete_reload_config (object, invocation);
   return TRUE;
 }
 
 static gboolean
-handle_update_activation_environment (GFreedesktopDBus *object,
+handle_update_activation_environment (_GFreedesktopDBus *object,
 				      GDBusMethodInvocation *invocation,
 				      GVariant *arg_environment)
 {
@@ -1225,7 +1225,7 @@ handle_update_activation_environment (GFreedesktopDBus *object,
 }
 
 static gboolean
-handle_remove_match (GFreedesktopDBus *object,
+handle_remove_match (_GFreedesktopDBus *object,
 		     GDBusMethodInvocation *invocation,
 		     const gchar *arg_rule)
 {
@@ -1256,8 +1256,8 @@ handle_remove_match (GFreedesktopDBus *object,
 	g_dbus_method_invocation_return_error (invocation,
 					       G_DBUS_ERROR, G_DBUS_ERROR_MATCH_RULE_NOT_FOUND,
 					       "The given match rule wasn't found and can't be removed");
-      //else
-	//_g_freedesktop_dbus_complete_remove_match (object, invocation);
+      else
+	_g_freedesktop_dbus_complete_remove_match (object, invocation);
     }
   if (match)
     match_free (match);
@@ -1266,7 +1266,7 @@ handle_remove_match (GFreedesktopDBus *object,
 }
 
 static gboolean
-handle_request_name (GFreedesktopDBus *object,
+handle_request_name (_GFreedesktopDBus *object,
 		     GDBusMethodInvocation *invocation,
 		     const gchar *arg_name,
 		     guint flags)
@@ -1343,12 +1343,12 @@ handle_request_name (GFreedesktopDBus *object,
 
   name_unref (name);
 
-  //_g_freedesktop_dbus_complete_request_name (object, invocation, result);
+  _g_freedesktop_dbus_complete_request_name (object, invocation, result);
   return TRUE;
 }
 
 static gboolean
-handle_start_service_by_name (GFreedesktopDBus *object,
+handle_start_service_by_name (_GFreedesktopDBus *object,
 			      GDBusMethodInvocation *invocation,
 			      const gchar *arg_name,
 			      guint arg_flags)
@@ -1357,10 +1357,10 @@ handle_start_service_by_name (GFreedesktopDBus *object,
   Name *name;
 
   name = name_lookup (daemon, arg_name);
-  if (!name)
-    /*_g_freedesktop_dbus_complete_start_service_by_name (object, invocation,
-							DBUS_START_REPLY_ALREADY_RUNNING);*/
-  //else
+  if (name)
+    _g_freedesktop_dbus_complete_start_service_by_name (object, invocation,
+							DBUS_START_REPLY_ALREADY_RUNNING);
+  else
     g_dbus_method_invocation_return_error (invocation,
 					   G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN,
 					   "No support for activation for name: %s", arg_name);
@@ -1692,9 +1692,7 @@ g_dbus_daemon_class_init (GDBusDaemonClass *klass)
 
   g_object_class_install_property (gobject_class,
 				   PROP_ADDRESS,
-				   g_param_spec_string ("address",
-							"Bus Address",
-							"The address the bus should use",
+				   g_param_spec_string ("address", NULL, NULL,
 							NULL,
 							G_PARAM_READWRITE |
 							G_PARAM_CONSTRUCT_ONLY |
@@ -1702,7 +1700,7 @@ g_dbus_daemon_class_init (GDBusDaemonClass *klass)
 }
 
 static void
-g_dbus_daemon_iface_init (GFreedesktopDBusIface *iface)
+g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface)
 {
   iface->handle_add_match = handle_add_match;
   iface->handle_get_connection_selinux_security_context = handle_get_connection_selinux_security_context;

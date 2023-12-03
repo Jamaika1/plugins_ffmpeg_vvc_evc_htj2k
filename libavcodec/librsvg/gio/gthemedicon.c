@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -27,20 +27,19 @@
 #include "gthemedicon.h"
 #include "gicon.h"
 #include "gioerror.h"
-#include "glibintl.h"
+#include "../glib/glibintl.h"
 
 
 /**
- * SECTION:gthemedicon
- * @short_description: Icon theming support
- * @include: gio/gio.h
- * @see_also: #GIcon, #GLoadableIcon
+ * GThemedIcon:
  *
- * #GThemedIcon is an implementation of #GIcon that supports icon themes.
- * #GThemedIcon contains a list of all of the icons present in an icon
- * theme, so that icons can be looked up quickly. #GThemedIcon does
+ * `GThemedIcon` is an implementation of [iface@Gio.Icon] that supports icon
+ * themes.
+ *
+ * `GThemedIcon` contains a list of all of the icons present in an icon
+ * theme, so that icons can be looked up quickly. `GThemedIcon` does
  * not provide actual pixmaps for icons, just the icon names.
- * Ideally something like gtk_icon_theme_choose_icon() should be used to
+ * Ideally something like [method@Gtk.IconTheme.choose_icon] should be used to
  * resolve the list of names so that fallback icons work nicely with
  * themes that inherit other themes.
  **/
@@ -50,7 +49,7 @@ static void g_themed_icon_icon_iface_init (GIconIface *iface);
 struct _GThemedIcon
 {
   GObject parent_instance;
-  
+
   char     **init_names;
   char     **names;
   gboolean   use_default_fallbacks;
@@ -168,7 +167,7 @@ static void
 g_themed_icon_class_init (GThemedIconClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  
+
   gobject_class->finalize = g_themed_icon_finalize;
   gobject_class->constructed = g_themed_icon_constructed;
   gobject_class->set_property = g_themed_icon_set_property;
@@ -180,9 +179,7 @@ g_themed_icon_class_init (GThemedIconClass *klass)
    * The icon name.
    */
   g_object_class_install_property (gobject_class, PROP_NAME,
-                                   g_param_spec_string ("name",
-                                                        P_("name"),
-                                                        P_("The name of the icon"),
+                                   g_param_spec_string ("name", NULL, NULL,
                                                         NULL,
                                                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME | G_PARAM_STATIC_BLURB | G_PARAM_STATIC_NICK));
 
@@ -192,20 +189,18 @@ g_themed_icon_class_init (GThemedIconClass *klass)
    * A %NULL-terminated array of icon names.
    */
   g_object_class_install_property (gobject_class, PROP_NAMES,
-                                   g_param_spec_boxed ("names",
-                                                       P_("names"),
-                                                       P_("An array containing the icon names"),
+                                   g_param_spec_boxed ("names", NULL, NULL,
                                                        G_TYPE_STRV,
                                                        G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME | G_PARAM_STATIC_BLURB | G_PARAM_STATIC_NICK));
 
   /**
    * GThemedIcon:use-default-fallbacks:
    *
-   * Whether to use the default fallbacks found by shortening the icon name 
-   * at '-' characters. If the "names" array has more than one element, 
+   * Whether to use the default fallbacks found by shortening the icon name
+   * at '-' characters. If the "names" array has more than one element,
    * ignores any past the first.
    *
-   * For example, if the icon name was "gnome-dev-cdrom-audio", the array 
+   * For example, if the icon name was "gnome-dev-cdrom-audio", the array
    * would become
    * |[<!-- language="C" -->
    * {
@@ -218,9 +213,7 @@ g_themed_icon_class_init (GThemedIconClass *klass)
    * ]|
    */
   g_object_class_install_property (gobject_class, PROP_USE_DEFAULT_FALLBACKS,
-                                   g_param_spec_boolean ("use-default-fallbacks",
-                                                         P_("use default fallbacks"),
-                                                         P_("Whether to use default fallbacks found by shortening the name at “-” characters. Ignores names after the first if multiple names are given."),
+                                   g_param_spec_boolean ("use-default-fallbacks", NULL, NULL,
                                                          FALSE,
                                                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME | G_PARAM_STATIC_BLURB | G_PARAM_STATIC_NICK));
 }
@@ -363,9 +356,9 @@ g_themed_icon_update_names (GThemedIcon *themed)
 /**
  * g_themed_icon_new:
  * @iconname: a string containing an icon name.
- * 
+ *
  * Creates a new themed icon for @iconname.
- * 
+ *
  * Returns: (transfer full) (type GThemedIcon): a new #GThemedIcon.
  **/
 GIcon *
@@ -379,11 +372,11 @@ g_themed_icon_new (const char *iconname)
 /**
  * g_themed_icon_new_from_names:
  * @iconnames: (array length=len): an array of strings containing icon names.
- * @len: the length of the @iconnames array, or -1 if @iconnames is 
+ * @len: the length of the @iconnames array, or -1 if @iconnames is
  *     %NULL-terminated
- * 
+ *
  * Creates a new themed icon for @iconnames.
- * 
+ *
  * Returns: (transfer full) (type GThemedIcon): a new #GThemedIcon
  **/
 GIcon *
@@ -422,10 +415,10 @@ g_themed_icon_new_from_names (char **iconnames,
  *
  * Creates a new themed icon for @iconname, and all the names
  * that can be created by shortening @iconname at '-' characters.
- * 
+ *
  * In the following example, @icon1 and @icon2 are equivalent:
  * |[<!-- language="C" -->
- * const char *names[] = { 
+ * const char *names[] = {
  *   "gnome-dev-cdrom-audio",
  *   "gnome-dev-cdrom",
  *   "gnome-dev",
@@ -473,7 +466,7 @@ g_themed_icon_get_names (GThemedIcon *icon)
  * to g_icon_hash().
  */
 void
-g_themed_icon_append_name (GThemedIcon *icon, 
+g_themed_icon_append_name (GThemedIcon *icon,
                            const char  *iconname)
 {
   guint num_names;
@@ -502,7 +495,7 @@ g_themed_icon_append_name (GThemedIcon *icon,
  * Since: 2.18
  */
 void
-g_themed_icon_prepend_name (GThemedIcon *icon, 
+g_themed_icon_prepend_name (GThemedIcon *icon,
                             const char  *iconname)
 {
   guint num_names;
@@ -536,7 +529,7 @@ g_themed_icon_hash (GIcon *icon)
 
   for (i = 0; themed->names[i] != NULL; i++)
     hash ^= g_str_hash (themed->names[i]);
-  
+
   return hash;
 }
 
@@ -573,7 +566,7 @@ g_themed_icon_to_tokens (GIcon *icon,
   for (n = 0; themed_icon->names[n] != NULL; n++)
     g_ptr_array_add (tokens,
 		     g_strdup (themed_icon->names[n]));
-  
+
   return TRUE;
 }
 
@@ -598,7 +591,7 @@ g_themed_icon_from_tokens (gchar  **tokens,
                    version);
       goto out;
     }
-  
+
   names = g_new0 (gchar *, num_tokens + 1);
   for (n = 0; n < num_tokens; n++)
     names[n] = tokens[n];
