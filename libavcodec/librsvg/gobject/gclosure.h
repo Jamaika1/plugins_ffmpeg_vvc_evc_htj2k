@@ -24,7 +24,7 @@
 #error "Only <glib-object.h> can be included directly."
 #endif
 
-#include        "gtype.h"
+#include "gtype.h"
 
 G_BEGIN_DECLS
 
@@ -169,15 +169,7 @@ struct _GClosureNotifyData
   gpointer       data;
   GClosureNotify notify;
 };
-/**
- * GClosure:
- * @in_marshal: Indicates whether the closure is currently being invoked with
- *  g_closure_invoke()
- * @is_invalid: Indicates whether the closure has been invalidated by
- *  g_closure_invalidate()
- *
- * A #GClosure represents a callback supplied by the programmer.
- */
+
 struct _GClosure
 {
   /*< private >*/
