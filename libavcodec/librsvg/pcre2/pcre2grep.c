@@ -211,6 +211,7 @@ static const char *dee_option = NULL;
 static const char *DEE_option = NULL;
 static const char *locale = NULL;
 static const char *newline_arg = NULL;
+static const char *group_separator = "--";
 static const char *om_separator = NULL;
 static const char *stdin_name = "(standard input)";
 static const char *output_text = NULL;
@@ -425,6 +426,8 @@ used to identify them. */
 #define N_OM_CAPTURE   (-24)
 #define N_ALLABSK      (-25)
 #define N_POSIX_DIGIT  (-26)
+#define N_GROUP_SEPARATOR (-27)
+#define N_NO_GROUP_SEPARATOR (-28)
 
 static option_item optionlist[] = {
   { OP_NODATA,     N_NULL,   NULL,              "",              "terminate options" },
@@ -448,6 +451,7 @@ static option_item optionlist[] = {
   { OP_FILELIST,   'f',      &pattern_files_data, "file=path",   "read patterns from file" },
   { OP_FILELIST,   N_FILE_LIST, &file_lists_data, "file-list=path","read files to search from file" },
   { OP_NODATA,     N_FOFFSETS, NULL,            "file-offsets",  "output file offsets, not text" },
+  { OP_STRING,     N_GROUP_SEPARATOR, &group_separator, "group-separator=text", "set separator between groups of lines" },
   { OP_NODATA,     'H',      NULL,              "with-filename", "force the prefixing filename on output" },
   { OP_NODATA,     'h',      NULL,              "no-filename",   "suppress the prefixing filename on output" },
   { OP_NODATA,     'I',      NULL,              "",              "treat binary files as not matching (ignore)" },
@@ -471,6 +475,7 @@ static option_item optionlist[] = {
 #else
   { OP_NODATA,     N_NOJIT,  NULL,              "no-jit",        "ignored: this pcre2grep does not support JIT" },
 #endif
+  { OP_NODATA,     N_NO_GROUP_SEPARATOR, NULL,   "no-group-separator", "suppress separators between groups of lines" },
   { OP_STRING,     'O',      &output_text,       "output=text",   "show only this text (possibly expanded)" },
   { OP_OP_NUMBERS, 'o',      &only_matching_data, "only-matching=n", "show only the part of the line that matched" },
   { OP_STRING,     N_OM_SEPARATOR, &om_separator, "om-separator=text", "set separator for multiple -o output" },
@@ -796,7 +801,7 @@ decode_ANSI_colour(const char *cs)
 WORD result = csbi.wAttributes;
 while (*cs)
   {
-  if (isdigit(*cs))
+  if (isdigit((unsigned char)(*cs)))
     {
     int code = atoi(cs);
     if (code == 1) result |= 0x08;
@@ -810,7 +815,7 @@ while (*cs)
     else if (code >= 90 && code <= 97) result = (result & 0xF0) | BGR_RGB(code - 90) | 0x08;
     else if (code >= 100 && code <= 107) result = (result & 0x0F) | (BGR_RGB(code - 100) << 4) | 0x80;
 
-    while (isdigit(*cs)) cs++;
+    while (isdigit((unsigned char)(*cs))) cs++;
     }
   if (*cs) cs++;
   }
@@ -1989,7 +1994,7 @@ switch (*(++string))
   case '{':
   brace = TRUE;
   string++;
-  if (!isdigit(*string))  /* Syntax error: a decimal number required. */
+  if (!isdigit((unsigned char)(*string)))  /* Syntax error: a decimal number required. */
     {
     if (!callout)
       fprintf(stderr, "pcre2grep: Error in output text at offset %d: %s\n",
@@ -2873,7 +2878,7 @@ while (ptr < endptr)
 
         /* Prepare to repeat to find the next match in the line. */
 
-        match = FALSE;
+        //match = FALSE;
         if (line_buffered) fflush(stdout);
         rc = 0;                      /* Had some success */
 
@@ -2954,7 +2959,8 @@ while (ptr < endptr)
 
       if (hyphenpending)
         {
-        fprintf(stdout, "--" STDOUT_NL);
+        if (group_separator != NULL)
+          fprintf(stdout, "%s%s", group_separator, STDOUT_NL);
         hyphenpending = FALSE;
         hyphenprinted = TRUE;
         }
@@ -2975,8 +2981,9 @@ while (ptr < endptr)
           p = previous_line(p, main_buffer);
           }
 
-        if (lastmatchnumber > 0 && p > lastmatchrestart && !hyphenprinted)
-          fprintf(stdout, "--" STDOUT_NL);
+        if (lastmatchnumber > 0 && p > lastmatchrestart && !hyphenprinted &&
+            group_separator != NULL)
+          fprintf(stdout, "%s%s", group_separator, STDOUT_NL);
 
         while (p < ptr)
           {
@@ -3590,6 +3597,7 @@ switch(letter)
   case N_LOFFSETS: line_offsets = number = TRUE; break;
   case N_NOJIT: use_jit = FALSE; break;
   case N_ALLABSK: extra_options |= PCRE2_EXTRA_ALLOW_LOOKAROUND_BSK; break;
+  case N_NO_GROUP_SEPARATOR: group_separator = NULL; break;
   case 'a': binary_files = BIN_TEXT; break;
   case 'c': count_only = TRUE; break;
   case N_POSIX_DIGIT: posix_digit = TRUE; break;
@@ -4036,7 +4044,7 @@ for (i = 1; i < argc; i++)
 
       if (op->type == OP_OP_NUMBER || op->type == OP_OP_NUMBERS)
         {
-        if (isdigit((unsigned char)s[1])) break;
+        if (isdigit((unsigned char)(s[1]))) break;
         }
       else   /* Check for an option with data */
         {
@@ -4520,7 +4528,7 @@ for (fn = file_lists; fn != NULL; fn = fn->next)
     {
     int frc;
     char *end = buffer + (int)strlen(buffer);
-    while (end > buffer && isspace(end[-1])) end--;
+    while (end > buffer && isspace((unsigned char)(end[-1]))) end--;
     *end = 0;
     if (*buffer != 0)
       {
