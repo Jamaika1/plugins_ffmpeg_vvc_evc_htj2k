@@ -20,7 +20,7 @@
 #include <inttypes.h>
 #if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
     (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
-#define WEBP_INLINE inline __attribute__((always_inline))
+#define WEBP_INLINE inline
 #else
 #define WEBP_INLINE
 #endif
@@ -35,6 +35,23 @@ typedef unsigned long long int uint64_t;
 typedef long long int int64_t;
 #define WEBP_INLINE __forceinline
 #endif  /* _MSC_VER */
+
+#if defined(WEBP_ENABLE_NODISCARD) ||                   \
+    (defined(__cplusplus) && __cplusplus >= 201700L) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#define WEBP_NODISCARD [[nodiscard]]
+#else
+// gcc's __has_attribute does not work for enums.
+#if defined(__clang__) && defined(__has_attribute)
+#if __has_attribute(warn_unused_result)
+#define WEBP_NODISCARD __attribute__((warn_unused_result))
+#else
+#define WEBP_NODISCARD
+#endif
+#else
+#define WEBP_NODISCARD
+#endif
+#endif
 
 #ifndef WEBP_EXTERN
 // This explicitly marks library functions and allows for changing the
@@ -60,7 +77,7 @@ extern "C" {
 // Allocates 'size' bytes of memory. Returns NULL upon error. Memory
 // must be deallocated by calling WebPFree(). This function is made available
 // by the core 'libwebp' library.
-WEBP_EXTERN void* WebPMalloc(size_t size);
+WEBP_NODISCARD WEBP_EXTERN void* WebPMalloc(size_t size);
 
 // Releases memory returned by the WebPDecode*() functions (from decode.h).
 WEBP_EXTERN void WebPFree(void* ptr);
