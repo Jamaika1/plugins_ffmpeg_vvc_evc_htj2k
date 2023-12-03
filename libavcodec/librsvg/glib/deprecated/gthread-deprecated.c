@@ -41,17 +41,6 @@
 /* {{{1 Documentation */
 
 /**
- * SECTION:threads-deprecated
- * @title: Deprecated thread API
- * @short_description: old thread APIs (for reference only)
- * @see_also: #GThread
- *
- * These APIs are deprecated.  You should not use them in new code.
- * This section remains only to assist with understanding code that was
- * written to use these APIs at some point in the past.
- **/
-
-/**
  * GThreadPriority:
  * @G_THREAD_PRIORITY_LOW: a priority lower than normal
  * @G_THREAD_PRIORITY_NORMAL: the default priority
@@ -232,7 +221,7 @@ g_thread_set_priority (GThread         *thread,
 
 /**
  * g_thread_foreach:
- * @thread_func: function to call for all #GThread structures
+ * @thread_func: (scope call): function to call for all #GThread structures
  * @user_data: second argument to @thread_func
  *
  * Call @thread_func on all #GThreads that have been
