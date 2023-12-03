@@ -244,7 +244,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_avx2(
     unsigned int i, j, k, subblock_idx;
 
     int32_t  idx_32x32               = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
-    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->min_frame_size << 16) / 10, 1 << 16);
+    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->tf_mv_dist_th << 16) / 10, 1 << 16);
 
     //Calculation for every quarter
     uint32_t  d_factor_fp8[4];
@@ -322,9 +322,8 @@ static void svt_av1_apply_temporal_filter_planewise_medium_partial_avx2(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint32_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
-        FP_ASSERT((((int64_t)combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3)) < ((int64_t)1 << 31));
-        uint32_t scaled_diff16 = AOMMIN(
+        uint64_t avg_err_fp10  = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor >> 10), 1), 7 * 16);
         uint32_t adjusted_weight = (expf_tab_fp16[scaled_diff16] * TF_WEIGHT_SCALE) >> 16;
 
@@ -507,9 +506,7 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_avx2(
 
     int32_t  idx_32x32               = me_ctx->tf_block_col + me_ctx->tf_block_row * 2;
     int      shift_factor            = ((encoder_bit_depth - 8) * 2);
-    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->min_frame_size << 16) / 10,
-                                              1 << 16); //TODO Change to FP8
-
+    uint32_t distance_threshold_fp16 = AOMMAX((me_ctx->tf_mv_dist_th << 16) / 10, 1 << 16); //TODO Change to FP8
     //Calculation for every quarter
     uint32_t  d_factor_fp8[4];
     uint32_t  block_error_fp8[4];
@@ -594,9 +591,8 @@ static void svt_av1_apply_temporal_filter_planewise_medium_hbd_partial_avx2(
                                        block_error_fp8[subblock_idx]) /
             (TF_WINDOW_BLOCK_BALANCE_WEIGHT + 1);
 
-        uint32_t avg_err_fp10 = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
-        FP_ASSERT((((int64_t)combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3)) < ((int64_t)1 << 31));
-        uint32_t scaled_diff16 = AOMMIN(
+        uint64_t avg_err_fp10  = ((combined_error_fp8 >> 3) * (d_factor_fp8[subblock_idx] >> 3));
+        uint32_t scaled_diff16 = (uint32_t)AOMMIN(
             /*((16*avg_err)<<8)*/ (avg_err_fp10) / AOMMAX((tf_decay_factor >> 10), 1), 7 * 16);
         int adjusted_weight = (expf_tab_fp16[scaled_diff16] * TF_WEIGHT_SCALE) >> 16;
 
