@@ -50,7 +50,8 @@
 #include <stdarg.h>
 #include "celt_lpc.h"
 #include "vq.h"
-#ifdef ENABLE_NEURAL_FEC
+
+#ifdef ENABLE_DEEP_PLC
 #include "../libopus/lpcnet/lpcnet.h"
 #include "../libopus/lpcnet/lpcnet_private.h"
 #endif
@@ -73,7 +74,7 @@
 /**********************************************************************/
 #define DECODE_BUFFER_SIZE 2048
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
 #define PLC_UPDATE_FRAMES 4
 #define PLC_UPDATE_SAMPLES (PLC_UPDATE_FRAMES*FRAME_SIZE)
 #endif
@@ -91,6 +92,7 @@ struct OpusCustomDecoder {
    int start, end;
    int signalling;
    int disable_inv;
+   int complexity;
    int arch;
 
    /* Everything beyond this point gets cleared on a reset */
@@ -107,13 +109,13 @@ struct OpusCustomDecoder {
    opus_val16 postfilter_gain_old;
    int postfilter_tapset;
    int postfilter_tapset_old;
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
    int prefilter_and_fold;
 #endif
 
    celt_sig preemph_memD[2];
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
    opus_int16 plc_pcm[PLC_UPDATE_SAMPLES];
    int plc_fill;
    float plc_preemphasis_mem;
@@ -517,7 +519,7 @@ static int celt_plc_pitch_search(celt_sig *decode_mem[2], int C, int arch)
    return pitch_index;
 }
 
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
 static void prefilter_and_fold(CELTDecoder * OPUS_RESTRICT st, int N)
 {
    int c;
@@ -554,9 +556,7 @@ static void prefilter_and_fold(CELTDecoder * OPUS_RESTRICT st, int N)
       }
    } while (++c<CC);
 }
-#endif
 
-#ifdef ENABLE_NEURAL_FEC
 #define SINC_ORDER 48
 /* h=cos(pi/2*abs(sin([-24:24]/48*pi*23./24)).^2);
    b=sinc([-24:24]/3*1.02).*h;
@@ -571,7 +571,7 @@ static const float sinc_filter[SINC_ORDER+1] = {
     4.2931e-05f
 };
 
-void update_plc_state(LPCNetPLCState *lpcnet, celt_sig *decode_mem[2], int CC)
+void update_plc_state(LPCNetPLCState *lpcnet, celt_sig *decode_mem[2], float *plc_preemphasis_mem, int CC)
 {
    int i;
    int tmp_read_post, tmp_fec_skip;
@@ -586,6 +586,7 @@ void update_plc_state(LPCNetPLCState *lpcnet, celt_sig *decode_mem[2], int CC)
    }
    /* Down-sample the last 40 ms. */
    for (i=1;i<DECODE_BUFFER_SIZE;i++) buf48k[i] += PREEMPHASIS*buf48k[i-1];
+   *plc_preemphasis_mem = buf48k[DECODE_BUFFER_SIZE-1];
    offset = DECODE_BUFFER_SIZE-SINC_ORDER-1 - 3*(PLC_UPDATE_SAMPLES-1);
    celt_assert(3*(PLC_UPDATE_SAMPLES-1) + SINC_ORDER + offset == DECODE_BUFFER_SIZE-1);
    for (i=0;i<PLC_UPDATE_SAMPLES;i++) {
@@ -607,7 +608,7 @@ void update_plc_state(LPCNetPLCState *lpcnet, celt_sig *decode_mem[2], int CC)
 #endif
 
 static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
       ,LPCNetPLCState *lpcnet
 #endif
       )
@@ -645,7 +646,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
 
    loss_duration = st->loss_duration;
    start = st->start;
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
    noise_based = start != 0 || (lpcnet->fec_fill_pos == 0 && (st->skip_plc || loss_duration >= 80));
 #else
    noise_based = loss_duration >= 40 || start != 0 || st->skip_plc;
@@ -674,7 +675,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
 #endif
       c=0; do {
          OPUS_MOVE(decode_mem[c], decode_mem[c]+N,
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
                DECODE_BUFFER_SIZE-N+overlap);
       } while (++c<C);
 
@@ -714,8 +715,10 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
       st->rng = seed;
 
       celt_synthesis(mode, X, out_syn, oldBandE, start, effEnd, C, C, 0, LM, st->downsample, 0, st->arch);
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
       st->prefilter_and_fold = 0;
+      /* Skip regular PLC until we get two consecutive packets. */
+      st->skip_plc = 1;
 #endif
    } else {
       int exc_length;
@@ -732,8 +735,8 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
 
       if (loss_duration == 0)
       {
-#ifdef ENABLE_NEURAL_FEC
-         update_plc_state(lpcnet, decode_mem, C);
+#ifdef ENABLE_DEEP_PLC
+        if (lpcnet->loaded) update_plc_state(lpcnet, decode_mem, &st->plc_preemphasis_mem, C);
 #endif
          st->last_pitch_index = pitch_index = celt_plc_pitch_search(decode_mem, C, st->arch);
       } else {
@@ -945,11 +948,11 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
 #endif
       } while (++c<C);
 
-#ifdef ENABLE_NEURAL_FEC
-      {
+      //{
+#ifdef ENABLE_DEEP_PLC
+      if (lpcnet->loaded && (st->complexity >= 5 || lpcnet->fec_fill_pos > 0)) {
          float overlap_mem;
          int samples_needed16k;
-         int ignored = 0;
          celt_sig *buf;
          VARDECL(float, buf_copy);
          buf = decode_mem[0];
@@ -962,9 +965,6 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
             and the overlap at the end. */
          samples_needed16k = (N+SINC_ORDER+overlap)/3;
          if (loss_duration == 0) {
-            /* Ignore the first 8 samples due to the update resampling delay. */
-            ignored = SINC_ORDER/6;
-            samples_needed16k += ignored;
             st->plc_fill = 0;
          }
          while (st->plc_fill < samples_needed16k) {
@@ -975,15 +975,15 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
          for (i=0;i<(N+overlap)/3;i++) {
             int j;
             float sum;
-            for (sum=0, j=0;j<17;j++) sum += 3*st->plc_pcm[ignored+i+j]*sinc_filter[3*j];
+            for (sum=0, j=0;j<17;j++) sum += 3*st->plc_pcm[i+j]*sinc_filter[3*j];
             buf[DECODE_BUFFER_SIZE-N+3*i] = sum;
-            for (sum=0, j=0;j<16;j++) sum += 3*st->plc_pcm[ignored+i+j+1]*sinc_filter[3*j+2];
+            for (sum=0, j=0;j<16;j++) sum += 3*st->plc_pcm[i+j+1]*sinc_filter[3*j+2];
             buf[DECODE_BUFFER_SIZE-N+3*i+1] = sum;
-            for (sum=0, j=0;j<16;j++) sum += 3*st->plc_pcm[ignored+i+j+1]*sinc_filter[3*j+1];
-            buf[DECODE_BUFFER_SIZE-N+3*i+1] = sum;
+            for (sum=0, j=0;j<16;j++) sum += 3*st->plc_pcm[i+j+1]*sinc_filter[3*j+1];
+            buf[DECODE_BUFFER_SIZE-N+3*i+2] = sum;
          }
-         OPUS_MOVE(st->plc_pcm, &st->plc_pcm[N/3+ignored], st->plc_fill-N/3-ignored);
-         st->plc_fill -= N/3+ignored;
+         OPUS_MOVE(st->plc_pcm, &st->plc_pcm[N/3], st->plc_fill-N/3);
+         st->plc_fill -= N/3;
          for (i=0;i<N;i++) {
             float tmp = buf[DECODE_BUFFER_SIZE-N+i];
             buf[DECODE_BUFFER_SIZE-N+i] -= PREEMPHASIS*st->plc_preemphasis_mem;
@@ -1004,8 +1004,6 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
             }
          } while (++c<C);
       }
-#endif
-#ifdef FIX_PREFILTER
       st->prefilter_and_fold = 1;
 #endif
    }
@@ -1016,7 +1014,7 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, int N, int LM
    RESTORE_STACK;
 }
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
 int celt_decode_with_ec_dred(CELTDecoder * OPUS_RESTRICT st, const unsigned char *data,
       int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec, int accum, LPCNetPLCState *lpcnet)
 #else
@@ -1140,7 +1138,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
    if (data == NULL || len<=1)
    {
       celt_decode_lost(st, N, LM
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
       , lpcnet
 #endif
                       );
@@ -1148,7 +1146,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
       RESTORE_STACK;
       return frame_size/st->downsample;
    }
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
    else {
       /* FIXME: This is a bit of a hack just to make sure opus_decode_native() knows we're no longer in PLC. */
       if (lpcnet) lpcnet->blend = 0;
@@ -1157,7 +1155,11 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
 
    /* Check if there are at least two packets received consecutively before
     * turning on the pitch-based PLC */
+#ifdef ENABLE_DEEP_PLC
+   if (st->loss_duration == 0) st->skip_plc = 0;
+#else
    st->skip_plc = st->loss_duration != 0;
+#endif
 
    if (dec == NULL)
    {
@@ -1323,7 +1325,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
       for (i=0;i<C*nbEBands;i++)
          oldBandE[i] = -QCONST16(28.f,DB_SHIFT);
    }
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
    if (st->prefilter_and_fold) {
       prefilter_and_fold(st, N);
    }
@@ -1391,7 +1393,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
 
    deemphasis(out_syn, pcm, N, CC, st->downsample, mode->preemph, st->preemph_memD, accum);
    st->loss_duration = 0;
-#ifdef FIX_PREFILTER
+#ifdef ENABLE_DEEP_PLC
    st->prefilter_and_fold = 0;
 #endif
    RESTORE_STACK;
@@ -1402,7 +1404,7 @@ int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *da
    return frame_size/st->downsample;
 }
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
 int celt2_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *data,
       int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec, int accum)
 {
@@ -1482,6 +1484,27 @@ int opus_custom_decoder_ctl(CELTDecoder * OPUS_RESTRICT st, int request, ...)
    va_start(ap, request);
    switch (request)
    {
+      case OPUS_SET_COMPLEXITY_REQUEST:
+      {
+          opus_int32 value = va_arg(ap, opus_int32);
+          if(value<0 || value>10)
+          {
+             goto bad_arg;
+          }
+          st->complexity = value;
+      }
+      break;
+      case OPUS_GET_COMPLEXITY_REQUEST:
+      {
+          opus_int32 *value = va_arg(ap, opus_int32*);
+          if (!value)
+          {
+             goto bad_arg;
+          }
+          *value = st->complexity;
+      }
+      break;
+
       case CELT_SET_START_BAND_REQUEST:
       {
          opus_int32 value = va_arg(ap, opus_int32);

@@ -41,7 +41,7 @@
 #include "entenc.h"
 #include "entdec.h"
 #include "arch.h"
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DEEP_PLC
 #include "../libopus/lpcnet/lpcnet.h"
 #endif
 
@@ -152,7 +152,7 @@ int celt2_decoder_get_size(int channels);
 
 int celt2_decoder_init(CELTDecoder *st, opus_int32 sampling_rate, int channels);
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DRED
 int celt_decode_with_ec_dred(CELTDecoder * OPUS_RESTRICT st, const unsigned char *data,
       int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec, int accum, LPCNetPLCState *lpcnet);
 #endif

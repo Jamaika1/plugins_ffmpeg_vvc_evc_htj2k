@@ -32,31 +32,32 @@ POSSIBILITY OF SUCH DAMAGE.
 #define HAVE_STDINT_H         1
 
 /* Comment out the next line for floating-point code */
-//#define FIXED_POINT           1
+#define FIXED_POINT           1
 
 #define OPUS_BUILD            1
 
 #undef FEATURES
-#define FIX_PREFILTER 1
-#define FIX_ICDF16 1
-#define FIX_PACKET_PARSE 1
+//#define FIX_PREFILTER 1
+//#define FIX_ICDF16 1
+//#define FIX_PACKET_PARSE 1
 
 #if defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
-/* Can always compile SSE intrinsics (no special compiler flags necessary) */
+// Can always compile SSE intrinsics (no special compiler flags necessary)
 #define OPUS_X86_MAY_HAVE_SSE
 #define OPUS_X86_MAY_HAVE_SSE2
 #define OPUS_X86_MAY_HAVE_SSE4_1
+#define OPUS_X86_MAY_HAVE_AVX
 
-/* Presume SSE functions, if compiled to use SSE/SSE2/AVX (note that AMD64 implies SSE2, and AVX
-   implies SSE4.1) */
-#if defined(_M_X64) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1)) || defined(__AVX__)
-//#define OPUS_X86_PRESUME_SSE 1
+// Presume SSE functions, if compiled to use SSE/SSE2/AVX (note that AMD64 implies SSE2, and AVX
+#if defined(_M_X64) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1)) || defined(__x86_64__)
+#define OPUS_X86_PRESUME_SSE 1
 #endif
-#if defined(_M_X64) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 2)) || defined(__AVX__)
-//#define OPUS_X86_PRESUME_SSE2 1
+#if defined(_M_X64) || (defined(_M_IX86_FP) && (_M_IX86_FP >= 2)) || defined(__x86_64__)
+#define OPUS_X86_PRESUME_SSE2 1
 #endif
 #if defined(__AVX__)
-//#define OPUS_X86_PRESUME_SSE4_1 1
+#define OPUS_X86_PRESUME_SSE4_1 1
+#define OPUS_X86_PRESUME_AVX 1
 #endif
 
 #if !defined(OPUS_X86_PRESUME_SSE4_1) || !defined(OPUS_X86_PRESUME_SSE2) || !defined(OPUS_X86_PRESUME_SSE)
