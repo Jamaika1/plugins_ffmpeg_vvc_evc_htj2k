@@ -172,7 +172,7 @@ void ec_enc_icdf(ec_enc *_this,int _s,const unsigned char *_icdf,unsigned _ftb){
   ec_enc_normalize(_this);
 }
 
-#ifdef FIX_ICDF16
+#ifdef ENABLE_DRED
 void ec_enc_icdf16(ec_enc *_this,int _s,const opus_uint16 *_icdf,unsigned _ftb){
   opus_uint32 r;
   r=_this->rng>>_ftb;

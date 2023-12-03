@@ -162,7 +162,7 @@ static int opus_multistream_packet_validate(const unsigned char *data,
       if (len<=0)
          return OPUS_INVALID_PACKET;
       count = opus_packet_parse_impl(data, len, s!=nb_streams-1, &toc, NULL,
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
                                      size, NULL, &packet_offset, NULL, NULL);
 #else
                                      size, NULL, &packet_offset);
@@ -254,7 +254,7 @@ int opus_multistream_decode_native(
          return OPUS_INTERNAL_ERROR;
       }
       packet_offset = 0;
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
       ret = opus_decode_native(dec, data, len, buf, frame_size, decode_fec, s!=st->layout.nb_streams-1, &packet_offset, soft_clip, NULL, 0);
 #else
       ret = opus_decode_native(dec, data, len, buf, frame_size, decode_fec, s!=st->layout.nb_streams-1, &packet_offset, soft_clip);

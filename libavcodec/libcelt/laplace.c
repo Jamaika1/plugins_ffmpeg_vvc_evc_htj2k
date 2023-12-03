@@ -133,7 +133,7 @@ int ec_laplace_decode(ec_dec *dec, unsigned fs, int decay)
    return val;
 }
 
-#ifdef FIX_ICDF16
+#ifdef ENABLE_DRED
 void ec_laplace_encode_p0(ec_enc *enc, int value, opus_uint16 p0, opus_uint16 decay)
 {
    int s;

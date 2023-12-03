@@ -64,7 +64,7 @@ void ec_enc_bit_logp(ec_enc *_this,int _val,unsigned _logp);
   _ftb: The number of bits of precision in the cumulative distribution.*/
 void ec_enc_icdf(ec_enc *_this,int _s,const unsigned char *_icdf,unsigned _ftb);
 
-#ifdef FIX_ICDF16
+#ifdef ENABLE_DRED
 /*Encodes a symbol given an "inverse" CDF table.
   _s:    The index of the symbol to encode.
   _icdf: The "inverse" CDF, such that symbol _s falls in the range

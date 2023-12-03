@@ -195,7 +195,7 @@ int ec_dec_icdf(ec_dec *_this,const unsigned char *_icdf,unsigned _ftb){
   return ret;
 }
 
-#ifdef FIX_ICDF16
+#ifdef ENABLE_DRED
 int ec_dec_icdf16(ec_dec *_this,const opus_uint16 *_icdf,unsigned _ftb){
   opus_uint32 r;
   opus_uint32 d;

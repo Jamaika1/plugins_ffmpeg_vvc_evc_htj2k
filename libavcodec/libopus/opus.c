@@ -194,7 +194,7 @@ int opus_packet_get_samples_per_frame(const unsigned char *data,
 int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       int self_delimited, unsigned char *out_toc,
       const unsigned char *frames[48], opus_int16 size[48],
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
       int *payload_offset, opus_int32 *packet_offset,
       const unsigned char **padding, opus_int32 *padding_len)
 #else
@@ -342,7 +342,7 @@ int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       data += size[i];
    }
 
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
    if (padding != NULL)
    {
       *padding = data;
@@ -363,7 +363,7 @@ int opus_packet_parse(const unsigned char *data, opus_int32 len,
       opus_int16 size[48], int *payload_offset)
 {
    return opus_packet_parse_impl(data, len, 0, out_toc,
-#ifdef FIX_PACKET_PARSE
+#ifdef FIX_PADDING
                                  frames, size, payload_offset, NULL, NULL, NULL);
 #else
                                  frames, size, payload_offset, NULL);

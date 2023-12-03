@@ -398,7 +398,7 @@ OPUS_EXPORT int opus_encoder_ctl(OpusEncoder *st, int request, ...) OPUS_ARG_NON
   */
 typedef struct OpusDecoder OpusDecoder;
 
-#ifdef FIX_PACKET_PARSE
+#ifdef ENABLE_DRED
 /** Opus DRED decoder.
   * This contains the complete state of an Opus DRED decoder.
   * It is position independent and can be freely copied.
@@ -528,7 +528,7 @@ OPUS_EXPORT int opus_decoder_ctl(OpusDecoder *st, int request, ...) OPUS_ARG_NON
   */
 OPUS_EXPORT void opus_decoder_destroy(OpusDecoder *st);
 
-#ifdef LPCNET
+#ifdef ENABLE_DRED
 /** Gets the size of an <code>OpusDREDDecoder</code> structure.
   * @returns The size in bytes.
   */
@@ -693,7 +693,7 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_packet_get_nb_frames(const unsigned
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_packet_get_nb_samples(const unsigned char packet[], opus_int32 len, opus_int32 Fs) OPUS_ARG_NONNULL(1);
 
-#ifdef FIX_PACKET_PARSE
+#ifdef ENABLE_DRED
 /** Checks whether an Opus packet has LBRR.
   * @param [in] data <tt>char*</tt>: Opus packet
   * @returns 1 is LBRR is present, 0 otherwise
