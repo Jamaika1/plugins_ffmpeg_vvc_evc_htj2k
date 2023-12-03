@@ -28,146 +28,6 @@
  * MT safe
  */
 
-/**
- * SECTION:messages
- * @Title: Message Output and Debugging Functions
- * @Short_description: functions to output messages and help debug applications
- *
- * These functions provide support for outputting messages.
- *
- * The g_return family of macros (g_return_if_fail(),
- * g_return_val_if_fail(), g_return_if_reached(),
- * g_return_val_if_reached()) should only be used for programming
- * errors, a typical use case is checking for invalid parameters at
- * the beginning of a public function. They should not be used if
- * you just mean "if (error) return", they should only be used if
- * you mean "if (bug in program) return". The program behavior is
- * generally considered undefined after one of these checks fails.
- * They are not intended for normal control flow, only to give a
- * perhaps-helpful warning before giving up.
- *
- * Structured logging output is supported using g_log_structured(). This differs
- * from the traditional g_log() API in that log messages are handled as a
- * collection of key–value pairs representing individual pieces of information,
- * rather than as a single string containing all the information in an arbitrary
- * format.
- *
- * The convenience macros g_info(), g_message(), g_debug(), g_warning() and g_error()
- * will use the traditional g_log() API unless you define the symbol
- * %G_LOG_USE_STRUCTURED before including `glib.h`. But note that even messages
- * logged through the traditional g_log() API are ultimatively passed to
- * g_log_structured(), so that all log messages end up in same destination.
- * If %G_LOG_USE_STRUCTURED is defined, g_test_expect_message() will become
- * ineffective for the wrapper macros g_warning() and friends (see
- * [Testing for Messages][testing-for-messages]).
- *
- * The support for structured logging was motivated by the following needs (some
- * of which were supported previously; others weren’t):
- *  * Support for multiple logging levels.
- *  * Structured log support with the ability to add `MESSAGE_ID`s (see
- *    g_log_structured()).
- *  * Moving the responsibility for filtering log messages from the program to
- *    the log viewer — instead of libraries and programs installing log handlers
- *    (with g_log_set_handler()) which filter messages before output, all log
- *    messages are outputted, and the log viewer program (such as `journalctl`)
- *    must filter them. This is based on the idea that bugs are sometimes hard
- *    to reproduce, so it is better to log everything possible and then use
- *    tools to analyse the logs than it is to not be able to reproduce a bug to
- *    get additional log data. Code which uses logging in performance-critical
- *    sections should compile out the g_log_structured() calls in
- *    release builds, and compile them in in debugging builds.
- *  * A single writer function which handles all log messages in a process, from
- *    all libraries and program code; rather than multiple log handlers with
- *    poorly defined interactions between them. This allows a program to easily
- *    change its logging policy by changing the writer function, for example to
- *    log to an additional location or to change what logging output fallbacks
- *    are used. The log writer functions provided by GLib are exposed publicly
- *    so they can be used from programs’ log writers. This allows log writer
- *    policy and implementation to be kept separate.
- *  * If a library wants to add standard information to all of its log messages
- *    (such as library state) or to redact private data (such as passwords or
- *    network credentials), it should use a wrapper function around its
- *    g_log_structured() calls or implement that in the single log writer
- *    function.
- *  * If a program wants to pass context data from a g_log_structured() call to
- *    its log writer function so that, for example, it can use the correct
- *    server connection to submit logs to, that user data can be passed as a
- *    zero-length #GLogField to g_log_structured_array().
- *  * Color output needed to be supported on the terminal, to make reading
- *    through logs easier.
- *
- * ## Using Structured Logging ## {#using-structured-logging}
- *
- * To use structured logging (rather than the old-style logging), either use
- * the g_log_structured() and g_log_structured_array() functions; or define
- * `G_LOG_USE_STRUCTURED` before including any GLib header, and use the
- * g_message(), g_debug(), g_error() (etc.) macros.
- *
- * You do not need to define `G_LOG_USE_STRUCTURED` to use g_log_structured(),
- * but it is a good idea to avoid confusion.
- *
- * ## Log Domains ## {#log-domains}
- *
- * Log domains may be used to broadly split up the origins of log messages.
- * Typically, there are one or a few log domains per application or library.
- * %G_LOG_DOMAIN should be used to define the default log domain for the current
- * compilation unit — it is typically defined at the top of a source file, or in
- * the preprocessor flags for a group of source files.
- *
- * Log domains must be unique, and it is recommended that they are the
- * application or library name, optionally followed by a hyphen and a sub-domain
- * name. For example, `bloatpad` or `bloatpad-io`.
- *
- * ## Debug Message Output ## {#debug-message-output}
- *
- * The default log functions (g_log_default_handler() for the old-style API and
- * g_log_writer_default() for the structured API) both drop debug and
- * informational messages by default, unless the log domains of those messages
- * are listed in the `G_MESSAGES_DEBUG` environment variable (or it is set to
- * `all`).
- *
- * It is recommended that custom log writer functions re-use the
- * `G_MESSAGES_DEBUG` environment variable, rather than inventing a custom one,
- * so that developers can re-use the same debugging techniques and tools across
- * projects. Since GLib 2.68, this can be implemented by dropping messages
- * for which g_log_writer_default_would_drop() returns %TRUE.
- *
- * ## Testing for Messages ## {#testing-for-messages}
- *
- * With the old g_log() API, g_test_expect_message() and
- * g_test_assert_expected_messages() could be used in simple cases to check
- * whether some code under test had emitted a given log message. These
- * functions have been deprecated with the structured logging API, for several
- * reasons:
- *  * They relied on an internal queue which was too inflexible for many use
- *    cases, where messages might be emitted in several orders, some
- *    messages might not be emitted deterministically, or messages might be
- *    emitted by unrelated log domains.
- *  * They do not support structured log fields.
- *  * Examining the log output of code is a bad approach to testing it, and
- *    while it might be necessary for legacy code which uses g_log(), it should
- *    be avoided for new code using g_log_structured().
- *
- * They will continue to work as before if g_log() is in use (and
- * %G_LOG_USE_STRUCTURED is not defined). They will do nothing if used with the
- * structured logging API.
- *
- * Examining the log output of code is discouraged: libraries should not emit to
- * `stderr` during defined behaviour, and hence this should not be tested. If
- * the log emissions of a library during undefined behaviour need to be tested,
- * they should be limited to asserting that the library aborts and prints a
- * suitable error message before aborting. This should be done with
- * g_test_trap_assert_stderr().
- *
- * If it is really necessary to test the structured log messages emitted by a
- * particular piece of code – and the code cannot be restructured to be more
- * suitable to more conventional unit testing – you should write a custom log
- * writer function (see g_log_set_writer_func()) which appends all log messages
- * to a queue. When you want to check the log messages, examine and clear the
- * queue, ignoring irrelevant log messages (for example, from log domains other
- * than the one under test).
- */
-
 #include "config.h"
 
 #include <stdlib.h>
@@ -450,7 +310,8 @@
  *
  * Such messages are suppressed by the g_log_default_handler() and
  * g_log_writer_default() unless the `G_MESSAGES_DEBUG` environment variable is
- * set appropriately.
+ * set appropriately. If you need to set the allowed domains at runtime, use
+ * g_log_writer_default_set_debug_domains().
  *
  * If structured logging is enabled, this will use g_log_structured();
  * otherwise it will use g_log(). See
@@ -473,7 +334,8 @@
  *
  * Such messages are suppressed by the g_log_default_handler() and
  * g_log_writer_default() unless the `G_MESSAGES_DEBUG` environment variable is
- * set appropriately.
+ * set appropriately. If you need to set the allowed domains at runtime, use
+ * g_log_writer_default_set_debug_domains().
  *
  * If structured logging is enabled, this will use g_log_structured();
  * otherwise it will use g_log(). See
@@ -566,27 +428,6 @@ static gboolean win32_keep_fatal_message = FALSE;
  * called with huge strings, is it?
  */
 static gchar  fatal_msg_buf[1000] = "Unspecified fatal error encountered, aborting.";
-static gchar *fatal_msg_ptr = fatal_msg_buf;
-
-#undef write
-static inline int
-dowrite (int          fd,
-	 const void  *buf,
-	 unsigned int len)
-{
-  if (win32_keep_fatal_message)
-    {
-      memcpy (fatal_msg_ptr, buf, len);
-      fatal_msg_ptr += len;
-      *fatal_msg_ptr = 0;
-      return len;
-    }
-
-  write (fd, buf, len);
-
-  return len;
-}
-#define write(fd, buf, len) dowrite(fd, buf, len)
 
 #endif
 
@@ -2626,6 +2467,56 @@ log_is_old_api (const GLogField *fields,
           g_strcmp0 (fields[0].value, "1") == 0);
 }
 
+static gboolean
+domain_found (const gchar *domains,
+              const char  *log_domain)
+{
+  guint len;
+  const gchar *found;
+
+  len = strlen (log_domain);
+
+  for (found = strstr (domains, log_domain); found;
+       found = strstr (found + 1, log_domain))
+    {
+      if ((found == domains || found[-1] == ' ')
+          && (found[len] == 0 || found[len] == ' '))
+        return TRUE;
+    }
+
+  return FALSE;
+}
+
+static struct {
+  GRWLock lock;
+  gchar *domains;
+  gboolean domains_set;
+} g_log_global;
+
+/**
+ * g_log_writer_default_set_debug_domains:
+ * @domains: (nullable) (transfer none): `NULL`-terminated array with domains to be printed.
+ *   `NULL` or an array with no values means none. Array with a single value `"all"` means all.
+
+ * Reset the list of domains to be logged, that might be initially set by the
+ * `G_MESSAGES_DEBUG` environment variable. This function is thread-safe.
+ *
+ * Since: 2.80
+ */
+void
+g_log_writer_default_set_debug_domains (const gchar * const *domains)
+{
+  g_rw_lock_writer_lock (&g_log_global.lock);
+
+  g_free (g_log_global.domains);
+  g_log_global.domains = domains ?
+      g_strjoinv (" ", (gchar **)domains) : NULL;
+
+  g_log_global.domains_set = TRUE;
+
+  g_rw_lock_writer_unlock (&g_log_global.lock);
+}
+
 /*
  * Internal version of g_log_writer_default_would_drop(), which can
  * read from either a log_domain or an array of fields. This avoids
@@ -2643,14 +2534,22 @@ should_drop_message (GLogLevelFlags   log_level,
       !(log_level >> G_LOG_LEVEL_USER_SHIFT) &&
       !g_log_get_debug_enabled ())
     {
-      const gchar *domains;
       gsize i;
 
-      domains = g_getenv ("G_MESSAGES_DEBUG");
+      g_rw_lock_reader_lock (&g_log_global.lock);
+
+      if (G_UNLIKELY (!g_log_global.domains_set))
+        {
+          g_log_global.domains = g_strdup (g_getenv ("G_MESSAGES_DEBUG"));
+          g_log_global.domains_set = TRUE;
+        }
 
       if ((log_level & INFO_LEVELS) == 0 ||
-          domains == NULL)
-        return TRUE;
+          g_log_global.domains == NULL)
+        {
+          g_rw_lock_reader_unlock (&g_log_global.lock);
+          return TRUE;
+        }
 
       if (log_domain == NULL)
         {
@@ -2664,9 +2563,14 @@ should_drop_message (GLogLevelFlags   log_level,
             }
         }
 
-      if (strcmp (domains, "all") != 0 &&
-          (log_domain == NULL || !strstr (domains, log_domain)))
-        return TRUE;
+      if (strcmp (g_log_global.domains, "all") != 0 &&
+          (log_domain == NULL || !domain_found (g_log_global.domains, log_domain)))
+        {
+          g_rw_lock_reader_unlock (&g_log_global.lock);
+          return TRUE;
+        }
+
+      g_rw_lock_reader_unlock (&g_log_global.lock);
     }
 
   return FALSE;
@@ -2683,7 +2587,7 @@ should_drop_message (GLogLevelFlags   log_level,
  *
  * As with g_log_default_handler(), this function drops debug and informational
  * messages unless their log domain (or `all`) is listed in the space-separated
- * `G_MESSAGES_DEBUG` environment variable.
+ * `G_MESSAGES_DEBUG` environment variable, or by g_log_writer_default_set_debug_domains().
  *
  * This can be used when implementing log writers with the same filtering
  * behaviour as the default, but a different destination or output format:
@@ -2740,7 +2644,7 @@ g_log_writer_default_would_drop (GLogLevelFlags  log_level,
  *
  * As with g_log_default_handler(), this function drops debug and informational
  * messages unless their log domain (or `all`) is listed in the space-separated
- * `G_MESSAGES_DEBUG` environment variable.
+ * `G_MESSAGES_DEBUG` environment variable, or set at runtime by g_log_writer_default_set_debug_domains().
  *
  * g_log_writer_default() uses the mask set by g_log_set_always_fatal() to
  * determine which messages are fatal. When using a custom writer func instead it is
@@ -2881,8 +2785,8 @@ _g_log_writer_fallback (GLogLevelFlags   log_level,
  * other logging functions; it should only be used from %GLogWriterFunc
  * implementations.
  *
- * Note also that the value of this does not depend on `G_MESSAGES_DEBUG`; see
- * the docs for g_log_set_debug_enabled().
+ * Note also that the value of this does not depend on `G_MESSAGES_DEBUG`, nor
+ * g_log_writer_default_set_debug_domains(); see the docs for g_log_set_debug_enabled().
  *
  * Returns: %TRUE if debug output is enabled, %FALSE otherwise
  *
@@ -2899,8 +2803,9 @@ g_log_get_debug_enabled (void)
  * @enabled: %TRUE to enable debug output, %FALSE otherwise
  *
  * Enable or disable debug output from the GLib logging system for all domains.
- * This value interacts disjunctively with `G_MESSAGES_DEBUG` — if either of
- * them would allow a debug message to be outputted, it will be.
+ * This value interacts disjunctively with `G_MESSAGES_DEBUG` and
+ * g_log_writer_default_set_debug_domains() — if any of them would allow
+ * a debug message to be outputted, it will be.
  *
  * Note that this should not be used from within library code to enable debug
  * output — it is intended for external use.
@@ -3227,7 +3132,8 @@ escape_string (GString *string)
  *
  * - `G_MESSAGES_DEBUG`: A space-separated list of log domains for
  *   which debug and informational messages are printed. By default
- *   these messages are not printed.
+ *   these messages are not printed. If you need to set the allowed
+ *   domains at runtime, use g_log_writer_default_set_debug_domains().
  *
  * stderr is used for levels %G_LOG_LEVEL_ERROR, %G_LOG_LEVEL_CRITICAL,
  * %G_LOG_LEVEL_WARNING and %G_LOG_LEVEL_MESSAGE. stdout is used for
@@ -3485,12 +3391,25 @@ g_printerr (const gchar *format,
  * Calculates the maximum space needed to store the output
  * of the sprintf() function.
  *
- * Returns: the maximum space needed to store the formatted string
+ * If @format or @args are invalid, `0` is returned. This could happen if, for
+ * example, @format contains an `%lc` or `%ls` placeholder and @args contains a
+ * wide character which cannot be represented in multibyte encoding. `0`
+ * can also be returned legitimately if, for example, @format is `%s` and @args
+ * is an empty string. The caller is responsible for differentiating these two
+ * return cases if necessary. It is recommended to not use `%lc` or `%ls`
+ * placeholders in any case, as their behaviour is locale-dependent.
+ *
+ * Returns: the maximum space needed to store the formatted string, or `0` on error
  */
 gsize
 g_printf_string_upper_bound (const gchar *format,
                              va_list      args)
 {
   gchar c;
-  return _g_vsnprintf (&c, 1, format, args) + 1;
+  int count = _g_vsnprintf (&c, 1, format, args);
+
+  if (count < 0)
+    return 0;
+
+  return count + 1;
 }

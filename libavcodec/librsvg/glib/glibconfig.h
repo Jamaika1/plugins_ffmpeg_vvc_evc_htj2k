@@ -162,7 +162,7 @@ typedef gint64 goffset;
 #endif
 
 #define GLIB_MAJOR_VERSION 2
-#define GLIB_MINOR_VERSION 78
+#define GLIB_MINOR_VERSION 79
 #define GLIB_MICRO_VERSION 0
 
 #define G_OS_WIN32 1
@@ -226,10 +226,17 @@ typedef gint64 goffset;
 #define GUINT_TO_LE(val)	((guint) GUINT32_TO_LE (val))
 #define GINT_TO_BE(val)		((gint) GINT32_TO_BE (val))
 #define GUINT_TO_BE(val)	((guint) GUINT32_TO_BE (val))
+#ifndef _WIN64
 #define GSIZE_TO_LE(val)	((gsize) GUINT32_TO_LE (val))
 #define GSSIZE_TO_LE(val)	((gssize) GINT32_TO_LE (val))
 #define GSIZE_TO_BE(val)	((gsize) GUINT32_TO_BE (val))
 #define GSSIZE_TO_BE(val)	((gssize) GINT32_TO_BE (val))
+#else
+#define GSIZE_TO_LE(val)	((gsize) GUINT64_TO_LE (val))
+#define GSSIZE_TO_LE(val)	((gssize) GINT64_TO_LE (val))
+#define GSIZE_TO_BE(val)	((gsize) GUINT64_TO_BE (val))
+#define GSSIZE_TO_BE(val)	((gssize) GINT64_TO_BE (val))
+#endif
 #define G_BYTE_ORDER G_LITTLE_ENDIAN
 
 #define GLIB_SYSDEF_POLLIN =1
