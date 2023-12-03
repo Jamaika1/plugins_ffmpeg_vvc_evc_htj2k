@@ -34,12 +34,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "../libcelt/entenc.h"
 #include "../libcelt/entdec.h"
 
-#ifdef NEURAL_PLC
+#ifdef ENABLE_DEEP_PLC
 #include "lpcnet.h"
 #include "lpcnet/src/lpcnet_private.h"
 #endif
 
-#ifdef ENABLE_NEURAL_FEC
+#ifdef ENABLE_DRED
 #include "dred_encoder.h"
 #include "dred_decoder.h"
 #endif
@@ -253,6 +253,7 @@ typedef struct {
     opus_int                    fs_kHz;
     opus_int                    nb_subfr;
     opus_int                    subfr_length;
+    opus_int                    enable_deep_plc;
 } silk_PLC_struct;
 
 /* Struct for CNG */
