@@ -5316,31 +5316,24 @@ EB_EXTERN EbErrorType svt_aom_write_sb(EntropyCodingContext *ec_ctx, SuperBlock 
     uint32_t blk_index       = 0;
     uint32_t final_blk_index = 0;
 
-    ec_ctx->coded_area_sb       = 0;
-    ec_ctx->coded_area_sb_uv    = 0;
-    Bool check_blk_out_of_bound = FALSE;
-
-    SbGeom *sb_geom = &pcs->ppcs->sb_geom[tb_ptr->index]; // .block_is_inside_md_scan[blk_index])
-
-    if (!(sb_geom->is_complete_sb))
-        check_blk_out_of_bound = TRUE;
+    ec_ctx->coded_area_sb             = 0;
+    ec_ctx->coded_area_sb_uv          = 0;
+    SbGeom    *sb_geom                = &pcs->ppcs->sb_geom[tb_ptr->index];
+    const bool check_blk_out_of_bound = !(sb_geom->is_complete_sb);
     do {
         Bool             code_blk_cond = TRUE; // Code cu only if it is inside the picture
         EcBlkStruct     *blk_ptr       = &tb_ptr->final_blk_arr[final_blk_index];
         const BlockGeom *blk_geom      = get_blk_geom_mds(blk_index);
 
-        BlockSize bsize = blk_geom->bsize;
+        const BlockSize bsize     = blk_geom->bsize;
+        const uint32_t  blk_org_x = ec_ctx->sb_origin_x + blk_geom->org_x;
+        const uint32_t  blk_org_y = ec_ctx->sb_origin_y + blk_geom->org_y;
         assert(bsize < BlockSizeS_ALL);
-        uint32_t blk_org_x = ec_ctx->sb_origin_x + blk_geom->org_x;
-        uint32_t blk_org_y = ec_ctx->sb_origin_y + blk_geom->org_y;
+        assert(blk_geom->shape == PART_N);
         if (check_blk_out_of_bound) {
-            if (blk_geom->shape != PART_N)
-                blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
-            code_blk_cond = FALSE;
-            if (((blk_org_x + blk_geom->bwidth / 2 < pcs->ppcs->aligned_width) ||
-                 (blk_org_y + blk_geom->bheight / 2 < pcs->ppcs->aligned_height)) &&
-                blk_org_x < pcs->ppcs->aligned_width && blk_org_y < pcs->ppcs->aligned_height)
-                code_blk_cond = TRUE;
+            code_blk_cond = ((blk_org_x + blk_geom->bwidth / 2 < pcs->ppcs->aligned_width) ||
+                             (blk_org_y + blk_geom->bheight / 2 < pcs->ppcs->aligned_height)) &&
+                (blk_org_x < pcs->ppcs->aligned_width && blk_org_y < pcs->ppcs->aligned_height);
         }
 
         if (code_blk_cond) {
@@ -5391,6 +5384,8 @@ EB_EXTERN EbErrorType svt_aom_write_sb(EntropyCodingContext *ec_ctx, SuperBlock 
                                      partition_context_na);
             }
 
+            assert(blk_geom->shape == PART_N);
+            assert(IMPLIES(bsize == BLOCK_4X4, tb_ptr->cu_partition_array[blk_index] == PARTITION_NONE));
             switch (tb_ptr->cu_partition_array[blk_index]) {
             case PARTITION_NONE: write_modes_b(pcs, ec_ctx, ec, tb_ptr, blk_ptr, tile_idx, coeff_ptr); break;
 
@@ -5464,8 +5459,12 @@ EB_EXTERN EbErrorType svt_aom_write_sb(EntropyCodingContext *ec_ctx, SuperBlock 
             case PARTITION_HORZ_4:
                 for (int32_t i = 0; i < 4; ++i) {
                     int32_t this_mi_row = mi_row + i * quarter_step;
-                    if (i > 0 && this_mi_row >= cm->mi_rows)
+                    if (i > 0 && this_mi_row >= cm->mi_rows) {
+                        // Only the last block is able to be outside the picture boundary. If one of the first
+                        // 3 blocks is outside the boundary, H4 is not a valid partition (see AV1 spec 5.11.4)
+                        assert(i == 3);
                         break;
+                    }
 
                     if (i > 0) {
                         final_blk_index++;
@@ -5477,8 +5476,12 @@ EB_EXTERN EbErrorType svt_aom_write_sb(EntropyCodingContext *ec_ctx, SuperBlock 
             case PARTITION_VERT_4:
                 for (int32_t i = 0; i < 4; ++i) {
                     int32_t this_mi_col = mi_col + i * quarter_step;
-                    if (i > 0 && this_mi_col >= cm->mi_cols)
+                    if (i > 0 && this_mi_col >= cm->mi_cols) {
+                        // Only the last block is able to be outside the picture boundary. If one of the first
+                        // 3 blocks is outside the boundary, H4 is not a valid partition (see AV1 spec 5.11.4)
+                        assert(i == 3);
                         break;
+                    }
                     if (i > 0) {
                         final_blk_index++;
                         blk_ptr = &tb_ptr->final_blk_arr[final_blk_index];
@@ -5494,8 +5497,9 @@ EB_EXTERN EbErrorType svt_aom_write_sb(EntropyCodingContext *ec_ctx, SuperBlock 
                 blk_index += blk_geom->ns_depth_offset;
             } else
                 blk_index += blk_geom->d1_depth_offset;
-        } else
-            ++blk_index;
+        } else {
+            blk_index += blk_geom->d1_depth_offset;
+        }
     } while (blk_index < scs->max_block_cnt);
     return return_error;
 }

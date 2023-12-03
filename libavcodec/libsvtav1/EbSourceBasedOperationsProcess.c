@@ -265,12 +265,6 @@ static int rate_estimator(TranLow *qcoeff, int eob, TxSize tx_size) {
 
 static void result_model_store(PictureParentControlSet *pcs, TplStats *tpl_stats_ptr, uint32_t mb_origin_x,
                                uint32_t mb_origin_y, uint32_t size) {
-    //normalize based on the block size 16x16
-    tpl_stats_ptr->srcrf_dist = tpl_stats_ptr->srcrf_dist / size;
-    tpl_stats_ptr->recrf_dist = tpl_stats_ptr->recrf_dist / size;
-    tpl_stats_ptr->srcrf_rate = tpl_stats_ptr->srcrf_rate / size;
-    tpl_stats_ptr->recrf_rate = tpl_stats_ptr->recrf_rate / size;
-
     tpl_stats_ptr->srcrf_dist = AOMMAX(1, tpl_stats_ptr->srcrf_dist);
     tpl_stats_ptr->recrf_dist = AOMMAX(1, tpl_stats_ptr->recrf_dist);
     tpl_stats_ptr->srcrf_rate = AOMMAX(1, tpl_stats_ptr->srcrf_rate);
@@ -279,27 +273,23 @@ static void result_model_store(PictureParentControlSet *pcs, TplStats *tpl_stats
         const int stride  = (((pcs->aligned_width + 31) / 32));
         TplStats *dst_ptr = pcs->pa_me_data->tpl_stats[(mb_origin_y >> 5) * stride + (mb_origin_x >> 5)];
 
-        //write to a 16x16 grid
+        //write to a 32x32 grid
         *dst_ptr = *tpl_stats_ptr;
-        /*if (size == 32) {
-            *dst_ptr = *tpl_stats_ptr;
-        }
-        else if (size == 16) {
-            dst_ptr[0] = *tpl_stats_ptr;
-            dst_ptr[1] = *tpl_stats_ptr;
-            dst_ptr[stride] = *tpl_stats_ptr;
-            dst_ptr[stride + 1] = *tpl_stats_ptr;
-        }*/
     } else if (pcs->tpl_ctrls.synth_blk_size == 16) {
         const int stride  = ((pcs->aligned_width + 15) / 16);
         TplStats *dst_ptr = pcs->pa_me_data->tpl_stats[(mb_origin_y >> 4) * stride + (mb_origin_x >> 4)];
 
         //write to a 16x16 grid
         if (size == 32) {
-            dst_ptr[0]          = *tpl_stats_ptr;
-            dst_ptr[1]          = *tpl_stats_ptr;
-            dst_ptr[stride]     = *tpl_stats_ptr;
-            dst_ptr[stride + 1] = *tpl_stats_ptr;
+            //normalize based on the block size 16x16
+            tpl_stats_ptr->srcrf_dist = AOMMAX(1, tpl_stats_ptr->srcrf_dist / 4);
+            tpl_stats_ptr->recrf_dist = AOMMAX(1, tpl_stats_ptr->recrf_dist / 4);
+            tpl_stats_ptr->srcrf_rate = AOMMAX(1, tpl_stats_ptr->srcrf_rate / 4);
+            tpl_stats_ptr->recrf_rate = AOMMAX(1, tpl_stats_ptr->recrf_rate / 4);
+            dst_ptr[0]                = *tpl_stats_ptr;
+            dst_ptr[1]                = *tpl_stats_ptr;
+            dst_ptr[stride]           = *tpl_stats_ptr;
+            dst_ptr[stride + 1]       = *tpl_stats_ptr;
         } else if (size == 16) {
             *dst_ptr = *tpl_stats_ptr;
         }
@@ -310,10 +300,15 @@ static void result_model_store(PictureParentControlSet *pcs, TplStats *tpl_stats
 
         //write to a 8x8 grid
         if (size == 32) {
-            dst_ptr[0] = *tpl_stats_ptr;
-            dst_ptr[1] = *tpl_stats_ptr;
-            dst_ptr[2] = *tpl_stats_ptr;
-            dst_ptr[3] = *tpl_stats_ptr;
+            //normalize based on the block size 8x8
+            tpl_stats_ptr->srcrf_dist = AOMMAX(1, tpl_stats_ptr->srcrf_dist / 16);
+            tpl_stats_ptr->recrf_dist = AOMMAX(1, tpl_stats_ptr->recrf_dist / 16);
+            tpl_stats_ptr->srcrf_rate = AOMMAX(1, tpl_stats_ptr->srcrf_rate / 16);
+            tpl_stats_ptr->recrf_rate = AOMMAX(1, tpl_stats_ptr->recrf_rate / 16);
+            dst_ptr[0]                = *tpl_stats_ptr;
+            dst_ptr[1]                = *tpl_stats_ptr;
+            dst_ptr[2]                = *tpl_stats_ptr;
+            dst_ptr[3]                = *tpl_stats_ptr;
 
             dst_ptr[stride]     = *tpl_stats_ptr;
             dst_ptr[stride + 1] = *tpl_stats_ptr;
@@ -331,10 +326,15 @@ static void result_model_store(PictureParentControlSet *pcs, TplStats *tpl_stats
             dst_ptr[(stride * 3) + 3] = *tpl_stats_ptr;
 
         } else if (size == 16) {
-            dst_ptr[0]          = *tpl_stats_ptr;
-            dst_ptr[1]          = *tpl_stats_ptr;
-            dst_ptr[stride]     = *tpl_stats_ptr;
-            dst_ptr[stride + 1] = *tpl_stats_ptr;
+            //normalize based on the block size 8x8
+            tpl_stats_ptr->srcrf_dist = AOMMAX(1, tpl_stats_ptr->srcrf_dist / 4);
+            tpl_stats_ptr->recrf_dist = AOMMAX(1, tpl_stats_ptr->recrf_dist / 4);
+            tpl_stats_ptr->srcrf_rate = AOMMAX(1, tpl_stats_ptr->srcrf_rate / 4);
+            tpl_stats_ptr->recrf_rate = AOMMAX(1, tpl_stats_ptr->recrf_rate / 4);
+            dst_ptr[0]                = *tpl_stats_ptr;
+            dst_ptr[1]                = *tpl_stats_ptr;
+            dst_ptr[stride]           = *tpl_stats_ptr;
+            dst_ptr[stride + 1]       = *tpl_stats_ptr;
         }
     }
 }
@@ -549,6 +549,15 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
     uint8_t *predictor = predictor8;
 
     MacroblockPlane mb_plane;
+#if FTR_RES_ON_FLY2
+    mb_plane.quant_qtx       = scs->enc_ctx->quants_8bit.y_quant[qIndex];
+    mb_plane.quant_fp_qtx    = scs->enc_ctx->quants_8bit.y_quant_fp[qIndex];
+    mb_plane.round_fp_qtx    = scs->enc_ctx->quants_8bit.y_round_fp[qIndex];
+    mb_plane.quant_shift_qtx = scs->enc_ctx->quants_8bit.y_quant_shift[qIndex];
+    mb_plane.zbin_qtx        = scs->enc_ctx->quants_8bit.y_zbin[qIndex];
+    mb_plane.round_qtx       = scs->enc_ctx->quants_8bit.y_round[qIndex];
+    mb_plane.dequant_qtx     = scs->enc_ctx->deq_8bit.y_dequant_qtx[qIndex];
+#else
     mb_plane.quant_qtx       = scs->quants_8bit.y_quant[qIndex];
     mb_plane.quant_fp_qtx    = scs->quants_8bit.y_quant_fp[qIndex];
     mb_plane.round_fp_qtx    = scs->quants_8bit.y_round_fp[qIndex];
@@ -556,13 +565,14 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
     mb_plane.zbin_qtx        = scs->quants_8bit.y_zbin[qIndex];
     mb_plane.round_qtx       = scs->quants_8bit.y_round[qIndex];
     mb_plane.dequant_qtx     = scs->deq_8bit.y_dequant_qtx[qIndex];
+#endif
 
     const uint32_t src_stride      = pcs->enhanced_pic->stride_y;
     B64Geom       *b64_geom        = &scs->b64_geom[sb_index];
     const int      aligned16_width = (pcs->aligned_width + 15) >> 4;
 
     const uint8_t disable_intra_pred = (pcs->tpl_ctrls.disable_intra_pred_nref && (pcs->tpl_data.is_ref == 0));
-    const uint8_t intra_dc_sad_path  = pcs->tpl_ctrls.use_pred_sad_in_intra_search;
+    const uint8_t intra_dc_sad_path  = pcs->tpl_ctrls.use_sad_in_src_search && pcs->tpl_ctrls.intra_mode_end == DC_PRED;
 
     for (uint32_t blk_index = blk_start; blk_index <= blk_end; blk_index++) {
         uint32_t               z_blk_index   = tpl_blk_idx_tab[0][blk_index];
@@ -727,7 +737,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
 
                             // Distortion
                             int64_t intra_cost;
-                            if (pcs->tpl_ctrls.use_pred_sad_in_intra_search) {
+                            if (pcs->tpl_ctrls.use_sad_in_src_search) {
                                 intra_cost = svt_nxm_sad_kernel_sub_sampled(
                                     src_mb, input_pic->stride_y, predictor, size, size, size);
                             } else {
@@ -807,30 +817,104 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                 if (pcs->tpl_ctrls.subpel_depth != FULL_PEL) {
                     tpl_subpel_search(scs, pcs, ref_pic_ptr, input_pic, &xd, mb_origin_x, mb_origin_y, bsize, &best_mv);
                 }
-                if (pcs->tpl_ctrls.use_pred_sad_in_inter_search) {
-                    int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x +
-                        ((int32_t)mb_origin_x + (best_mv.col >> 3)) +
-                        ((int32_t)mb_origin_y + (best_mv.row >> 3) + (int32_t)ref_pic_ptr->org_y) *
-                            (int32_t)ref_pic_ptr->stride_y;
+                int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x + ((int32_t)mb_origin_x + (best_mv.col / 8)) +
+                    ((int32_t)mb_origin_y + (best_mv.row / 8) + (int32_t)ref_pic_ptr->org_y) *
+                        (int32_t)ref_pic_ptr->stride_y;
 
-                    inter_cost = svt_nxm_sad_kernel_sub_sampled(src_mb,
-                                                                input_pic->stride_y,
-                                                                ref_pic_ptr->buffer_y + ref_origin_index,
-                                                                ref_pic_ptr->stride_y,
-                                                                size,
-                                                                size);
+                // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
+                uint8_t subpel_mv = (best_mv.col & 0x7 || best_mv.row & 0x7);
+                if (subpel_mv) {
+                    DECLARE_ALIGNED(32, uint16_t, tmp_dst_y[MAX_TPL_SAMPLES_PER_BLOCK]);
+                    DECLARE_ALIGNED(16, uint8_t, seg_mask[2 * MAX_TPL_SAMPLES_PER_BLOCK]);
+                    ConvolveParams conv_params_y = get_conv_params_no_round(
+                        0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
+
+                    svt_aom_enc_make_inter_predictor(
+                        scs,
+                        ref_pic_ptr->buffer_y + ref_pic_ptr->org_x + (ref_pic_ptr->org_y * ref_pic_ptr->stride_y),
+                        NULL, // src_ptr_2b,
+                        compensated_blk,
+                        (int16_t)mb_origin_y,
+                        (int16_t)mb_origin_x,
+                        best_mv,
+                        &scs->sf_identity,
+                        &conv_params_y,
+                        0, // interp_filters
+                        0, // interinter_comp
+                        seg_mask,
+                        ref_pic_ptr->width,
+                        ref_pic_ptr->height,
+                        bsize, // bwidth
+                        bsize, // bheight
+                        block_size,
+                        &xd,
+                        ref_pic_ptr->stride_y,
+                        size,
+                        0,
+                        0, // ss_y,
+                        0, // ss_x,
+                        8, // Always use 8bit for now
+                        0, // use_intrabc,
+                        0,
+                        0); // is16bit
+                }
+
+                if (pcs->tpl_ctrls.use_sad_in_src_search) {
+                    inter_cost = svt_nxm_sad_kernel_sub_sampled(
+                        src_mb,
+                        input_pic->stride_y,
+                        subpel_mv ? compensated_blk : ref_pic_ptr->buffer_y + ref_origin_index,
+                        subpel_mv ? size : ref_pic_ptr->stride_y,
+                        size,
+                        size);
                 } else {
-                    int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x +
-                        ((int32_t)mb_origin_x + (best_mv.col / 8)) +
-                        ((int32_t)mb_origin_y + (best_mv.row / 8) + (int32_t)ref_pic_ptr->org_y) *
-                            (int32_t)ref_pic_ptr->stride_y;
+                    svt_aom_subtract_block(size >> tpl_ctrls->subsample_tx,
+                                           size,
+                                           src_diff,
+                                           size << tpl_ctrls->subsample_tx,
+                                           src_mb,
+                                           input_pic->stride_y << tpl_ctrls->subsample_tx,
+                                           subpel_mv ? compensated_blk : ref_pic_ptr->buffer_y + ref_origin_index,
+                                           (subpel_mv ? size : ref_pic_ptr->stride_y) << tpl_ctrls->subsample_tx);
+                    EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
+                    svt_av1_wht_fwd_txfm(src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
 
+                    inter_cost = svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
+                        << tpl_ctrls->subsample_tx;
+                }
+
+                if (inter_cost < best_inter_cost) {
+                    if (!pcs->tpl_ctrls.use_sad_in_src_search)
+                        EB_MEMCPY(best_coeff, coeff, sizeof(best_coeff));
+
+                    best_ref_poc    = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_number;
+                    best_rf_idx     = rf_idx;
+                    best_inter_cost = inter_cost;
+                    final_best_mv   = best_mv;
+                }
+            } // rf_idx
+
+            if (best_inter_cost < best_intra_cost)
+                best_mode = NEWMV;
+
+            if (best_mode == NEWMV) {
+                uint16_t eob = 0;
+
+                if (pcs->tpl_ctrls.use_sad_in_src_search) {
+                    uint32_t list_index    = best_rf_idx < 4 ? 0 : 1;
+                    uint32_t ref_pic_index = best_rf_idx >= 4 ? (best_rf_idx - 4) : best_rf_idx;
+                    ref_pic_ptr            = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
+                    int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x +
+                        ((int32_t)mb_origin_x + (final_best_mv.col >> 3)) +
+                        ((int32_t)mb_origin_y + (final_best_mv.row >> 3) + (int32_t)ref_pic_ptr->org_y) *
+                            (int32_t)ref_pic_ptr->stride_y;
                     // Need to do compensation for subpel, otherwise, can get pixels directly from REF picture
-                    if (pcs->tpl_ctrls.subpel_depth != FULL_PEL) {
+                    uint8_t subpel_mv = (final_best_mv.col & 0x7 || final_best_mv.row & 0x7);
+                    if (subpel_mv) {
                         DECLARE_ALIGNED(32, uint16_t, tmp_dst_y[MAX_TPL_SAMPLES_PER_BLOCK]);
                         DECLARE_ALIGNED(16, uint8_t, seg_mask[2 * MAX_TPL_SAMPLES_PER_BLOCK]);
                         ConvolveParams conv_params_y = get_conv_params_no_round(
-                            0, 0, 0, tmp_dst_y, 128, 0 /*is_compound*/, 8 /*bit_depth*/);
+                            0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
 
                         svt_aom_enc_make_inter_predictor(
                             scs,
@@ -839,7 +923,7 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                             compensated_blk,
                             (int16_t)mb_origin_y,
                             (int16_t)mb_origin_x,
-                            best_mv,
+                            final_best_mv, //best_mv,
                             &scs->sf_identity,
                             &conv_params_y,
                             0, // interp_filters
@@ -868,53 +952,8 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                                            size << tpl_ctrls->subsample_tx,
                                            src_mb,
                                            input_pic->stride_y << tpl_ctrls->subsample_tx,
-                                           pcs->tpl_ctrls.subpel_depth != FULL_PEL
-                                               ? compensated_blk
-                                               : ref_pic_ptr->buffer_y + ref_origin_index,
-                                           (pcs->tpl_ctrls.subpel_depth != FULL_PEL ? size : ref_pic_ptr->stride_y)
-                                               << tpl_ctrls->subsample_tx);
-                    EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
-                    svt_av1_wht_fwd_txfm(src_diff, size << tpl_ctrls->subsample_tx, coeff, tx_size, pf_shape, 8, 0);
-
-                    inter_cost = svt_aom_satd(coeff, (size * size) >> tpl_ctrls->subsample_tx)
-                        << tpl_ctrls->subsample_tx;
-                }
-
-                if (inter_cost < best_inter_cost) {
-                    if (!pcs->tpl_ctrls.use_pred_sad_in_inter_search)
-                        EB_MEMCPY(best_coeff, coeff, sizeof(best_coeff));
-
-                    best_ref_poc    = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_number;
-                    best_rf_idx     = rf_idx;
-                    best_inter_cost = inter_cost;
-                    final_best_mv   = best_mv;
-                }
-            } // rf_idx
-
-            if (best_inter_cost < best_intra_cost)
-                best_mode = NEWMV;
-
-            if (best_mode == NEWMV) {
-                uint16_t eob = 0;
-
-                if (pcs->tpl_ctrls.use_pred_sad_in_inter_search) {
-                    uint32_t list_index    = best_rf_idx < 4 ? 0 : 1;
-                    uint32_t ref_pic_index = best_rf_idx >= 4 ? (best_rf_idx - 4) : best_rf_idx;
-                    ref_pic_ptr            = pcs->tpl_data.tpl_ref_ds_ptr_array[list_index][ref_pic_index].picture_ptr;
-                    int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x +
-                        ((int32_t)mb_origin_x + (final_best_mv.col >> 3)) +
-                        ((int32_t)mb_origin_y + (final_best_mv.row >> 3) + (int32_t)ref_pic_ptr->org_y) *
-                            (int32_t)ref_pic_ptr->stride_y;
-
-                    svt_aom_subtract_block(size >> tpl_ctrls->subsample_tx,
-                                           size,
-                                           src_diff,
-                                           size << tpl_ctrls->subsample_tx,
-                                           src_mb,
-                                           input_pic->stride_y << tpl_ctrls->subsample_tx,
-                                           ref_pic_ptr->buffer_y + ref_origin_index,
-                                           ref_pic_ptr->stride_y << tpl_ctrls->subsample_tx);
-
+                                           subpel_mv ? compensated_blk : ref_pic_ptr->buffer_y + ref_origin_index,
+                                           (subpel_mv ? size : ref_pic_ptr->stride_y) << tpl_ctrls->subsample_tx);
                     EB_TRANS_COEFF_SHAPE pf_shape = pcs->tpl_ctrls.pf_shape;
 
                     svt_av1_wht_fwd_txfm(
@@ -967,18 +1006,14 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
             int32_t ref_origin_index = (int32_t)ref_pic_ptr->org_x + ((int32_t)mb_origin_x + (final_best_mv.col >> 3)) +
                 ((int32_t)mb_origin_y + (final_best_mv.row >> 3) + (int32_t)ref_pic_ptr->org_y) *
                     (int32_t)ref_pic_ptr->stride_y;
-            for (int i = 0; i < (int)size; ++i)
-                EB_MEMCPY(dst_buffer + i * dst_buffer_stride,
-                          ref_pic_ptr->buffer_y + ref_origin_index + i * ref_pic_ptr->stride_y,
-                          sizeof(uint8_t) * (size));
-
             // REDO COMPENSATION WITH REF PIC (INSTEAD OF REF BEING THE SRC PIC)
             // Need to do compensation for subpel, otherwise, can get pixels directly from RECON picture
-            if (pcs->tpl_ctrls.subpel_depth != FULL_PEL) {
+            uint8_t subpel_mv = (final_best_mv.col & 0x7 || final_best_mv.row & 0x7);
+            if (subpel_mv) {
                 DECLARE_ALIGNED(32, uint16_t, tmp_dst_y[MAX_TPL_SAMPLES_PER_BLOCK]);
                 DECLARE_ALIGNED(16, uint8_t, seg_mask[2 * MAX_TPL_SAMPLES_PER_BLOCK]);
                 ConvolveParams conv_params_y = get_conv_params_no_round(
-                    0, 0, 0, tmp_dst_y, 128, 0 /*is_compound*/, 8 /*bit_depth*/);
+                    0, 0, 0, tmp_dst_y, MAX_TPL_SIZE, 0 /*is_compound*/, 8 /*bit_depth*/);
 
                 svt_aom_enc_make_inter_predictor(
                     scs,
@@ -1008,6 +1043,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                     0, // use_intrabc,
                     0,
                     0); // is16bit
+            } else {
+                for (int i = 0; i < (int)size; ++i)
+                    EB_MEMCPY(dst_buffer + i * dst_buffer_stride,
+                              ref_pic_ptr->buffer_y + ref_origin_index + i * ref_pic_ptr->stride_y,
+                              sizeof(uint8_t) * (size));
             }
         } else {
             // intra recon
@@ -1419,29 +1459,26 @@ static int round_floor(int ref_pos, int bsize_pix) {
 }
 
 static int64_t delta_rate_cost(int64_t delta_rate, int64_t recrf_dist, int64_t srcrf_dist, int pix_num) {
-    if (srcrf_dist <= 128)
-        return delta_rate;
+    double  beta      = (double)srcrf_dist / recrf_dist;
+    int64_t rate_cost = delta_rate;
 
-    int64_t      rate_cost = delta_rate;
-    double       beta      = (double)srcrf_dist / recrf_dist;
-    double       dr        = (double)(delta_rate >> (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT)) / pix_num;
-    const double log2_mul2 = 1.3862943611; /*(2.0 * log(2))*/
-    /* double log_den = log(beta) / log(2.0) + 2.0 * dr;
-       double num = pow(2.0, log_den);
-       equivalent of:
-       double num = beta * exp(2.0 * dr * log(2.0));*/
-    double num = beta * exp(dr * log2_mul2);
-    if (num > 10.0) {
-        //rate_cost = (int64_t)((pix_num * log(1.0 / beta) ) / log(2.0) / 2.0);
-        //rate_cost = (int64_t)((pix_num * (-log(beta)) ) / (2.0 * log(2.0)));
-        assert(beta > 0.0);
-        rate_cost = (int64_t)((pix_num * (-log(beta))) / log2_mul2);
-    } else {
-        //double den = num * beta + (1 - beta) * beta;
-        double den = num * beta + (1.0 - beta) * beta;
-        assert(den > 0.0);
-        rate_cost = (int64_t)(((double)pix_num * log(num / den)) / log2_mul2);
+    if (srcrf_dist <= 128)
+        return rate_cost;
+
+    double dr = (double)(delta_rate >> (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT)) / pix_num;
+
+    double log_den = log(beta) / log(2.0) + 2.0 * dr;
+
+    if (log_den > log(10.0) / log(2.0)) {
+        rate_cost = (int64_t)((log(1.0 / beta) * pix_num) / log(2.0) / 2.0);
+        rate_cost <<= (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT);
+        return rate_cost;
     }
+
+    double num = pow(2.0, log_den);
+    double den = num * beta + (1 - beta) * beta;
+
+    rate_cost = (int64_t)((pix_num * log(num / den)) / log(2.0) / 2.0);
 
     rate_cost <<= (TPL_DEP_COST_SCALE_LOG2 + AV1_PROB_COST_SHIFT);
 
@@ -1568,6 +1605,8 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
     // Super-res upscaled size should be used here.
     const int32_t mi_cols_sr = ((pcs->enhanced_unscaled_pic->width + 15) / 16) << 2; // picture column boundary
     const int32_t mi_rows    = ((pcs->enhanced_unscaled_pic->height + 15) / 16) << 2; // picture row boundary
+    int64_t       count      = 0;
+    int64_t       max_dist   = 0;
 
     for (int row = 0; row < cm->mi_rows; row += step) {
         for (int col = 0; col < mi_cols_sr; col += col_step_sr) {
@@ -1577,12 +1616,19 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
                 pcs->pa_me_data->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
             recrf_dist_base_sum += tpl_stats_ptr->recrf_dist;
             mc_dep_delta_base_sum += mc_dep_delta;
+            count++;
+            if (mc_dep_delta > max_dist)
+                max_dist = mc_dep_delta;
         }
     }
 
     mc_dep_cost_base = (recrf_dist_base_sum << RDDIV_BITS) + mc_dep_delta_base_sum;
     if (mc_dep_cost_base != 0) {
-        pcs->r0           = ((double)(recrf_dist_base_sum << (RDDIV_BITS))) / mc_dep_cost_base;
+        pcs->r0 = ((double)(recrf_dist_base_sum << (RDDIV_BITS))) / mc_dep_cost_base;
+        // If there are outlier blocks responsible for most of the propagation, set r0 to 1.0 to indicate
+        // no error propagation, as the result may not be reliable.
+        if (max_dist > (mc_dep_delta_base_sum / count) * 100 && max_dist > (mc_dep_delta_base_sum * 9 / 10))
+            pcs->r0 = 1.0;
         pcs->tpl_is_valid = 1;
     } else {
         pcs->tpl_is_valid = 0;
@@ -1778,6 +1824,14 @@ static EbErrorType tpl_mc_flow(EncodeContext *enc_ctx, SequenceControlSet *scs, 
             EbObjectWrapper *ref_pic_wrapper;
             // Get Empty Reference Picture Object
             svt_get_empty_object(scs->enc_ctx->tpl_reference_picture_pool_fifo_ptr, &ref_pic_wrapper);
+#if FTR_RES_ON_FLY5
+            // if resolution has changed, and the tpl_reference_picture settings do not match scs settings, update tpl reference params
+            if (((EbTplReferenceObject *)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_width !=
+                    scs->max_input_luma_width ||
+                ((EbTplReferenceObject *)ref_pic_wrapper->object_ptr)->ref_picture_ptr->max_height !=
+                    scs->max_input_luma_height)
+                svt_tpl_reference_param_update((EbTplReferenceObject *)ref_pic_wrapper->object_ptr, scs);
+#endif
             // Give the new Reference a nominal live_count of 1
             svt_object_inc_live_count(ref_pic_wrapper, 1);
 
@@ -2055,7 +2109,6 @@ static void sbo_send_picture_out(SourceBasedOperationsContext *context_ptr, Pict
     svt_post_full_object(out_results_wrapper);
 }
 
-#if TUNE_SSIM_LIBAOM_APPROACH
 // This is used as a reference when computing the source variance for the
 //  purposes of activity masking.
 // Eventually this should be replaced by custom no-reference routines,
@@ -2161,7 +2214,6 @@ static void aom_av1_set_mb_ssim_rdmult_scaling(PictureParentControlSet *pcs) {
         }
     }
 }
-#endif
 
 /************************************************
  * Source Based Operations Kernel
@@ -2203,11 +2255,9 @@ void *svt_aom_source_based_operations_kernel(void *input_ptr) {
             }
         }
         /*********************************************Picture-based operations**********************************************************/
-#if TUNE_SSIM_LIBAOM_APPROACH
         if (scs->static_config.tune == 2) {
             aom_av1_set_mb_ssim_rdmult_scaling(pcs);
         }
-#endif
         sbo_send_picture_out(context_ptr, pcs, FALSE);
 
         // Release the Input Results

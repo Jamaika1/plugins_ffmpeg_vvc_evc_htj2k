@@ -532,7 +532,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-#if TUNE_SSIM
     if (config->tune > 2) {
         SVT_ERROR(
             "Instance %u: Invalid tune flag [0 - 2, 0 for VQ, 1 for PSNR and 2 for SSIM], your "
@@ -554,14 +553,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
                 channel_number + 1);
         }
     }
-#else
-    if (config->tune > 1) {
-        SVT_ERROR("Instance %u: Invalid tune flag [0 - 1, 0 for VQ and 1 for PSNR], your input: %d\n",
-                  channel_number + 1,
-                  config->tune);
-        return_error = EB_ErrorBadParameter;
-    }
-#endif
 
     if (config->superres_mode > SUPERRES_AUTO) {
         SVT_ERROR("Instance %u: invalid superres-mode %d, should be in the range [%d - %d]\n",
@@ -1008,8 +999,12 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->min_qm_level = 8;
     config_ptr->max_qm_level = 15;
 
-    config_ptr->startup_mg_size = 0;
-    config_ptr->enable_roi_map  = false;
+    config_ptr->startup_mg_size                   = 0;
+    config_ptr->frame_scale_evts.evt_num          = 0;
+    config_ptr->frame_scale_evts.resize_denoms    = NULL;
+    config_ptr->frame_scale_evts.resize_kf_denoms = NULL;
+    config_ptr->frame_scale_evts.start_frame_nums = NULL;
+    config_ptr->enable_roi_map                    = false;
     return return_error;
 }
 
@@ -1063,7 +1058,6 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                 : config->encoder_color_format == EB_YUV444 ? "YUV444"
                                                             : "Unknown color format");
 
-#if TUNE_SSIM
         SVT_INFO("SVT [config]: preset / tune / pred struct \t\t\t\t\t: %d / %s / %s\n",
                  config->enc_mode,
                  config->tune == 0       ? "VQ"
@@ -1072,14 +1066,6 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                  config->pred_structure == 1       ? "low delay"
                      : config->pred_structure == 2 ? "random access"
                                                    : "Unknown pred structure");
-#else
-        SVT_INFO("SVT [config]: preset / tune / pred struct \t\t\t\t\t: %d / %s / %s\n",
-                 config->enc_mode,
-                 config->tune == 0 ? "VQ" : "PSNR",
-                 config->pred_structure == 1       ? "low delay"
-                     : config->pred_structure == 2 ? "random access"
-                                                   : "Unknown pred structure");
-#endif
         SVT_INFO(
             "SVT [config]: gop size / mini-gop size / key-frame type \t\t\t: "
             "%d / %d / %s\n",
@@ -1512,6 +1498,7 @@ static EbErrorType str_to_asm(const char *nptr, EbCpuFlags *out) {
     } simds[] = {
         {"c", 0},
         {"0", 0},
+#ifdef ARCH_X86_64
         {"mmx", (EB_CPU_FLAGS_MMX << 1) - 1},
         {"1", (EB_CPU_FLAGS_MMX << 1) - 1},
         {"sse", (EB_CPU_FLAGS_SSE << 1) - 1},
@@ -1532,8 +1519,12 @@ static EbErrorType str_to_asm(const char *nptr, EbCpuFlags *out) {
         {"9", (EB_CPU_FLAGS_AVX2 << 1) - 1},
         {"avx512", (EB_CPU_FLAGS_AVX512VL << 1) - 1},
         {"10", (EB_CPU_FLAGS_AVX512VL << 1) - 1},
+#elif defined(ARCH_AARCH64)
+        {"neon", (EB_CPU_FLAGS_NEON << 1) - 1},
+        {"1", (EB_CPU_FLAGS_NEON << 1) - 1},
+#endif
         {"max", EB_CPU_FLAGS_ALL},
-        {"11", EB_CPU_FLAGS_ALL},
+        {"100", EB_CPU_FLAGS_ALL},
     };
     const size_t simds_size = sizeof(simds) / sizeof(simds[0]);
 

@@ -24,7 +24,7 @@
 #include "EbPackUnPack_C.h"
 #include "EbAvcStyleMcp.h"
 
-#ifdef ARCH_X86_64
+#if defined ARCH_X86_64
 // for svt_aom_get_cpu_flags
 #include "cpuinfo/cpuinfo.h"
 #endif
@@ -48,6 +48,7 @@
 #define HAS_AVX512PF EB_CPU_FLAGS_AVX512PF
 #define HAS_AVX512BW EB_CPU_FLAGS_AVX512BW
 #define HAS_AVX512VL EB_CPU_FLAGS_AVX512VL
+#define HAS_NEON EB_CPU_FLAGS_NEON
 
 // coeff: 16 bits, dynamic range [-32640, 32640].
 // length: value range {16, 64, 256, 1024}.
@@ -114,7 +115,27 @@ EbCpuFlags svt_aom_get_cpu_flags_to_use() {
 #endif
     return flags;
 }
-#endif /*ARCH_X86_64*/
+#else
+#if defined ARCH_AARCH64
+EbCpuFlags svt_aom_get_cpu_flags() {
+    EbCpuFlags flags = 0;
+
+    // safe to call multiple times, and threadsafe
+
+    flags |= EB_CPU_FLAGS_NEON;
+
+    return flags;
+}
+EbCpuFlags svt_aom_get_cpu_flags_to_use() {
+    EbCpuFlags flags = svt_aom_get_cpu_flags();
+    return flags;
+}
+#else
+EbCpuFlags svt_aom_get_cpu_flags_to_use() {
+  return 0;
+}
+#endif
+#endif
 
 #ifdef ARCH_X86_64
 #if EN_AVX512_SUPPORT
@@ -135,10 +156,12 @@ EbCpuFlags svt_aom_get_cpu_flags_to_use() {
     if (((uintptr_t)NULL != (uintptr_t)avx)    && (flags & HAS_AVX))    ptr = avx;                \
     if (((uintptr_t)NULL != (uintptr_t)avx2)   && (flags & HAS_AVX2))   ptr = avx2;               \
     SET_FUNCTIONS_AVX512(ptr, avx512)
-#else /* ARCH_X86_64 */
-#define SET_FUNCTIONS_X86(ptr, c, mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx, avx2, avx512)
-#endif /* ARCH_X86_64 */
+#elif defined ARCH_AARCH64
+#define SET_FUNCTIONS_AARCH64(ptr, c, neon) \
+    if (((uintptr_t)NULL != (uintptr_t)neon)   && (flags & HAS_NEON))   ptr = neon;
+#endif
 
+#ifdef ARCH_X86_64
 #if EXCLUDE_HASH
 #define SET_FUNCTIONS(ptr, c, mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx, avx2, avx512)     \
     do {                                                                                          \
@@ -168,8 +191,68 @@ EbCpuFlags svt_aom_get_cpu_flags_to_use() {
         SET_FUNCTIONS_X86(ptr, c, mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx, avx2, avx512) \
     } while (0)
 #endif
+#elif defined ARCH_AARCH64
+#if EXCLUDE_HASH
+#define SET_FUNCTIONS(ptr, c, neon)     \
+    do {                                                                                          \
+        if (check_pointer_was_set && ptr != 0) {                                                                           \
+            printf("Error: %s:%i: Pointer \"%s\" is set before!\n", __FILE__, 0, #ptr);    \
+            assert(0);                                                                            \
+        }                                                                                         \
+        if ((uintptr_t)NULL == (uintptr_t)c) {                                                    \
+            printf("Error: %s:%i: Pointer \"%s\" on C is NULL!\n", __FILE__, 0, #ptr);     \
+            assert(0);                                                                            \
+        }                                                                                         \
+        ptr = c;                                                                                  \
+        SET_FUNCTIONS_AARCH64(ptr, c, neon) \
+    } while (0)
+#else
+#define SET_FUNCTIONS(ptr, c, neon)     \
+    do {                                                                                          \
+        if (check_pointer_was_set && ptr != 0) {                                                                           \
+            printf("Error: %s:%i: Pointer \"%s\" is set before!\n", __FILE__, __LINE__, #ptr);    \
+            assert(0);                                                                            \
+        }                                                                                         \
+        if ((uintptr_t)NULL == (uintptr_t)c) {                                                    \
+            printf("Error: %s:%i: Pointer \"%s\" on C is NULL!\n", __FILE__, __LINE__, #ptr);     \
+            assert(0);                                                                            \
+        }                                                                                         \
+        ptr = c;                                                                                  \
+        SET_FUNCTIONS_AARCH64(ptr, c, neon) \
+    } while (0)
+#endif
+#else
+#if EXCLUDE_HASH
+#define SET_FUNCTIONS(ptr, c)     \
+    do {                                                                                          \
+        if (check_pointer_was_set && ptr != 0) {                                                                           \
+            printf("Error: %s:%i: Pointer \"%s\" is set before!\n", __FILE__, 0, #ptr);    \
+            assert(0);                                                                            \
+        }                                                                                         \
+        if ((uintptr_t)NULL == (uintptr_t)c) {                                                    \
+            printf("Error: %s:%i: Pointer \"%s\" on C is NULL!\n", __FILE__, 0, #ptr);     \
+            assert(0);                                                                            \
+        }                                                                                         \
+        ptr = c;                                                                                  \
+    } while (0)
+#else
+#define SET_FUNCTIONS(ptr, c)     \
+    do {                                                                                          \
+        if (check_pointer_was_set && ptr != 0) {                                                                           \
+            printf("Error: %s:%i: Pointer \"%s\" is set before!\n", __FILE__, __LINE__, #ptr);    \
+            assert(0);                                                                            \
+        }                                                                                         \
+        if ((uintptr_t)NULL == (uintptr_t)c) {                                                    \
+            printf("Error: %s:%i: Pointer \"%s\" on C is NULL!\n", __FILE__, __LINE__, #ptr);     \
+            assert(0);                                                                            \
+        }                                                                                         \
+        ptr = c;                                                                                  \
+    } while (0)
+#endif
+#endif
 
 /* Macros SET_* use local variable EbCpuFlags flags and Bool check_pointer_was_set */
+#ifdef ARCH_X86_64
 #define SET_ONLY_C(ptr, c)                                  SET_FUNCTIONS(ptr, c, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 #define SET_SSE2(ptr, c, sse2)                              SET_FUNCTIONS(ptr, c, 0, 0, sse2, 0, 0, 0, 0, 0, 0, 0)
 #define SET_SSE2_SSSE3(ptr, c, sse2, ssse3)                 SET_FUNCTIONS(ptr, c, 0, 0, sse2, 0, ssse3, 0, 0, 0, 0, 0)
@@ -185,20 +268,26 @@ EbCpuFlags svt_aom_get_cpu_flags_to_use() {
 #define SET_SSE2_AVX2_AVX512(ptr, c, sse2, avx2, avx512)    SET_FUNCTIONS(ptr, c, 0, 0, sse2, 0, 0, 0, 0, 0, avx2, avx512)
 #define SET_SSE2_SSSE3_AVX2_AVX512(ptr, c, sse2, ssse3, avx2, avx512)    SET_FUNCTIONS(ptr, c, 0, 0, sse2, 0, ssse3, 0, 0, 0, avx2, avx512)
 #define SET_SSE2_SSSE3_AVX2(ptr, c, sse2, ssse3, avx2)      SET_FUNCTIONS(ptr, c, 0, 0, sse2, 0, ssse3, 0, 0, 0, avx2, 0)
-
+#elif defined ARCH_AARCH64
+    #define SET_ONLY_C(ptr, c)                                      SET_FUNCTIONS(ptr, c, 0)
+    #define SET_NEON(ptr, c, neon)                                  SET_FUNCTIONS(ptr, c, neon)
+#else
+    #define SET_ONLY_C(ptr, c)                                      SET_FUNCTIONS(ptr, c)
+#endif
 
 void svt_aom_setup_common_rtcd_internal(EbCpuFlags flags) {
     /* Avoid check that pointer is set double, after first  setup. */
     static Bool first_call_setup      = TRUE;
     Bool        check_pointer_was_set = first_call_setup;
     first_call_setup                    = FALSE;
-#ifdef ARCH_X86_64
+
     /** Should be done during library initialization,
         but for safe limiting cpu flags again. */
+#if defined ARCH_X86_64 || defined ARCH_AARCH64
     flags &= svt_aom_get_cpu_flags_to_use();
-    //to use C: flags=0
 #else
-    (void)flags;
+    flags = 0;
+    //to use C: flags=0
 #endif
 
     /* No C version, use only internal in kerneal: svt_cdef_filter_block_avx2() */
@@ -1104,5 +1193,12 @@ void svt_aom_setup_common_rtcd_internal(EbCpuFlags flags) {
     SET_SSE2(svt_log2f, svt_aom_log2f_32, Log2f_ASM);
     SET_SSE2(svt_memcpy, svt_memcpy_c, svt_memcpy_intrin_sse);
     SET_SSE2(svt_aom_hadamard_8x8, svt_aom_hadamard_8x8_c, svt_aom_hadamard_8x8_sse2);
+
+    if(0 == flags)
+    {
+      (void) check_pointer_was_set;
+    }
+    (void)flags;
+
 }
 // clang-format on
