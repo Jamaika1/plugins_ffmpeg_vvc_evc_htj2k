@@ -59,7 +59,7 @@ be including this file. There is no explicit way of forcing a compile to be
 abandoned, but trying to include a non-existent file seems cleanest. Otherwise
 there will be many irrelevant consequential errors. */
 
-#if !defined PCRE2_BUILDING_PCRE2TEST && \
+#if (!defined PCRE2_BUILDING_PCRE2TEST && !defined PCRE2_DFTABLES) && \
   (!defined PCRE2_CODE_UNIT_WIDTH ||     \
     (PCRE2_CODE_UNIT_WIDTH != 8 &&       \
      PCRE2_CODE_UNIT_WIDTH != 16 &&      \
@@ -1299,7 +1299,7 @@ match. */
 #define PT_ALNUM      6    /* Alphanumeric - the union of L and N */
 #define PT_SPACE      7    /* Perl space - general category Z plus 9,10,12,13 */
 #define PT_PXSPACE    8    /* POSIX space - Z plus 9,10,11,12,13 */
-#define PT_WORD       9    /* Word - L plus N plus underscore */
+#define PT_WORD       9    /* Word - L, N, Mn, or Pc */
 #define PT_CLIST     10    /* Pseudo-property: match character list */
 #define PT_UCNC      11    /* Universal Character nameable character */
 #define PT_BIDICL    12    /* Specified bidi class */
@@ -1315,6 +1315,7 @@ table. */
 #define PT_PXGRAPH   14    /* [:graph:] - characters that mark the paper */
 #define PT_PXPRINT   15    /* [:print:] - [:graph:] plus non-control spaces */
 #define PT_PXPUNCT   16    /* [:punct:] - punctuation characters */
+#define PT_PXXDIGIT  17    /* [:xdigit:] - hex digits */
 
 /* This value is used when parsing \p and \P escapes to indicate that neither
 \p{script:...} nor \p{scx:...} has been encountered. */
@@ -1345,6 +1346,12 @@ mode rather than an escape sequence. It is also used for [^] in JavaScript
 compatibility mode, and for \C in non-utf mode. In non-DOTALL mode, "." behaves
 like \N.
 
+ESC_ub is a special return from check_escape() when, in BSUX mode, \u{ is not
+followed by hex digits and }, in which case it should mean a literal "u"
+followed by a literal "{". This hack is necessary for cases like \u{ 12}
+because without it, this is interpreted as u{12} now that spaces are allowed in
+quantifiers.
+
 Negative numbers are used to encode a backreference (\1, \2, \3, etc.) in
 check_escape(). There are tests in the code for an escape greater than ESC_b
 and less than ESC_Z to detect the types that may be repeated. These are the
@@ -1354,7 +1361,7 @@ consume a character, that code will have to change. */
 enum { ESC_A = 1, ESC_G, ESC_K, ESC_B, ESC_b, ESC_D, ESC_d, ESC_S, ESC_s,
        ESC_W, ESC_w, ESC_N, ESC_dum, ESC_C, ESC_P, ESC_p, ESC_R, ESC_H,
        ESC_h, ESC_V, ESC_v, ESC_X, ESC_Z, ESC_z,
-       ESC_E, ESC_Q, ESC_g, ESC_k };
+       ESC_E, ESC_Q, ESC_g, ESC_k, ESC_ub };
 
 
 /********************** Opcode definitions ******************/

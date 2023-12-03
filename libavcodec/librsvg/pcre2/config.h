@@ -66,7 +66,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define HAVE_BZLIB_H 1
 
 /* Define to 1 if you have the <dirent.h> header file. */
-#define HAVE_DIRENT_H 1
+//#define HAVE_DIRENT_H 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 //#define HAVE_DLFCN_H 1
@@ -93,7 +93,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_MINIX_CONFIG_H */
 
 /* Define to 1 if you have the `mkostemp' function. */
-#define HAVE_MKOSTEMP 1
+/* #undef HAVE_MKOSTEMP */
 
 /* Define if you have POSIX threads libraries and header files. */
 /* #undef HAVE_PTHREAD */
@@ -129,25 +129,25 @@ sure both macros are undefined; an emulation function will then be used. */
 #define HAVE_STRERROR 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H 1
+/* #undef HAVE_STRINGS_H */
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+/* #undef HAVE_SYS_STAT_H */
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+/* #undef HAVE_SYS_TYPES_H */
 
 /* Define to 1 if you have the <sys/wait.h> header file. */
-//#define HAVE_SYS_WAIT_H 1
+/* #undef HAVE_SYS_WAIT_H */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-//#define HAVE_UNISTD_H 1
+/* #undef HAVE_UNISTD_H */
 
 /* Define to 1 if the compiler supports simple visibility declarations. */
-//#define HAVE_VISIBILITY 1
+/* #undef HAVE_VISIBILITY */
 
 /* Define to 1 if you have the <wchar.h> header file. */
 #define HAVE_WCHAR_H 1
@@ -227,7 +227,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_NAME "PCRE2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PCRE2 10.43-b254448"
+#define PACKAGE_STRING "PCRE2 10.43-afce00e"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pcre2"
@@ -236,7 +236,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "10.43-b254448"
+#define PACKAGE_VERSION "10.43-afce00e"
 
 /* The value of PARENS_NEST_LIMIT specifies the maximum depth of nested
    parentheses (of any kind) in a pattern. This limits the amount of system
@@ -427,7 +427,7 @@ sure both macros are undefined; an emulation function will then be used. */
 #endif
 
 /* Version number of package */
-#define VERSION "10.43-b254448"
+#define VERSION "10.43-afce00e"
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

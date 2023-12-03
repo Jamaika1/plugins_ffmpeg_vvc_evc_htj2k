@@ -43,8 +43,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define PCRE2_MAJOR           10
 #define PCRE2_MINOR           43
-#define PCRE2_PRERELEASE      -3c93cdc
-#define PCRE2_DATE            2023-04-14
+#define PCRE2_PRERELEASE      -afce00e
+#define PCRE2_DATE            2023-11-16
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE2, the appropriate
@@ -405,6 +405,7 @@ released, the numbers must not be changed. */
 #define PCRE2_ERROR_CONVERT_SYNTAX    (-64)
 #define PCRE2_ERROR_INTERNAL_DUPMATCH (-65)
 #define PCRE2_ERROR_DFA_UINVALID_UTF  (-66)
+#define PCRE2_ERROR_INVALIDOFFSET     (-67)
 
 
 /* Request types for pcre2_pattern_info() */

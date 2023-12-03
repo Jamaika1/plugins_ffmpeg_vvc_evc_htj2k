@@ -659,6 +659,7 @@ typedef struct pcre2_real_match_data {
   PCRE2_SPTR       mark;             /* Pointer to last mark */
   struct heapframe *heapframes;      /* Backtracking frames heap memory */
   PCRE2_SIZE       heapframes_size;  /* Malloc-ed size */
+  PCRE2_SIZE       subject_length;   /* Subject length */
   PCRE2_SIZE       leftchar;         /* Offset to leftmost code unit */
   PCRE2_SIZE       rightchar;        /* Offset to rightmost code unit */
   PCRE2_SIZE       startchar;        /* Offset to starting code unit */
@@ -879,7 +880,8 @@ typedef struct match_block {
   PCRE2_SPTR start_code;          /* For use when recursing */
   PCRE2_SPTR start_subject;       /* Start of the subject string */
   PCRE2_SPTR check_subject;       /* Where UTF-checked from */
-  PCRE2_SPTR end_subject;         /* End of the subject string */
+  PCRE2_SPTR end_subject;         /* Usable end of the subject string */
+  PCRE2_SPTR true_end_subject;    /* Actual end of the subject string */
   PCRE2_SPTR end_match_ptr;       /* Subject position at end match */
   PCRE2_SPTR start_used_ptr;      /* Earliest consulted character */
   PCRE2_SPTR last_used_ptr;       /* Latest consulted character */
