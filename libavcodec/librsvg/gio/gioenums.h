@@ -225,6 +225,9 @@ typedef enum {
  *   sizes.  Normally, the block-size is used, if available, as this is a
  *   more accurate representation of disk space used.
  *   Compare with `du --apparent-size`.
+ *   Since GLib 2.78. and similarly to `du` since GNU Coreutils 9.2, this will
+ *   ignore the sizes of file types other than regular files and links, as the
+ *   sizes of other file types are not specified in a standard way.
  * @G_FILE_MEASURE_NO_XDEV: Do not cross mount point boundaries.
  *   Compare with `du -x`.
  *
@@ -312,6 +315,8 @@ typedef enum {
  * @G_FILE_COPY_ALL_METADATA: Copy all file metadata instead of just default set used for copy (see #GFileInfo).
  * @G_FILE_COPY_NO_FALLBACK_FOR_MOVE: Don't use copy and delete fallback if native move not supported.
  * @G_FILE_COPY_TARGET_DEFAULT_PERMS: Leaves target file with default perms, instead of setting the source file perms.
+ * @G_FILE_COPY_TARGET_DEFAULT_MODIFIED_TIME: Use default modification
+ *     timestamps instead of copying them from the source file. Since 2.80
  *
  * Flags used when copying or moving files.
  */
@@ -322,7 +327,8 @@ typedef enum {
   G_FILE_COPY_NOFOLLOW_SYMLINKS    = (1 << 2),
   G_FILE_COPY_ALL_METADATA         = (1 << 3),
   G_FILE_COPY_NO_FALLBACK_FOR_MOVE = (1 << 4),
-  G_FILE_COPY_TARGET_DEFAULT_PERMS = (1 << 5)
+  G_FILE_COPY_TARGET_DEFAULT_PERMS = (1 << 5),
+  G_FILE_COPY_TARGET_DEFAULT_MODIFIED_TIME GIO_AVAILABLE_ENUMERATOR_IN_2_80 = (1 << 6),
 } GFileCopyFlags;
 
 
@@ -512,6 +518,7 @@ typedef enum {
  * @G_IO_ERROR_NOT_CONNECTED: Transport endpoint is not connected. Since 2.44
  * @G_IO_ERROR_MESSAGE_TOO_LARGE: Message too large. Since 2.48.
  * @G_IO_ERROR_NO_SUCH_DEVICE: No such device found. Since 2.74
+ * @G_IO_ERROR_DESTINATION_UNSET: Destination address unset. Since 2.80
  *
  * Error codes returned by GIO functions.
  *
@@ -582,6 +589,7 @@ typedef enum {
   G_IO_ERROR_NOT_CONNECTED,
   G_IO_ERROR_MESSAGE_TOO_LARGE,
   G_IO_ERROR_NO_SUCH_DEVICE GIO_AVAILABLE_ENUMERATOR_IN_2_74,
+  G_IO_ERROR_DESTINATION_UNSET GIO_AVAILABLE_ENUMERATOR_IN_2_80,
 } GIOErrorEnum;
 
 
