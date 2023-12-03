@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../glib/gversionmacros.h"
+//#include "gversionmacros.h"
 #include "../glib/glib-object.h"
 #include "../glib/glibintl.h"
 
@@ -39,7 +39,7 @@
 #define LOAD_BUFFER_SIZE 65536
 #define SNIFF_BUFFER_SIZE 4096
 
-
+
 
 typedef struct _GdkPixbufClass GdkPixbufClass;
 

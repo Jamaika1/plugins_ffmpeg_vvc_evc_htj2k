@@ -8,9 +8,9 @@
 GType
 gdk_colorspace_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GFlagsValue values[] = {
         { GDK_COLORSPACE_RGB, "GDK_COLORSPACE_RGB", "RGB" },
