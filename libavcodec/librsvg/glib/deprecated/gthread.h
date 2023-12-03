@@ -121,13 +121,14 @@ GLIB_DEPRECATED_IN_2_32
 void     g_thread_foreach      (GFunc             thread_func,
                                 gpointer          user_data);
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
 #include <sys/types.h>
+//#include <pthread.h>
 #include "../../../libpthread_win32/pthread.h"
 #endif
 
 #define g_static_mutex_get_mutex g_static_mutex_get_mutex_impl GLIB_DEPRECATED_MACRO_IN_2_32
-#ifdef G_OS_WIN32
+#if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
 #define G_STATIC_MUTEX_INIT { NULL, PTHREAD_MUTEX_INITIALIZER } GLIB_DEPRECATED_MACRO_IN_2_32_FOR(g_mutex_init)
 #else
 #define G_STATIC_MUTEX_INIT { NULL } GLIB_DEPRECATED_MACRO_IN_2_32_FOR(g_mutex_init)
@@ -135,7 +136,7 @@ void     g_thread_foreach      (GFunc             thread_func,
 typedef struct
 {
   GMutex *mutex;
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
   /* only for ABI compatibility reasons */
   pthread_mutex_t unused;
 #endif
@@ -164,7 +165,7 @@ struct _GStaticRecMutex
 
   /* ABI compat only */
   union {
-#ifdef G_OS_WIN32
+#if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
     void *owner;
 #else
     pthread_t owner;
@@ -286,7 +287,7 @@ void            g_cond_free             (GCond  *cond);
 GLIB_DEPRECATED_IN_2_32
 gboolean        g_cond_timed_wait       (GCond          *cond,
                                          GMutex         *mutex,
-                                         GTimeVal       *timeval);
+                                         GTimeVal       *abs_time);
 
 G_GNUC_END_IGNORE_DEPRECATIONS
 

@@ -12,25 +12,28 @@
 #define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
 #define GLIB_VAR _GLIB_EXTERN
 #define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_78
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_80
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_78
+#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_80
 #define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_78
+#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_80
 #define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_78
+#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_80
 #define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
 #define GLIB_COMPILATION
 #define GIO_COMPILATION
 #define GOBJECT_COMPILATION
+#define G_SETTINGS_ENABLE_BACKEND
 //#define G_DISABLE_ASSERT
 //#define G_DISABLE_CHECKS
 
 //__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
+//__ATOMIC_SEQ_CST
 //_GLIB_GCC_HAVE_SYNC_SWAP
 //#define G_ATOMIC_LOCK_FREE
 //#define HAVE__ALIGNED_MALLOC 1
 #define SIZEOF_WCHAR_T 2
+#define G_ENABLE_DEBUG 1
 //
 
 #define USE_SYSTEM_PRINTF
@@ -68,7 +71,7 @@
 /* always defined to indicate that i18n is enabled */
 //#define ENABLE_NLS 1
 /* Define the gettext package to be used */
-#define GETTEXT_PACKAGE "glib20"
+#define GETTEXT_PACKAGE "dummy"
 /* Define to the GLIB binary age */
 #define GLIB_BINARY_AGE 7701
 /* Byte contents of gmutex */
@@ -82,7 +85,7 @@
 /* Define to the GLIB micro version */
 #define GLIB_MICRO_VERSION 0
 /* Define to the GLIB minor version */
-#define GLIB_MINOR_VERSION 78
+#define GLIB_MINOR_VERSION 79
 /* The size of gmutex, as computed by sizeof. */
 /* #undef GLIB_SIZEOF_GMUTEX */
 /* The size of system_thread, as computed by sizeof. */
@@ -217,12 +220,10 @@
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
+#undef HAVE_STDINT_H
 /* Define if <stdint.h> exists, doesn't clash with <sys/types.h>, and declares
    uintmax_t. */
 #define HAVE_STDINT_H_WITH_UINTMAX 1
-/* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
 /* Define to 1 if you have the `stpcpy' function. */
 /* #undef HAVE_STPCPY */
 /* Define to 1 if you have the `strcasecmp' function. */
@@ -230,7 +231,7 @@
 /* Define to 1 if you have the `strerror' function. */
 #define HAVE_STRERROR 1
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H 1
+/* #undef HAVE_STRINGS_H */
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 /* Have functions strlcpy and strlcat */
@@ -242,21 +243,21 @@
 /* Define to 1 if you have the `symlink' function. */
 /* #undef HAVE_SYMLINK */
 /* Define to 1 if you have the <sys/param.h> header file. */
-#define HAVE_SYS_PARAM_H 1
+/* #undef HAVE_SYS_PARAM_H */
 /* Define to 1 if you have the <sys/poll.h> header file. */
 /* #undef HAVE_SYS_POLL_H */
 /* found fd_set in sys/select.h */
 /* #undef HAVE_SYS_SELECT_H */
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+/* #undef HAVE_SYS_STAT_H */
 /* Define to 1 if you have the <sys/times.h> header file. */
 /* #undef HAVE_SYS_TIMES_H */
 /* Define to 1 if you have the <sys/time.h> header file. */
-#define HAVE_SYS_TIME_H 1
+/* #undef HAVE_SYS_TIME_H */
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+/* #undef HAVE_SYS_TYPES_H */
 /* Define to 1 if you have the <unistd.h> header file. */
-//#define HAVE_UNISTD_H 1
+/* #undef HAVE_UNISTD_H */
 /* Define if your printf function family supports positional parameters as
    specified by Unix98. */
 /* #undef HAVE_UNIX98_PRINTF */
@@ -292,11 +293,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.78.0-8af4f49"
+#define PACKAGE_STRING "glib 2.79.0-b53218a"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.78.0-8af4f49"
+#define PACKAGE_VERSION "2.79.0-b53218a"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */

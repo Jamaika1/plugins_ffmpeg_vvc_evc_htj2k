@@ -30,19 +30,7 @@
 #include "gdbusprivate.h"
 #include "gdbusconnection.h"
 
-#include "glibintl.h"
-
-/**
- * SECTION:gdbusnameowning
- * @title: Owning Bus Names
- * @short_description: Simple API for owning bus names
- * @include: gio/gio.h
- *
- * Convenience API for owning bus names.
- *
- * A simple example for owning a name can be found in
- * [gdbus-example-own-name.c](https://gitlab.gnome.org/GNOME/glib/-/blob/HEAD/gio/tests/gdbus-example-own-name.c)
- */
+#include "../glib/glibintl.h"
 
 G_LOCK_DEFINE_STATIC (lock);
 
@@ -521,8 +509,10 @@ connection_get_cb (GObject      *source_object,
  * @connection: a #GDBusConnection
  * @name: the well-known name to own
  * @flags: a set of flags from the #GBusNameOwnerFlags enumeration
- * @name_acquired_handler: (nullable): handler to invoke when @name is acquired or %NULL
- * @name_lost_handler: (nullable): handler to invoke when @name is lost or %NULL
+ * @name_acquired_handler: (nullable) (scope notified): handler to invoke when
+ *   @name is acquired or %NULL
+ * @name_lost_handler: (nullable) (scope notified): handler to invoke when @name
+ *   is lost or %NULL
  * @user_data: user data to pass to handlers
  * @user_data_free_func: (nullable): function for freeing @user_data or %NULL
  *
@@ -583,22 +573,25 @@ g_bus_own_name_on_connection (GDBusConnection          *connection,
  * @bus_type: the type of bus to own a name on
  * @name: the well-known name to own
  * @flags: a set of flags from the #GBusNameOwnerFlags enumeration
- * @bus_acquired_handler: (nullable): handler to invoke when connected to the bus of type @bus_type or %NULL
- * @name_acquired_handler: (nullable): handler to invoke when @name is acquired or %NULL
- * @name_lost_handler: (nullable): handler to invoke when @name is lost or %NULL
+ * @bus_acquired_handler: (nullable) (scope notified): handler to invoke when
+ *   connected to the bus of type @bus_type or %NULL
+ * @name_acquired_handler: (nullable) (scope notified): handler to invoke when
+ *   @name is acquired or %NULL
+ * @name_lost_handler: (nullable) (scope notified): handler to invoke when @name
+ *   is lost or %NULL
  * @user_data: user data to pass to handlers
  * @user_data_free_func: (nullable): function for freeing @user_data or %NULL
  *
  * Starts acquiring @name on the bus specified by @bus_type and calls
  * @name_acquired_handler and @name_lost_handler when the name is
- * acquired respectively lost. Callbacks will be invoked in the 
+ * acquired respectively lost. Callbacks will be invoked in the
  * [thread-default main context][g-main-context-push-thread-default]
  * of the thread you are calling this function from.
  *
  * You are guaranteed that one of the @name_acquired_handler and @name_lost_handler
  * callbacks will be invoked after calling this function - there are three
  * possible cases:
- * 
+ *
  * - @name_lost_handler with a %NULL connection (if a connection to the bus
  *   can't be made).
  *

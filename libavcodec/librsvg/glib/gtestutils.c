@@ -68,193 +68,6 @@
 #define TAP_SUBTEST_PREFIX "#    "  /* a 4-space indented line */
 
 /**
- * SECTION:testing
- * @title: Testing
- * @short_description: a test framework
- *
- * GLib provides a framework for writing and maintaining unit tests
- * in parallel to the code they are testing. The API is designed according
- * to established concepts found in the other test frameworks (JUnit, NUnit,
- * RUnit), which in turn is based on smalltalk unit testing concepts.
- *
- * - Test case: Tests (test methods) are grouped together with their
- *   fixture into test cases.
- *
- * - Fixture: A test fixture consists of fixture data and setup and
- *   teardown methods to establish the environment for the test
- *   functions. We use fresh fixtures, i.e. fixtures are newly set
- *   up and torn down around each test invocation to avoid dependencies
- *   between tests.
- *
- * - Test suite: Test cases can be grouped into test suites, to allow
- *   subsets of the available tests to be run. Test suites can be
- *   grouped into other test suites as well.
- *
- * The API is designed to handle creation and registration of test suites
- * and test cases implicitly. A simple call like
- * |[<!-- language="C" -->
- *   g_test_init (&argc, &argv, G_TEST_OPTION_ISOLATE_DIRS, NULL);
- *
- *   g_test_add_func ("/misc/assertions", test_assertions);
- * ]|
- * creates a test suite called "misc" with a single test case named
- * "assertions", which consists of running the test_assertions function.
- *
- * g_test_init() should be called before calling any other test functions.
- *
- * In addition to the traditional g_assert_true(), the test framework provides
- * an extended set of assertions for comparisons: g_assert_cmpfloat(),
- * g_assert_cmpfloat_with_epsilon(), g_assert_cmpint(), g_assert_cmpuint(),
- * g_assert_cmphex(), g_assert_cmpstr(), g_assert_cmpmem() and
- * g_assert_cmpvariant(). The
- * advantage of these variants over plain g_assert_true() is that the assertion
- * messages can be more elaborate, and include the values of the compared
- * entities.
- *
- * Note that g_assert() should not be used in unit tests, since it is a no-op
- * when compiling with `G_DISABLE_ASSERT`. Use g_assert() in production code,
- * and g_assert_true() in unit tests.
- *
- * A full example of creating a test suite with two tests using fixtures:
- * |[<!-- language="C" -->
- * #include <glib.h>
- * #include <locale.h>
- *
- * typedef struct {
- *   MyObject *obj;
- *   OtherObject *helper;
- * } MyObjectFixture;
- *
- * static void
- * my_object_fixture_set_up (MyObjectFixture *fixture,
- *                           gconstpointer user_data)
- * {
- *   fixture->obj = my_object_new ();
- *   my_object_set_prop1 (fixture->obj, "some-value");
- *   my_object_do_some_complex_setup (fixture->obj, user_data);
- *
- *   fixture->helper = other_object_new ();
- * }
- *
- * static void
- * my_object_fixture_tear_down (MyObjectFixture *fixture,
- *                              gconstpointer user_data)
- * {
- *   g_clear_object (&fixture->helper);
- *   g_clear_object (&fixture->obj);
- * }
- *
- * static void
- * test_my_object_test1 (MyObjectFixture *fixture,
- *                       gconstpointer user_data)
- * {
- *   g_assert_cmpstr (my_object_get_property (fixture->obj), ==, "initial-value");
- * }
- *
- * static void
- * test_my_object_test2 (MyObjectFixture *fixture,
- *                       gconstpointer user_data)
- * {
- *   my_object_do_some_work_using_helper (fixture->obj, fixture->helper);
- *   g_assert_cmpstr (my_object_get_property (fixture->obj), ==, "updated-value");
- * }
- *
- * int
- * main (int argc, char *argv[])
- * {
- *   setlocale (LC_ALL, "");
- *
- *   g_test_init (&argc, &argv, NULL);
- *
- *   // Define the tests.
- *   g_test_add ("/my-object/test1", MyObjectFixture, "some-user-data",
- *               my_object_fixture_set_up, test_my_object_test1,
- *               my_object_fixture_tear_down);
- *   g_test_add ("/my-object/test2", MyObjectFixture, "some-user-data",
- *               my_object_fixture_set_up, test_my_object_test2,
- *               my_object_fixture_tear_down);
- *
- *   return g_test_run ();
- * }
- * ]|
- *
- * ## Integrating GTest in your project
- *
- * If you are using the [Meson](http://mesonbuild.com) build system, you will
- * typically use the provided `test()` primitive to call the test binaries,
- * e.g.:
- *
- * |[<!-- language="plain" -->
- *   test(
- *     'foo',
- *     executable('foo', 'foo.c', dependencies: deps),
- *     env: [
- *       'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
- *       'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
- *     ],
- *   )
- *
- *   test(
- *     'bar',
- *     executable('bar', 'bar.c', dependencies: deps),
- *     env: [
- *       'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
- *       'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
- *     ],
- *   )
- * ]|
- *
- * If you are using Autotools, you're strongly encouraged to use the Automake
- * [TAP](https://testanything.org/) harness; GLib provides template files for
- * easily integrating with it:
- *
- *   - [glib-tap.mk](https://gitlab.gnome.org/GNOME/glib/blob/glib-2-58/glib-tap.mk)
- *   - [tap-test](https://gitlab.gnome.org/GNOME/glib/blob/glib-2-58/tap-test)
- *   - [tap-driver.sh](https://gitlab.gnome.org/GNOME/glib/blob/glib-2-58/tap-driver.sh)
- *
- * You can copy these files in your own project's root directory, and then
- * set up your `Makefile.am` file to reference them, for instance:
- *
- * |[<!-- language="plain" -->
- * include $(top_srcdir)/glib-tap.mk
- *
- * # test binaries
- * test_programs = \
- *   foo \
- *   bar
- *
- * # data distributed in the tarball
- * dist_test_data = \
- *   foo.data.txt \
- *   bar.data.txt
- *
- * # data not distributed in the tarball
- * test_data = \
- *   blah.data.txt
- * ]|
- *
- * Make sure to distribute the TAP files, using something like the following
- * in your top-level `Makefile.am`:
- *
- * |[<!-- language="plain" -->
- * EXTRA_DIST += \
- *   tap-driver.sh \
- *   tap-test
- * ]|
- *
- * `glib-tap.mk` will be distributed implicitly due to being included in a
- * `Makefile.am`. All three files should be added to version control.
- *
- * If you don't have access to the Autotools TAP harness, you can use the
- * [gtester][gtester] and [gtester-report][gtester-report] tools, and use
- * the [glib.mk](https://gitlab.gnome.org/GNOME/glib/blob/glib-2-58/glib.mk)
- * Automake template provided by GLib. Note, however, that since GLib 2.62,
- * [gtester][gtester] and [gtester-report][gtester-report] have been deprecated
- * in favour of using TAP. The `--tap` argument to tests is enabled by default
- * as of GLib 2.62.
- */
-
-/**
  * g_test_initialized:
  *
  * Returns %TRUE if g_test_init() has been called.
@@ -1102,10 +915,10 @@ g_test_log (GTestLogType lbit,
   unsigned subtest_level;
   gdouble timing;
 
-  if (g_once_init_enter (&g_default_print_func))
+  if (g_once_init_enter_pointer (&g_default_print_func))
     {
-      g_once_init_leave (&g_default_print_func,
-                         g_set_print_handler (g_test_print_handler));
+      g_once_init_leave_pointer (&g_default_print_func,
+                                 g_set_print_handler (g_test_print_handler));
       g_assert_nonnull (g_default_print_func);
     }
 
@@ -1844,8 +1657,8 @@ void
       test_run_seedstr = seedstr;
     }
 
-  if (!g_get_prgname() && !no_g_set_prgname)
-    g_set_prgname ((*argv)[0]);
+  if (!g_get_prgname () && !no_g_set_prgname)
+    g_set_prgname_once ((*argv)[0]);
 
   if (g_getenv ("G_TEST_ROOT_PROCESS"))
     {
@@ -4037,6 +3850,32 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  * @test_flags:   Flags to modify subprocess behaviour.
  *
  * Respawns the test program to run only @test_path in a subprocess.
+ *
+ * This is equivalent to calling g_test_trap_subprocess_with_envp() with `envp`
+ * set to %NULL. See the documentation for that function for full details.
+ *
+ * Since: 2.38
+ */
+void
+g_test_trap_subprocess (const char           *test_path,
+                        guint64               usec_timeout,
+                        GTestSubprocessFlags  test_flags)
+{
+  g_test_trap_subprocess_with_envp (test_path, NULL, usec_timeout, test_flags);
+}
+
+/**
+ * g_test_trap_subprocess_with_envp:
+ * @test_path: (nullable): Test to run in a subprocess
+ * @envp: (array zero-terminated=1) (nullable) (element-type filename): Environment
+ *   to run the test in, or %NULL to inherit the parent’s environment. This must
+ *   be in the GLib filename encoding.
+ * @usec_timeout: Timeout for the subprocess test in micro seconds.
+ * @test_flags:   Flags to modify subprocess behaviour.
+ *
+ * Respawns the test program to run only @test_path in a subprocess with the
+ * given @envp environment.
+ *
  * This can be used for a test case that might not return, or that
  * might abort.
  *
@@ -4049,6 +3888,8 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  * ending with "`/subprocess`" if the test only has one child test);
  * tests with names of this form will automatically be skipped in the
  * parent process.
+ *
+ * If @envp is %NULL, the parent process’ environment will be inherited.
  *
  * If @usec_timeout is non-0, the test subprocess is aborted and
  * considered failing if its run time exceeds it.
@@ -4066,6 +3907,11 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  * If your `main ()` needs to behave differently in
  * the subprocess, you can call g_test_subprocess() (after calling
  * g_test_init()) to see whether you are in a subprocess.
+ *
+ * Internally, this function tracks the child process using
+ * g_child_watch_source_new(), so your process must not ignore `SIGCHLD`, and
+ * must not attempt to watch or wait for the child process via another
+ * mechanism.
  *
  * The following example tests that calling
  * `my_object_new(1000000)` will abort with an error
@@ -4087,23 +3933,44 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  *     g_test_trap_assert_stderr ("*ERROR*too large*");
  *   }
  *
+ *   static void
+ *   test_different_username (void)
+ *   {
+ *     if (g_test_subprocess ())
+ *       {
+ *         // Code under test goes here
+ *         g_message ("Username is now simulated as %s", g_getenv ("USER"));
+ *         return;
+ *       }
+ *
+ *     // Reruns this same test in a subprocess
+ *     g_autoptr(GStrv) envp = g_get_environ ();
+ *     envp = g_environ_setenv (g_steal_pointer (&envp), "USER", "charlie", TRUE);
+ *     g_test_trap_subprocess_with_envp (NULL, envp, 0, G_TEST_SUBPROCESS_DEFAULT);
+ *     g_test_trap_assert_passed ();
+ *     g_test_trap_assert_stdout ("Username is now simulated as charlie");
+ *   }
+ *
  *   int
  *   main (int argc, char **argv)
  *   {
  *     g_test_init (&argc, &argv, NULL);
  *
- *     g_test_add_func ("/myobject/create_large_object",
+ *     g_test_add_func ("/myobject/create-large-object",
  *                      test_create_large_object);
+ *     g_test_add_func ("/myobject/different-username",
+ *                      test_different_username);
  *     return g_test_run ();
  *   }
  * ]|
  *
- * Since: 2.38
+ * Since: 2.80
  */
 void
-g_test_trap_subprocess (const char           *test_path,
-                        guint64               usec_timeout,
-                        GTestSubprocessFlags  test_flags)
+g_test_trap_subprocess_with_envp (const char           *test_path,
+                                  const char * const   *envp,
+                                  guint64               usec_timeout,
+                                  GTestSubprocessFlags  test_flags)
 {
   GError *error = NULL;
   GPtrArray *argv;
@@ -4162,7 +4029,7 @@ g_test_trap_subprocess (const char           *test_path,
 
   if (!g_spawn_async_with_pipes (test_initial_cwd,
                                  (char **)argv->pdata,
-                                 NULL, flags,
+                                 (char **) envp, flags,
                                  NULL, NULL,
                                  &pid, NULL, &stdout_fd, &stderr_fd,
                                  &error))

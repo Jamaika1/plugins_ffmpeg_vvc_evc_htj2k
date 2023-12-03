@@ -3100,6 +3100,9 @@ link_handlers_to_unregistered_apps (void)
           if (handler_verb->app != NULL)
             continue;
 
+          if (handler_verb->executable_folded == NULL)
+            continue;
+
           handler_exe_basename = g_utf8_find_basename (handler_verb->executable_folded, -1);
           g_hash_table_iter_init (&app_iter, apps_by_id);
 
@@ -3118,6 +3121,9 @@ link_handlers_to_unregistered_apps (void)
                   GWin32PrivateStat app_verb_exec_info;
                   const gchar *app_exe_basename;
                   app_verb = _verb_idx (app->verbs, ai);
+
+                  if (app_verb->executable_folded == NULL)
+                    continue;
 
                   app_exe_basename = g_utf8_find_basename (app_verb->executable_folded, -1);
 
@@ -4028,9 +4034,9 @@ gio_win32_appinfo_init (gboolean do_wait)
       /* Trigger initial tree build. Fake data pointer. */
       g_thread_pool_push (gio_win32_appinfo_threadpool, (gpointer) keys_updated, NULL);
       /* Increment the DLL refcount */
-      GetModuleHandleExA (GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
-                          (const char *) gio_win32_appinfo_init,
-                          &gio_dll_extra);
+      GetModuleHandleEx (GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
+                         (LPCWSTR) gio_win32_appinfo_init,
+                         &gio_dll_extra);
       /* gio DLL cannot be unloaded now */
 
       g_once_init_leave (&initialized, TRUE);
@@ -4247,7 +4253,7 @@ g_win32_app_info_get_name (GAppInfo *appinfo)
   else if (info->app && info->app->canonical_name_u8)
     return info->app->canonical_name_u8;
   else
-    return P_("Unnamed");
+    return _("Unnamed");
 }
 
 static const char *
@@ -4351,7 +4357,7 @@ expand_macro_single (char macro, file_or_uri *obj)
           const char *prefix = "file:///";
           const size_t prefix_len = strlen (prefix);
 
-          if (g_str_has_prefix (obj->uri, prefix) == 0 && obj->uri[prefix_len] != 0)
+          if (g_str_has_prefix (obj->uri, prefix) && obj->uri[prefix_len] != 0)
             {
               GFile *file = g_file_new_for_uri (obj->uri);
               result = g_file_get_path (file);
@@ -5207,11 +5213,11 @@ g_win32_app_info_launch_internal (GWin32AppInfo      *info,
     {
       if (info->app->is_uwp || info->handler == NULL)
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     P_("The app ‘%s’ in the application object has no verbs"),
+                     _("The app ‘%s’ in the application object has no verbs"),
                      g_win32_appinfo_application_get_some_name (info->app));
       else if (info->handler->verbs->len == 0)
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     P_("The app ‘%s’ and the handler ‘%s’ in the application object have no verbs"),
+                     _("The app ‘%s’ and the handler ‘%s’ in the application object have no verbs"),
                      g_win32_appinfo_application_get_some_name (info->app),
                      info->handler->handler_id_folded);
 

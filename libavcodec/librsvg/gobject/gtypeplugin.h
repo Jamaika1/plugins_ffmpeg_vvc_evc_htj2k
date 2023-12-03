@@ -23,7 +23,7 @@
 #error "Only <glib-object.h> can be included directly."
 #endif
 
-#include	"gtype.h"
+#include "gtype.h"
 
 G_BEGIN_DECLS
 
@@ -80,12 +80,6 @@ typedef void  (*GTypePluginCompleteInterfaceInfo) (GTypePlugin     *plugin,
 						   GType            instance_type,
 						   GType            interface_type,
 						   GInterfaceInfo  *info);
-/**
- * GTypePlugin:
- *
- * The GTypePlugin typedef is used as a placeholder
- * for objects that implement the GTypePlugin interface.
- */
 /**
  * GTypePluginClass:
  * @use_plugin: Increases the use count of the plugin.

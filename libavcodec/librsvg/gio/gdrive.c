@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -27,40 +27,38 @@
 #include "gthemedicon.h"
 #include "gasyncresult.h"
 #include "gioerror.h"
-#include "glibintl.h"
+#include "../glib/glibintl.h"
 
 
 /**
- * SECTION:gdrive
- * @short_description: Drive management
- * @include: gio/gio.h
+ * GDrive:
  *
- * #GDrive - this represent a piece of hardware connected to the machine.
- * It's generally only created for removable hardware or hardware with
+ * `GDrive` represents a piece of hardware connected to the machine.
+ * It’s generally only created for removable hardware or hardware with
  * removable media.
  *
- * #GDrive is a container class for #GVolume objects that stem from
- * the same piece of media. As such, #GDrive abstracts a drive with
+ * `GDrive` is a container class for [iface@Gio.Volume] objects that stem from
+ * the same piece of media. As such, `GDrive` abstracts a drive with
  * (or without) removable media and provides operations for querying
  * whether media is available, determining whether media change is
  * automatically detected and ejecting the media.
  *
- * If the #GDrive reports that media isn't automatically detected, one
+ * If the `GDrive` reports that media isn’t automatically detected, one
  * can poll for media; typically one should not do this periodically
  * as a poll for media operation is potentially expensive and may
  * spin up the drive creating noise.
  *
- * #GDrive supports starting and stopping drives with authentication
+ * `GDrive` supports starting and stopping drives with authentication
  * support for the former. This can be used to support a diverse set
  * of use cases including connecting/disconnecting iSCSI devices,
  * powering down external disk enclosures and starting/stopping
  * multi-disk devices such as RAID devices. Note that the actual
- * semantics and side-effects of starting/stopping a #GDrive may vary
+ * semantics and side-effects of starting/stopping a `GDrive` may vary
  * according to implementation. To choose the correct verbs in e.g. a
- * file manager, use g_drive_get_start_stop_type().
+ * file manager, use [method@Gio.Drive.get_start_stop_type].
  *
- * For porting from GnomeVFS note that there is no equivalent of
- * #GDrive in that API.
+ * For [porting from GnomeVFS](migrating-gnome-vfs.html) note that there is no
+ * equivalent of `GDrive` in that API.
  **/
 
 typedef GDriveIface GDriveInterface;
@@ -136,10 +134,10 @@ g_drive_default_init (GDriveInterface *iface)
 /**
  * g_drive_get_name:
  * @drive: a #GDrive.
- * 
+ *
  * Gets the name of @drive.
  *
- * Returns: a string containing @drive's name. The returned 
+ * Returns: a string containing @drive's name. The returned
  *     string should be freed when no longer needed.
  **/
 char *
@@ -157,9 +155,9 @@ g_drive_get_name (GDrive *drive)
 /**
  * g_drive_get_icon:
  * @drive: a #GDrive.
- * 
+ *
  * Gets the icon for @drive.
- * 
+ *
  * Returns: (transfer full): #GIcon for the @drive.
  *    Free the returned object with g_object_unref().
  **/
@@ -167,7 +165,7 @@ GIcon *
 g_drive_get_icon (GDrive *drive)
 {
   GDriveIface *iface;
-  
+
   g_return_val_if_fail (G_IS_DRIVE (drive), NULL);
 
   iface = G_DRIVE_GET_IFACE (drive);
@@ -178,9 +176,9 @@ g_drive_get_icon (GDrive *drive)
 /**
  * g_drive_get_symbolic_icon:
  * @drive: a #GDrive.
- * 
+ *
  * Gets the icon for @drive.
- * 
+ *
  * Returns: (transfer full): symbolic #GIcon for the @drive.
  *    Free the returned object with g_object_unref().
  *
@@ -207,9 +205,9 @@ g_drive_get_symbolic_icon (GDrive *drive)
 /**
  * g_drive_has_volumes:
  * @drive: a #GDrive.
- * 
+ *
  * Check if @drive has any mountable volumes.
- * 
+ *
  * Returns: %TRUE if the @drive contains volumes, %FALSE otherwise.
  **/
 gboolean
@@ -227,12 +225,12 @@ g_drive_has_volumes (GDrive *drive)
 /**
  * g_drive_get_volumes:
  * @drive: a #GDrive.
- * 
+ *
  * Get a list of mountable volumes for @drive.
  *
  * The returned list should be freed with g_list_free(), after
  * its elements have been unreffed with g_object_unref().
- * 
+ *
  * Returns: (element-type GVolume) (transfer full): #GList containing any #GVolume objects on the given @drive.
  **/
 GList *
@@ -250,9 +248,9 @@ g_drive_get_volumes (GDrive *drive)
 /**
  * g_drive_is_media_check_automatic:
  * @drive: a #GDrive.
- * 
+ *
  * Checks if @drive is capable of automatically detecting media changes.
- * 
+ *
  * Returns: %TRUE if the @drive is capable of automatically detecting
  *     media changes, %FALSE otherwise.
  **/
@@ -296,9 +294,9 @@ g_drive_is_removable (GDrive *drive)
 /**
  * g_drive_is_media_removable:
  * @drive: a #GDrive.
- * 
+ *
  * Checks if the @drive supports removable media.
- * 
+ *
  * Returns: %TRUE if @drive supports removable media, %FALSE otherwise.
  **/
 gboolean
@@ -316,11 +314,11 @@ g_drive_is_media_removable (GDrive *drive)
 /**
  * g_drive_has_media:
  * @drive: a #GDrive.
- * 
+ *
  * Checks if the @drive has media. Note that the OS may not be polling
  * the drive for media changes; see g_drive_is_media_check_automatic()
  * for more details.
- * 
+ *
  * Returns: %TRUE if @drive has media, %FALSE otherwise.
  **/
 gboolean
@@ -338,9 +336,9 @@ g_drive_has_media (GDrive *drive)
 /**
  * g_drive_can_eject:
  * @drive: a #GDrive.
- * 
+ *
  * Checks if a drive can be ejected.
- * 
+ *
  * Returns: %TRUE if the @drive can be ejected, %FALSE otherwise.
  **/
 gboolean
@@ -361,9 +359,9 @@ g_drive_can_eject (GDrive *drive)
 /**
  * g_drive_can_poll_for_media:
  * @drive: a #GDrive.
- * 
+ *
  * Checks if a drive can be polled for media changes.
- * 
+ *
  * Returns: %TRUE if the @drive can be polled for media changes,
  *     %FALSE otherwise.
  **/
@@ -389,7 +387,7 @@ g_drive_can_poll_for_media (GDrive *drive)
  * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore.
  * @callback: (nullable): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
- * 
+ *
  * Asynchronously ejects a drive.
  *
  * When the operation is finished, @callback will be called.
@@ -419,7 +417,7 @@ g_drive_eject (GDrive              *drive,
                                _("drive doesn’t implement eject"));
       return;
     }
-  
+
   (* iface->eject) (drive, flags, cancellable, callback, user_data);
 }
 
@@ -428,9 +426,9 @@ g_drive_eject (GDrive              *drive,
  * @drive: a #GDrive.
  * @result: a #GAsyncResult.
  * @error: a #GError, or %NULL
- * 
+ *
  * Finishes ejecting a drive.
- * 
+ *
  * Returns: %TRUE if the drive has been ejected successfully,
  *     %FALSE otherwise.
  *
@@ -452,7 +450,7 @@ g_drive_eject_finish (GDrive        *drive,
     return g_task_propagate_boolean (G_TASK (result), error);
 
   iface = G_DRIVE_GET_IFACE (drive);
-  
+
   return (* iface->eject_finish) (drive, result, error);
 }
 
@@ -546,9 +544,9 @@ g_drive_eject_with_operation_finish (GDrive        *drive,
  * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore.
  * @callback: (nullable): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
- * 
+ *
  * Asynchronously polls @drive to see if media has been inserted or removed.
- * 
+ *
  * When the operation is finished, @callback will be called.
  * You can then call g_drive_poll_for_media_finish() to obtain the
  * result of the operation.
@@ -573,7 +571,7 @@ g_drive_poll_for_media (GDrive              *drive,
                                _("drive doesn’t implement polling for media"));
       return;
     }
-  
+
   (* iface->poll_for_media) (drive, cancellable, callback, user_data);
 }
 
@@ -582,9 +580,9 @@ g_drive_poll_for_media (GDrive              *drive,
  * @drive: a #GDrive.
  * @result: a #GAsyncResult.
  * @error: a #GError, or %NULL
- * 
+ *
  * Finishes an operation started with g_drive_poll_for_media() on a drive.
- * 
+ *
  * Returns: %TRUE if the drive has been poll_for_mediaed successfully,
  *     %FALSE otherwise.
  **/
@@ -604,7 +602,7 @@ g_drive_poll_for_media_finish (GDrive        *drive,
     return g_task_propagate_boolean (G_TASK (result), error);
 
   iface = G_DRIVE_GET_IFACE (drive);
-  
+
   return (* iface->poll_for_media_finish) (drive, result, error);
 }
 
@@ -634,7 +632,7 @@ g_drive_get_identifier (GDrive     *drive,
 
   if (iface->get_identifier == NULL)
     return NULL;
-  
+
   return (* iface->get_identifier) (drive, kind);
 }
 
@@ -642,7 +640,7 @@ g_drive_get_identifier (GDrive     *drive,
  * g_drive_enumerate_identifiers:
  * @drive: a #GDrive
  *
- * Gets the kinds of identifiers that @drive has. 
+ * Gets the kinds of identifiers that @drive has.
  * Use g_drive_get_identifier() to obtain the identifiers
  * themselves.
  *
@@ -660,7 +658,7 @@ g_drive_enumerate_identifiers (GDrive *drive)
 
   if (iface->enumerate_identifiers == NULL)
     return NULL;
-  
+
   return (* iface->enumerate_identifiers) (drive);
 }
 

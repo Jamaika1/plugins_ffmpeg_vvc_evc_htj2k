@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Christian Kellner <gicmo@gnome.org> 
+ * Author: Christian Kellner <gicmo@gnome.org>
  */
 
 #include "config.h"
@@ -28,20 +28,17 @@
 #include "string.h"
 #include "gtask.h"
 #include "gioerror.h"
-#include "glibintl.h"
+#include "../glib/glibintl.h"
 
 
 /**
- * SECTION:gmemoryinputstream
- * @short_description: Streaming input operations on memory chunks
- * @include: gio/gio.h
- * @see_also: #GMemoryOutputStream
+ * GMemoryInputStream:
  *
- * #GMemoryInputStream is a class for using arbitrary
+ * `GMemoryInputStream` is a class for using arbitrary
  * memory chunks as input for GIO streaming input operations.
  *
- * As of GLib 2.34, #GMemoryInputStream implements
- * #GPollableInputStream.
+ * As of GLib 2.34, `GMemoryInputStream` implements
+ * [iface@Gio.PollableInputStream].
  */
 
 struct _GMemoryInputStreamPrivate {
@@ -118,7 +115,7 @@ g_memory_input_stream_class_init (GMemoryInputStreamClass *klass)
 
   object_class = G_OBJECT_CLASS (klass);
   object_class->finalize     = g_memory_input_stream_finalize;
-  
+
   istream_class = G_INPUT_STREAM_CLASS (klass);
   istream_class->read_fn  = g_memory_input_stream_read;
   istream_class->skip  = g_memory_input_stream_skip;
@@ -170,7 +167,7 @@ g_memory_input_stream_init (GMemoryInputStream *stream)
 /**
  * g_memory_input_stream_new:
  *
- * Creates a new empty #GMemoryInputStream. 
+ * Creates a new empty #GMemoryInputStream.
  *
  * Returns: a new #GInputStream
  */
@@ -191,11 +188,11 @@ g_memory_input_stream_new (void)
  * @destroy: (nullable): function that is called to free @data, or %NULL
  *
  * Creates a new #GMemoryInputStream with data in memory of a given size.
- * 
+ *
  * Returns: new #GInputStream read from @data of @len bytes.
  **/
 GInputStream *
-g_memory_input_stream_new_from_data (const void     *data, 
+g_memory_input_stream_new_from_data (const void     *data,
                                      gssize          len,
                                      GDestroyNotify  destroy)
 {
@@ -222,7 +219,7 @@ g_memory_input_stream_new_from_data (const void     *data,
 GInputStream *
 g_memory_input_stream_new_from_bytes (GBytes  *bytes)
 {
-  
+
   GInputStream *stream;
 
   stream = g_memory_input_stream_new ();
@@ -259,7 +256,7 @@ g_memory_input_stream_add_data (GMemoryInputStream *stream,
   bytes = g_bytes_new_with_free_func (data, len, destroy, (void*)data);
 
   g_memory_input_stream_add_bytes (stream, bytes);
-  
+
   g_bytes_unref (bytes);
 }
 
@@ -277,7 +274,7 @@ g_memory_input_stream_add_bytes (GMemoryInputStream *stream,
 				 GBytes             *bytes)
 {
   GMemoryInputStreamPrivate *priv;
- 
+
   g_return_if_fail (G_IS_MEMORY_INPUT_STREAM (stream));
   g_return_if_fail (bytes != NULL);
 
@@ -307,7 +304,7 @@ g_memory_input_stream_read (GInputStream  *stream,
   count = MIN (count, priv->len - priv->pos);
 
   offset = 0;
-  for (l = priv->chunks; l; l = l->next) 
+  for (l = priv->chunks; l; l = l->next)
     {
       chunk = (GBytes *)l->data;
       len = g_bytes_get_size (chunk);
@@ -317,7 +314,7 @@ g_memory_input_stream_read (GInputStream  *stream,
 
       offset += len;
     }
-  
+
   start = priv->pos - offset;
   rest = count;
 
@@ -455,7 +452,7 @@ g_memory_input_stream_seek (GSeekable     *seekable,
   memory_stream = G_MEMORY_INPUT_STREAM (seekable);
   priv = memory_stream->priv;
 
-  switch (type) 
+  switch (type)
     {
     case G_SEEK_CUR:
       absolute = priv->pos + offset;
@@ -468,7 +465,7 @@ g_memory_input_stream_seek (GSeekable     *seekable,
     case G_SEEK_END:
       absolute = priv->len + offset;
       break;
-  
+
     default:
       g_set_error_literal (error,
                            G_IO_ERROR,

@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -25,17 +25,14 @@
 #include "gloadableicon.h"
 #include "gasyncresult.h"
 #include "gtask.h"
-#include "glibintl.h"
+#include "../glib/glibintl.h"
 
 
 /**
- * SECTION:gloadableicon
- * @short_description: Loadable Icons
- * @include: gio/gio.h
- * @see_also: #GIcon, #GThemedIcon
- * 
- * Extends the #GIcon interface and adds the ability to 
- * load icons from streams.
+ * GLoadableIcon:
+ *
+ * `GLoadableIcon` extends the [iface@Gio.Icon] interface and adds the ability
+ * to load icons from streams.
  **/
 
 static void          g_loadable_icon_real_load_async  (GLoadableIcon        *icon,
@@ -68,10 +65,10 @@ g_loadable_icon_default_init (GLoadableIconIface *iface)
  * ignore.
  * @error: a #GError location to store the error occurring, or %NULL
  * to ignore.
- * 
- * Loads a loadable icon. For the asynchronous version of this function, 
+ *
+ * Loads a loadable icon. For the asynchronous version of this function,
  * see g_loadable_icon_load_async().
- * 
+ *
  * Returns: (transfer full): a #GInputStream to read the icon from.
  **/
 GInputStream *
@@ -94,13 +91,13 @@ g_loadable_icon_load (GLoadableIcon  *icon,
  * g_loadable_icon_load_async:
  * @icon: a #GLoadableIcon.
  * @size: an integer.
- * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore. 
+ * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore.
  * @callback: (scope async): a #GAsyncReadyCallback
  *   to call when the request is satisfied
  * @user_data: the data to pass to callback function
- * 
- * Loads an icon asynchronously. To finish this function, see 
- * g_loadable_icon_load_finish(). For the synchronous, blocking 
+ *
+ * Loads an icon asynchronously. To finish this function, see
+ * g_loadable_icon_load_finish(). For the synchronous, blocking
  * version of this function, see g_loadable_icon_load().
  **/
 void
@@ -111,7 +108,7 @@ g_loadable_icon_load_async (GLoadableIcon       *icon,
                             gpointer             user_data)
 {
   GLoadableIconIface *iface;
-  
+
   g_return_if_fail (G_IS_LOADABLE_ICON (icon));
 
   iface = G_LOADABLE_ICON_GET_IFACE (icon);
@@ -125,11 +122,11 @@ g_loadable_icon_load_async (GLoadableIcon       *icon,
  * @res: a #GAsyncResult.
  * @type: (out) (optional): a location to store the type of the loaded
  *        icon, %NULL to ignore.
- * @error: a #GError location to store the error occurring, or %NULL to 
+ * @error: a #GError location to store the error occurring, or %NULL to
  * ignore.
- * 
+ *
  * Finishes an asynchronous icon load started in g_loadable_icon_load_async().
- * 
+ *
  * Returns: (transfer full): a #GInputStream to read the icon from.
  **/
 GInputStream *
@@ -139,7 +136,7 @@ g_loadable_icon_load_finish (GLoadableIcon  *icon,
 			     GError        **error)
 {
   GLoadableIconIface *iface;
-  
+
   g_return_val_if_fail (G_IS_LOADABLE_ICON (icon), NULL);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (res), NULL);
 

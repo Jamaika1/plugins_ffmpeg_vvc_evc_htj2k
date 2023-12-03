@@ -38,102 +38,30 @@
 #include "../glib/gconstructor.h"
 
 /**
- * SECTION:objects
- * @title: GObject
- * @short_description: The base object type
- * @see_also: #GParamSpecObject, g_param_spec_object()
+ * GObject:
  *
- * GObject is the fundamental type providing the common attributes and
+ * The base object type.
+ *
+ * `GObject` is the fundamental type providing the common attributes and
  * methods for all object types in GTK, Pango and other libraries
- * based on GObject.  The GObject class provides methods for object
+ * based on GObject. The `GObject` class provides methods for object
  * construction and destruction, property access methods, and signal
- * support.  Signals are described in detail [here][gobject-Signals].
+ * support. Signals are described in detail [here][gobject-Signals].
  *
- * For a tutorial on implementing a new GObject class, see [How to define and
- * implement a new GObject][howto-gobject]. For a list of naming conventions for
- * GObjects and their methods, see the [GType conventions][gtype-conventions].
- * For the high-level concepts behind GObject, read [Instantiatable classed types:
- * Objects][gtype-instantiatable-classed].
+ * For a tutorial on implementing a new `GObject` class, see [How to define and
+ * implement a new GObject](tutorial.html#how-to-define-and-implement-a-new-gobject).
+ * For a list of naming conventions for GObjects and their methods, see the
+ * [GType conventions](concepts.html#conventions). For the high-level concepts
+ * behind GObject, read
+ * [Instantiatable classed types: Objects](concepts.html#instantiatable-classed-types-objects).
  *
- * ## Floating references # {#floating-ref}
- *
- * **Note**: Floating references are a C convenience API and should not be
- * used in modern GObject code. Language bindings in particular find the
- * concept highly problematic, as floating references are not identifiable
- * through annotations, and neither are deviations from the floating reference
- * behavior, like types that inherit from #GInitiallyUnowned and still return
- * a full reference from g_object_new().
- *
- * GInitiallyUnowned is derived from GObject. The only difference between
- * the two is that the initial reference of a GInitiallyUnowned is flagged
- * as a "floating" reference. This means that it is not specifically
- * claimed to be "owned" by any code portion. The main motivation for
- * providing floating references is C convenience. In particular, it
- * allows code to be written as:
- *
- * |[<!-- language="C" -->
- * container = create_container ();
- * container_add_child (container, create_child());
- * ]|
- *
- * If container_add_child() calls g_object_ref_sink() on the passed-in child,
- * no reference of the newly created child is leaked. Without floating
- * references, container_add_child() can only g_object_ref() the new child,
- * so to implement this code without reference leaks, it would have to be
- * written as:
- *
- * |[<!-- language="C" -->
- * Child *child;
- * container = create_container ();
- * child = create_child ();
- * container_add_child (container, child);
- * g_object_unref (child);
- * ]|
- *
- * The floating reference can be converted into an ordinary reference by
- * calling g_object_ref_sink(). For already sunken objects (objects that
- * don't have a floating reference anymore), g_object_ref_sink() is equivalent
- * to g_object_ref() and returns a new reference.
- *
- * Since floating references are useful almost exclusively for C convenience,
- * language bindings that provide automated reference and memory ownership
- * maintenance (such as smart pointers or garbage collection) should not
- * expose floating references in their API. The best practice for handling
- * types that have initially floating references is to immediately sink those
- * references after g_object_new() returns, by checking if the #GType
- * inherits from #GInitiallyUnowned. For instance:
- *
- * |[<!-- language="C" -->
- * GObject *res = g_object_new_with_properties (gtype,
- *                                              n_props,
- *                                              prop_names,
- *                                              prop_values);
- *
- * // or: if (g_type_is_a (gtype, G_TYPE_INITIALLY_UNOWNED))
- * if (G_IS_INITIALLY_UNOWNED (res))
- *   g_object_ref_sink (res);
- *
- * return res;
- * ]|
- *
- * Some object implementations may need to save an objects floating state
- * across certain code portions (an example is #GtkMenu), to achieve this,
- * the following sequence can be used:
- *
- * |[<!-- language="C" -->
- * // save floating state
- * gboolean was_floating = g_object_is_floating (object);
- * g_object_ref_sink (object);
- * // protected code portion
- *
- * ...
- *
- * // restore floating state
- * if (was_floating)
- *   g_object_force_floating (object);
- * else
- *   g_object_unref (object); // release previously acquired reference
- * ]|
+ * Since GLib 2.72, all `GObject`s are guaranteed to be aligned to at least the
+ * alignment of the largest basic GLib type (typically this is `guint64` or
+ * `gdouble`). If you need larger alignment for an element in a `GObject`, you
+ * should allocate it on the heap (aligned), or arrange for your `GObject` to be
+ * appropriately padded. This guarantee applies to the `GObject` (or derived)
+ * struct, the `GObjectClass` (or derived) struct, and any private data allocated
+ * by `G_ADD_PRIVATE()`.
  */
 
 /* --- macros --- */
@@ -260,6 +188,7 @@ G_LOCK_DEFINE_STATIC (weak_refs_mutex);
 G_LOCK_DEFINE_STATIC (toggle_refs_mutex);
 static GQuark	            quark_closure_array = 0;
 static GQuark	            quark_weak_refs = 0;
+static GQuark	            quark_weak_notifies = 0;
 static GQuark	            quark_toggle_refs = 0;
 static GQuark               quark_notify_queue;
 #ifndef HAVE_OPTIONAL_FLAGS
@@ -523,6 +452,7 @@ g_object_do_class_init (GObjectClass *class)
   quark_closure_array = g_quark_from_static_string ("GObject-closure-array");
 
   quark_weak_refs = g_quark_from_static_string ("GObject-weak-references");
+  quark_weak_notifies = g_quark_from_static_string ("GObject-weak-notifies");
   quark_weak_locations = g_quark_from_static_string ("GObject-weak-locations");
   quark_toggle_refs = g_quark_from_static_string ("GObject-toggle-references");
   quark_notify_queue = g_quark_from_static_string ("GObject-notify-queue");
@@ -819,13 +749,13 @@ find_pspec (GObjectClass *class,
  *   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
  *
  *   obj_properties[PROP_FOO] =
- *     g_param_spec_int ("foo", "Foo", "Foo",
+ *     g_param_spec_int ("foo", NULL, NULL,
  *                       -1, G_MAXINT,
  *                       0,
  *                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
  *
  *   obj_properties[PROP_BAR] =
- *     g_param_spec_string ("bar", "Bar", "Bar",
+ *     g_param_spec_string ("bar", NULL, NULL,
  *                          NULL,
  *                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
  *
@@ -1359,9 +1289,16 @@ static void
 g_object_real_dispose (GObject *object)
 {
   g_signal_handlers_destroy (object);
-  g_datalist_id_set_data (&object->qdata, quark_closure_array, NULL);
+
+  /* GWeakRef and weak_pointer do not call into user code. Clear those first
+   * so that user code can rely on the state of their weak pointers.
+   */
   g_datalist_id_set_data (&object->qdata, quark_weak_refs, NULL);
   g_datalist_id_set_data (&object->qdata, quark_weak_locations, NULL);
+
+  /* GWeakNotify and GClosure can call into user code */
+  g_datalist_id_set_data (&object->qdata, quark_weak_notifies, NULL);
+  g_datalist_id_set_data (&object->qdata, quark_closure_array, NULL);
 }
 
 #ifdef G_ENABLE_DEBUG
@@ -1628,7 +1565,7 @@ g_object_notify (GObject     *object,
  *   static void
  *   my_object_class_init (MyObjectClass *klass)
  *   {
- *     properties[PROP_FOO] = g_param_spec_int ("foo", "Foo", "The foo",
+ *     properties[PROP_FOO] = g_param_spec_int ("foo", NULL, NULL,
  *                                              0, 100,
  *                                              50,
  *                                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
@@ -1710,14 +1647,14 @@ maybe_issue_property_deprecation_warning (const GParamSpec *pspec)
   static GMutex already_warned_lock;
   gboolean already;
 
-  if (g_once_init_enter (&enable_diagnostic))
+  if (g_once_init_enter_pointer (&enable_diagnostic))
     {
       const gchar *value = g_getenv ("G_ENABLE_DIAGNOSTIC");
 
       if (!value)
         value = "0";
 
-      g_once_init_leave (&enable_diagnostic, value);
+      g_once_init_leave_pointer (&enable_diagnostic, value);
     }
 
   if (enable_diagnostic[0] == '0')
@@ -3316,7 +3253,7 @@ g_object_weak_ref (GObject    *object,
   g_return_if_fail (g_atomic_int_get (&object->ref_count) >= 1);
 
   G_LOCK (weak_refs_mutex);
-  wstack = g_datalist_id_remove_no_notify (&object->qdata, quark_weak_refs);
+  wstack = g_datalist_id_remove_no_notify (&object->qdata, quark_weak_notifies);
   if (wstack)
     {
       i = wstack->n_weak_refs++;
@@ -3331,7 +3268,7 @@ g_object_weak_ref (GObject    *object,
     }
   wstack->weak_refs[i].notify = notify;
   wstack->weak_refs[i].data = data;
-  g_datalist_id_set_data_full (&object->qdata, quark_weak_refs, wstack, weak_refs_notify);
+  g_datalist_id_set_data_full (&object->qdata, quark_weak_notifies, wstack, weak_refs_notify);
   G_UNLOCK (weak_refs_mutex);
 }
 
@@ -3355,7 +3292,7 @@ g_object_weak_unref (GObject    *object,
   g_return_if_fail (notify != NULL);
 
   G_LOCK (weak_refs_mutex);
-  wstack = g_datalist_id_get_data (&object->qdata, quark_weak_refs);
+  wstack = g_datalist_id_get_data (&object->qdata, quark_weak_notifies);
   if (wstack)
     {
       guint i;
@@ -3438,7 +3375,7 @@ object_floating_flag_handler (GObject        *object,
       oldvalue = g_atomic_pointer_get (&object->qdata);
       while (!g_atomic_pointer_compare_and_exchange_full (
         (void**) &object->qdata, oldvalue,
-        (void *) ((gsize) oldvalue | OBJECT_FLOATING_FLAG),
+        (void *) ((guintptr) oldvalue | OBJECT_FLOATING_FLAG),
         &oldvalue))
         ;
       return (gsize) oldvalue & OBJECT_FLOATING_FLAG;
@@ -3446,7 +3383,7 @@ object_floating_flag_handler (GObject        *object,
       oldvalue = g_atomic_pointer_get (&object->qdata);
       while (!g_atomic_pointer_compare_and_exchange_full (
         (void**) &object->qdata, oldvalue,
-        (void *) ((gsize) oldvalue & ~(gsize) OBJECT_FLOATING_FLAG),
+        (void *) ((guintptr) oldvalue & ~(gsize) OBJECT_FLOATING_FLAG),
         &oldvalue))
         ;
       return (gsize) oldvalue & OBJECT_FLOATING_FLAG;
@@ -3928,6 +3865,7 @@ g_object_unref (gpointer _object)
       g_signal_handlers_destroy (object);
       g_datalist_id_set_data (&object->qdata, quark_weak_refs, NULL);
       g_datalist_id_set_data (&object->qdata, quark_weak_locations, NULL);
+      g_datalist_id_set_data (&object->qdata, quark_weak_notifies, NULL);
 
       /* decrement the last reference */
       old_ref = g_atomic_int_add (&object->ref_count, -1);
@@ -4860,7 +4798,7 @@ g_object_compat_control (gsize           what,
     {
       gpointer *pp;
     case 1:     /* floating base type */
-      return G_TYPE_INITIALLY_UNOWNED;
+      return (gsize) G_TYPE_INITIALLY_UNOWNED;
     case 2:     /* FIXME: remove this once GLib/Gtk+ break ABI again */
       floating_flag_handler = (guint(*)(GObject*,gint)) data;
       return 1;
