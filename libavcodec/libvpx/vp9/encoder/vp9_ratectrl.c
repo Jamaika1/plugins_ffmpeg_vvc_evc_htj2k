@@ -260,7 +260,7 @@ void vp9_update_buffer_level_preencode(VP9_COMP *cpi) {
 // for the layered rate control which involves cumulative buffer levels for
 // the temporal layers. Allow for using the timestamp(pts) delta for the
 // framerate when the set_ref_frame_config is used.
-static void update_buffer_level_svc_preencode(VP9_COMP *cpi) {
+void vp9_update_buffer_level_svc_preencode(VP9_COMP *cpi) {
   SVC *const svc = &cpi->svc;
   int i;
   // Set this to 1 to use timestamp delta for "framerate" under
@@ -680,7 +680,8 @@ static int adjust_q_cbr(const VP9_COMP *cpi, int q) {
     else
       q = qclamp;
   }
-  if (cpi->oxcf.content == VP9E_CONTENT_SCREEN)
+  if (cpi->oxcf.content == VP9E_CONTENT_SCREEN &&
+      cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ)
     vp9_cyclic_refresh_limit_q(cpi, &q);
   return VPXMAX(VPXMIN(q, cpi->rc.worst_quality), cpi->rc.best_quality);
 }
@@ -1991,6 +1992,7 @@ void vp9_rc_postencode_update(VP9_COMP *cpi, uint64_t bytes_used) {
   rc->last_avg_frame_bandwidth = rc->avg_frame_bandwidth;
   if (cpi->use_svc && svc->spatial_layer_id < svc->number_spatial_layers - 1)
     svc->lower_layer_qindex = cm->base_qindex;
+  cpi->deadline_mode_previous_frame = cpi->oxcf.mode;
 }
 
 void vp9_rc_postencode_update_drop_frame(VP9_COMP *cpi) {
@@ -2011,6 +2013,7 @@ void vp9_rc_postencode_update_drop_frame(VP9_COMP *cpi) {
     cpi->rc.buffer_level = cpi->rc.optimal_buffer_level;
     cpi->rc.bits_off_target = cpi->rc.optimal_buffer_level;
   }
+  cpi->deadline_mode_previous_frame = cpi->oxcf.mode;
 }
 
 int vp9_calc_pframe_target_size_one_pass_vbr(const VP9_COMP *cpi) {
@@ -2118,7 +2121,8 @@ void vp9_rc_get_one_pass_vbr_params(VP9_COMP *cpi) {
   int target;
   if (!cpi->refresh_alt_ref_frame &&
       (cm->current_video_frame == 0 || (cpi->frame_flags & FRAMEFLAGS_KEY) ||
-       rc->frames_to_key == 0)) {
+       rc->frames_to_key == 0 ||
+       (cpi->oxcf.mode != cpi->deadline_mode_previous_frame))) {
     cm->frame_type = KEY_FRAME;
     rc->this_key_frame_forced =
         cm->current_video_frame != 0 && rc->frames_to_key == 0;
@@ -2284,14 +2288,15 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
   // Periodic key frames is based on the super-frame counter
   // (svc.current_superframe), also only base spatial layer is key frame.
   // Key frame is set for any of the following: very first frame, frame flags
-  // indicates key, superframe counter hits key frequency, or (non-intra) sync
-  // flag is set for spatial layer 0.
+  // indicates key, superframe counter hits key frequency,(non-intra) sync
+  // flag is set for spatial layer 0, or deadline mode changes.
   if ((cm->current_video_frame == 0 && !svc->previous_frame_is_intra_only) ||
       (cpi->frame_flags & FRAMEFLAGS_KEY) ||
       (cpi->oxcf.auto_key &&
        (svc->current_superframe % cpi->oxcf.key_freq == 0) &&
        !svc->previous_frame_is_intra_only && svc->spatial_layer_id == 0) ||
-      (svc->spatial_layer_sync[0] == 1 && svc->spatial_layer_id == 0)) {
+      (svc->spatial_layer_sync[0] == 1 && svc->spatial_layer_id == 0) ||
+      (cpi->oxcf.mode != cpi->deadline_mode_previous_frame)) {
     cm->frame_type = KEY_FRAME;
     rc->source_alt_ref_active = 0;
     if (is_one_pass_svc(cpi)) {
@@ -2445,7 +2450,7 @@ void vp9_rc_get_svc_params(VP9_COMP *cpi) {
     vp9_cyclic_refresh_update_parameters(cpi);
 
   vp9_rc_set_frame_target(cpi, target);
-  if (cm->show_frame) update_buffer_level_svc_preencode(cpi);
+  if (cm->show_frame) vp9_update_buffer_level_svc_preencode(cpi);
 
   if (cpi->oxcf.resize_mode == RESIZE_DYNAMIC && svc->single_layer_svc == 1 &&
       svc->spatial_layer_id == svc->first_spatial_layer_to_encode &&
@@ -2490,7 +2495,8 @@ void vp9_rc_get_one_pass_cbr_params(VP9_COMP *cpi) {
   RATE_CONTROL *const rc = &cpi->rc;
   int target;
   if ((cm->current_video_frame == 0) || (cpi->frame_flags & FRAMEFLAGS_KEY) ||
-      (cpi->oxcf.auto_key && rc->frames_to_key == 0)) {
+      (cpi->oxcf.auto_key && rc->frames_to_key == 0) ||
+      (cpi->oxcf.mode != cpi->deadline_mode_previous_frame)) {
     cm->frame_type = KEY_FRAME;
     rc->frames_to_key = cpi->oxcf.key_freq;
     rc->kf_boost = DEFAULT_KF_BOOST;
@@ -2643,7 +2649,8 @@ void vp9_rc_update_framerate(VP9_COMP *cpi) {
   RATE_CONTROL *const rc = &cpi->rc;
   int vbr_max_bits;
 
-  rc->avg_frame_bandwidth = (int)(oxcf->target_bandwidth / cpi->framerate);
+  rc->avg_frame_bandwidth =
+      (int)VPXMIN(oxcf->target_bandwidth / cpi->framerate, INT_MAX);
   rc->min_frame_bandwidth =
       (int)(rc->avg_frame_bandwidth * oxcf->two_pass_vbrmin_section / 100);
 

@@ -1868,6 +1868,19 @@ void vpx_subtract_block_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, con
 #define vpx_subtract_block vpx_subtract_block_c
 #endif
 
+int64_t vpx_sse_c(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
+int64_t vpx_sse_sse4_1(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+RTCD_EXTERN int64_t (*vpx_sse)(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+#endif
+#if defined(__AVX2__)
+int64_t vpx_sse_sse4_1(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+#endif
+#else
+#define vpx_sse vpx_sse_c
+#endif
+
 unsigned int vpx_sad64x64_c(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
 #if HAVE_SIMD
 #if defined(__SSE2__)
@@ -2714,6 +2727,19 @@ void vpx_highbd_subtract_block_avx2(int rows, int cols, int16_t *diff_ptr, ptrdi
 #endif
 #else
 #define vpx_highbd_subtract_block vpx_highbd_subtract_block_c
+#endif
+
+int64_t vpx_highbd_sse_c(const uint8_t *a8, int a_stride, const uint8_t *b8,int b_stride, int width, int heigh);
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
+int64_t vpx_highbd_sse_sse4_1(const uint8_t *a8, int a_stride, const uint8_t *b8,int b_stride, int width, int heigh);
+RTCD_EXTERN int64_t (*vpx_highbd_sse)(const uint8_t *a8, int a_stride, const uint8_t *b8,int b_stride, int width, int heigh);
+#endif
+#if defined(__AVX2__)
+int64_t vpx_highbd_sse_avx2(const uint8_t *a8, int a_stride, const uint8_t *b8,int b_stride, int width, int heigh);
+#endif
+#else
+#define vpx_highbd_sse vpx_highbd_sse_c
 #endif
 
 // Single block SAD
@@ -4042,6 +4068,7 @@ vpx_d45_predictor_32x32 = vpx_d45_predictor_32x32_c;
 vpx_d63_predictor_32x32 = vpx_d63_predictor_32x32_c;
 vpx_d153_predictor_32x32 = vpx_d153_predictor_32x32_c;
 vpx_scaled_2d = vpx_scaled_2d_c;
+  vpx_sse = vpx_sse_c;
 #if defined(__SSE2__) && HAVE_SIMD
   vpx_convolve8 = vpx_convolve8_sse2;
   vpx_convolve8_horiz = vpx_convolve8_horiz_sse2;
@@ -4169,7 +4196,7 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   if (flags & HAS_SSSE3) vpx_sub_pixel_avg_variance4x4 =
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
-
+  if (flags & HAS_SSE4_1) vpx_sse = vpx_sse_sse4_1;
 #endif
 #if defined(__AVX__) && HAVE_SIMD
   if (flags & HAS_AVX) vpx_quantize_b =
@@ -4195,6 +4222,7 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   if (flags & HAS_AVX2) vpx_quantize_b =
   if (flags & HAS_AVX2) vpx_quantize_b_32x32 =
   if (flags & HAS_AVX2) vpx_subtract_block =
+  if (flags & HAS_AVX2) vpx_sse = vpx_sse_avx2;
   if (flags & HAS_AVX2) vpx_sad64x64 = vpx_sad64x64_avx2;
   if (flags & HAS_AVX2) vpx_sad64x32 = vpx_sad64x32_avx2;
   if (flags & HAS_AVX2) vpx_sad32x64 = vpx_sad32x64_avx2;
@@ -4260,6 +4288,8 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   vpx_highbd_hadamard_16x16 = vpx_highbd_hadamard_16x16_c;
   vpx_highbd_hadamard_32x32 = vpx_highbd_hadamard_32x32_c;
   vpx_highbd_satd = vpx_highbd_satd_c;
+  vpx_highbd_subtract_block = vpx_highbd_subtract_block_c;
+  vpx_highbd_sse = vpx_highbd_sse_c;
 #if defined(__SSE2__) && HAVE_SIMD
   vpx_highbd_convolve_copy = vpx_highbd_convolve_copy_sse2;
   vpx_highbd_convolve_avg = vpx_highbd_convolve_avg_sse2;
@@ -4331,6 +4361,7 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   if (flags & HAS_SSSE3) vpx_highbd_d153_predictor_32x32 = vpx_highbd_d153_predictor_32x32_ssse3;
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
+  if (flags & HAS_SSE4_1) vpx_highbd_sse = vpx_highbd_sse_sse4_1;
 #if CONFIG_EMULATE_HARDWARE
   if (flags & HAS_SSE4_1) vpx_highbd_idct4x4_16_add = vpx_highbd_idct4x4_16_add_sse4_1;
   if (flags & HAS_SSE4_1) vpx_highbd_idct8x8_64_add = vpx_highbd_idct8x8_64_add_sse4_1;
@@ -4357,6 +4388,7 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   if (flags & HAS_AVX2) vpx_highbd_hadamard_32x32 = vpx_highbd_hadamard_32x32_avx2;
   if (flags & HAS_AVX2) vpx_highbd_satd = vpx_highbd_satd_avx2;
   if (flags & HAS_AVX2) vpx_highbd_subtract_block =
+  if (flags & HAS_AVX2) vpx_highbd_sse = vpx_highbd_sse_avx2;
   if (flags & HAS_AVX2) vpx_highbd_quantize_b =
   if (flags & HAS_AVX2) vpx_highbd_quantize_b_32x32 =
   if (flags & HAS_AVX2) vpx_highbd_sad64x64 =
