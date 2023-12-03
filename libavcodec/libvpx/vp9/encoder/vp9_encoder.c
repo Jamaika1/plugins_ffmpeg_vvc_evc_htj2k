@@ -24,6 +24,7 @@
 #if CONFIG_INTERNAL_STATS
 #include "vpx_dsp/ssim.h"
 #endif
+#include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/mem.h"
 #include "vpx_ports/system_state.h"
 #include "vpx_ports/vpx_once.h"
@@ -33,6 +34,7 @@
 #endif  // CONFIG_BITSTREAM_DEBUG || CONFIG_MISMATCH_DEBUG
 
 #include "vp9/common/vp9_alloccommon.h"
+#include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_filter.h"
 #include "vp9/common/vp9_idct.h"
 #if CONFIG_VP9_POSTPROC
@@ -80,6 +82,8 @@
 #include "vp9/encoder/vp9_temporal_filter.h"
 #include "vp9/encoder/vp9_tpl_model.h"
 #include "vp9/vp9_cx_iface.h"
+
+#include "vpx/vpx_ext_ratectrl.h"
 
 #define AM_SEGMENT_ID_INACTIVE 7
 #define AM_SEGMENT_ID_ACTIVE 0
@@ -879,10 +883,11 @@ static int vp9_enc_alloc_mi(VP9_COMMON *cm, int mi_size) {
   if (!cm->prev_mip) return 1;
   cm->mi_alloc_size = mi_size;
 
-  cm->mi_grid_base = (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO *));
+  cm->mi_grid_base =
+      (MODE_INFO **)vpx_calloc(mi_size, sizeof(*cm->mi_grid_base));
   if (!cm->mi_grid_base) return 1;
   cm->prev_mi_grid_base =
-      (MODE_INFO **)vpx_calloc(mi_size, sizeof(MODE_INFO *));
+      (MODE_INFO **)vpx_calloc(mi_size, sizeof(*cm->prev_mi_grid_base));
   if (!cm->prev_mi_grid_base) return 1;
 
   return 0;
@@ -2045,6 +2050,17 @@ static void alloc_copy_partition_data(VP9_COMP *cpi) {
   }
 }
 
+static void free_copy_partition_data(VP9_COMP *cpi) {
+  vpx_free(cpi->prev_partition);
+  cpi->prev_partition = NULL;
+  vpx_free(cpi->prev_segment_id);
+  cpi->prev_segment_id = NULL;
+  vpx_free(cpi->prev_variance_low);
+  cpi->prev_variance_low = NULL;
+  vpx_free(cpi->copied_frame_cnt);
+  cpi->copied_frame_cnt = NULL;
+}
+
 void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
   VP9_COMMON *const cm = &cpi->common;
   RATE_CONTROL *const rc = &cpi->rc;
@@ -2124,6 +2140,8 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     new_mi_size = cm->mi_stride * calc_mi_size(cm->mi_rows);
     if (cm->mi_alloc_size < new_mi_size) {
       vp9_free_context_buffers(cm);
+      vp9_free_pc_tree(&cpi->td);
+      vpx_free(cpi->mbmi_ext_base);
       alloc_compressor_data(cpi);
       realloc_segmentation_maps(cpi);
       cpi->initial_width = cpi->initial_height = 0;
@@ -2142,8 +2160,18 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     update_frame_size(cpi);
 
   if (last_w != cpi->oxcf.width || last_h != cpi->oxcf.height) {
-    memset(cpi->consec_zero_mv, 0,
-           cm->mi_rows * cm->mi_cols * sizeof(*cpi->consec_zero_mv));
+    vpx_free(cpi->consec_zero_mv);
+    CHECK_MEM_ERROR(
+        &cm->error, cpi->consec_zero_mv,
+        vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->consec_zero_mv)));
+
+    vpx_free(cpi->skin_map);
+    CHECK_MEM_ERROR(
+        &cm->error, cpi->skin_map,
+        vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->skin_map)));
+
+    free_copy_partition_data(cpi);
+    alloc_copy_partition_data(cpi);
     if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ)
       vp9_cyclic_refresh_reset_resize(cpi);
     rc->rc_1_frame = 0;
@@ -2354,7 +2382,7 @@ void vp9_update_compressor_with_img_fmt(VP9_COMP *cpi, vpx_img_fmt_t img_fmt) {
 VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
                                 BufferPool *const pool) {
   unsigned int i;
-  VP9_COMP *volatile const cpi = vpx_memalign(32, sizeof(VP9_COMP));
+  VP9_COMP *volatile const cpi = vpx_memalign(32, sizeof(*cpi));
   VP9_COMMON *volatile const cm = cpi != NULL ? &cpi->common : NULL;
 
   if (!cm) return NULL;
@@ -2403,7 +2431,7 @@ VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
 
   CHECK_MEM_ERROR(
       &cm->error, cpi->skin_map,
-      vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(cpi->skin_map[0])));
+      vpx_calloc(cm->mi_rows * cm->mi_cols, sizeof(*cpi->skin_map)));
 
 #if !CONFIG_REALTIME_ONLY
   CHECK_MEM_ERROR(&cm->error, cpi->alt_ref_aq, vp9_alt_ref_aq_create());
@@ -4037,6 +4065,7 @@ static int encode_without_recode_loop(VP9_COMP *cpi, size_t *size,
   cpi->rc.hybrid_intra_scene_change = 0;
   cpi->rc.re_encode_maxq_scene_change = 0;
   if (cm->show_frame && cpi->oxcf.mode == REALTIME &&
+      !cpi->disable_scene_detection_rtc_ratectrl &&
       (cpi->oxcf.rc_mode == VPX_VBR ||
        cpi->oxcf.content == VP9E_CONTENT_SCREEN ||
        (cpi->oxcf.speed >= 5 && cpi->oxcf.speed < 8)))
@@ -5489,26 +5518,7 @@ static void encode_frame_to_data_rate(
   struct segmentation *const seg = &cm->seg;
   TX_SIZE t;
 
-  // SVC: skip encoding of enhancement layer if the layer target bandwidth = 0.
-  // No need to set svc.skip_enhancement_layer if whole superframe will be
-  // dropped.
-  if (cpi->use_svc && cpi->svc.spatial_layer_id > 0 &&
-      cpi->oxcf.target_bandwidth == 0 &&
-      !(cpi->svc.framedrop_mode != LAYER_DROP &&
-        (cpi->svc.framedrop_mode != CONSTRAINED_FROM_ABOVE_DROP ||
-         cpi->svc
-             .force_drop_constrained_from_above[cpi->svc.number_spatial_layers -
-                                                1]) &&
-        cpi->svc.drop_spatial_layer[0])) {
-    cpi->svc.skip_enhancement_layer = 1;
-    vp9_rc_postencode_update_drop_frame(cpi);
-    cpi->ext_refresh_frame_flags_pending = 0;
-    cpi->last_frame_dropped = 1;
-    cpi->svc.last_layer_dropped[cpi->svc.spatial_layer_id] = 1;
-    cpi->svc.drop_spatial_layer[cpi->svc.spatial_layer_id] = 1;
-    vp9_inc_frame_in_layer(cpi);
-    return;
-  }
+  if (vp9_svc_check_skip_enhancement_layer(cpi)) return;
 
   set_ext_overrides(cpi);
   vpx_clear_system_state();
@@ -5525,6 +5535,11 @@ static void encode_frame_to_data_rate(
     // Set the arf sign bias for this frame.
     set_ref_sign_bias(cpi);
   }
+
+  // On the very first frame set the deadline_mode_previous_frame to
+  // the current mode.
+  if (cpi->common.current_video_frame == 0)
+    cpi->deadline_mode_previous_frame = cpi->oxcf.mode;
 
   // Set default state for segment based loop filter update flags.
   cm->lf.mode_ref_delta_update = 0;
