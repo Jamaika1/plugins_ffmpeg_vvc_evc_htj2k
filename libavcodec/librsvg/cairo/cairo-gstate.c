@@ -193,6 +193,7 @@ void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     _cairo_stroke_style_fini (&gstate->stroke_style);
+    _cairo_font_options_fini (&gstate->font_options);
 
     cairo_font_face_destroy (gstate->font_face);
     gstate->font_face = NULL;
@@ -1918,6 +1919,8 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 				            &gstate->font_matrix,
 					    &font_ctm,
 					    &options);
+
+    _cairo_font_options_fini (&options);
 
     status = cairo_scaled_font_status (scaled_font);
     if (unlikely (status))

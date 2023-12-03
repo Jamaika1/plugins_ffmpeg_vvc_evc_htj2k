@@ -2903,6 +2903,22 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  **/
 
 /**
+ * CAIRO_TAG_CONTENT:
+ *
+ * Create a content tag.
+ *
+ * Since: 1.18
+ **/
+
+/**
+ * CAIRO_TAG_CONTENT_REF:
+ *
+ * Create a content reference tag.
+ *
+ * Since: 1.18
+ **/
+
+/**
  * cairo_tag_begin:
  * @cr: a cairo context
  * @tag_name: tag name
@@ -3885,7 +3901,7 @@ cairo_get_operator (cairo_t *cr)
 }
 
 #if 0
-/**
+/*
  * cairo_get_opacity:
  * @cr: a cairo context
  *

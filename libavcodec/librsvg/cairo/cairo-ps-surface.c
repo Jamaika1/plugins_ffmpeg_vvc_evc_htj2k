@@ -3521,7 +3521,7 @@ _cairo_ps_surface_use_form (cairo_ps_surface_t           *surface,
     unique_id_length = source_key.unique_id_length;
     memcpy (unique_id, source_key.unique_id, unique_id_length);
 
-    source_entry = calloc (sizeof (cairo_ps_form_t), 1);
+    source_entry = calloc (1, sizeof (cairo_ps_form_t));
     if (source_entry == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail;

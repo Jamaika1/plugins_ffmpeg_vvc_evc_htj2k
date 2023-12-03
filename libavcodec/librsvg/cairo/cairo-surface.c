@@ -127,13 +127,18 @@ const cairo_surface_t name = {					\
     NULL,				/* snapshot_detach */	\
     { NULL, NULL },			/* snapshots */		\
     { NULL, NULL },			/* snapshot */		\
-    { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
+    {                                   /* font options begin */\
+      CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
       CAIRO_LCD_FILTER_DEFAULT,		/* lcd_filter */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
       CAIRO_HINT_METRICS_DEFAULT,	/* hint_metrics */	\
-      CAIRO_ROUND_GLYPH_POS_DEFAULT	/* round_glyph_positions */	\
-    },					/* font_options */		\
+      CAIRO_ROUND_GLYPH_POS_DEFAULT,	/* round_glyph_positions */	\
+      NULL,                            /* variations */ \
+      CAIRO_COLOR_MODE_DEFAULT,                /* color mode */ \
+      CAIRO_COLOR_PALETTE_DEFAULT,     /* color palette */ \
+      NULL, 0,                         /* custom palette */ \
+    },					/* font_options end */		\
     NULL,                               /* foreground_source */		\
     FALSE,                              /* foreground_used */   \
 }
@@ -453,6 +458,7 @@ _cairo_surface_copy_similar_properties (cairo_surface_t *surface,
 
 	cairo_surface_get_font_options (other, &options);
 	_cairo_surface_set_font_options (surface, &options);
+	_cairo_font_options_fini (&options);
     }
 
     cairo_surface_set_fallback_resolution (surface,
@@ -982,6 +988,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->owns_device)
         cairo_device_destroy (surface->device);
+
+    if (surface->has_font_options)
+	_cairo_font_options_fini (&surface->font_options);
 
     assert (surface->snapshot_of == NULL);
     assert (! _cairo_surface_has_snapshots (surface));

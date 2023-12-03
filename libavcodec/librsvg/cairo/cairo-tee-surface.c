@@ -35,8 +35,22 @@
  *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-/* This surface supports redirecting all its input to multiple surfaces.
- */
+/**
+ * SECTION:cairo-tee
+ * @Title: Tee surface
+ * @Short_Description: Redirect input to multiple surfaces
+ * @See_Also: #cairo_surface_t
+ *
+ * The "tee" surface supports redirecting all its input to multiple surfaces.
+ **/
+
+/**
+ * CAIRO_HAS_TEE_SURFACE:
+ *
+ * Defined if the tee surface backend is available.
+ *
+ * Since: 1.10
+ **/
 
 #include "cairoint.h"
 
@@ -420,6 +434,22 @@ static const cairo_surface_backend_t cairo_tee_surface_backend = {
     _cairo_tee_surface_show_text_glyphs
 };
 
+/**
+ * cairo_tee_surface_create:
+ * @primary: the primary #cairo_surface_t
+ *
+ * Creates a new "tee" surface.
+ *
+ * The @primary surface is used when querying surface options, like
+ * font options and extents.
+ *
+ * Operations performed on the tee surface will be replayed on any
+ * surface added to it.
+ *
+ * Returns: the newly created surface
+ *
+ * Since: 1.10
+ **/
 cairo_surface_t *
 cairo_tee_surface_create (cairo_surface_t *primary)
 {
@@ -445,6 +475,16 @@ cairo_tee_surface_create (cairo_surface_t *primary)
     return &surface->base;
 }
 
+/**
+ * cairo_tee_surface_add:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @target: the surface to add
+ *
+ * Adds a new target surface to the list of replicas of a
+ * tee surface.
+ *
+ * Since: 1.10
+ **/
 void
 cairo_tee_surface_add (cairo_surface_t *abstract_surface,
 		       cairo_surface_t *target)
@@ -482,6 +522,16 @@ cairo_tee_surface_add (cairo_surface_t *abstract_surface,
     }
 }
 
+/**
+ * cairo_tee_surface_remove:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @target: the surface to remove
+ *
+ * Removes the given surface from the list of replicas of a
+ * tee surface.
+ *
+ * Since: 1.10
+ **/
 void
 cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
 			  cairo_surface_t *target)
@@ -530,6 +580,20 @@ cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
     surface->replicas.num_elements--; /* XXX: cairo_array_remove()? */
 }
 
+/**
+ * cairo_tee_surface_index:
+ * @abstract_surface: a #cairo_tee_surface_t
+ * @index: the index of the replica to retrieve
+ *
+ * Retrieves the replica surface at the given index.
+ *
+ * The primary surface used to create the #cairo_tee_surface_t is
+ * always set at the zero index.
+ *
+ * Returns: the surface at the given index
+ *
+ * Since: 1.10
+ **/
 cairo_surface_t *
 cairo_tee_surface_index (cairo_surface_t *abstract_surface,
 			 unsigned int index)

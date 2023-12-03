@@ -39,7 +39,7 @@
 
 #include "cairo-list-private.h"
 
-/**
+/*< private >
  * cairo_list_entry:
  * @ptr: the pointer to the #cairo_list_t member.
  * @type: the type of the struct.
@@ -56,7 +56,7 @@
 #define cairo_list_last_entry(ptr, type, member) \
 	cairo_list_entry((ptr)->prev, type, member)
 
-/**
+/*< private >
  * cairo_list_foreach:
  * @pos: a #cairo_list_t* to use as a loop variable.
  * @head: the list.
@@ -66,7 +66,7 @@
 #define cairo_list_foreach(pos, head)                                   \
 	for (pos = (head)->next; pos != (head);	pos = pos->next)
 
-/**
+/*< private >
  * cairo_list_foreach_entry:
  * @pos: a variable of type T * to use as a loop variable.
  * @type: the type of the entry struct
@@ -80,7 +80,7 @@
 	     &pos->member != (head);					\
 	     pos = cairo_list_entry(pos->member.next, type, member))
 
-/**
+/*< private >
  * cairo_list_foreach_entry_safe:
  * @pos: a variable of type T * to use as a loop variable.
  * @n: a variable of type T * that point to the next item after @pos.
@@ -92,7 +92,7 @@
  * iterating. @n is a temporary variable required to support safe
  * iterating.
  *
- * <informalexample><programlisting>
+ * |[<!-- language="C" -->
  *      struct foo {
  *          int a;
  *          cairo_list_t list;
@@ -107,7 +107,7 @@
  *          printf("%d\n", pos->a);
  *          cairo_list_del (pos);
  *      }
- * </programlisting></informalexample>
+ * ]|
  **/
 #define cairo_list_foreach_entry_safe(pos, n, type, head, member)	\
 	for (pos = cairo_list_entry ((head)->next, type, member),\
@@ -115,7 +115,7 @@
 	     &pos->member != (head);					\
 	     pos = n, n = cairo_list_entry (n->member.next, type, member))
 
-/**
+/*< private >
  * cairo_list_foreach_entry:
  * @pos: a variable of type T * to use as a loop variable.
  * @type: the type of the entry struct
@@ -129,7 +129,7 @@
 	     &pos->member != (head);					\
 	     pos = cairo_list_entry(pos->member.prev, type, member))
 
-/**
+/*< private >
  * cairo_list_foreach_entry_safe:
  * @pos: a variable of type T * to use as a loop variable.
  * @n: a variable of type T * that point to the next item after @pos.
@@ -175,7 +175,7 @@ cairo_list_validate_is_empty (const cairo_list_t *head)
 #define cairo_list_validate_is_empty(head)
 #endif
 
-/**
+/*< private >
  * cairo_list_init:
  * @entry: list entry to initialize
  *
@@ -200,7 +200,7 @@ __cairo_list_add (cairo_list_t *entry,
     prev->next = entry;
 }
 
-/**
+/*< private >
  * cairo_list_add:
  * @entry: new entry
  * @head: linked list head
@@ -216,7 +216,7 @@ cairo_list_add (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
-/**
+/*< private >
  * cairo_list_add_tail:
  * @entry: new entry
  * @head: linked list head
@@ -245,7 +245,7 @@ _cairo_list_del (cairo_list_t *entry)
     __cairo_list_del (entry->prev, entry->next);
 }
 
-/**
+/*< private >
  * cairo_list_del:
  * @entry: entry to remove
  *
@@ -258,7 +258,7 @@ cairo_list_del (cairo_list_t *entry)
     cairo_list_init (entry);
 }
 
-/**
+/*< private >
  * cairo_list_move:
  * @entry: entry to move
  * @head: linked list to move @entry to
@@ -274,7 +274,7 @@ cairo_list_move (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
-/**
+/*< private >
  * cairo_list_move_tail:
  * @entry: entry tp move
  * @head: linked list to move @entry to
@@ -290,7 +290,7 @@ cairo_list_move_tail (cairo_list_t *entry, cairo_list_t *head)
     cairo_list_validate (head);
 }
 
-/**
+/*< private >
  * cairo_list_move_list:
  * @old: List to move
  * @new: List to move to. Should be empty,
@@ -304,7 +304,7 @@ cairo_list_move_list (cairo_list_t *old, cairo_list_t *new)
     cairo_list_init (old);
 }
 
-/**
+/*< private >
  * cairo_list_is_first:
  * @entry: entry to check
  * @head: linked list
@@ -319,7 +319,7 @@ cairo_list_is_first (const cairo_list_t *entry,
     return entry->prev == head;
 }
 
-/**
+/*< private >
  * cairo_list_is_last:
  * @entry: entry to check
  * @head: linked list
@@ -334,7 +334,7 @@ cairo_list_is_last (const cairo_list_t *entry,
     return entry->next == head;
 }
 
-/**
+/*< private >
  * cairo_list_is_empty:
  * @head: linked list
  *
@@ -347,7 +347,7 @@ cairo_list_is_empty (const cairo_list_t *head)
     return head->next == head;
 }
 
-/**
+/*< private >
  * cairo_list_is_singular:
  * @head: linked list
  *

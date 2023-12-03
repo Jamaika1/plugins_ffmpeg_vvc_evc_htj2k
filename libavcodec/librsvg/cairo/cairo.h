@@ -83,7 +83,7 @@ CAIRO_BEGIN_DECLS
 
 
 #define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
-	#major"."#minor"."#micro"-7a06f65"
+	#major"."#minor"."#micro"-ee07a81"
 #define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
 	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
 
@@ -440,6 +440,38 @@ typedef enum _cairo_format {
     CAIRO_FORMAT_RGBA128F  = 7
 } cairo_format_t;
 
+/**
+ * cairo_dither_t:
+ * @CAIRO_DITHER_NONE: No dithering.
+ * @CAIRO_DITHER_DEFAULT: Default choice at cairo compile time. Currently NONE.
+ * @CAIRO_DITHER_FAST: Fastest dithering algorithm supported by the backend
+ * @CAIRO_DITHER_GOOD: An algorithm with smoother dithering than FAST
+ * @CAIRO_DITHER_BEST: Best algorithm available in the backend
+ *
+ * Dither is an intentionally applied form of noise used to randomize
+ * quantization error, preventing large-scale patterns such as color banding
+ * in images (e.g. for gradients). Ordered dithering applies a precomputed
+ * threshold matrix to spread the errors smoothly.
+ *
+ *  #cairo_dither_t is modeled on pixman dithering algorithm choice.
+ * As of Pixman 0.40, FAST corresponds to a 8x8 ordered bayer noise and GOOD
+ * and BEST use an ordered 64x64 precomputed blue noise.
+ *
+ * Since: 1.18
+ **/
+typedef enum _cairo_dither {
+    CAIRO_DITHER_NONE,
+    CAIRO_DITHER_DEFAULT,
+    CAIRO_DITHER_FAST,
+    CAIRO_DITHER_GOOD,
+    CAIRO_DITHER_BEST
+} cairo_dither_t;
+
+cairo_public void
+cairo_pattern_set_dither (cairo_pattern_t *pattern, cairo_dither_t dither);
+
+cairo_public cairo_dither_t
+cairo_pattern_get_dither (cairo_pattern_t *pattern);
 
 /**
  * cairo_write_func_t:
@@ -2368,6 +2400,16 @@ cairo_public cairo_surface_t *
 cairo_surface_create_observer (cairo_surface_t *target,
 			       cairo_surface_observer_mode_t mode);
 
+/**
+ * cairo_surface_observer_callback_t:
+ * @observer: the #cairo_surface_observer_t
+ * @target: the observed surface
+ * @data: closure used when adding the callback
+ *
+ * A generic callback function for surface operations.
+ *
+ * Since: 1.12
+ **/
 typedef void (*cairo_surface_observer_callback_t) (cairo_surface_t *observer,
 						   cairo_surface_t *target,
 						   void *data);
@@ -2408,34 +2450,34 @@ cairo_surface_observer_add_finish_callback (cairo_surface_t *abstract_surface,
 					    void *data);
 
 cairo_public cairo_status_t
-cairo_surface_observer_print (cairo_surface_t *surface,
+cairo_surface_observer_print (cairo_surface_t *abstract_surface,
 			      cairo_write_func_t write_func,
 			      void *closure);
 cairo_public double
-cairo_surface_observer_elapsed (cairo_surface_t *surface);
+cairo_surface_observer_elapsed (cairo_surface_t *abstract_surface);
 
 cairo_public cairo_status_t
-cairo_device_observer_print (cairo_device_t *device,
+cairo_device_observer_print (cairo_device_t *abstract_device,
 			     cairo_write_func_t write_func,
 			     void *closure);
 
 cairo_public double
-cairo_device_observer_elapsed (cairo_device_t *device);
+cairo_device_observer_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_paint_elapsed (cairo_device_t *device);
+cairo_device_observer_paint_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_mask_elapsed (cairo_device_t *device);
+cairo_device_observer_mask_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_fill_elapsed (cairo_device_t *device);
+cairo_device_observer_fill_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_stroke_elapsed (cairo_device_t *device);
+cairo_device_observer_stroke_elapsed (cairo_device_t *abstract_device);
 
 cairo_public double
-cairo_device_observer_glyphs_elapsed (cairo_device_t *device);
+cairo_device_observer_glyphs_elapsed (cairo_device_t *abstract_device);
 
 cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);

@@ -678,6 +678,12 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 	_cairo_scaled_font_compute_hash (scaled_font);
 }
 
+static void
+_cairo_scaled_font_fini_key (cairo_scaled_font_t *scaled_font)
+{
+    _cairo_font_options_fini (&scaled_font->options);
+}
+
 static cairo_bool_t
 _cairo_scaled_font_keys_equal (const void *abstract_key_a,
 			       const void *abstract_key_b)
@@ -914,6 +920,7 @@ _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 
     _cairo_scaled_font_reset_cache (scaled_font);
     _cairo_hash_table_destroy (scaled_font->glyphs);
+    _cairo_font_options_fini (&scaled_font->options);
 
     cairo_font_face_destroy (scaled_font->font_face);
     cairo_font_face_destroy (scaled_font->original_font_face);
@@ -1105,6 +1112,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	 * just wait until it's done, then retry */
 	_cairo_scaled_font_placeholder_wait_for_creation_to_finish (scaled_font);
     }
+    _cairo_scaled_font_fini_key (&key);
 
     if (scaled_font != NULL) {
 	/* If the original reference count is 0, then this font must have
@@ -2653,7 +2661,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * glyph, or NULL if foreground color not required.
  *
  * Sets the surface that was used to record the glyph.
- */
+ **/
 void
 _cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
 					   cairo_scaled_font_t  *scaled_font,
@@ -2686,7 +2694,7 @@ _cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
  * used when rendering the surface color.
  *
  * Sets the color surface of the glyph.
- */
+ **/
 void
 _cairo_scaled_glyph_set_color_surface (cairo_scaled_glyph_t  *scaled_glyph,
 	                               cairo_scaled_font_t   *scaled_font,

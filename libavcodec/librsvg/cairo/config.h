@@ -1,10 +1,13 @@
 // #define HAVE_BYTESWAP_H 1
-// #define HAVE_INTTYPES_H 1
-#define HAVE_STDINT_H 1
+#define HAVE_INTTYPES_H 1
+//#define HAVE_STDINT_H 1
 // #define HAVE_SYS_INT_TYPES_H 1
 //#define HAVE_UNISTD_H 1
 // #define HAVE_UINT128_T 1
 #define HAVE_UINT64_T 1
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX 1
 
 #define SIZEOF_INT 4
 /* The size of a `long', as computed by sizeof. */

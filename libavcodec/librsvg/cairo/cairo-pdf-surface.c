@@ -52,6 +52,7 @@
 #include "cairo-composite-rectangles-private.h"
 #include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
+#include "cairo-user-font-private.h"
 #include "cairo-image-surface-inline.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-inline.h"
@@ -9296,6 +9297,13 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	status = _cairo_pdf_surface_select_pattern (surface, source, pattern_res, FALSE);
 	if (unlikely (status))
 	    goto cleanup;
+
+	/* User-fonts can use strokes; reset the stroke pattern as well. */
+	if (_cairo_font_face_is_user(scaled_font->font_face)) {
+	    status = _cairo_pdf_surface_select_pattern (surface, source, pattern_res, TRUE);
+	    if (unlikely (status))
+		goto cleanup;
+	}
 
 	/* Each call to show_glyphs() with a transclucent pattern must
 	 * be in a separate text object otherwise overlapping text
