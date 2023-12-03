@@ -86,6 +86,9 @@
 #define FILE_READ_ONLY_VOLUME           0x00080000
 #endif
 
+#ifndef S_ISREG
+#define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
+#endif
 #ifndef S_ISDIR
 #define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
 #endif
@@ -102,7 +105,7 @@
 static void g_local_file_file_iface_init (GFileIface *iface);
 
 static GFileAttributeInfoList *local_writable_attributes = NULL;
-static /* GFileAttributeInfoList * */ gsize local_writable_namespaces = 0;
+static GFileAttributeInfoList *local_writable_namespaces = NULL;
 
 struct _GLocalFile
 {
@@ -845,10 +848,10 @@ get_mount_info (GFileInfo             *fs_info,
       G_UNLOCK (mount_info_hash);
     }
 
-  if (mount_info & MOUNT_INFO_READONLY &&
-      g_file_attribute_matcher_matches (matcher,
+  if (g_file_attribute_matcher_matches (matcher,
                                         G_FILE_ATTRIBUTE_FILESYSTEM_READONLY))
-    g_file_info_set_attribute_boolean (fs_info, G_FILE_ATTRIBUTE_FILESYSTEM_READONLY, TRUE);
+    g_file_info_set_attribute_boolean (fs_info, G_FILE_ATTRIBUTE_FILESYSTEM_READONLY,
+                                       (mount_info & MOUNT_INFO_READONLY));
 
   if (g_file_attribute_matcher_matches (matcher,
                                         G_FILE_ATTRIBUTE_FILESYSTEM_REMOTE))
@@ -1271,7 +1274,7 @@ g_local_file_query_writable_namespaces (GFile         *file,
   GVfsClass *class;
   GVfs *vfs;
 
-  if (g_once_init_enter (&local_writable_namespaces))
+  if (g_once_init_enter_pointer (&local_writable_namespaces))
     {
       /* Writable namespaces: */
 
@@ -1294,7 +1297,7 @@ g_local_file_query_writable_namespaces (GFile         *file,
       if (class->add_writable_namespaces)
 	class->add_writable_namespaces (vfs, list);
 
-      g_once_init_leave (&local_writable_namespaces, (gsize)list);
+      g_once_init_leave_pointer (&local_writable_namespaces, list);
     }
   list = (GFileAttributeInfoList *)local_writable_namespaces;
 
@@ -1929,7 +1932,7 @@ _g_local_file_has_trash_dir (const char *dirname, dev_t dir_dev)
   return res;
 }
 
-#ifdef G_OS_UNIX
+#ifndef G_OS_WIN32
 gboolean
 _g_local_file_is_lost_found_dir (const char *path, dev_t path_dev)
 {
@@ -2777,6 +2780,39 @@ g_local_file_measure_size_of_contents (gint           fd,
                                        MeasureState  *state,
                                        GError       **error);
 
+/*
+ * _g_stat_is_size_usable:
+ * @buf: a #GLocalFileStat.
+ *
+ * Checks if the file type is such that the `st_size` field of `struct stat` is
+ * well-defined by POSIX.
+ * (see https://pubs.opengroup.org/onlinepubs/009696799/basedefs/sys/stat.h.html)
+ *
+ * This behaviour is aligned with `du` from GNU Coreutils 9.2+
+ * (see https://lists.gnu.org/archive/html/bug-coreutils/2023-03/msg00007.html)
+ * and makes apparent size sums well-defined; formerly, they depended on the
+ * implementation, and could differ across filesystems.
+ *
+ * Returns: %TRUE if the size field is well-defined, %FALSE otherwise.
+ **/
+inline static gboolean
+_g_stat_is_size_usable (const GLocalFileStat *buf)
+{
+#ifndef HAVE_STATX
+  /* Memory objects are defined by POSIX, but are not supported by statx nor Windows */
+#ifdef S_TYPEISSHM
+  if (S_TYPEISSHM (buf))
+    return TRUE;
+#endif
+#ifdef S_TYPEISTMO
+  if (S_TYPEISTMO (buf))
+    return TRUE;
+#endif
+#endif
+
+  return S_ISREG (_g_stat_mode (buf)) || S_ISLNK (_g_stat_mode (buf));
+}
+
 static gboolean
 g_local_file_measure_size_of_file (gint           parent_fd,
                                    GSList        *name,
@@ -2836,6 +2872,7 @@ g_local_file_measure_size_of_file (gint           parent_fd,
     state->disk_usage += _g_stat_blocks (&buf) * G_GUINT64_CONSTANT (512);
   else
 #endif
+  if (_g_stat_is_size_usable (&buf))
     state->disk_usage += _g_stat_size (&buf);
 
   if (S_ISDIR (_g_stat_mode (&buf)))

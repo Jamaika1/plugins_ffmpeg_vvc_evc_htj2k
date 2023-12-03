@@ -53,13 +53,16 @@
 #include <windows.h>
 #endif
 
+#ifdef G_OS_WIN32
+#define FO_CLOEXEC ""
+#else
+#define FO_CLOEXEC "e"
+#endif
+
 #include "../glib/glibintl.h"
 
 /**
- * SECTION:gdbusaddress
- * @title: D-Bus Addresses
- * @short_description: D-Bus connection endpoints
- * @include: gio/gio.h
+ * GDBusAddress:
  *
  * Routines for working with D-Bus addresses. A D-Bus address is a string
  * like `unix:tmpdir=/tmp/my-app-name`. The exact format of addresses
@@ -711,7 +714,7 @@ g_dbus_address_connect (const gchar   *address_entry,
           int errsv;
 
           /* be careful to read only 16 bytes - we also check that the file is only 16 bytes long */
-          f = fopen (nonce_file, "rb");
+          f = fopen (nonce_file, "rb" FO_CLOEXEC);
           errsv = errno;
           if (f == NULL)
             {
