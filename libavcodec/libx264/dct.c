@@ -1,7 +1,7 @@
 /*****************************************************************************
  * dct.c: transform and zigzag
  *****************************************************************************
- * Copyright (C) 2003-2022 x264 project
+ * Copyright (C) 2003-2023 x264 project
  *
  * Authors: Loren Merritt <lorenm@u.washington.edu>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -41,7 +41,9 @@
 #if HAVE_MSA
 #   include "mips/dct.h"
 #endif
-
+#if HAVE_LSX
+#   include "loongarch/dct.h"
+#endif
 static void dct4x4dc( dctcoef d[16] )
 {
     dctcoef tmp[16];
@@ -629,6 +631,7 @@ void x264_dct_init( uint32_t cpu, x264_dct_function_t *dctf )
         dctf->sub8x8_dct8      = x264_sub8x8_dct8_avx;
         dctf->sub16x16_dct8    = x264_sub16x16_dct8_avx;
     }
+
 #if defined(__XOP__)
     if( cpu&X264_CPU_XOP )
     {
@@ -727,6 +730,38 @@ void x264_dct_init( uint32_t cpu, x264_dct_function_t *dctf )
         dctf->add16x16_idct_dc = x264_add16x16_idct_dc_msa;
         dctf->add8x8_idct8     = x264_add8x8_idct8_msa;
         dctf->add16x16_idct8   = x264_add16x16_idct8_msa;
+    }
+#endif
+
+#if HAVE_LSX
+    if( cpu&X264_CPU_LSX )
+    {
+        dctf->sub4x4_dct       = x264_sub4x4_dct_lsx;
+        dctf->add4x4_idct      = x264_add4x4_idct_lsx;
+        dctf->dct4x4dc         = x264_dct4x4dc_lsx;
+        dctf->idct4x4dc        = x264_idct4x4dc_lsx;
+        dctf->sub8x8_dct8      = x264_sub8x8_dct8_lsx;
+        dctf->sub8x8_dct       = x264_sub8x8_dct_lsx;
+        dctf->add8x8_idct      = x264_add8x8_idct_lsx;
+        dctf->add8x8_idct8     = x264_add8x8_idct8_lsx;
+        dctf->add8x8_idct_dc   = x264_add8x8_idct_dc_lsx;
+        dctf->add16x16_idct    = x264_add16x16_idct_lsx;
+        dctf->sub16x16_dct     = x264_sub16x16_dct_lsx;
+        dctf->add16x16_idct_dc = x264_add16x16_idct_dc_lsx;
+        dctf->sub16x16_dct8    = x264_sub16x16_dct8_lsx;
+    }
+    if( cpu&X264_CPU_LASX )
+    {
+        dctf->sub8x8_dct       = x264_sub8x8_dct_lasx;
+        dctf->sub16x16_dct     = x264_sub16x16_dct_lasx;
+        dctf->add8x8_idct      = x264_add8x8_idct_lasx;
+        dctf->add8x8_idct8     = x264_add8x8_idct8_lasx;
+        dctf->add16x16_idct    = x264_add16x16_idct_lasx;
+        dctf->sub16x16_dct8    = x264_sub16x16_dct8_lasx;
+        dctf->add8x8_idct_dc   = x264_add8x8_idct_dc_lasx;
+        dctf->add16x16_idct_dc = x264_add16x16_idct_dc_lasx;
+        dctf->dct4x4dc         = x264_dct4x4dc_lasx;
+        dctf->idct4x4dc        = x264_idct4x4dc_lasx;
     }
 #endif
 
@@ -1088,6 +1123,13 @@ void x264_zigzag_init( uint32_t cpu, x264_zigzag_function_t *pf_progressive, x26
     if( cpu&X264_CPU_MSA )
     {
         pf_progressive->scan_4x4  = x264_zigzag_scan_4x4_frame_msa;
+    }
+#endif
+
+#if HAVE_LSX
+    if( cpu&X264_CPU_LASX )
+    {
+        pf_progressive->scan_4x4  = x264_zigzag_scan_4x4_frame_lasx;
     }
 #endif
 #endif // !HIGH_BIT_DEPTH
