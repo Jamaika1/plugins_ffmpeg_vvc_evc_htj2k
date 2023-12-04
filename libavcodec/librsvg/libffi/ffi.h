@@ -307,18 +307,20 @@ FFI_API size_t ffi_raw_size (ffi_cif *cif);
    packing, even on 64-bit machines.  I.e. on 64-bit machines longs
    and doubles are followed by an empty 64-bit word.  */
 
+#if !FFI_NATIVE_RAW_API
 FFI_API
 void ffi_java_raw_call (ffi_cif *cif,
 			void (*fn)(void),
 			void *rvalue,
-			ffi_java_raw *avalue);
+			ffi_java_raw *avalue) __attribute__((deprecated));
+#endif
 
 FFI_API
-void ffi_java_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_java_raw *raw);
+void ffi_java_ptrarray_to_raw (ffi_cif *cif, void **args, ffi_java_raw *raw) __attribute__((deprecated));
 FFI_API
-void ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args);
+void ffi_java_raw_to_ptrarray (ffi_cif *cif, ffi_java_raw *raw, void **args) __attribute__((deprecated));
 FFI_API
-size_t ffi_java_raw_size (ffi_cif *cif);
+size_t ffi_java_raw_size (ffi_cif *cif) __attribute__((deprecated));
 
 /* ---- Definitions for closures ----------------------------------------- */
 
@@ -461,7 +463,7 @@ ffi_prep_java_raw_closure_loc (ffi_java_raw_closure*,
 
 #endif /* FFI_CLOSURES */
 
-#if FFI_GO_CLOSURES
+#ifdef FFI_GO_CLOSURES
 
 typedef struct {
   void      *tramp;
