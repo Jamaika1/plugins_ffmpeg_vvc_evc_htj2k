@@ -11,11 +11,10 @@
 #include <type_traits>
 
 #include "lib/jxl/ac_strategy.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/compressed_dc.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dct_util.h"
@@ -25,6 +24,7 @@
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_modular.h"
 #include "lib/jxl/enc_quant_weights.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -113,9 +113,10 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
         std::move(dc),
         ColorEncoding::LinearSRGB(shared.metadata->m.color_encoding.IsGray()));
     if (!ib.metadata()->extra_channel_info.empty()) {
-      // Add dummy extra channels to the patch image: dc_level frames do not yet
-      // support extra channels, but the codec expects that the amount of extra
-      // channels in frames matches that in the metadata of the codestream.
+      // Add placeholder extra channels to the patch image: dc_level frames do
+      // not yet support extra channels, but the codec expects that the amount
+      // of extra channels in frames matches that in the metadata of the
+      // codestream.
       std::vector<ImageF> extra_channels;
       extra_channels.reserve(ib.metadata()->extra_channel_info.size());
       for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
@@ -128,9 +129,6 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
       }
       ib.SetExtraChannels(std::move(extra_channels));
     }
-    std::unique_ptr<PassesEncoderState> state =
-        jxl::make_unique<PassesEncoderState>();
-
     auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
     FrameInfo dc_frame_info;
     dc_frame_info.frame_type = FrameType::kDCFrame;
@@ -138,8 +136,8 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
     dc_frame_info.ib_needs_color_transform = false;
     dc_frame_info.save_before_color_transform = true;  // Implicitly true
     AuxOut dc_aux_out;
-    JXL_CHECK(EncodeFrame(cparams, dc_frame_info, shared.metadata, ib,
-                          state.get(), cms, pool, special_frame.get(),
+    JXL_CHECK(EncodeFrame(cparams, dc_frame_info, shared.metadata, ib, cms,
+                          pool, special_frame.get(),
                           aux_out ? &dc_aux_out : nullptr));
     if (aux_out) {
       for (const auto& l : dc_aux_out.layers) {
@@ -197,12 +195,6 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
                                 "Compute AC Metadata"));
 
   return true;
-}
-
-void EncCache::InitOnce() {
-  if (num_nzeroes.xsize() == 0) {
-    num_nzeroes = Image3I(kGroupDimInBlocks, kGroupDimInBlocks);
-  }
 }
 
 }  // namespace jxl
