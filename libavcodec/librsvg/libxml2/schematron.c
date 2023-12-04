@@ -25,6 +25,7 @@
 
 #ifdef LIBXML_SCHEMATRON_ENABLED
 
+#include <stdlib.h>
 #include <string.h>
 #include "parser.h"
 #include "tree.h"

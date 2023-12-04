@@ -12,11 +12,14 @@
 
 #include "xmlversion.h"
 #include "tree.h"
+#include "xmlerror.h"
 #include "xmlIO.h"
 #ifdef LIBXML_SCHEMAS_ENABLED
 #include "relaxng.h"
 #include "xmlschemas.h"
 #endif
+/* for compatibility */
+#include "parser.h"
 
 #ifdef __cplusplus
 extern "C" {

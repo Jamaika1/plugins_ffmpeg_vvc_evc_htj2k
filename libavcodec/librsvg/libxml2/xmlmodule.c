@@ -17,10 +17,10 @@
 #include "libxml.h"
 
 #include <string.h>
+#include "xmlmodule.h"
 #include "xmlmemory.h"
 #include "xmlerror.h"
-#include "xmlmodule.h"
-#include "globals.h"
+#include "xmlstring.h"
 
 #include "private/error.h"
 

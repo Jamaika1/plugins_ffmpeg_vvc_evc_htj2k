@@ -12,8 +12,6 @@
 #ifndef __XML_SAX_H__
 #define __XML_SAX_H__
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "xmlversion.h"
 #include "parser.h"
 

@@ -19,10 +19,8 @@
 #include "HTMLparser.h"
 #include "HTMLtree.h"
 #include "entities.h"
-#include "valid.h"
 #include "xmlerror.h"
 #include "parserInternals.h"
-#include "globals.h"
 #include "uri.h"
 
 #include "private/buf.h"

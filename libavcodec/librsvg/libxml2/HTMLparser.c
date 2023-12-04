@@ -14,18 +14,16 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#include "HTMLparser.h"
 #include "xmlmemory.h"
 #include "tree.h"
 #include "parser.h"
 #include "parserInternals.h"
 #include "xmlerror.h"
-#include "HTMLparser.h"
 #include "HTMLtree.h"
 #include "entities.h"
 #include "encoding.h"
-#include "valid.h"
 #include "xmlIO.h"
-#include "globals.h"
 #include "uri.h"
 
 #include "private/buf.h"
@@ -39,8 +37,6 @@
 #define HTML_MAX_NAMELEN 1000
 #define HTML_PARSER_BIG_BUFFER_SIZE 1000
 #define HTML_PARSER_BUFFER_SIZE 100
-
-/* #define DEBUG */
 
 static int htmlOmittedDefaultValue = 1;
 
@@ -325,7 +321,6 @@ htmlNodeInfoPop(htmlParserCtxtPtr ctxt)
  ************/
 
 #define CUR_CHAR(l) htmlCurrentChar(ctxt, &l)
-#define CUR_SCHAR(s, l) xmlStringCurrentChar(ctxt, s, &l)
 
 #define COPY_BUF(l,b,i,v)						\
     if (l == 1) b[i++] = v;						\
@@ -1537,20 +1532,11 @@ htmlAutoCloseOnEnd(htmlParserCtxtPtr ctxt)
 static void
 htmlAutoClose(htmlParserCtxtPtr ctxt, const xmlChar * newtag)
 {
-    while ((newtag != NULL) && (ctxt->name != NULL) &&
-           (htmlCheckAutoClose(newtag, ctxt->name))) {
-        if ((ctxt->sax != NULL) && (ctxt->sax->endElement != NULL))
-            ctxt->sax->endElement(ctxt->userData, ctxt->name);
-	htmlnamePop(ctxt);
-    }
-    if (newtag == NULL) {
-        htmlAutoCloseOnEnd(ctxt);
+    if (newtag == NULL)
         return;
-    }
-    while ((newtag == NULL) && (ctxt->name != NULL) &&
-           ((xmlStrEqual(ctxt->name, BAD_CAST "head")) ||
-            (xmlStrEqual(ctxt->name, BAD_CAST "body")) ||
-            (xmlStrEqual(ctxt->name, BAD_CAST "html")))) {
+
+    while ((ctxt->name != NULL) &&
+           (htmlCheckAutoClose(newtag, ctxt->name))) {
         if ((ctxt->sax != NULL) && (ctxt->sax->endElement != NULL))
             ctxt->sax->endElement(ctxt->userData, ctxt->name);
 	htmlnamePop(ctxt);
@@ -4866,6 +4852,14 @@ htmlParseDocument(htmlParserCtxtPtr ctxt) {
     xmlDetectEncoding(ctxt);
 
     /*
+     * This is wrong but matches long-standing behavior. In most cases,
+     * a document starting with an XML declaration will specify UTF-8.
+     */
+    if (((ctxt->input->flags & XML_INPUT_HAS_ENCODING) == 0) &&
+        (xmlStrncmp(ctxt->input->cur, BAD_CAST "<?xm", 4) == 0))
+        xmlSwitchEncoding(ctxt, XML_CHAR_ENCODING_UTF8);
+
+    /*
      * Wipe out everything which is before the first '<'
      */
     SKIP_BLANKS;
@@ -5127,7 +5121,8 @@ htmlNewSAXParserCtxt(const htmlSAXHandler *sax, void *userData)
  * @buffer:  a pointer to a char array
  * @size:  the size of the array
  *
- * Create a parser context for an HTML in-memory document.
+ * Create a parser context for an HTML in-memory document. The input buffer
+ * must not contain a terminating null byte.
  *
  * Returns the new parser context or NULL
  */
@@ -5422,6 +5417,16 @@ htmlParseTryOrFinish(htmlParserCtxtPtr ctxt, int terminate) {
 		 */
 	        goto done;
             case XML_PARSER_START:
+                /*
+                 * This is wrong but matches long-standing behavior. In most
+                 * cases, a document starting with an XML declaration will
+                 * specify UTF-8.
+                 */
+                if (((ctxt->input->flags & XML_INPUT_HAS_ENCODING) == 0) &&
+                    (xmlStrncmp(ctxt->input->cur, BAD_CAST "<?xm", 4) == 0)) {
+                    xmlSwitchEncoding(ctxt, XML_CHAR_ENCODING_UTF8);
+                }
+
 	        /*
 		 * Very first chars read from the document flow.
 		 */
@@ -6321,7 +6326,7 @@ htmlAttrAllowed(const htmlElemDesc* elt, const xmlChar* attr, int legacy) {
  *	for other nodes, HTML_NA (no checks performed)
  */
 htmlStatus
-htmlNodeStatus(const htmlNodePtr node, int legacy) {
+htmlNodeStatus(htmlNodePtr node, int legacy) {
   if ( ! node )
     return HTML_INVALID ;
 
@@ -6625,7 +6630,8 @@ htmlReadFile(const char *filename, const char *encoding, int options)
  * @encoding:  the document encoding, or NULL
  * @options:  a combination of htmlParserOption(s)
  *
- * parse an XML in-memory document and build a tree.
+ * Parse an HTML in-memory document and build a tree. The input buffer must
+ * not contain a terminating null byte.
  *
  * Returns the resulting document tree
  */
@@ -6734,7 +6740,7 @@ htmlReadIO(xmlInputReadCallback ioread, xmlInputCloseCallback ioclose,
 /**
  * htmlCtxtReadDoc:
  * @ctxt:  an HTML parser context
- * @cur:  a pointer to a zero terminated string
+ * @str:  a pointer to a zero terminated string
  * @URL:  the base URL to use for the document
  * @encoding:  the document encoding, or NULL
  * @options:  a combination of htmlParserOption(s)
@@ -6817,7 +6823,8 @@ htmlCtxtReadFile(htmlParserCtxtPtr ctxt, const char *filename,
  * @encoding:  the document encoding, or NULL
  * @options:  a combination of htmlParserOption(s)
  *
- * parse an XML in-memory document and build a tree.
+ * Parse an HTML in-memory document and build a tree. The input buffer must
+ * not contain a terminating null byte.
  * This reuses the existing @ctxt parser context
  *
  * Returns the resulting document tree
