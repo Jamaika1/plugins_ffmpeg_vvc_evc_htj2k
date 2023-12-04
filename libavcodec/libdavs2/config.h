@@ -83,9 +83,9 @@
 #define WORDS_BIGENDIAN         0
 
 /* others */
-#define HAVE_STDINT_H           1
+#define HAVE_STDINT_H           0
 #define HAVE_VECTOREXT          0
-#define HAVE_LOG2F              0
+#define HAVE_LOG2F              1
 #define HAVE_SWSCALE            0
 #define HAVE_LAVF               0
 #define HAVE_FFMS               0
