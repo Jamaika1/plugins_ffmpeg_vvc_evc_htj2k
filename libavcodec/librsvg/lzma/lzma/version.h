@@ -75,7 +75,7 @@
  * Macros to construct the compile-time version string
  */
 #if LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_ALPHA
-#	define LZMA_VERSION_STABILITY_STRING "-eccf128"
+#	define LZMA_VERSION_STABILITY_STRING "-6b05f82"
 #elif LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_BETA
 #	define LZMA_VERSION_STABILITY_STRING "beta"
 #elif LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_STABLE
@@ -106,7 +106,7 @@
 		LZMA_VERSION_COMMIT)
 
 
-/* #ifndef is needed for use with windres (MinGW or Cygwin). */
+/* #ifndef is needed for use with windres (MinGW-w64 or Cygwin). */
 #ifndef LZMA_H_INTERNAL_RC
 
 /**
