@@ -531,7 +531,7 @@ av_cold void ff_qpeldsp_init_x86(QpelDSPContext *c)
     int cpu_flags = av_get_cpu_flags();
 
     if (X86_MMXEXT(cpu_flags)) {
-#if HAVE_MMXEXT_EXTERNAL
+#if !HAVE_MMXEXT_EXTERNAL
         SET_QPEL_FUNCS(avg_qpel,        0, 16, mmxext, );
         SET_QPEL_FUNCS(avg_qpel,        1,  8, mmxext, );
 
