@@ -485,7 +485,7 @@ hb_ft_paint_glyph_colr (hb_font_t *font,
 
   /* Face is locked. */
 
-  //FT_Error error;
+  FT_Error error;
   FT_Color*         palette;
   FT_LayerIterator  iterator;
 
@@ -493,9 +493,9 @@ hb_ft_paint_glyph_colr (hb_font_t *font,
   FT_UInt  layer_glyph_index;
   FT_UInt  layer_color_index;
 
-  //error = FT_Palette_Select(ft_face, palette_index, &palette);
-  //if (error)
-    //palette = NULL;
+  error = FT_Palette_Select(ft_face, palette_index, &palette);
+  if (error)
+    palette = NULL;
 
   /* COLRv1 */
   FT_OpaquePaint paint = {0};
