@@ -30,6 +30,10 @@
 #endif
 #include "pangowin32-private.h"
 
+#ifdef USE_HB_DWRITE
+#include "../harfbuzz/hb-directwrite.h"
+#endif
+
 #ifdef _MSC_VER
 # define UUID_OF_IDWriteFactory __uuidof (IDWriteFactory)
 # define UUID_OF_IDWriteFont1 __uuidof (IDWriteFont1)
@@ -383,7 +387,7 @@ util_free_to_string (IDWriteLocalizedStrings *strings)
       UINT32 length = 0;
 
       hr = strings->FindLocaleName (L"en-us", &index, &exists);
-      if (FAILED (hr) || !exists || index == UINT32_MAX)
+      if (FAILED (hr) || !exists || index == G_MAXUINT32)
         index = 0;
 
       hr = strings->GetStringLength (index, &length);
@@ -512,22 +516,30 @@ pango_win32_dwrite_font_check_is_hinted (PangoWin32Font *font)
                                                        &table_ctx,
                                                        &exists)))
         {
-          if (exists)
+          if (exists && table_size > 4)
             {
               guint16 version = DWRITE_NEXT_USHORT (table_data);
 
               if (version == 0 || version == 1)
                 {
                   guint16 num_ranges = DWRITE_NEXT_USHORT (table_data);
-                  guint16 i;
+                  UINT32 max_ranges = (table_size - 4) / (sizeof (guint16) * 2);
+                  guint16 i = 0;
 
-                  for (i = 0; !result && i < num_ranges && i < (table_size / sizeof (guint16)); i ++)
+                  if (num_ranges > max_ranges)
+                    num_ranges = max_ranges;
+
+                  for (i = 0; i < num_ranges; i++)
                     {
+                      G_GNUC_UNUSED
                       guint16 ppem = DWRITE_NEXT_USHORT (table_data);
                       guint16 behavior = DWRITE_NEXT_USHORT (table_data);
 
                       if (behavior & (GASP_GRIDFIT | GASP_SYMMETRIC_GRIDFIT))
-                        result = TRUE;
+                        {
+                          result = TRUE;
+                          break;
+                        }
                     }
                 }
             }
@@ -540,6 +552,36 @@ pango_win32_dwrite_font_check_is_hinted (PangoWin32Font *font)
 
   return result;
 }
+
+#ifdef USE_HB_DWRITE
+/* Sadly, hb-directwrite.h stuff has to be done via C++... */
+hb_face_t *
+pango_win32_font_create_hb_face_dwrite (PangoWin32Font *font)
+{
+  hb_face_t *hb_face = NULL;
+  IDWriteFontFace *face = NULL;
+
+  g_return_val_if_fail (PANGO_WIN32_IS_FONT (font), NULL);
+
+  face = static_cast<IDWriteFontFace *>(pango_win32_font_get_dwrite_font_face (font));
+
+  if (face != NULL)
+    hb_face = hb_directwrite_face_create (face);
+
+  if (hb_face != NULL)
+    {
+      static hb_user_data_key_t key;
+
+      hb_face_set_user_data (hb_face,
+                            &key,
+                             face,
+                             (hb_destroy_func_t) pango_win32_dwrite_font_face_release,
+                             TRUE);
+    }
+
+  return hb_face;
+}
+#endif
 
 void
 pango_win32_dwrite_font_release (gpointer dwrite_font)

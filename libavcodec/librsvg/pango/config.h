@@ -9,13 +9,13 @@
 #define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
 #define GLIB_VAR _GLIB_EXTERN
 #define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_78
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_80
 #define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_78
+#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_80
 #define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_78
+#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_80
 #define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_78
+#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_80
 #define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
 #define GLIB_COMPILATION
 #define GIO_COMPILATION
@@ -38,6 +38,7 @@
 //#define GDK_PIXBUF_RELOCATABLE 1
 #define GDK_PIXBUF_ENABLE_BACKEND 1
 #define USE_GMODULE 1
+#define USE_HB_DWRITE 1
 //#define __GI_SCANNER__ 1
 //#define PANGO_DISABLE_DEPRECATED 1
 
@@ -78,7 +79,7 @@
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
-#define HAVE_DIRENT_H 1
+//#define HAVE_DIRENT_H 1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
@@ -95,10 +96,10 @@
 /* #undef HAVE_GETPAGESIZE */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-/*#undef HAVE_INTTYPES_H */
+/* #undef HAVE_INTTYPES_H */
 
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+/* #undef HAVE_MEMORY_H */
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
@@ -112,13 +113,13 @@
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H 1
+/* #undef HAVE_STRINGS_H */
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the `strtok_r' function. */
-#define HAVE_STRTOK_R 1
+/* #undef HAVE_STRTOK_R */
 
 /* Define to 1 if you have the `sysconf' function. */
 /* #undef HAVE_SYSCONF */
@@ -172,7 +173,7 @@
 #define PACKAGE_VERSION ""
 
 /* PANGO binary age */
-#define PANGO_BINARY_AGE 5100
+#define PANGO_BINARY_AGE 5101
 
 /* PANGO interface age */
 #define PANGO_INTERFACE_AGE
@@ -181,7 +182,7 @@
 #define PANGO_VERSION_MAJOR 1
 
 /* PANGO micro version */
-#define PANGO_VERSION_MICRO 0
+#define PANGO_VERSION_MICRO 1
 
 /* PANGO minor version */
 #define PANGO_VERSION_MINOR 51
@@ -190,4 +191,4 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.51.0"
+#define VERSION "1.51.1-7c65bc7"

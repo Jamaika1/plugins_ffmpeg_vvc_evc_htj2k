@@ -7,9 +7,9 @@
 GType
 pango_attr_type_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_ATTR_INVALID, "PANGO_ATTR_INVALID", "invalid" },
@@ -55,9 +55,9 @@ pango_attr_type_get_type (void)
 GType
 pango_underline_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_UNDERLINE_NONE, "PANGO_UNDERLINE_NONE", "none" },
@@ -80,9 +80,9 @@ pango_underline_get_type (void)
 GType
 pango_overline_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_OVERLINE_NONE, "PANGO_OVERLINE_NONE", "none" },
@@ -99,9 +99,9 @@ pango_overline_get_type (void)
 GType
 pango_show_flags_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GFlagsValue values[] = {
         { PANGO_SHOW_NONE, "PANGO_SHOW_NONE", "none" },
@@ -121,9 +121,9 @@ pango_show_flags_get_type (void)
 GType
 pango_bidi_type_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_BIDI_TYPE_L, "PANGO_BIDI_TYPE_L", "l" },
@@ -158,9 +158,9 @@ pango_bidi_type_get_type (void)
 GType
 pango_coverage_level_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_COVERAGE_NONE, "PANGO_COVERAGE_NONE", "none" },
@@ -180,9 +180,9 @@ pango_coverage_level_get_type (void)
 GType
 pango_direction_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_DIRECTION_LTR, "PANGO_DIRECTION_LTR", "ltr" },
@@ -205,9 +205,9 @@ pango_direction_get_type (void)
 GType
 pango_style_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_STYLE_NORMAL, "PANGO_STYLE_NORMAL", "normal" },
@@ -225,9 +225,9 @@ pango_style_get_type (void)
 GType
 pango_variant_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_VARIANT_NORMAL, "PANGO_VARIANT_NORMAL", "normal" },
@@ -244,9 +244,9 @@ pango_variant_get_type (void)
 GType
 pango_weight_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_WEIGHT_THIN, "PANGO_WEIGHT_THIN", "thin" },
@@ -273,9 +273,9 @@ pango_weight_get_type (void)
 GType
 pango_stretch_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_STRETCH_ULTRA_CONDENSED, "PANGO_STRETCH_ULTRA_CONDENSED", "ultra-condensed" },
@@ -299,9 +299,9 @@ pango_stretch_get_type (void)
 GType
 pango_font_mask_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GFlagsValue values[] = {
         { PANGO_FONT_MASK_FAMILY, "PANGO_FONT_MASK_FAMILY", "family" },
@@ -325,9 +325,9 @@ pango_font_mask_get_type (void)
 GType
 pango_shape_flags_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GFlagsValue values[] = {
         { PANGO_SHAPE_NONE, "PANGO_SHAPE_NONE", "none" },
@@ -345,9 +345,9 @@ pango_shape_flags_get_type (void)
 GType
 pango_gravity_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_GRAVITY_SOUTH, "PANGO_GRAVITY_SOUTH", "south" },
@@ -367,9 +367,9 @@ pango_gravity_get_type (void)
 GType
 pango_gravity_hint_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_GRAVITY_HINT_NATURAL, "PANGO_GRAVITY_HINT_NATURAL", "natural" },
@@ -388,9 +388,9 @@ pango_gravity_hint_get_type (void)
 GType
 pango_alignment_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_ALIGN_LEFT, "PANGO_ALIGN_LEFT", "left" },
@@ -408,9 +408,9 @@ pango_alignment_get_type (void)
 GType
 pango_wrap_mode_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_WRAP_WORD, "PANGO_WRAP_WORD", "word" },
@@ -428,9 +428,9 @@ pango_wrap_mode_get_type (void)
 GType
 pango_ellipsize_mode_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_ELLIPSIZE_NONE, "PANGO_ELLIPSIZE_NONE", "none" },
@@ -450,9 +450,9 @@ pango_ellipsize_mode_get_type (void)
 GType
 pango_render_part_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_RENDER_PART_FOREGROUND, "PANGO_RENDER_PART_FOREGROUND", "foreground" },
@@ -473,9 +473,9 @@ pango_render_part_get_type (void)
 GType
 pango_script_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_SCRIPT_INVALID_CODE, "PANGO_SCRIPT_INVALID_CODE", "invalid-code" },
@@ -609,9 +609,9 @@ pango_script_get_type (void)
 GType
 pango_tab_align_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_TAB_LEFT, "PANGO_TAB_LEFT", "left" },
@@ -628,9 +628,9 @@ pango_tab_align_get_type (void)
 GType
 pango_baseline_shift_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_BASELINE_SHIFT_SUPERSCRIPT, "PANGO_BASELINE_SHIFT_SUPERSCRIPT", "superscript" },
@@ -648,9 +648,9 @@ pango_baseline_shift_get_type (void)
 GType
 pango_font_scale_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_FONT_SCALE_SUPERSCRIPT, "PANGO_FONT_SCALE_SUPERSCRIPT", "superscript" },
@@ -669,9 +669,9 @@ pango_font_scale_get_type (void)
 GType
 pango_text_transform_get_type (void)
 {
-  static volatile gsize g_define_type_id__volatile = 0;
+  static GType g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&g_define_type_id__volatile))
+  if (g_once_init_enter_pointer (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
         { PANGO_TEXT_TRANSFORM_LOWERCASE, "PANGO_TEXT_TRANSFORM_LOWERCASE", "lowercase" },
