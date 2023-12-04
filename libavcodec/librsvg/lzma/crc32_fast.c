@@ -2,14 +2,10 @@
 //
 /// \file       crc32.c
 /// \brief      CRC32 calculation
-///
-/// Calculate the CRC32 using the slice-by-eight algorithm.
-/// It is explained in this document:
-/// http://www.intel.com/technology/comms/perfnet/download/CRC_generators.pdf
-/// The code in this file is not the same as in Intel's paper, but
-/// the basic principle is identical.
 //
-//  Author:     Lasse Collin
+//  Authors:    Lasse Collin
+//              Ilya Kurdyukov
+//              Hans Jansen
 //
 //  This file has been put into the public domain.
 //  You can do whatever you want with this file.
@@ -17,14 +13,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "check.h"
-#include "crc_macros.h"
+#include "crc_common.h"
 
+#ifdef CRC_GENERIC
 
-// If you make any changes, do some benchmarking! Seemingly unrelated
-// changes can very easily ruin the performance (and very probably is
-// very compiler dependent).
-extern LZMA_API(uint32_t)
-lzma_crc32(const uint8_t *buf, size_t size, uint32_t crc)
+///////////////////
+// Generic CRC32 //
+///////////////////
+
+static uint32_t
+crc32_generic(const uint8_t *buf, size_t size, uint32_t crc)
 {
 	crc = ~crc;
 
@@ -80,3 +78,151 @@ lzma_crc32(const uint8_t *buf, size_t size, uint32_t crc)
 
 	return ~crc;
 }
+#endif
+
+#if defined(CRC_GENERIC) && defined(CRC_CLMUL)
+
+//////////////////////////
+// Function dispatching //
+//////////////////////////
+
+// If both the generic and CLMUL implementations are built, then the
+// function to use is selected at runtime since system running the
+// binary may not have the CLMUL instructions.
+// The three dispatch methods in order of priority:
+//
+// 1. Indirect function (ifunc). This method is slightly more efficient
+//    than the constructor method because it will change the entry in the
+//    Procedure Linkage Table (PLT) for the function either at load time or
+//    at the first call. This avoids having to call the function through a
+//    function pointer and will treat the function call like a regular call
+//    through the PLT. ifuncs are created by using
+//    __attribute__((__ifunc__("resolver"))) on a function which has no
+//    body. The "resolver" is the name of the function that chooses at
+//    runtime which implementation to use.
+//
+// 2. Constructor. This method uses __attribute__((__constructor__)) to
+//    set crc32_func at load time. This avoids extra computation (and any
+//    unlikely threading bugs) on the first call to lzma_crc32() to decide
+//    which implementation should be used.
+//
+// 3. First Call Resolution. On the very first call to lzma_crc32(), the
+//    call will be directed to crc32_dispatch() instead. This will set the
+//    appropriate implementation function and will not be called again.
+//    This method does not use any kind of locking but is safe because if
+//    multiple threads run the dispatcher simultaneously then they will all
+//    set crc32_func to the same value.
+
+typedef uint32_t (*crc32_func_type)(
+		const uint8_t *buf, size_t size, uint32_t crc);
+
+// Clang 16.0.0 and older has a bug where it marks the ifunc resolver
+// function as unused since it is static and never used outside of
+// __attribute__((__ifunc__())).
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(__clang__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+
+// This resolver is shared between all three dispatch methods. It serves as
+// the ifunc resolver if ifunc is supported, otherwise it is called as a
+// regular function by the constructor or first call resolution methods.
+static crc32_func_type
+crc32_resolve(void)
+{
+	return is_clmul_supported() ? &lzma_crc32_clmul : &crc32_generic;
+}
+
+#if defined(HAVE_FUNC_ATTRIBUTE_IFUNC) && defined(__clang__)
+#	pragma GCC diagnostic pop
+#endif
+
+#ifndef HAVE_FUNC_ATTRIBUTE_IFUNC
+
+#ifdef HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR
+// Constructor method.
+#	define CRC32_SET_FUNC_ATTR __attribute__((__constructor__))
+static crc32_func_type crc32_func;
+#else
+// First Call Resolution method.
+#	define CRC32_SET_FUNC_ATTR
+static uint32_t crc32_dispatch(const uint8_t *buf, size_t size, uint32_t crc);
+static crc32_func_type crc32_func = &crc32_dispatch;
+#endif
+
+CRC32_SET_FUNC_ATTR
+static void
+crc32_set_func(void)
+{
+	crc32_func = crc32_resolve();
+	return;
+}
+
+#ifndef HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR
+static uint32_t
+crc32_dispatch(const uint8_t *buf, size_t size, uint32_t crc)
+{
+	// When __attribute__((__ifunc__(...))) and
+	// __attribute__((__constructor__)) isn't supported, set the
+	// function pointer without any locking. If multiple threads run
+	// the detection code in parallel, they will all end up setting
+	// the pointer to the same value. This avoids the use of
+	// mythread_once() on every call to lzma_crc32() but this likely
+	// isn't strictly standards compliant. Let's change it if it breaks.
+	crc32_set_func();
+	return crc32_func(buf, size, crc);
+}
+
+#endif
+#endif
+#endif
+
+
+#ifdef CRC_USE_IFUNC
+extern LZMA_API(uint32_t)
+lzma_crc32(const uint8_t *buf, size_t size, uint32_t crc)
+		__attribute__((__ifunc__("crc32_resolve")));
+#else
+extern LZMA_API(uint32_t)
+lzma_crc32(const uint8_t *buf, size_t size, uint32_t crc)
+{
+#if defined(CRC_GENERIC) && defined(CRC_CLMUL)
+	// If CLMUL is available, it is the best for non-tiny inputs,
+	// being over twice as fast as the generic slice-by-four version.
+	// However, for size <= 16 it's different. In the extreme case
+	// of size == 1 the generic version can be five times faster.
+	// At size >= 8 the CLMUL starts to become reasonable. It
+	// varies depending on the alignment of buf too.
+	//
+	// The above doesn't include the overhead of mythread_once().
+	// At least on x86-64 GNU/Linux, pthread_once() is very fast but
+	// it still makes lzma_crc32(buf, 1, crc) 50-100 % slower. When
+	// size reaches 12-16 bytes the overhead becomes negligible.
+	//
+	// So using the generic version for size <= 16 may give better
+	// performance with tiny inputs but if such inputs happen rarely
+	// it's not so obvious because then the lookup table of the
+	// generic version may not be in the processor cache.
+#ifdef CRC_USE_GENERIC_FOR_SMALL_INPUTS
+	if (size <= 16)
+		return crc32_generic(buf, size, crc);
+#endif
+
+/*
+#ifndef HAVE_FUNC_ATTRIBUTE_CONSTRUCTOR
+	// See crc32_dispatch(). This would be the alternative which uses
+	// locking and doesn't use crc32_dispatch(). Note that on Windows
+	// this method needs Vista threads.
+	mythread_once(crc64_set_func);
+#endif
+*/
+	return crc32_func(buf, size, crc);
+
+#elif defined(CRC_CLMUL)
+	return lzma_crc32_clmul(buf, size, crc);
+
+#else
+	return crc32_generic(buf, size, crc);
+#endif
+}
+#endif
