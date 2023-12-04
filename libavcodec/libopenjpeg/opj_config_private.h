@@ -1,14 +1,14 @@
 /* create opj_config_private.h for CMake */
-//#define OPJ_HAVE_INTTYPES_H 1
-#define OPJ_PACKAGE_VERSION "2.5.0-1ee6d11"
+#define OPJ_HAVE_INTTYPES_H 1
+#define OPJ_PACKAGE_VERSION "2.5.0-6af3931"
 
 /* Not used by openjp2*/
-#define HAVE_MEMORY_H 1
-#define HAVE_STDLIB_H 1
+#undef HAVE_MEMORY_H
+//#define HAVE_STDLIB_H 1
 #undef HAVE_STRINGS_H
 #define HAVE_STRING_H 1
-#define HAVE_SYS_STAT_H 1
-#define HAVE_SYS_TYPES_H 1
+#undef HAVE_SYS_STAT_H
+#undef HAVE_SYS_TYPES_H
 #undef HAVE_UNISTD_H
 
 /* find whether or not have <malloc.h> */

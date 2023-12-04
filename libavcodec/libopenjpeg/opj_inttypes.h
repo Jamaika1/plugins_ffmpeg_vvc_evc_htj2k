@@ -36,6 +36,7 @@
 #include <inttypes.h>
 #else
 #if defined(_WIN32)
+#define PRIu32 "u"
 #define PRId64 "I64d"
 #define PRIi64 "I64i"
 #define PRIu64 "I64u"

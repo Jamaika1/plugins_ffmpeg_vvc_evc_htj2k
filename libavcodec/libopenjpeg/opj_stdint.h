@@ -35,7 +35,8 @@
 #ifdef OPJ_HAVE_STDINT_H
 #include <stdint.h>
 #else
-#if defined(_WIN32)
+#include <inttypes.h>
+/*#if defined(_WIN32)
 typedef   signed __int8   int8_t;
 typedef unsigned __int8   uint8_t;
 typedef   signed __int16  int16_t;
@@ -46,7 +47,7 @@ typedef   signed __int64  int64_t;
 typedef unsigned __int64  uint64_t;
 #else
 #error unsupported platform
-#endif
+#endif*/
 #endif
 
 #endif /* OPJ_STDINT_H */
