@@ -17,13 +17,12 @@
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/color_management.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_frame.h"
 #include "lib/jxl/enc_ans.h"
@@ -37,6 +36,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/patch_dictionary_internal.h"
 
 namespace jxl {
@@ -760,9 +760,9 @@ void RoundtripPatchFrame(Image3F* reference_frame,
   ib.SetFromImage(std::move(*reference_frame),
                   state->shared.metadata->m.color_encoding);
   if (!ib.metadata()->extra_channel_info.empty()) {
-    // Add dummy extra channels to the patch image: patch encoding does not yet
-    // support extra channels, but the codec expects that the amount of extra
-    // channels in frames matches that in the metadata of the codestream.
+    // Add placeholder extra channels to the patch image: patch encoding does
+    // not yet support extra channels, but the codec expects that the amount of
+    // extra channels in frames matches that in the metadata of the codestream.
     std::vector<ImageF> extra_channels;
     extra_channels.reserve(ib.metadata()->extra_channel_info.size());
     for (size_t i = 0; i < ib.metadata()->extra_channel_info.size(); i++) {
@@ -774,11 +774,10 @@ void RoundtripPatchFrame(Image3F* reference_frame,
     }
     ib.SetExtraChannels(std::move(extra_channels));
   }
-  PassesEncoderState roundtrip_state;
   auto special_frame = std::unique_ptr<BitWriter>(new BitWriter());
   AuxOut patch_aux_out;
   JXL_CHECK(EncodeFrame(cparams, patch_frame_info, state->shared.metadata, ib,
-                        &roundtrip_state, cms, pool, special_frame.get(),
+                        cms, pool, special_frame.get(),
                         aux_out ? &patch_aux_out : nullptr));
   if (aux_out) {
     for (const auto& l : patch_aux_out.layers) {

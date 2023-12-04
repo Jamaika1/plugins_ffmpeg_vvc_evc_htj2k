@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/compressed_dc.h"
@@ -38,6 +37,7 @@
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/modular/transform/enc_transform.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/toc.h"
 
 namespace jxl {
@@ -961,14 +961,11 @@ Status ModularFrameEncoder::ComputeEncodingData(
 
   JXL_RETURN_IF_ERROR(ValidateChannelDimensions(gi, stream_options_[0]));
 
-  return PrepareEncoding(frame_header, pool, enc_state->heuristics.get(),
-                         aux_out);
+  return PrepareEncoding(frame_header, pool, aux_out);
 }
 
 Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
-                                            ThreadPool* pool,
-                                            EncoderHeuristics* heuristics,
-                                            AuxOut* aux_out) {
+                                            ThreadPool* pool, AuxOut* aux_out) {
   if (!tree_.empty()) return true;
 
   // Compute tree.
@@ -976,8 +973,8 @@ Status ModularFrameEncoder::PrepareEncoding(const FrameHeader& frame_header,
   stream_headers_.resize(num_streams);
   tokens_.resize(num_streams);
 
-  if (heuristics->CustomFixedTreeLossless(frame_dim_, &tree_)) {
-    // Using a fixed tree.
+  if (!cparams_.custom_fixed_tree.empty()) {
+    tree_ = cparams_.custom_fixed_tree;
   } else if (cparams_.speed_tier < SpeedTier::kFalcon ||
              !cparams_.modular_mode) {
     // Avoid creating a tree with leaves that don't correspond to any pixels.

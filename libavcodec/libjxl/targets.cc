@@ -354,12 +354,16 @@ int64_t DetectTargets() {
   }
 #endif
 
-#if defined(HWCAP2_SVE2) && defined(HWCAP2_SVEAES)
+#ifndef HWCAP2_SVE2
+#define HWCAP2_SVE2 (1 << 1)
+#endif
+#ifndef HWCAP2_SVEAES
+#define HWCAP2_SVEAES (1 << 2)
+#endif
   const CapBits hw2 = getauxval(AT_HWCAP2);
   if ((hw2 & HWCAP2_SVE2) && (hw2 & HWCAP2_SVEAES)) {
     bits |= HWY_SVE2;
   }
-#endif
 
 #else  // !HWY_ARCH_ARM_A64
 
@@ -484,7 +488,7 @@ int64_t DetectTargets() {
 
 HWY_DLLEXPORT HWY_NORETURN void HWY_FORMAT(3, 4)
     Abort(const char* file, int line, const char* format, ...) {
-  char buf[2000];
+  char buf[800];
   va_list args;
   va_start(args, format);
   vsnprintf(buf, sizeof(buf), format, args);

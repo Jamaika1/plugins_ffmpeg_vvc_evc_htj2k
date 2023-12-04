@@ -6,7 +6,6 @@
 #include "lib/jxl/extras/enc/pgx.h"
 
 #include <jxl/codestream_header.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "lib/jxl/extras/packed_image.h"
