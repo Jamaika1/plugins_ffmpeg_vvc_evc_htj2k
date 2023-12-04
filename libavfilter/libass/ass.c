@@ -228,9 +228,9 @@ static void set_default_style(ASS_Style *style)
 
 static long long string2timecode(ASS_Library *library, char *p)
 {
-    int h, m, s, ms;
+    int32_t h, m, s, ms;
     long long tm;
-    int res = sscanf(p, "%d:%d:%d.%d", &h, &m, &s, &ms);
+    int res = sscanf(p, "%" SCNd32 ":%" SCNd32 ":%" SCNd32 ".%" SCNd32, &h, &m, &s, &ms);
     if (res < 4) {
         ass_msg(library, MSGL_WARN, "Bad timestamp");
         return 0;
@@ -619,7 +619,6 @@ void ass_process_force_style(ASS_Track *track)
 */
 static int process_style(ASS_Track *track, char *str)
 {
-
     char *token;
     char *tname;
     char *p = str;
@@ -667,6 +666,8 @@ static int process_style(ASS_Track *track, char *str)
 
         PARSE_START
             STARREDSTRVAL(Name)
+                if (!target->Name)
+                    goto fail;
             STRVAL(FontName)
             COLORVAL(PrimaryColour)
             COLORVAL(SecondaryColour)
@@ -704,7 +705,10 @@ static int process_style(ASS_Track *track, char *str)
             FPVAL(Shadow)
         PARSE_END
     }
+
     free(format);
+    format = NULL;
+
     // VSF compat: always set BackColour Alpha to 0x80 in SSA
     if (track->track_type == TRACK_TYPE_SSA)
         set_style_alpha(style, ssa_alpha, 0x80);
@@ -717,19 +721,23 @@ static int process_style(ASS_Track *track, char *str)
     style->Italic = !!style->Italic;
     style->Underline = !!style->Underline;
     style->StrikeOut = !!style->StrikeOut;
-    if (!style->Name)
+    if (!style->Name || !*style->Name) {
+        free(style->Name);
         style->Name = strdup("Default");
+    }
     if (!style->FontName)
         style->FontName = strdup("Arial");
-    if (!style->Name || !style->FontName) {
-        ass_free_style(track, sid);
-        track->n_styles--;
-        return -1;
-    }
+    if (!style->Name || !style->FontName)
+        goto fail;
     if (strcmp(target->Name, "Default") == 0)
         track->default_style = sid;
     return 0;
 
+fail:
+    free(format);
+    ass_free_style(track, sid);
+    track->n_styles--;
+    return -1;
 }
 
 static bool format_line_compare(const char *fmt1, const char *fmt2)
@@ -1013,6 +1021,8 @@ static int process_events_line(ASS_Track *track, char *str)
         ass_free_event(track, eid);
         track->n_events--;
         return ret;
+    } else if (!strncmp(str, "Comment:", 8)) {
+        // Ignore Comments
     } else {
         ass_msg(track->library, MSGL_V, "Not understood: '%.30s'", str);
     }
