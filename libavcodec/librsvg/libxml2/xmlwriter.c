@@ -16,6 +16,7 @@
 #include "parser.h"
 #include "uri.h"
 #include "HTMLtree.h"
+#include "SAX2.h"
 
 #ifdef LIBXML_WRITER_ENABLED
 

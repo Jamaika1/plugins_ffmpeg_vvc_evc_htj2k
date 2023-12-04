@@ -24,7 +24,6 @@
 #include "uri.h"
 #include "catalog.h"
 #include "parser.h"
-#include "globals.h"
 
 #if defined(LIBXML_CATALOG_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
 static int shell = 0;
@@ -321,7 +320,6 @@ int main(int argc, char **argv) {
     }
 
     LIBXML_TEST_VERSION;
-
     for (i = 1; i < argc ; i++) {
 	if (!strcmp(argv[i], "-"))
 	    break;

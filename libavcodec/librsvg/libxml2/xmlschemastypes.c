@@ -17,6 +17,7 @@
 
 #ifdef LIBXML_SCHEMAS_ENABLED
 
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <float.h>
@@ -25,7 +26,6 @@
 #include "parser.h"
 #include "parserInternals.h"
 #include "hash.h"
-#include "valid.h"
 #include "xpath.h"
 #include "uri.h"
 
@@ -34,8 +34,6 @@
 #include "xmlschemastypes.h"
 
 #include "private/error.h"
-
-#define DEBUG
 
 #ifndef LIBXML_XPATH_ENABLED
 extern double xmlXPathNAN;
@@ -1275,7 +1273,7 @@ static const unsigned int daysInMonthLeap[12] =
 	((dt)->hour == 24 && (dt)->min == 0 && (dt)->sec == 0)
 
 #define VALID_TIME(dt)						\
-	(((VALID_HOUR(dt->hour) && VALID_MIN(dt->min) &&	\
+	(((VALID_HOUR((int)dt->hour) && VALID_MIN((int)dt->min) &&	\
 	  VALID_SEC(dt->sec)) || VALID_END_OF_DAY(dt)) &&	\
 	 VALID_TZO(dt->tzo))
 
@@ -1298,25 +1296,6 @@ static const long dayInLeapYearByMonth[12] =
         ((IS_LEAP(year) ?					\
                 dayInLeapYearByMonth[month - 1] :		\
                 dayInYearByMonth[month - 1]) + day)
-
-#ifdef DEBUG
-#define DEBUG_DATE(dt)                                                  \
-    xmlGenericError(xmlGenericErrorContext,                             \
-        "type=%o %04ld-%02u-%02uT%02u:%02u:%03f",                       \
-        dt->type,dt->value.date.year,dt->value.date.mon,                \
-        dt->value.date.day,dt->value.date.hour,dt->value.date.min,      \
-        dt->value.date.sec);                                            \
-    if (dt->value.date.tz_flag)                                         \
-        if (dt->value.date.tzo != 0)                                    \
-            xmlGenericError(xmlGenericErrorContext,                     \
-                "%+05d\n",dt->value.date.tzo);                          \
-        else                                                            \
-            xmlGenericError(xmlGenericErrorContext, "Z\n");             \
-    else                                                                \
-        xmlGenericError(xmlGenericErrorContext,"\n")
-#else
-#define DEBUG_DATE(dt)
-#endif
 
 /**
  * _xmlSchemaParseGYear:

@@ -18,6 +18,12 @@
 #include "entities.h"
 #include "xmlerror.h"
 #include "xmlstring.h"
+#include "xmlmemory.h"
+#include "encoding.h"
+#include "xmlIO.h"
+/* for compatibility */
+#include "SAX2.h"
+#include "threads.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,6 +172,8 @@ typedef enum {
 } xmlParserMode;
 
 typedef struct _xmlStartTag xmlStartTag;
+typedef struct _xmlParserNsData xmlParserNsData;
+typedef struct _xmlAttrHashBucket xmlAttrHashBucket;
 
 /**
  * xmlParserCtxt:
@@ -276,7 +284,7 @@ struct _xmlParserCtxt {
     int                nsNr;          /* the number of inherited namespaces */
     int                nsMax;         /* the size of the arrays */
     const xmlChar *   *nsTab;         /* the array of prefix/namespace name */
-    int               *attallocs;     /* which attribute were allocated */
+    unsigned          *attallocs;     /* which attribute were allocated */
     xmlStartTag       *pushTab;       /* array of data for push */
     xmlHashTablePtr    attsDefault;   /* defaulted attributes if any */
     xmlHashTablePtr    attsSpecial;   /* non-CDATA attributes if any */
@@ -313,6 +321,10 @@ struct _xmlParserCtxt {
     unsigned short     nbErrors;    /* number of errors */
     unsigned short   nbWarnings;    /* number of warnings */
     unsigned            maxAmpl;    /* maximum amplification factor */
+
+    xmlParserNsData       *nsdb;    /* namespace database */
+    unsigned        attrHashMax;    /* allocated size */
+    xmlAttrHashBucket *attrHash;    /* atttribute hash table */
 };
 
 /**
@@ -733,6 +745,19 @@ struct _xmlSAXHandler {
     setDocumentLocatorSAXFunc setDocumentLocator;
     startDocumentSAXFunc startDocument;
     endDocumentSAXFunc endDocument;
+    /*
+     * `startElement` and `endElement` are only used by the legacy SAX1
+     * interface and should not be used in new software. If you really
+     * have to enable SAX1, the preferred way is set the `initialized`
+     * member to 1 instead of XML_SAX2_MAGIC.
+     *
+     * For backward compatibility, it's also possible to set the
+     * `startElementNs` and `endElementNs` handlers to NULL.
+     *
+     * You can also set the XML_PARSE_SAX1 parser option, but versions
+     * older than 2.12.0 will probably crash if this option is provided
+     * together with custom SAX callbacks.
+     */
     startElementSAXFunc startElement;
     endElementSAXFunc endElement;
     referenceSAXFunc reference;
@@ -746,8 +771,14 @@ struct _xmlSAXHandler {
     getParameterEntitySAXFunc getParameterEntity;
     cdataBlockSAXFunc cdataBlock;
     externalSubsetSAXFunc externalSubset;
+    /*
+     * `initialized` should always be set to XML_SAX2_MAGIC to enable the
+     * modern SAX2 interface.
+     */
     unsigned int initialized;
-    /* The following fields are extensions available only on version 2 */
+    /*
+     * The following members are only used by the SAX2 interface.
+     */
     void *_private;
     startElementNsSAX2Func startElementNs;
     endElementNsSAX2Func endElementNs;
@@ -805,18 +836,63 @@ typedef xmlParserInputPtr (*xmlExternalEntityLoader) (const char *URL,
 					 const char *ID,
 					 xmlParserCtxtPtr context);
 
-#ifdef __cplusplus
-}
+/*
+ * Variables
+ */
+
+XMLPUBVAR const char *const xmlParserVersion;
+#ifdef LIBXML_THREAD_ENABLED
+/* backward compatibility */
+XMLPUBFUN const char *const *__xmlParserVersion(void);
 #endif
 
-#include "encoding.h"
-#include "xmlIO.h"
-#include "globals.h"
+/** DOC_DISABLE */
+#define XML_GLOBALS_PARSER_CORE \
+  XML_OP(oldXMLWDcompatibility, int, XML_DEPRECATED) \
+  XML_OP(xmlDefaultSAXLocator, xmlSAXLocator, XML_DEPRECATED) \
+  XML_OP(xmlDoValidityCheckingDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlGetWarningsDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlKeepBlanksDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlLineNumbersDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlLoadExtDtdDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlParserDebugEntities, int, XML_DEPRECATED) \
+  XML_OP(xmlPedanticParserDefaultValue, int, XML_DEPRECATED) \
+  XML_OP(xmlSubstituteEntitiesDefaultValue, int, XML_DEPRECATED)
 
-#ifdef __cplusplus
-extern "C" {
+#ifdef LIBXML_SAX1_ENABLED
+  #define XML_GLOBALS_PARSER_SAX1 \
+    XML_OP(xmlDefaultSAXHandler, xmlSAXHandlerV1, XML_DEPRECATED)
+#else
+  #define XML_GLOBALS_PARSER_SAX1
 #endif
 
+#define XML_GLOBALS_PARSER \
+  XML_GLOBALS_PARSER_CORE \
+  XML_GLOBALS_PARSER_SAX1
+
+#define XML_OP XML_DECLARE_GLOBAL
+XML_GLOBALS_PARSER
+#undef XML_OP
+
+#if defined(LIBXML_THREAD_ENABLED) && !defined(XML_GLOBALS_NO_REDEFINITION)
+  #define oldXMLWDcompatibility XML_GLOBAL_MACRO(oldXMLWDcompatibility)
+  #define xmlDefaultSAXHandler XML_GLOBAL_MACRO(xmlDefaultSAXHandler)
+  #define xmlDefaultSAXLocator XML_GLOBAL_MACRO(xmlDefaultSAXLocator)
+  #define xmlDoValidityCheckingDefaultValue \
+    XML_GLOBAL_MACRO(xmlDoValidityCheckingDefaultValue)
+  #define xmlGetWarningsDefaultValue \
+    XML_GLOBAL_MACRO(xmlGetWarningsDefaultValue)
+  #define xmlKeepBlanksDefaultValue XML_GLOBAL_MACRO(xmlKeepBlanksDefaultValue)
+  #define xmlLineNumbersDefaultValue \
+    XML_GLOBAL_MACRO(xmlLineNumbersDefaultValue)
+  #define xmlLoadExtDtdDefaultValue XML_GLOBAL_MACRO(xmlLoadExtDtdDefaultValue)
+  #define xmlParserDebugEntities XML_GLOBAL_MACRO(xmlParserDebugEntities)
+  #define xmlPedanticParserDefaultValue \
+    XML_GLOBAL_MACRO(xmlPedanticParserDefaultValue)
+  #define xmlSubstituteEntitiesDefaultValue \
+    XML_GLOBAL_MACRO(xmlSubstituteEntitiesDefaultValue)
+#endif
+/** DOC_ENABLE */
 
 /*
  * Init/Cleanup
@@ -850,16 +926,32 @@ XMLPUBFUN xmlDocPtr
 		xmlParseMemory		(const char *buffer,
 					 int size);
 #endif /* LIBXML_SAX1_ENABLED */
-XMLPUBFUN int
+XML_DEPRECATED XMLPUBFUN int
 		xmlSubstituteEntitiesDefault(int val);
-XMLPUBFUN int
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefSubstituteEntitiesDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
 		xmlKeepBlanksDefault	(int val);
+XML_DEPRECATED XMLPUBFUN int
+		xmlThrDefKeepBlanksDefaultValue(int v);
 XMLPUBFUN void
 		xmlStopParser		(xmlParserCtxtPtr ctxt);
-XMLPUBFUN int
+XML_DEPRECATED XMLPUBFUN int
 		xmlPedanticParserDefault(int val);
-XMLPUBFUN int
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefPedanticParserDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
 		xmlLineNumbersDefault	(int val);
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefLineNumbersDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefDoValidityCheckingDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefGetWarningsDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefLoadExtDtdDefaultValue(int v);
+XML_DEPRECATED XMLPUBFUN int
+                xmlThrDefParserDebugEntities(int v);
 
 #ifdef LIBXML_SAX1_ENABLED
 /*
@@ -1070,18 +1162,18 @@ XMLPUBFUN xmlParserInputPtr
  * Node infos.
  */
 XMLPUBFUN const xmlParserNodeInfo*
-		xmlParserFindNodeInfo	(const xmlParserCtxtPtr ctxt,
-				         const xmlNodePtr node);
+		xmlParserFindNodeInfo	(xmlParserCtxtPtr ctxt,
+				         xmlNodePtr node);
 XMLPUBFUN void
 		xmlInitNodeInfoSeq	(xmlParserNodeInfoSeqPtr seq);
 XMLPUBFUN void
 		xmlClearNodeInfoSeq	(xmlParserNodeInfoSeqPtr seq);
 XMLPUBFUN unsigned long
-		xmlParserFindNodeInfoIndex(const xmlParserNodeInfoSeqPtr seq,
-                                         const xmlNodePtr node);
+		xmlParserFindNodeInfoIndex(xmlParserNodeInfoSeqPtr seq,
+                                         xmlNodePtr node);
 XMLPUBFUN void
 		xmlParserAddNodeInfo	(xmlParserCtxtPtr ctxt,
-					 const xmlParserNodeInfoPtr info);
+					 xmlParserNodeInfoPtr info);
 
 /*
  * External entities handling actually implemented in xmlIO.

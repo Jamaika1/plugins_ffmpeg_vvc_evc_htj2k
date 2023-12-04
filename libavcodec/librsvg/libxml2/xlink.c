@@ -19,9 +19,7 @@
 #include "xmlmemory.h"
 #include "tree.h"
 #include "parser.h"
-#include "valid.h"
 #include "xlink.h"
-#include "globals.h"
 
 #define XLINK_NAMESPACE (BAD_CAST "http://www.w3.org/1999/xlink/namespace/")
 #define XHTML_NAMESPACE (BAD_CAST "http://www.w3.org/1999/xhtml/")

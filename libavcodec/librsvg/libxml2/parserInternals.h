@@ -16,6 +16,7 @@
 #include "parser.h"
 #include "HTMLparser.h"
 #include "chvalid.h"
+#include "SAX2.h"
 
 #ifdef __cplusplus
 extern "C" {

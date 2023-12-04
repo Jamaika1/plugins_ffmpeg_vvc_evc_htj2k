@@ -11,7 +11,9 @@
 #ifndef __XML_REGEXP_H__
 #define __XML_REGEXP_H__
 
+#include <stdio.h>
 #include "xmlversion.h"
+#include "xmlstring.h"
 
 #ifdef LIBXML_REGEXP_ENABLED
 
@@ -35,15 +37,6 @@ typedef xmlRegexp *xmlRegexpPtr;
  */
 typedef struct _xmlRegExecCtxt xmlRegExecCtxt;
 typedef xmlRegExecCtxt *xmlRegExecCtxtPtr;
-
-#ifdef __cplusplus
-}
-#endif
-#include "tree.h"
-#include "dict.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*
  * The POSIX like API

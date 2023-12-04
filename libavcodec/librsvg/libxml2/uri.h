@@ -11,8 +11,9 @@
 #ifndef __XML_URI_H__
 #define __XML_URI_H__
 
+#include <stdio.h>
 #include "xmlversion.h"
-#include "tree.h"
+#include "xmlstring.h"
 
 #ifdef __cplusplus
 extern "C" {

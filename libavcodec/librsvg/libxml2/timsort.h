@@ -37,7 +37,8 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #elif defined(_WIN32)
-typedef unsigned __int64 uint64_t;
+#include <inttypes.h>
+//typedef unsigned __int64 uint64_t;
 #endif
 
 #ifndef SORT_NAME

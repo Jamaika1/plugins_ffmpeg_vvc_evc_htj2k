@@ -12,6 +12,7 @@
 #ifndef __XML_XPATH_INTERNALS_H__
 #define __XML_XPATH_INTERNALS_H__
 
+#include <stdio.h>
 #include "xmlversion.h"
 #include "xpath.h"
 

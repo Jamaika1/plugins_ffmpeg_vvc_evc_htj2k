@@ -25,7 +25,6 @@
 #include "uri.h"
 #include "valid.h"
 #include "HTMLtree.h"
-#include "globals.h"
 #include "SAX2.h"
 
 #ifdef LIBXML_LEGACY_ENABLED

@@ -18,12 +18,10 @@
 #include "tree.h"
 #include "parser.h"
 #include "parserInternals.h"
-#include "valid.h"
 #include "debugXML.h"
 #include "HTMLtree.h"
 #include "HTMLparser.h"
 #include "xmlerror.h"
-#include "globals.h"
 #include "xpathInternals.h"
 #include "uri.h"
 #ifdef LIBXML_SCHEMAS_ENABLED
