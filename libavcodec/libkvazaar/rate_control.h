@@ -41,6 +41,7 @@
 #include "global.h" // IWYU pragma: keep
 
 #include "encoderstate.h"
+//#include <pthread.h>
 #include "../libpthread_win32/pthread.h"
 
 typedef struct kvz_rc_data {

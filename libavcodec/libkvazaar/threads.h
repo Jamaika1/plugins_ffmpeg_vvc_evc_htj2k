@@ -40,7 +40,12 @@
 
 #include "global.h" // IWYU pragma: keep
 
+//#include <pthread.h>
 #include "../libpthread_win32/pthread.h"
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#endif
 
 #if defined(__GNUC__) && !defined(__MINGW32__)
 #include <unistd.h> // IWYU pragma: export
@@ -84,9 +89,9 @@
 
 #endif //__GNUC__
 
-#ifdef __APPLE__
-// POSIX semaphores are deprecated on Mac so we use Grand Central Dispatch
-// semaphores instead.
+#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED > 1050 && !defined(__ppc__)
+// POSIX semaphores are deprecated on Mac so we use Grand Central Dispatch semaphores instead.
+// However GCD is supported only on 10.6+, and is not supported on any ppc, including 10.6 Rosetta.
 #include <dispatch/dispatch.h>
 typedef dispatch_semaphore_t kvz_sem_t;
 
@@ -113,7 +118,7 @@ static INLINE void kvz_sem_destroy(kvz_sem_t *sem)
 }
 
 #else
-// Use POSIX semaphores.
+// Use POSIX semaphores. This is also a fallback for old Darwin.
 #include "../libpthread_win32/semaphore.h"
 
 typedef sem_t kvz_sem_t;
