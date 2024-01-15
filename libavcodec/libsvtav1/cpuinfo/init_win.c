@@ -52,7 +52,7 @@ static void cpuinfo_x86_count_caches(
 	uint32_t last_l2_id = UINT32_MAX, last_l3_id = UINT32_MAX, last_l4_id = UINT32_MAX;
 	for (uint32_t i = 0; i < processors_count; i++) {
 		const uint32_t apic_id = processors[i].apic_id;
-		cpuinfo_log_debug("APID ID %" PRIu64 ": logical processor %" PRIu64, apic_id, i);
+		cpuinfo_log_debug("APID ID %" PRIu64 ": logical processor %" PRIu64, (long long unsigned int)apic_id, (long long unsigned int)i);
 
 		if (x86_processor->cache.l1i.size != 0) {
 			const uint32_t l1i_id = apic_id & ~bit_mask(x86_processor->cache.l1i.apic_bits);
@@ -136,13 +136,13 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 	/* WINE doesn't implement GetMaximumProcessorGroupCount and aborts when
 	 * calling it */
 	const uint32_t max_group_count = is_wine ? 1 : (uint32_t)GetMaximumProcessorGroupCount();
-	cpuinfo_log_debug("detected %" PRIu64 " processor groups", max_group_count);
+	cpuinfo_log_debug("detected %" PRIu64 " processor groups", (long long unsigned int)max_group_count);
 
 	uint32_t processors_count = 0;
 	uint32_t* processors_per_group = (uint32_t*)CPUINFO_ALLOCA(max_group_count * sizeof(uint32_t));
 	for (uint32_t i = 0; i < max_group_count; i++) {
 		processors_per_group[i] = GetMaximumProcessorCount((WORD)i);
-		cpuinfo_log_debug("detected %" PRIu64 " processors in group %" PRIu64, processors_per_group[i], i);
+		cpuinfo_log_debug("detected %" PRIu64 " processors in group %" PRIu64, (long long unsigned int)processors_per_group[i], (long long unsigned int)i);
 		processors_count += processors_per_group[i];
 	}
 
@@ -150,16 +150,16 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 	for (uint32_t i = 0, count = 0; i < max_group_count; i++) {
 		processors_before_group[i] = count;
 		cpuinfo_log_debug(
-			"detected %" PRIu64 " processors before group %" PRIu64, processors_before_group[i], i);
+			"detected %" PRIu64 " processors before group %" PRIu64, (long long unsigned int)processors_before_group[i], (long long unsigned int)i);
 		count += processors_per_group[i];
 	}
 
 	processors = HeapAlloc(heap, HEAP_ZERO_MEMORY, processors_count * sizeof(struct cpuinfo_processor));
 	if (processors == NULL) {
 		cpuinfo_log_error(
-			"failed to allocate %zu bytes for descriptions of %" PRIu64 " logical processors",
-			processors_count * sizeof(struct cpuinfo_processor),
-			processors_count);
+			"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " logical processors",
+			(long long unsigned int)processors_count * sizeof(struct cpuinfo_processor),
+			(long long unsigned int)processors_count);
 		goto cleanup;
 	}
 
@@ -169,7 +169,7 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		if (last_error != ERROR_INSUFFICIENT_BUFFER) {
 			cpuinfo_log_error(
 				"failed to query size of processor cores information: error %" PRIu64,
-				(uint32_t)last_error);
+				(long long unsigned int)last_error);
 			goto cleanup;
 		}
 	}
@@ -180,7 +180,7 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		if (last_error != ERROR_INSUFFICIENT_BUFFER) {
 			cpuinfo_log_error(
 				"failed to query size of processor packages information: error %" PRIu64,
-				(uint32_t)last_error);
+				(long long unsigned int)last_error);
 			goto cleanup;
 		}
 	}
@@ -191,13 +191,13 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 	if (processor_infos == NULL) {
 		cpuinfo_log_error(
 			"failed to allocate %" PRIu64 " bytes for logical processor information",
-			(uint32_t)max_info_size);
+			(long long unsigned int)max_info_size);
 		goto cleanup;
 	}
 
 	if (GetLogicalProcessorInformationEx(RelationProcessorPackage, processor_infos, &max_info_size) == FALSE) {
 		cpuinfo_log_error(
-			"failed to query processor packages information: error %" PRIu64, (uint32_t)GetLastError());
+			"failed to query processor packages information: error %" PRIu64, (long long unsigned int)GetLastError());
 		goto cleanup;
 	}
 
@@ -209,7 +209,7 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		if (package_info->Relationship != RelationProcessorPackage) {
 			cpuinfo_log_warning(
 				"unexpected processor info type (%" PRIu64 ") for processor package information",
-				(uint32_t)package_info->Relationship);
+				(long long unsigned int)package_info->Relationship);
 			continue;
 		}
 
@@ -245,7 +245,7 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 	max_info_size = max(cores_info_size, packages_info_size);
 	if (GetLogicalProcessorInformationEx(RelationProcessorCore, processor_infos, &max_info_size) == FALSE) {
 		cpuinfo_log_error(
-			"failed to query processor cores information: error %" PRIu64, (uint32_t)GetLastError());
+			"failed to query processor cores information: error %" PRIu64, (long long unsigned int)GetLastError());
 		goto cleanup;
 	}
 
@@ -261,7 +261,7 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		if (core_info->Relationship != RelationProcessorCore) {
 			cpuinfo_log_warning(
 				"unexpected processor info type (%" PRIu64 ") for processor core information",
-				(uint32_t)core_info->Relationship);
+				(long long unsigned int)core_info->Relationship);
 			continue;
 		}
 
@@ -300,11 +300,11 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 					((smt_id & thread_bits_mask) << x86_processor.topology.thread_bits_offset) |
 					((package_core_id & core_bits_mask) << x86_processor.topology.core_bits_offset);
 				cpuinfo_log_debug(
-					"reconstructed APIC ID 0x%08" PRIx32 " for processor %" PRIu64
+					"reconstructed APIC ID 0x%08" PRIx64 " for processor %" PRIu64
 					" in group %" PRIu64,
-					processors[processor_id].apic_id,
-					group_processor_id,
-					group_id);
+					(long long unsigned int)processors[processor_id].apic_id,
+					(long long unsigned int)group_processor_id,
+					(long long unsigned int)group_id);
 
 				/* Set SMT ID (assume logical processors within
 				 * the core are reported in APIC order) */
@@ -320,27 +320,27 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 	cores = HeapAlloc(heap, HEAP_ZERO_MEMORY, cores_count * sizeof(struct cpuinfo_core));
 	if (cores == NULL) {
 		cpuinfo_log_error(
-			"failed to allocate %zu bytes for descriptions of %" PRIu64 " cores",
-			cores_count * sizeof(struct cpuinfo_core),
-			cores_count);
+			"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " cores",
+			(long long unsigned int)cores_count * sizeof(struct cpuinfo_core),
+			(long long unsigned int)cores_count);
 		goto cleanup;
 	}
 
 	clusters = HeapAlloc(heap, HEAP_ZERO_MEMORY, packages_count * sizeof(struct cpuinfo_cluster));
 	if (clusters == NULL) {
 		cpuinfo_log_error(
-			"failed to allocate %zu bytes for descriptions of %" PRIu64 " core clusters",
-			packages_count * sizeof(struct cpuinfo_cluster),
-			packages_count);
+			"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " core clusters",
+			(long long unsigned int)packages_count * sizeof(struct cpuinfo_cluster),
+			(long long unsigned int)packages_count);
 		goto cleanup;
 	}
 
 	packages = HeapAlloc(heap, HEAP_ZERO_MEMORY, packages_count * sizeof(struct cpuinfo_package));
 	if (packages == NULL) {
 		cpuinfo_log_error(
-			"failed to allocate %zu bytes for descriptions of %" PRIu64 " physical packages",
-			packages_count * sizeof(struct cpuinfo_package),
-			packages_count);
+			"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " physical packages",
+			(long long unsigned int)packages_count * sizeof(struct cpuinfo_package),
+			(long long unsigned int)packages_count);
 		goto cleanup;
 	}
 
@@ -422,9 +422,9 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		l1i = HeapAlloc(heap, HEAP_ZERO_MEMORY, l1i_count * sizeof(struct cpuinfo_cache));
 		if (l1i == NULL) {
 			cpuinfo_log_error(
-				"failed to allocate %zu bytes for descriptions of %" PRIu64 " L1I caches",
-				l1i_count * sizeof(struct cpuinfo_cache),
-				l1i_count);
+				"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " L1I caches",
+				(long long unsigned int)l1i_count * sizeof(struct cpuinfo_cache),
+				(long long unsigned int)l1i_count);
 			goto cleanup;
 		}
 	}
@@ -432,9 +432,9 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		l1d = HeapAlloc(heap, HEAP_ZERO_MEMORY, l1d_count * sizeof(struct cpuinfo_cache));
 		if (l1d == NULL) {
 			cpuinfo_log_error(
-				"failed to allocate %zu bytes for descriptions of %" PRIu64 " L1D caches",
-				l1d_count * sizeof(struct cpuinfo_cache),
-				l1d_count);
+				"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " L1D caches",
+				(long long unsigned int)l1d_count * sizeof(struct cpuinfo_cache),
+				(long long unsigned int)l1d_count);
 			goto cleanup;
 		}
 	}
@@ -442,9 +442,9 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		l2 = HeapAlloc(heap, HEAP_ZERO_MEMORY, l2_count * sizeof(struct cpuinfo_cache));
 		if (l2 == NULL) {
 			cpuinfo_log_error(
-				"failed to allocate %zu bytes for descriptions of %" PRIu64 " L2 caches",
-				l2_count * sizeof(struct cpuinfo_cache),
-				l2_count);
+				"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " L2 caches",
+				(long long unsigned int)l2_count * sizeof(struct cpuinfo_cache),
+				(long long unsigned int)l2_count);
 			goto cleanup;
 		}
 	}
@@ -452,9 +452,9 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		l3 = HeapAlloc(heap, HEAP_ZERO_MEMORY, l3_count * sizeof(struct cpuinfo_cache));
 		if (l3 == NULL) {
 			cpuinfo_log_error(
-				"failed to allocate %zu bytes for descriptions of %" PRIu64 " L3 caches",
-				l3_count * sizeof(struct cpuinfo_cache),
-				l3_count);
+				"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " L3 caches",
+				(long long unsigned int)l3_count * sizeof(struct cpuinfo_cache),
+				(long long unsigned int)l3_count);
 			goto cleanup;
 		}
 	}
@@ -462,9 +462,9 @@ BOOL CALLBACK cpuinfo_x86_windows_init(PINIT_ONCE init_once, PVOID parameter, PV
 		l4 = HeapAlloc(heap, HEAP_ZERO_MEMORY, l4_count * sizeof(struct cpuinfo_cache));
 		if (l4 == NULL) {
 			cpuinfo_log_error(
-				"failed to allocate %zu bytes for descriptions of %" PRIu64 " L4 caches",
-				l4_count * sizeof(struct cpuinfo_cache),
-				l4_count);
+				"failed to allocate %" PRIu64 " bytes for descriptions of %" PRIu64 " L4 caches",
+				(long long unsigned int)l4_count * sizeof(struct cpuinfo_cache),
+				(long long unsigned int)l4_count);
 			goto cleanup;
 		}
 	}
