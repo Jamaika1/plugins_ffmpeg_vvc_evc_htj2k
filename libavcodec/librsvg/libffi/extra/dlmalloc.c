@@ -1446,7 +1446,7 @@ static int win32munmap(void* ptr, size_t size) {
 
 //#if !defined(WIN32) && !defined(__OS2__)
 /* By default use posix locks */
-#include "../../../libpthread_win32/pthread.h"
+#include <pthread.h>
 #define MLOCK_T pthread_mutex_t
 #define INITIAL_LOCK(l)      pthread_mutex_init(l, NULL)
 #define ACQUIRE_LOCK(l)      pthread_mutex_lock(l)
@@ -1457,6 +1457,49 @@ static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_MORECORE */
 
 static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+//#elif defined(__OS2__)
+//#define MLOCK_T HMTX
+//#define INITIAL_LOCK(l)      DosCreateMutexSem(0, l, 0, FALSE)
+//#define ACQUIRE_LOCK(l)      DosRequestMutexSem(*l, SEM_INDEFINITE_WAIT)
+//#define RELEASE_LOCK(l)      DosReleaseMutexSem(*l)
+//#if HAVE_MORECORE
+//static MLOCK_T morecore_mutex;
+//#endif /* HAVE_MORECORE */
+//static MLOCK_T magic_init_mutex;
+
+//#else /* WIN32 */
+/*
+   Because lock-protected regions have bounded times, and there
+   are no recursive lock calls, we can use simple spinlocks.
+*/
+
+//#define MLOCK_T long
+//static int win32_acquire_lock (MLOCK_T *sl) {
+//  for (;;) {
+//#ifdef InterlockedCompareExchangePointer
+//    if (!InterlockedCompareExchange(sl, 1, 0))
+//      return 0;
+//#else  /* Use older void* version */
+//    if (!InterlockedCompareExchange((void**)sl, (void*)1, (void*)0))
+//      return 0;
+//#endif /* InterlockedCompareExchangePointer */
+//    Sleep (0);
+//  }
+//}
+
+//static void win32_release_lock (MLOCK_T *sl) {
+//  InterlockedExchange (sl, 0);
+//}
+
+//#define INITIAL_LOCK(l)      *(l)=0
+//#define ACQUIRE_LOCK(l)      win32_acquire_lock(l)
+//#define RELEASE_LOCK(l)      win32_release_lock(l)
+//#if HAVE_MORECORE
+//static MLOCK_T morecore_mutex;
+//#endif /* HAVE_MORECORE */
+//static MLOCK_T magic_init_mutex;
+//#endif /* WIN32 */
 
 #define USE_LOCK_BIT               (2U)
 #else  /* USE_LOCKS */
@@ -4409,7 +4452,7 @@ struct mallinfo dlmallinfo(void) {
 }
 #endif /* NO_MALLINFO */
 
-void dlmalloc_stats() {
+void dlmalloc_stats(void) {
   internal_malloc_stats(gm);
 }
 
