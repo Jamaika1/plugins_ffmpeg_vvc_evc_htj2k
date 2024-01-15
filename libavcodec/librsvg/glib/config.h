@@ -93,7 +93,7 @@
 /* alpha atomic implementation */
 /* #undef G_ATOMIC_ALPHA */
 /* i486 atomic implementation */
-/* #undef G_ATOMIC_I486 1
+/* #undef G_ATOMIC_I486 1 */
 /* ia64 atomic implementation */
 /* #undef G_ATOMIC_IA64 */
 /* powerpc atomic implementation */
@@ -117,8 +117,8 @@
 /* 'va_lists' cannot be copies as values */
 /* #undef G_VA_COPY_AS_ARRAY */
 /* Define to 1 if you have `alloca', as a function or macro. */
-/* #undef HAVE_ALLOCA 1
-/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
+/* #undef HAVE_ALLOCA 1 */
+/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix). */
 /* #undef HAVE_ALLOCA_H */
 /* Define to 1 if you have the `atexit' function. */
 #define HAVE_ATEXIT 1
@@ -293,11 +293,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.79.0-b53218a"
+#define PACKAGE_STRING "glib 2.79.0-f09bd17"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.79.0-b53218a"
+#define PACKAGE_VERSION "2.79.0-f09bd17"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */

@@ -147,7 +147,7 @@ typedef gint64 goffset;
 
 #else
 
-#define G_POLLFD_FORMAT "%#I64x"
+#define G_POLLFD_FORMAT "%#llx"
 
 #define GPOINTER_TO_INT(p)	((gint)  (gint64) (p))
 #define GPOINTER_TO_UINT(p)	((guint) (guint64) (p))
