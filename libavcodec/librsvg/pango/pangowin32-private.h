@@ -59,7 +59,7 @@
 
 G_BEGIN_DECLS
 
-#define PANGO_TYPE_WIN32_FONT_MAP             (_pango_win32_font_map_get_type ())
+#define PANGO_TYPE_WIN32_FONT_MAP             (pango_win32_font_map_get_type ())
 #define PANGO_WIN32_FONT_MAP(object)          (G_TYPE_CHECK_INSTANCE_CAST ((object), PANGO_TYPE_WIN32_FONT_MAP, PangoWin32FontMap))
 #define PANGO_WIN32_IS_FONT_MAP(object)       (G_TYPE_CHECK_INSTANCE_TYPE ((object), PANGO_TYPE_WIN32_FONT_MAP))
 #define PANGO_WIN32_FONT_MAP_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), PANGO_TYPE_WIN32_FONT_MAP, PangoWin32FontMapClass))
@@ -83,12 +83,16 @@ typedef PangoFontFaceClass             PangoWin32FaceClass;
 typedef struct _PangoWin32GlyphInfo    PangoWin32GlyphInfo;
 typedef struct _PangoWin32MetricsInfo  PangoWin32MetricsInfo;
 
+typedef struct _PangoWin32DWriteFontSetBuilder PangoWin32DWriteFontSetBuilder;
+typedef struct _PangoWin32CustomFontsLegacy PangoWin32CustomFontsLegacy;
+
 struct _PangoWin32FontMap
 {
   PangoFontMap parent_instance;
 
   PangoWin32FontCache *font_cache;
   GQueue *freed_fonts;
+  guint serial;
 
   /* Map Pango family names to PangoWin32Family structs */
   GHashTable *families;
@@ -108,6 +112,12 @@ struct _PangoWin32FontMap
   GHashTable *aliases;
 
   double resolution;		/* (points / pixel) * PANGO_SCALE */
+
+  /* IDWriteFontSetBuilder for loading custom fonts on Windows 10+ */
+  PangoWin32DWriteFontSetBuilder *font_set_builder;
+
+  /* Items for loading custom fonts on legacy Windows 7/8.x */
+  PangoWin32CustomFontsLegacy *custom_fonts_legacy;
 };
 
 struct _PangoWin32FontMapClass
@@ -271,7 +281,7 @@ void            _pango_win32_make_matching_logfontw (PangoFontMap   *fontmap,
 						     LOGFONTW       *out);
 
 _PANGO_EXTERN
-GType           _pango_win32_font_map_get_type      (void) G_GNUC_CONST;
+GType           pango_win32_font_map_get_type      (void) G_GNUC_CONST;
 
 _PANGO_EXTERN
 void            _pango_win32_fontmap_cache_remove   (PangoFontMap   *fontmap,
@@ -323,6 +333,22 @@ pango_win32_font_description_from_logfontw_dwrite             (const LOGFONTW   
 
 hb_face_t *
 pango_win32_font_create_hb_face_dwrite                        (PangoWin32Font        *font);
+
+PangoFontDescription *
+pango_win32_font_description_from_dwrite_font                 (void                  *dwrite_font);
+
+/* This needs to be called from PangoCairo as well */
+_PANGO_EXTERN
+void                  pango_win32_font_map_cache_clear        (PangoFontMap          *font_map);
+
+gboolean              pango_win32_dwrite_add_font_file        (PangoFontMap          *font_map,
+                                                               const char            *font_file_path,
+                                                               GError               **error);
+
+void
+pango_win32_dwrite_release_font_set_builders                  (PangoWin32FontMap     *win32fontmap);
+
+gboolean              pango_win32_release_legacy_font_loader  (PangoWin32FontMap     *win32fontmap);
 
 G_END_DECLS
 

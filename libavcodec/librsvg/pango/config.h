@@ -104,6 +104,8 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 /* #undef HAVE_NDIR_H */
 
+#define HAVE_DWRITE_3_H 1
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #if (!defined (_MSC_VER) || (_MSC_VER >= 1600))
 #define HAVE_STDINT_H 1
@@ -191,4 +193,4 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.51.1-7c65bc7"
+#define VERSION "1.51.1-982a010"

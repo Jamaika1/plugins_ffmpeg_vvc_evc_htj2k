@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-#define STRICT
+#define STRICT 1
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600	/* To get ClearType-related macros */
 #endif
@@ -142,6 +142,11 @@ PangoFontDescription *pango_win32_font_description_from_logfont (const LOGFONTA 
 
 PANGO_AVAILABLE_IN_1_16
 PangoFontDescription *pango_win32_font_description_from_logfontw (const LOGFONTW *lfp);
+
+PANGO_AVAILABLE_IN_1_52
+gboolean              pango_win32_font_map_add_font_file (PangoFontMap       *font_map,
+                                                          const char         *font_file_path,
+                                                          GError            **error);
 
 G_END_DECLS
 
