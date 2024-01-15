@@ -59,8 +59,7 @@ typedef CRITICAL_SECTION fc_mutex_impl_t;
 
 #elif !defined(FC_NO_MT) && (defined(HAVE_PTHREAD) || defined(__APPLE__))
 
-//#include <pthread.h>
-#include "../../libpthread_win32/pthread.h"
+#include <pthread.h>
 typedef pthread_mutex_t fc_mutex_impl_t;
 #define FC_MUTEX_IMPL_INIT	PTHREAD_MUTEX_INITIALIZER
 #define fc_mutex_impl_init(M)	pthread_mutex_init (M, NULL)
