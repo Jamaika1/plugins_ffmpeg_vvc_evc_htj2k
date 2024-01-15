@@ -40,8 +40,7 @@
 
 #include "global.h" // IWYU pragma: keep
 
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
@@ -119,7 +118,7 @@ static INLINE void kvz_sem_destroy(kvz_sem_t *sem)
 
 #else
 // Use POSIX semaphores. This is also a fallback for old Darwin.
-#include "../libpthread_win32/semaphore.h"
+#include <semaphore.h>
 
 typedef sem_t kvz_sem_t;
 

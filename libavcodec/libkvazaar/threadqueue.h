@@ -40,8 +40,7 @@
 
 #include "global.h" // IWYU pragma: keep
 
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 
 typedef struct threadqueue_job_t threadqueue_job_t;
 typedef struct threadqueue_queue_t threadqueue_queue_t;

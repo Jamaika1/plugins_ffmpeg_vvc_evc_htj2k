@@ -34,8 +34,7 @@
 #include "threadqueue.h"
 
 #include <errno.h> // ETIMEDOUT
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

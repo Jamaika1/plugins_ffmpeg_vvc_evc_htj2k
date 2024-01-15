@@ -36,8 +36,7 @@
 
 #include "encoder.h"
 #include "kvazaar.h"
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 
 
 static const int MIN_SMOOTHING_WINDOW = 40;

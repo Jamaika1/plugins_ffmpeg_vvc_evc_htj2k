@@ -41,8 +41,7 @@
 #include "global.h" // IWYU pragma: keep
 
 #include "encoderstate.h"
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 
 typedef struct kvz_rc_data {
   double *c_para[KVZ_MAX_GOP_LAYERS];
