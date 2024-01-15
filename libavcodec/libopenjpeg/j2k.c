@@ -3959,9 +3959,12 @@ static OPJ_BOOL opj_j2k_merge_ppm(opj_cp_t *p_cp, opj_event_mgr_t * p_manager)
                     opj_read_bytes(l_data, &l_N_ppm, 4);
                     l_data += 4;
                     l_data_size -= 4;
-                    l_ppm_data_size +=
-                        l_N_ppm; /* can't overflow, max 256 markers of max 65536 bytes, that is when PPM markers are not corrupted which is checked elsewhere */
 
+                    if (l_ppm_data_size > UINT_MAX - l_N_ppm) {
+                        opj_event_msg(p_manager, EVT_ERROR, "Too large value for Nppm\n");
+                        return OPJ_FALSE;
+                    }
+                    l_ppm_data_size += l_N_ppm;
                     if (l_data_size >= l_N_ppm) {
                         l_data_size -= l_N_ppm;
                         l_data += l_N_ppm;
@@ -7815,7 +7818,7 @@ OPJ_BOOL opj_j2k_setup_encoder(opj_j2k_t *p_j2k,
                                        image->comps[0].h * image->comps[0].prec) /
                                       ((double)parameters->tcp_rates[parameters->tcp_numlayers - 1] * 8 *
                                        image->comps[0].dx * image->comps[0].dy));
-            if (temp_size > INT_MAX) {
+            if (temp_size > (OPJ_FLOAT32)INT_MAX) {
                 parameters->max_cs_size = INT_MAX;
             } else {
                 parameters->max_cs_size = (int) floor(temp_size);
@@ -11101,6 +11104,10 @@ static OPJ_BOOL opj_j2k_read_SQcd_SQcc(opj_j2k_t *p_j2k,
                 l_tccp->stepsizes[l_band_no].mant = 0;
             }
         }
+
+        if (*p_header_size < l_num_band) {
+            return OPJ_FALSE;
+        }
         *p_header_size = *p_header_size - l_num_band;
     } else {
         for (l_band_no = 0; l_band_no < l_num_band; l_band_no++) {
@@ -11110,6 +11117,10 @@ static OPJ_BOOL opj_j2k_read_SQcd_SQcc(opj_j2k_t *p_j2k,
                 l_tccp->stepsizes[l_band_no].expn = (OPJ_INT32)(l_tmp >> 11);
                 l_tccp->stepsizes[l_band_no].mant = l_tmp & 0x7ff;
             }
+        }
+
+        if (*p_header_size < 2 * l_num_band) {
+            return OPJ_FALSE;
         }
         *p_header_size = *p_header_size - 2 * l_num_band;
     }
