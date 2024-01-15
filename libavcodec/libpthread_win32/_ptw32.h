@@ -150,18 +150,18 @@
  * at build-time or the above block of defines is in use otherwise
  * and NEED_ERRNO is either defined or not defined.
  */
-#if defined(HAVE_ERRNO_H) || !defined(NEED_ERRNO)
+//#if defined(HAVE_ERRNO_H) || !defined(NEED_ERRNO)
 #  include <errno.h>
-#else
-#  include "need_errno.h"
-#endif
+//#else
+//#  include "need_errno.h"
+//#endif
 
 #if defined(__BORLANDC__)
 #  define int64_t LONGLONG
 #  define uint64_t ULONGLONG
-#elif !defined(__MINGW32__)
-     typedef _int64 int64_t;
-     typedef unsigned _int64 uint64_t;
+#elif !defined(__MINGW32__) || defined(__MINGW64_VERSION_MAJOR)
+     typedef long long int64_t;
+     typedef unsigned long long uint64_t;
 #  if defined (PTW32_CONFIG_MSVC6)
      typedef long intptr_t;
 #  endif
