@@ -1868,14 +1868,14 @@ void vpx_subtract_block_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, con
 #define vpx_subtract_block vpx_subtract_block_c
 #endif
 
-int64_t vpx_sse_c(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+int64_t vpx_sse_c(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
 #if HAVE_SIMD
 #if defined(__SSE4_1__)
-int64_t vpx_sse_sse4_1(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
-RTCD_EXTERN int64_t (*vpx_sse)(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+int64_t vpx_sse_sse4_1(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
+RTCD_EXTERN int64_t (*vpx_sse)(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
 #endif
 #if defined(__AVX2__)
-int64_t vpx_sse_sse4_1(const uint8_t *a, int a_stride, const uint8_t *b,int b_stride, int width, int height);
+int64_t vpx_sse_avx2(const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, int width, int height);
 #endif
 #else
 #define vpx_sse vpx_sse_c

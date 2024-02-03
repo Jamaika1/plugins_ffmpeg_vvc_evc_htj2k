@@ -28,7 +28,7 @@
 //#define CONFIG_AV1_DECODER 1
 //#define CONFIG_AV1_ENCODER 1
 #define CONFIG_AV1_HIGHBITDEPTH 1
-#define CONFIG_AV1_TEMPORAL_DENOISING 0 // cmake encoder av1_temporal_denoiser.c
+#define CONFIG_AV1_TEMPORAL_DENOISING 1 // cmake encoder av1_temporal_denoiser.c
 #define CONFIG_BIG_ENDIAN 0
 #define CONFIG_BITRATE_ACCURACY 0
 #define CONFIG_RATECTRL_LOG 0
@@ -57,6 +57,7 @@
 #define CONFIG_INTER_STATS_ONLY 0
 //#define CONFIG_LIBYUV 0
 //#define CONFIG_LOWBITDEPTH 0
+#define CONFIG_LIBVMAF_PSNR_PEAK 0
 #define CONFIG_LPF_MASK 0 // cmake common loopfiltermask.c, error with libwebp2
 #define CONFIG_MAX_DECODE_PROFILE 2
 #define CONFIG_MISMATCH_DEBUG 0

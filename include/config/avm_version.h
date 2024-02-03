@@ -10,11 +10,11 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#define VERSION_MAJOR 5
+#define VERSION_MAJOR 6
 #define VERSION_MINOR 0
 #define VERSION_PATCH 0
-#define VERSION_EXTRA "8f881c2"
+#define VERSION_EXTRA "be89819"
 #define VERSION_PACKED \
   ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))
-#define VERSION_STRING_NOSP "v5.0.0-8f881c2"
-#define VERSION_STRING " v5.0.0-8f881c2"
+#define VERSION_STRING_NOSP "v6.0.0-be89819"
+#define VERSION_STRING " v6.0.0-be89819"

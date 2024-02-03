@@ -219,7 +219,39 @@ void aom_comp_mask_pred_c(uint8_t* comp_pred,
      const uint8_t* mask,
      int mask_stride,
      int invert_mask);
+#if HAVE_SIMD
+RTCD_EXTERN void (*aom_comp_mask_pred)(uint8_t* comp_pred,
+     const uint8_t* pred,
+     int width,
+     int height,
+     const uint8_t* ref,
+     int ref_stride,
+     const uint8_t* mask,
+     int mask_stride,
+     int invert_mask);
+void aom_comp_mask_pred_ssse3(uint8_t* comp_pred,
+     const uint8_t* pred,
+     int width,
+     int height,
+     const uint8_t* ref,
+     int ref_stride,
+     const uint8_t* mask,
+     int mask_stride,
+     int invert_mask);
+#if defined(__AVX2__)
+void aom_comp_mask_pred_avx2(uint8_t* comp_pred,
+     const uint8_t* pred,
+     int width,
+     int height,
+     const uint8_t* ref,
+     int ref_stride,
+     const uint8_t* mask,
+     int mask_stride,
+     int invert_mask);
+#endif
+#else
 #define aom_comp_mask_pred aom_comp_mask_pred_c
+#endif
 
 void aom_convolve8_c(const uint8_t* src,
      ptrdiff_t src_stride,
@@ -245,8 +277,8 @@ void aom_convolve8_horiz_c(const uint8_t* src,
      int w,
      int h);
 #if HAVE_SIMD
-#if defined(__SSE2__)
-void aom_convolve8_horiz_sse2(const uint8_t* src,
+#if defined(__SSSE3__)
+void aom_convolve8_horiz_ssse3(const uint8_t* src,
      ptrdiff_t src_stride,
      uint8_t* dst,
      ptrdiff_t dst_stride,
@@ -257,18 +289,6 @@ void aom_convolve8_horiz_sse2(const uint8_t* src,
      int w,
      int h);
 RTCD_EXTERN void (*aom_convolve8_horiz)(const uint8_t* src,
-     ptrdiff_t src_stride,
-     uint8_t* dst,
-     ptrdiff_t dst_stride,
-     const int16_t* filter_x,
-     int x_step_q4,
-     const int16_t* filter_y,
-     int y_step_q4,
-     int w,
-     int h);
-#endif
-#if defined(__SSSE3__)
-void aom_convolve8_horiz_ssse3(const uint8_t* src,
      ptrdiff_t src_stride,
      uint8_t* dst,
      ptrdiff_t dst_stride,
@@ -306,8 +326,8 @@ void aom_convolve8_vert_c(const uint8_t* src,
      int w,
      int h);
 #if HAVE_SIMD
-#if defined(__SSE2__)
-void aom_convolve8_vert_sse2(const uint8_t* src,
+#if defined(__SSSE3__)
+void aom_convolve8_vert_ssse3(const uint8_t* src,
      ptrdiff_t src_stride,
      uint8_t* dst,
      ptrdiff_t dst_stride,
@@ -318,18 +338,6 @@ void aom_convolve8_vert_sse2(const uint8_t* src,
      int w,
      int h);
 RTCD_EXTERN void (*aom_convolve8_vert)(const uint8_t* src,
-     ptrdiff_t src_stride,
-     uint8_t* dst,
-     ptrdiff_t dst_stride,
-     const int16_t* filter_x,
-     int x_step_q4,
-     const int16_t* filter_y,
-     int y_step_q4,
-     int w,
-     int h);
-#endif
-#if defined(__SSSE3__)
-void aom_convolve8_vert_ssse3(const uint8_t* src,
      ptrdiff_t src_stride,
      uint8_t* dst,
      ptrdiff_t dst_stride,
@@ -1748,7 +1756,7 @@ void aom_dist_wtd_comp_avg_pred_c(uint8_t* comp_pred,
      const uint8_t* ref,
      int ref_stride,
      const DIST_WTD_COMP_PARAMS* jcp_param);
-/*#if HAVE_SIMD
+#if HAVE_SIMD
 #if defined(__SSSE3__)
 void aom_dist_wtd_comp_avg_pred_ssse3(uint8_t* comp_pred,
      const uint8_t* pred,
@@ -1765,9 +1773,9 @@ RTCD_EXTERN void (*aom_dist_wtd_comp_avg_pred)(uint8_t* comp_pred,
      int ref_stride,
      const DIST_WTD_COMP_PARAMS* jcp_param);
 #endif
-#else*/
+#else
 #define aom_dist_wtd_comp_avg_pred aom_dist_wtd_comp_avg_pred_c
-//#endif
+#endif
 
 unsigned int aom_dist_wtd_sad128x128_avg_c(const uint8_t* src_ptr,
      int src_stride,
@@ -2177,8 +2185,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance128x128_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance128x128)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance128x128_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance128x128 \
   aom_dist_wtd_sub_pixel_avg_variance128x128_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance128x64_c(
     const uint8_t* src_ptr,
@@ -2190,8 +2223,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance128x64_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance128x64)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance128x64_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance128x64 \
   aom_dist_wtd_sub_pixel_avg_variance128x64_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance16x16_c(
     const uint8_t* src_ptr,
@@ -2203,8 +2261,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance16x16_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance16x16)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance16x16_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance16x16 \
   aom_dist_wtd_sub_pixel_avg_variance16x16_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance16x32_c(
     const uint8_t* src_ptr,
@@ -2216,8 +2299,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance16x32_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance16x32)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance16x32_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance16x32 \
   aom_dist_wtd_sub_pixel_avg_variance16x32_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance16x4_c(
     const uint8_t* src_ptr,
@@ -2255,8 +2363,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance16x8_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance16x8)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance16x8_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance16x8 \
   aom_dist_wtd_sub_pixel_avg_variance16x8_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance32x16_c(
     const uint8_t* src_ptr,
@@ -2268,8 +2401,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance32x16_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance32x16)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance32x16_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance32x16 \
   aom_dist_wtd_sub_pixel_avg_variance32x16_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance32x32_c(
     const uint8_t* src_ptr,
@@ -2281,8 +2439,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance32x32_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance32x32)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance32x32_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance32x32 \
   aom_dist_wtd_sub_pixel_avg_variance32x32_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance32x64_c(
     const uint8_t* src_ptr,
@@ -2294,8 +2477,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance32x64_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance32x64)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance32x64_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance32x64 \
   aom_dist_wtd_sub_pixel_avg_variance32x64_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance32x8_c(
     const uint8_t* src_ptr,
@@ -2333,8 +2541,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance4x4_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance4x4)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance4x4_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance4x4 \
   aom_dist_wtd_sub_pixel_avg_variance4x4_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance4x8_c(
     const uint8_t* src_ptr,
@@ -2346,8 +2579,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance4x8_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance4x8)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance4x8_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance4x8 \
   aom_dist_wtd_sub_pixel_avg_variance4x8_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance64x128_c(
     const uint8_t* src_ptr,
@@ -2359,8 +2617,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance64x128_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance64x128)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance64x128_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance64x128 \
   aom_dist_wtd_sub_pixel_avg_variance64x128_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance64x16_c(
     const uint8_t* src_ptr,
@@ -2385,8 +2668,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance64x32_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance64x32)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance64x32_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance64x32 \
   aom_dist_wtd_sub_pixel_avg_variance64x32_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance64x64_c(
     const uint8_t* src_ptr,
@@ -2398,8 +2706,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance64x64_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance64x64)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance64x64_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance64x64 \
   aom_dist_wtd_sub_pixel_avg_variance64x64_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance8x16_c(
     const uint8_t* src_ptr,
@@ -2411,8 +2744,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance8x16_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance8x16)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance8x16_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance8x16 \
   aom_dist_wtd_sub_pixel_avg_variance8x16_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance8x32_c(
     const uint8_t* src_ptr,
@@ -2437,8 +2795,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance8x4_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance8x4)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance8x4_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance8x4 \
   aom_dist_wtd_sub_pixel_avg_variance8x4_c
+#endif
 
 uint32_t aom_dist_wtd_sub_pixel_avg_variance8x8_c(
     const uint8_t* src_ptr,
@@ -2450,8 +2833,33 @@ uint32_t aom_dist_wtd_sub_pixel_avg_variance8x8_c(
     uint32_t* sse,
     const uint8_t* second_pred,
     const DIST_WTD_COMP_PARAMS* jcp_param);
+#if HAVE_SIMD
+RTCD_EXTERN uint32_t (*aom_dist_wtd_sub_pixel_avg_variance8x8)(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#if defined(__SSSE3__)
+uint32_t aom_dist_wtd_sub_pixel_avg_variance8x8_ssse3(
+    const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred,
+    const DIST_WTD_COMP_PARAMS* jcp_param);
+#endif
+#else
 #define aom_dist_wtd_sub_pixel_avg_variance8x8 \
   aom_dist_wtd_sub_pixel_avg_variance8x8_c
+#endif
 
 void aom_fdct4x4_c(const int16_t* input, tran_low_t* output, int stride);
 #if defined(__SSE2__) && HAVE_SIMD
@@ -2594,6 +3002,15 @@ void aom_get_var_sse_sum_16x16_dual_c(const uint8_t *src_ptr,
      int *tot_sum,
      uint32_t *var16x16);
 #if HAVE_SIMD
+#if defined(__SSE2__)
+void aom_get_var_sse_sum_16x16_dual_sse2(const uint8_t *src_ptr,
+     int source_stride,
+     const uint8_t *ref_ptr,
+     int ref_stride,
+     uint32_t *sse16x16,
+     unsigned int *tot_sse,
+     int *tot_sum,
+     uint32_t *var16x16);
 RTCD_EXTERN void (*aom_get_var_sse_sum_16x16_dual)(const uint8_t *src_ptr,
      int source_stride,
      const uint8_t *ref_ptr,
@@ -2602,6 +3019,7 @@ RTCD_EXTERN void (*aom_get_var_sse_sum_16x16_dual)(const uint8_t *src_ptr,
      unsigned int *tot_sse,
      int *tot_sum,
      uint32_t *var16x16);
+#endif
 #if defined(__AVX2__)
 void aom_get_var_sse_sum_16x16_dual_avx2(const uint8_t *src_ptr,
      int source_stride,
@@ -2936,39 +3354,124 @@ void aom_h_predictor_8x8_sse2(uint8_t* dst,
 #endif
 
 void aom_hadamard_32x32_c(const int16_t* src_diff,
-ptrdiff_t src_stride,
-tran_low_t* coeff);
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+void aom_hadamard_32x32_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+RTCD_EXTERN void (*aom_hadamard_32x32)(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#endif
+#if defined(__AVX2__)
+void aom_hadamard_32x32_avx2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#endif
+#else
 #define aom_hadamard_32x32 aom_hadamard_32x32_c
+#endif
 
 void aom_hadamard_16x16_c(const int16_t* src_diff,
-ptrdiff_t src_stride,
-tran_low_t* coeff);
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+void aom_hadamard_16x16_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+RTCD_EXTERN void (*aom_hadamard_16x16)(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#endif
+#if defined(__AVX2__)
+void aom_hadamard_16x16_avx2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#endif
+#else
 #define aom_hadamard_16x16 aom_hadamard_16x16_c
+#endif
 
 void aom_hadamard_8x8_c(const int16_t* src_diff,
-   ptrdiff_t src_stride,
-   tran_low_t* coeff);
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#if defined(__SSE2__) && HAVE_SIMD
+void aom_hadamard_8x8_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#define aom_hadamard_8x8 aom_hadamard_8x8_sse2
+#else
 #define aom_hadamard_8x8 aom_hadamard_8x8_c
+#endif
 
 void aom_hadamard_4x4_c(const int16_t* src_diff,
-   ptrdiff_t src_stride,
-   tran_low_t* coeff);
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#if defined(__SSE2__) && HAVE_SIMD
+void aom_hadamard_4x4_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     tran_low_t* coeff);
+#define aom_hadamard_4x4 aom_hadamard_4x4_sse2
+#else
 #define aom_hadamard_4x4 aom_hadamard_4x4_c
+#endif
 
 void aom_hadamard_lp_16x16_c(const int16_t* src_diff,
-   ptrdiff_t src_stride,
-   int16_t* coeff);
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+void aom_hadamard_lp_16x16_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+RTCD_EXTERN void (*aom_hadamard_lp_16x16)(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+#endif
+#if defined(__AVX2__)
+void aom_hadamard_lp_16x16_avx2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+#endif
+#else
 #define aom_hadamard_lp_16x16 aom_hadamard_lp_16x16_c
+#endif
 
 void aom_hadamard_lp_8x8_c(const int16_t* src_diff,
- ptrdiff_t src_stride,
- int16_t* coeff);
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+#if defined(__SSE2__) && HAVE_SIMD
+void aom_hadamard_lp_8x8_sse2(const int16_t* src_diff,
+     ptrdiff_t src_stride,
+     int16_t* coeff);
+#define aom_hadamard_lp_8x8 aom_hadamard_lp_8x8_sse2
+#else
 #define aom_hadamard_lp_8x8 aom_hadamard_lp_8x8_c
+#endif
 
 void aom_hadamard_lp_8x8_dual_c(const int16_t *src_diff,
-   ptrdiff_t src_stride,
-   int16_t *coeff);
+     ptrdiff_t src_stride,
+     int16_t *coeff);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+void aom_hadamard_lp_8x8_dual_sse2(const int16_t *src_diff,
+     ptrdiff_t src_stride,
+     int16_t *coeff);
+RTCD_EXTERN void (*aom_hadamard_lp_8x8_dual)(const int16_t *src_diff,
+     ptrdiff_t src_stride,
+     int16_t *coeff);
+#endif
+#if defined(__AVX2__)
+void aom_hadamard_lp_8x8_dual_avx2(const int16_t *src_diff,
+     ptrdiff_t src_stride,
+     int16_t *coeff);
+#endif
+#else
 #define aom_hadamard_lp_8x8_dual aom_hadamard_lp_8x8_dual_c
+#endif
 
 #if CONFIG_AV1_HIGHBITDEPTH
 uint32_t aom_highbd_10_dist_wtd_sub_pixel_avg_variance128x128_c(
@@ -26327,7 +26830,7 @@ void aom_sad16x4x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad16x4x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -26347,9 +26850,9 @@ void aom_sad16x4x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad16x4x4d aom_sad16x4x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad16x64_c(const uint8_t* src_ptr,
      int src_stride,
@@ -26408,7 +26911,7 @@ void aom_sad16x64x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad16x64x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -26428,9 +26931,9 @@ void aom_sad16x64x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad16x64x4d aom_sad16x64x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad16x8_c(const uint8_t* src_ptr,
      int src_stride,
@@ -26885,7 +27388,7 @@ void aom_sad32x8x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad32x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -26905,9 +27408,9 @@ void aom_sad32x8x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad32x8x4d aom_sad32x8x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad4x16_c(const uint8_t* src_ptr,
      int src_stride,
@@ -26951,16 +27454,16 @@ void aom_sad4x16x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
+/*#if defined(__SSE2__) && HAVE_SIMD
 void aom_sad4x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
 #define aom_sad4x16x4d aom_sad4x16x4d_sse2
-#else
+#else*/
 #define aom_sad4x16x4d aom_sad4x16x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad4x4_c(const uint8_t* src_ptr,
      int src_stride,
@@ -27230,7 +27733,7 @@ void aom_sad64x16x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad64x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -27250,9 +27753,9 @@ void aom_sad64x16x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad64x16x4d aom_sad64x16x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad64x32_c(const uint8_t* src_ptr,
      int src_stride,
@@ -27559,16 +28062,16 @@ void aom_sad8x32x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
+/*#if defined(__SSE2__) && HAVE_SIMD
 void aom_sad8x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
 #define aom_sad8x32x4d aom_sad8x32x4d_sse2
-#else
+#else*/
 #define aom_sad8x32x4d aom_sad8x32x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad8x4_c(const uint8_t* src_ptr,
      int src_stride,
@@ -27902,7 +28405,7 @@ void aom_sad_skip_16x64x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad_skip_16x64x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -27922,9 +28425,9 @@ void aom_sad_skip_16x64x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad_skip_16x64x4d aom_sad_skip_16x64x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad_skip_16x8_c(const uint8_t* src_ptr,
      int src_stride,
@@ -28150,7 +28653,7 @@ void aom_sad_skip_32x8x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad_skip_32x8x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -28170,9 +28673,9 @@ void aom_sad_skip_32x8x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad_skip_32x8x4d aom_sad_skip_32x8x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad_skip_4x16_c(const uint8_t* src_ptr,
      int src_stride,
@@ -28193,16 +28696,16 @@ void aom_sad_skip_4x16x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
+/*#if defined(__SSE2__) && HAVE_SIMD
 void aom_sad_skip_4x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
 #define aom_sad_skip_4x16x4d aom_sad_skip_4x16x4d_sse2
-#else
+#else*/
 #define aom_sad_skip_4x16x4d aom_sad_skip_4x16x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad_skip_4x4_c(const uint8_t* src_ptr,
 int src_stride,
@@ -28320,7 +28823,7 @@ void aom_sad_skip_64x16x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if HAVE_SIMD
+/*#if HAVE_SIMD
 #if defined(__SSE2__)
 void aom_sad_skip_64x16x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
@@ -28340,9 +28843,9 @@ void aom_sad_skip_64x16x4d_avx2(const uint8_t* src_ptr,
      int ref_stride,
      uint32_t sad_array[4]);
 #endif
-#else
+#else*/
 #define aom_sad_skip_64x16x4d aom_sad_skip_64x16x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad_skip_64x32_c(const uint8_t* src_ptr,
      int src_stride,
@@ -28501,16 +29004,16 @@ void aom_sad_skip_8x32x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
-#if defined(__SSE2__) && HAVE_SIMD
+/*#if defined(__SSE2__) && HAVE_SIMD
 void aom_sad_skip_8x32x4d_sse2(const uint8_t* src_ptr,
      int src_stride,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
 #define aom_sad_skip_8x32x4d aom_sad_skip_8x32x4d_sse2
-#else
+#else*/
 #define aom_sad_skip_8x32x4d aom_sad_skip_8x32x4d_c
-#endif
+//#endif
 
 unsigned int aom_sad_skip_8x4_c(const uint8_t* src_ptr,
 int src_stride,
@@ -29608,157 +30111,445 @@ const uint8_t* left);
 #endif
 
 int64_t aom_sse_c(const uint8_t* a,
-  int a_stride,
-  const uint8_t* b,
-  int b_stride,
-  int width,
-  int height);
+    int a_stride,
+    const uint8_t* b,
+    int b_stride,
+    int width,
+    int height);
 #if HAVE_SIMD
 #if defined(__SSE4_1__)
 int64_t aom_sse_sse4_1(const uint8_t* a,
-  int a_stride,
-  const uint8_t* b,
-  int b_stride,
-  int width,
-  int height);
+    int a_stride,
+    const uint8_t* b,
+    int b_stride,
+    int width,
+    int height);
 RTCD_EXTERN int64_t (*aom_sse)(const uint8_t* a,
-  int a_stride,
-  const uint8_t* b,
-  int b_stride,
-  int width,
-  int height);
+    int a_stride,
+    const uint8_t* b,
+    int b_stride,
+    int width,
+    int height);
 #endif
 #if defined(__AVX2__)
 int64_t aom_sse_avx2(const uint8_t* a,
-  int a_stride,
-  const uint8_t* b,
-  int b_stride,
-  int width,
-  int height);
+    int a_stride,
+    const uint8_t* b,
+    int b_stride,
+    int width,
+    int height);
 #endif
 #else
 #define aom_sse aom_sse_c
 #endif
 
 uint32_t aom_sub_pixel_avg_variance128x128_c(const uint8_t* src_ptr,
-   int source_stride,
-   int xoffset,
-   int yoffset,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   uint32_t* sse,
-   const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance128x128_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance128x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance128x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance128x128 aom_sub_pixel_avg_variance128x128_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance128x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse,
-  const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance128x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance128x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance128x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance128x64 aom_sub_pixel_avg_variance128x64_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance16x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance16x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance16x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance16x16 aom_sub_pixel_avg_variance16x16_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance16x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance16x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance16x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance16x32 aom_sub_pixel_avg_variance16x32_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance16x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance16x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance16x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance16x4 aom_sub_pixel_avg_variance16x4_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance16x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance16x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance16x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance16x64 aom_sub_pixel_avg_variance16x64_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance16x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance16x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance16x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance16x8 aom_sub_pixel_avg_variance16x8_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance32x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance32x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance32x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance32x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance32x16 aom_sub_pixel_avg_variance32x16_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance32x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance32x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance32x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance32x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance32x32 aom_sub_pixel_avg_variance32x32_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance32x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance32x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance32x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance32x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance32x64 aom_sub_pixel_avg_variance32x64_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance32x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance32x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance32x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance32x8 aom_sub_pixel_avg_variance32x8_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance4x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance4x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance4x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance4x16 aom_sub_pixel_avg_variance4x16_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance4x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -29768,7 +30559,26 @@ uint32_t aom_sub_pixel_avg_variance4x4_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance4x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance4x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance4x4 aom_sub_pixel_avg_variance4x4_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance4x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -29778,67 +30588,236 @@ uint32_t aom_sub_pixel_avg_variance4x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance4x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance4x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance4x8 aom_sub_pixel_avg_variance4x8_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance64x128_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse,
-  const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance64x128_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance64x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance64x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance64x128 aom_sub_pixel_avg_variance64x128_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance64x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance64x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance64x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance64x16 aom_sub_pixel_avg_variance64x16_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance64x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance64x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance64x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance64x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance64x32 aom_sub_pixel_avg_variance64x32_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance64x64_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse,
- const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_avg_variance64x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance64x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_avg_variance64x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#endif
+#else
 #define aom_sub_pixel_avg_variance64x64 aom_sub_pixel_avg_variance64x64_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance8x16_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance8x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance8x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance8x16 aom_sub_pixel_avg_variance8x16_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance8x32_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse,
-const uint8_t* second_pred);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance8x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance8x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance8x32 aom_sub_pixel_avg_variance8x32_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
     int source_stride,
@@ -29848,7 +30827,26 @@ uint32_t aom_sub_pixel_avg_variance8x4_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance8x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance8x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance8x4 aom_sub_pixel_avg_variance8x4_c
+#endif
 
 uint32_t aom_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
     int source_stride,
@@ -29858,7 +30856,26 @@ uint32_t aom_sub_pixel_avg_variance8x8_c(const uint8_t* src_ptr,
     int ref_stride,
     uint32_t* sse,
     const uint8_t* second_pred);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_avg_variance8x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_avg_variance8x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse,
+    const uint8_t* second_pred);
+#else
 #define aom_sub_pixel_avg_variance8x8 aom_sub_pixel_avg_variance8x8_c
+#endif
 
 uint32_t aom_sub_pixel_variance128x128_c(const uint8_t* src_ptr,
     int source_stride,
@@ -29867,196 +30884,713 @@ uint32_t aom_sub_pixel_variance128x128_c(const uint8_t* src_ptr,
     const uint8_t* ref_ptr,
     int ref_stride,
     uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance128x128_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance128x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance128x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance128x128 aom_sub_pixel_variance128x128_c
+#endif
 
 uint32_t aom_sub_pixel_variance128x64_c(const uint8_t* src_ptr,
-   int source_stride,
-   int xoffset,
-   int yoffset,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance128x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance128x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance128x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance128x64 aom_sub_pixel_variance128x64_c
+#endif
 
 uint32_t aom_sub_pixel_variance16x16_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance16x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance16x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance16x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance16x16 aom_sub_pixel_variance16x16_c
+#endif
 
 uint32_t aom_sub_pixel_variance16x32_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance16x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance16x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance16x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance16x32 aom_sub_pixel_variance16x32_c
+#endif
 
 uint32_t aom_sub_pixel_variance16x4_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance16x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance16x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance16x4_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance16x4 aom_sub_pixel_variance16x4_c
+#endif
 
 uint32_t aom_sub_pixel_variance16x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance16x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance16x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance16x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance16x64 aom_sub_pixel_variance16x64_c
+#endif
 
 uint32_t aom_sub_pixel_variance16x8_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance16x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance16x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance16x8_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance16x8 aom_sub_pixel_variance16x8_c
+#endif
 
 uint32_t aom_sub_pixel_variance32x16_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance32x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance32x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance32x16_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance32x16 aom_sub_pixel_variance32x16_c
+#endif
 
 uint32_t aom_sub_pixel_variance32x32_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance32x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance32x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance32x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance32x32 aom_sub_pixel_variance32x32_c
+#endif
 
 uint32_t aom_sub_pixel_variance32x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance32x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance32x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance32x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance32x64 aom_sub_pixel_variance32x64_c
+#endif
 
 uint32_t aom_sub_pixel_variance32x8_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance32x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance32x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance32x8 aom_sub_pixel_variance32x8_c
+#endif
 
 uint32_t aom_sub_pixel_variance4x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance4x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance4x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance4x16 aom_sub_pixel_variance4x16_c
+#endif
 
 uint32_t aom_sub_pixel_variance4x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance4x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance4x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance4x4 aom_sub_pixel_variance4x4_c
+#endif
 
 uint32_t aom_sub_pixel_variance4x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance4x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance4x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance4x8 aom_sub_pixel_variance4x8_c
+#endif
 
 uint32_t aom_sub_pixel_variance64x128_c(const uint8_t* src_ptr,
-   int source_stride,
-   int xoffset,
-   int yoffset,
-   const uint8_t* ref_ptr,
-   int ref_stride,
-   uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance64x128_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance64x128)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance64x128_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance64x128 aom_sub_pixel_variance64x128_c
+#endif
 
 uint32_t aom_sub_pixel_variance64x16_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance64x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance64x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance64x16 aom_sub_pixel_variance64x16_c
+#endif
 
 uint32_t aom_sub_pixel_variance64x32_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance64x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance64x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance64x32_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance64x32 aom_sub_pixel_variance64x32_c
+#endif
 
 uint32_t aom_sub_pixel_variance64x64_c(const uint8_t* src_ptr,
-  int source_stride,
-  int xoffset,
-  int yoffset,
-  const uint8_t* ref_ptr,
-  int ref_stride,
-  uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if HAVE_SIMD
+#if defined(__SSSE3__)
+uint32_t aom_sub_pixel_variance64x64_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance64x64)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#if defined(__AVX2__)
+uint32_t aom_sub_pixel_variance64x64_avx2(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#endif
+#else
 #define aom_sub_pixel_variance64x64 aom_sub_pixel_variance64x64_c
+#endif
 
 uint32_t aom_sub_pixel_variance8x16_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance8x16_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance8x16)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance8x16 aom_sub_pixel_variance8x16_c
+#endif
 
 uint32_t aom_sub_pixel_variance8x32_c(const uint8_t* src_ptr,
- int source_stride,
- int xoffset,
- int yoffset,
- const uint8_t* ref_ptr,
- int ref_stride,
- uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance8x32_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance8x32)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance8x32 aom_sub_pixel_variance8x32_c
+#endif
 
 uint32_t aom_sub_pixel_variance8x4_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance8x4_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance8x4)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance8x4 aom_sub_pixel_variance8x4_c
+#endif
 
 uint32_t aom_sub_pixel_variance8x8_c(const uint8_t* src_ptr,
-int source_stride,
-int xoffset,
-int yoffset,
-const uint8_t* ref_ptr,
-int ref_stride,
-uint32_t* sse);
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#if defined(__SSSE3__) && HAVE_SIMD
+uint32_t aom_sub_pixel_variance8x8_ssse3(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+RTCD_EXTERN uint32_t (*aom_sub_pixel_variance8x8)(const uint8_t* src_ptr,
+    int source_stride,
+    int xoffset,
+    int yoffset,
+    const uint8_t* ref_ptr,
+    int ref_stride,
+    uint32_t* sse);
+#else
 #define aom_sub_pixel_variance8x8 aom_sub_pixel_variance8x8_c
+#endif
 
 void aom_subtract_block_c(int rows,
      int cols,
@@ -30733,6 +32267,96 @@ double av1_compute_cross_correlation_avx2(const unsigned char *frame1,
 #define av1_compute_cross_correlation av1_compute_cross_correlation_c
 #endif
 
+bool aom_compute_mean_stddev_c(const unsigned char *frame,
+     int stride,
+     int x,
+     int y,
+     double *mean,
+     double *one_over_stddev);
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
+bool aom_compute_mean_stddev_sse4_1(const unsigned char *frame,
+     int stride,
+     int x,
+     int y,
+     double *mean,
+     double *one_over_stddev);
+RTCD_EXTERN bool (*aom_compute_mean_stddev)(const unsigned char *frame,
+     int stride,
+     int x,
+     int y,
+     double *mean,
+     double *one_over_stddev);
+#endif
+#if defined(__AVX2__)
+bool aom_compute_mean_stddev_avx2(const unsigned char *frame,
+     int stride,
+     int x,
+     int y,
+     double *mean,
+     double *one_over_stddev);
+#endif
+#else
+#define aom_compute_mean_stddev aom_compute_mean_stddev_c
+#endif
+
+double aom_compute_correlation_c(const unsigned char *frame1,
+     int stride1,
+     int x1,
+     int y1,
+     double mean1,
+     double one_over_stddev1,
+     const unsigned char *frame2,
+     int stride2,
+     int x2,
+     int y2,
+     double mean2,
+     double one_over_stddev2);
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
+double aom_compute_correlation_sse4_1(const unsigned char *frame1,
+     int stride1,
+     int x1,
+     int y1,
+     double mean1,
+     double one_over_stddev1,
+     const unsigned char *frame2,
+     int stride2,
+     int x2,
+     int y2,
+     double mean2,
+     double one_over_stddev2);
+RTCD_EXTERN double (*aom_compute_correlation)(const unsigned char *frame1,
+     int stride1,
+     int x1,
+     int y1,
+     double mean1,
+     double one_over_stddev1,
+     const unsigned char *frame2,
+     int stride2,
+     int x2,
+     int y2,
+     double mean2,
+     double one_over_stddev2);
+#endif
+#if defined(__AVX2__)
+double aom_compute_correlation_avx2(const unsigned char *frame1,
+     int stride1,
+     int x1,
+     int y1,
+     double mean1,
+     double one_over_stddev1,
+     const unsigned char *frame2,
+     int stride2,
+     int x2,
+     int y2,
+     double mean2,
+     double one_over_stddev2);
+#endif
+#else
+#define aom_compute_correlation aom_compute_correlation_c
+#endif
+
 void aom_compute_flow_at_point_c(const uint8_t *src,
      const uint8_t *ref,
      int x,
@@ -30753,7 +32377,7 @@ void aom_compute_flow_at_point_sse4_1(const uint8_t *src,
      int stride,
      double *u,
      double *v);
-RTCD_EXTERN double (*aom_compute_flow_at_point)(const uint8_t *src,
+RTCD_EXTERN void (*aom_compute_flow_at_point)(const uint8_t *src,
      const uint8_t *ref,
      int x,
      int y,
@@ -30776,11 +32400,51 @@ static void setup_rtcd_internal(void) {
 
   (void)flags;
 
+    aom_dist_wtd_sub_pixel_avg_variance128x128 = aom_dist_wtd_sub_pixel_avg_variance128x128_c;
+    aom_dist_wtd_sub_pixel_avg_variance128x64 = aom_dist_wtd_sub_pixel_avg_variance128x64_c;
+    aom_dist_wtd_sub_pixel_avg_variance16x16 = aom_dist_wtd_sub_pixel_avg_variance16x16_c;
+    aom_dist_wtd_sub_pixel_avg_variance16x32 = aom_dist_wtd_sub_pixel_avg_variance16x32_c;
+    aom_dist_wtd_sub_pixel_avg_variance16x8 = aom_dist_wtd_sub_pixel_avg_variance16x8_c;
+    aom_dist_wtd_sub_pixel_avg_variance32x16 = aom_dist_wtd_sub_pixel_avg_variance32x16_c;
+    aom_dist_wtd_sub_pixel_avg_variance32x32 = aom_dist_wtd_sub_pixel_avg_variance32x32_c;
+    aom_dist_wtd_sub_pixel_avg_variance32x64 = aom_dist_wtd_sub_pixel_avg_variance32x64_c;
+    aom_dist_wtd_sub_pixel_avg_variance4x4 = aom_dist_wtd_sub_pixel_avg_variance4x4_c;
+    aom_dist_wtd_sub_pixel_avg_variance4x8 = aom_dist_wtd_sub_pixel_avg_variance4x8_c;
+    aom_dist_wtd_sub_pixel_avg_variance64x128 = aom_dist_wtd_sub_pixel_avg_variance64x128_c;
+    aom_dist_wtd_sub_pixel_avg_variance64x32 = aom_dist_wtd_sub_pixel_avg_variance64x32_c;
+    aom_dist_wtd_sub_pixel_avg_variance64x64 = aom_dist_wtd_sub_pixel_avg_variance64x64_c;
+    aom_dist_wtd_sub_pixel_avg_variance8x16 = aom_dist_wtd_sub_pixel_avg_variance8x16_c;
+    aom_dist_wtd_sub_pixel_avg_variance8x4 = aom_dist_wtd_sub_pixel_avg_variance8x4_c;
+    aom_dist_wtd_sub_pixel_avg_variance8x8 = aom_dist_wtd_sub_pixel_avg_variance8x8_c;
+    aom_hadamard_32x32 = aom_hadamard_32x32_sse2;
+    aom_hadamard_16x16 = aom_hadamard_16x16_sse2;
+
+    /*
+    aom_dc_left_predictor_32x16 = aom_dc_left_predictor_32x16_sse2;
+    aom_dc_left_predictor_32x32 = aom_dc_left_predictor_32x32_sse2;
+    aom_dc_left_predictor_32x64 = aom_dc_left_predictor_32x64_sse2;
+    aom_dc_left_predictor_64x16 = aom_dc_left_predictor_64x16_sse2;
+    aom_dc_left_predictor_64x32 = aom_dc_left_predictor_64x32_sse2;
+    aom_dc_left_predictor_64x64 = aom_dc_left_predictor_64x64_sse2;
+    aom_dc_predictor_32x16 = aom_dc_predictor_32x16_sse2;
+    aom_dc_predictor_32x32 = aom_dc_predictor_32x32_sse2;
+    aom_dc_predictor_32x64 = aom_dc_predictor_32x64_sse2;
+    aom_dc_predictor_64x16 = aom_dc_predictor_64x16_sse2;
+    aom_dc_predictor_64x32 = aom_dc_predictor_64x32_sse2;
+    aom_dc_predictor_64x64 = aom_dc_predictor_64x64_sse2;
+    aom_dc_top_predictor_32x16 = aom_dc_top_predictor_32x16_sse2;
+    aom_dc_top_predictor_32x32 = aom_dc_top_predictor_32x32_sse2;
+    aom_dc_top_predictor_32x64 = aom_dc_top_predictor_32x64_sse2;
+    aom_dc_top_predictor_64x16 = aom_dc_top_predictor_64x16_sse2;
+    aom_dc_top_predictor_64x32 = aom_dc_top_predictor_64x32_sse2;
+    aom_dc_top_predictor_64x64 = aom_dc_top_predictor_64x64_sse2;
+    */
+
 #if HAVE_SIMD
-  av1_compute_cross_correlation = av1_compute_cross_correlation_c;
+  aom_compute_mean_stddev = aom_compute_mean_stddev_c;
+  aom_compute_correlation = aom_compute_correlation_c;
   aom_compute_flow_at_point = aom_compute_flow_at_point_c;
   aom_vector_var = aom_vector_var_c;
-  aom_get_var_sse_sum_16x16_dual = aom_get_var_sse_sum_16x16_dual_c;
   aom_obmc_sad128x128 = aom_obmc_sad128x128_c;
   aom_obmc_sad128x64 = aom_obmc_sad128x64_c;
   aom_obmc_sad64x128 = aom_obmc_sad64x128_c;
@@ -30931,7 +32595,7 @@ static void setup_rtcd_internal(void) {
   aom_blend_a64_vmask = aom_blend_a64_vmask_c;
   aom_sse = aom_sse_c;
   aom_comp_avg_pred = aom_comp_avg_pred_c;
-  //aom_dist_wtd_comp_avg_pred = aom_dist_wtd_comp_avg_pred_c;
+  aom_dist_wtd_comp_avg_pred = aom_dist_wtd_comp_avg_pred_c;
   /*aom_dist_wtd_sad128x128_avg = aom_dist_wtd_sad128x128_avg_c;
   aom_dist_wtd_sad128x64_avg = aom_dist_wtd_sad128x64_avg_c;
   aom_dist_wtd_sad64x128_avg = aom_dist_wtd_sad64x128_avg_c;
@@ -31038,6 +32702,52 @@ static void setup_rtcd_internal(void) {
   aom_masked_sub_pixel_variance32x8 = aom_masked_sub_pixel_variance32x8_c;
   aom_masked_sub_pixel_variance16x64 = aom_masked_sub_pixel_variance16x64_c;
   aom_masked_sub_pixel_variance64x16 = aom_masked_sub_pixel_variance64x16_c;
+  aom_convolve8_horiz = aom_convolve8_horiz_c;
+  aom_convolve8_vert = aom_convolve8_vert_c;
+  aom_sub_pixel_variance128x128 = aom_sub_pixel_variance128x128_c;
+  aom_sub_pixel_variance128x64 = aom_sub_pixel_variance128x64_c;
+  aom_sub_pixel_variance64x128 = aom_sub_pixel_variance64x128_c;
+  aom_sub_pixel_variance64x64 = aom_sub_pixel_variance64x64_c;
+  aom_sub_pixel_variance64x32 = aom_sub_pixel_variance64x32_c;
+  aom_sub_pixel_variance32x64 = aom_sub_pixel_variance32x64_c;
+  aom_sub_pixel_variance32x32 = aom_sub_pixel_variance32x32_c;
+  aom_sub_pixel_variance32x16 = aom_sub_pixel_variance32x16_c;
+  aom_sub_pixel_variance16x32 = aom_sub_pixel_variance16x32_c;
+  aom_sub_pixel_variance16x16 = aom_sub_pixel_variance16x16_c;
+  aom_sub_pixel_variance16x8 = aom_sub_pixel_variance16x8_c;
+  aom_sub_pixel_variance8x16 = aom_sub_pixel_variance8x16_c;
+  aom_sub_pixel_variance8x8 = aom_sub_pixel_variance8x8_c;
+  aom_sub_pixel_variance8x4 = aom_sub_pixel_variance8x4_c;
+  aom_sub_pixel_variance4x8 = aom_sub_pixel_variance4x8_c;
+  aom_sub_pixel_variance4x4 = aom_sub_pixel_variance4x4_c;
+  aom_sub_pixel_variance4x16 = aom_sub_pixel_variance4x16_c;
+  aom_sub_pixel_variance16x4 = aom_sub_pixel_variance16x4_c;
+  aom_sub_pixel_variance8x32 = aom_sub_pixel_variance8x32_c;
+  aom_sub_pixel_variance32x8 = aom_sub_pixel_variance32x8_c;
+  aom_sub_pixel_variance16x64 = aom_sub_pixel_variance16x64_c;
+  aom_sub_pixel_variance64x16 = aom_sub_pixel_variance64x16_c;
+  aom_sub_pixel_avg_variance128x128 = aom_sub_pixel_avg_variance128x128_c;
+  aom_sub_pixel_avg_variance128x64 = aom_sub_pixel_avg_variance128x64_c;
+  aom_sub_pixel_avg_variance64x128 = aom_sub_pixel_avg_variance64x128_c;
+  aom_sub_pixel_avg_variance64x64 = aom_sub_pixel_avg_variance64x64_c;
+  aom_sub_pixel_avg_variance64x32 = aom_sub_pixel_avg_variance64x32_c;
+  aom_sub_pixel_avg_variance32x64 = aom_sub_pixel_avg_variance32x64_c;
+  aom_sub_pixel_avg_variance32x32 = aom_sub_pixel_avg_variance32x32_c;
+  aom_sub_pixel_avg_variance32x16 = aom_sub_pixel_avg_variance32x16_c;
+  aom_sub_pixel_avg_variance16x32 = aom_sub_pixel_avg_variance16x32_c;
+  aom_sub_pixel_avg_variance16x16 = aom_sub_pixel_avg_variance16x16_c;
+  aom_sub_pixel_avg_variance16x8 = aom_sub_pixel_avg_variance16x8_c;
+  aom_sub_pixel_avg_variance8x16 = aom_sub_pixel_avg_variance8x16_c;
+  aom_sub_pixel_avg_variance8x8 = aom_sub_pixel_avg_variance8x8_c;
+  aom_sub_pixel_avg_variance8x4 = aom_sub_pixel_avg_variance8x4_c;
+  aom_sub_pixel_avg_variance4x8 = aom_sub_pixel_avg_variance4x8_c;
+  aom_sub_pixel_avg_variance4x4 = aom_sub_pixel_avg_variance4x4_c;
+  aom_sub_pixel_avg_variance4x16 = aom_sub_pixel_avg_variance4x16_c;
+  aom_sub_pixel_avg_variance16x4 = aom_sub_pixel_avg_variance16x4_c;
+  aom_sub_pixel_avg_variance8x32 = aom_sub_pixel_avg_variance8x32_c;
+  aom_sub_pixel_avg_variance32x8 = aom_sub_pixel_avg_variance32x8_c;
+  aom_sub_pixel_avg_variance16x64 = aom_sub_pixel_avg_variance16x64_c;
+  aom_sub_pixel_avg_variance64x16 = aom_sub_pixel_avg_variance64x16_c;
 #endif
 #if defined(__SSE2__) && HAVE_SIMD
   aom_avg_8x8_quad = aom_avg_8x8_quad_sse2;
@@ -31074,9 +32784,10 @@ static void setup_rtcd_internal(void) {
   aom_dc_predictor_64x64 = aom_dc_predictor_64x64_sse2;
   aom_dc_predictor_64x32 = aom_dc_predictor_64x32_sse2;
   aom_dc_predictor_64x16 = aom_dc_predictor_64x16_sse2;
+  aom_hadamard_lp_16x16 = aom_hadamard_lp_16x16_sse2;
+  aom_hadamard_lp_8x8_dual = aom_hadamard_lp_8x8_dual_sse2;
   aom_convolve_copy = aom_convolve_copy_sse2;
-  aom_convolve8_horiz = aom_convolve8_horiz_sse2;
-  aom_convolve8_vert = aom_convolve8_vert_sse2;
+  aom_get_var_sse_sum_16x16_dual = aom_get_var_sse_sum_16x16_dual_sse2;
   aom_lpf_horizontal_6_quad = aom_lpf_horizontal_6_quad_sse2;
   aom_lpf_horizontal_8_quad = aom_lpf_horizontal_8_quad_sse2;
   aom_lpf_horizontal_14_quad = aom_lpf_horizontal_14_quad_sse2;
@@ -31127,27 +32838,27 @@ static void setup_rtcd_internal(void) {
   aom_sad64x128x4d = aom_sad64x128x4d_sse2;
   aom_sad64x64x4d = aom_sad64x64x4d_sse2;
   aom_sad64x32x4d = aom_sad64x32x4d_sse2;
-  aom_sad64x16x4d = aom_sad64x16x4d_sse2;
+  //aom_sad64x16x4d = aom_sad64x16x4d_sse2;
   aom_sad32x64x4d = aom_sad32x64x4d_sse2;
   aom_sad32x32x4d = aom_sad32x32x4d_sse2;
   aom_sad32x16x4d = aom_sad32x16x4d_sse2;
-  aom_sad32x8x4d = aom_sad32x8x4d_sse2;
-  aom_sad16x64x4d = aom_sad16x64x4d_sse2;
+  //aom_sad32x8x4d = aom_sad32x8x4d_sse2;
+  //aom_sad16x64x4d = aom_sad16x64x4d_sse2;
   aom_sad16x32x4d = aom_sad16x32x4d_sse2;
   aom_sad16x16x4d = aom_sad16x16x4d_sse2;
   aom_sad16x8x4d = aom_sad16x8x4d_sse2;
-  aom_sad16x4x4d = aom_sad16x4x4d_sse2;
+  //aom_sad16x4x4d = aom_sad16x4x4d_sse2;
   aom_sad_skip_128x128x4d = aom_sad_skip_128x128x4d_sse2;
   aom_sad_skip_128x64x4d = aom_sad_skip_128x64x4d_sse2;
   aom_sad_skip_64x128x4d = aom_sad_skip_64x128x4d_sse2;
   aom_sad_skip_64x64x4d = aom_sad_skip_64x64x4d_sse2;
   aom_sad_skip_64x32x4d = aom_sad_skip_64x32x4d_sse2;
-  aom_sad_skip_64x16x4d = aom_sad_skip_64x16x4d_sse2;
+  //aom_sad_skip_64x16x4d = aom_sad_skip_64x16x4d_sse2;
   aom_sad_skip_32x64x4d = aom_sad_skip_32x64x4d_sse2;
   aom_sad_skip_32x32x4d = aom_sad_skip_32x32x4d_sse2;
   aom_sad_skip_32x16x4d = aom_sad_skip_32x16x4d_sse2;
-  aom_sad_skip_32x8x4d = aom_sad_skip_32x8x4d_sse2;
-  aom_sad_skip_16x64x4d = aom_sad_skip_16x64x4d_sse2;
+  //aom_sad_skip_32x8x4d = aom_sad_skip_32x8x4d_sse2;
+  //aom_sad_skip_16x64x4d = aom_sad_skip_16x64x4d_sse2;
   aom_sad_skip_16x32x4d = aom_sad_skip_16x32x4d_sse2;
   aom_sad_skip_16x16x4d = aom_sad_skip_16x16x4d_sse2;
   aom_sad_skip_16x8x4d = aom_sad_skip_16x8x4d_sse2;
@@ -31261,6 +32972,7 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) aom_quantize_b = aom_quantize_b_ssse3; //SSSE3
   if (flags & HAS_SSSE3) aom_quantize_b_32x32 = aom_quantize_b_32x32_ssse3; //SSSE3
 #endif
+  if (flags & HAS_SSSE3) aom_comp_mask_pred = aom_comp_mask_pred_ssse3;
   if (flags & HAS_SSSE3) aom_convolve8_horiz = aom_convolve8_horiz_ssse3; // AVX2
   if (flags & HAS_SSSE3) aom_convolve8_vert = aom_convolve8_vert_ssse3; // AVX2
   if (flags & HAS_SSSE3) aom_scaled_2d = aom_scaled_2d_ssse3; // AVX2
@@ -31341,7 +33053,23 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) aom_smooth_h_predictor_64x16 = aom_smooth_h_predictor_64x16_ssse3;
   if (flags & HAS_SSSE3) aom_smooth_h_predictor_64x32 = aom_smooth_h_predictor_64x32_ssse3;
   if (flags & HAS_SSSE3) aom_smooth_h_predictor_64x64 = aom_smooth_h_predictor_64x64_ssse3;
-  //if (flags & HAS_SSSE3) aom_dist_wtd_comp_avg_pred = aom_dist_wtd_comp_avg_pred_ssse3;
+  if (flags & HAS_SSSE3) aom_dist_wtd_comp_avg_pred = aom_dist_wtd_comp_avg_pred_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance128x128 = aom_dist_wtd_sub_pixel_avg_variance128x128_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance128x64 = aom_dist_wtd_sub_pixel_avg_variance128x64_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance16x16 = aom_dist_wtd_sub_pixel_avg_variance16x16_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance16x32 = aom_dist_wtd_sub_pixel_avg_variance16x32_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance16x8 = aom_dist_wtd_sub_pixel_avg_variance16x8_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance32x16 = aom_dist_wtd_sub_pixel_avg_variance32x16_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance32x32 = aom_dist_wtd_sub_pixel_avg_variance32x32_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance32x64 = aom_dist_wtd_sub_pixel_avg_variance32x64_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance4x4 = aom_dist_wtd_sub_pixel_avg_variance4x4_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance4x8 = aom_dist_wtd_sub_pixel_avg_variance4x8_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance64x128 = aom_dist_wtd_sub_pixel_avg_variance64x128_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance64x32 = aom_dist_wtd_sub_pixel_avg_variance64x32_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance64x64 = aom_dist_wtd_sub_pixel_avg_variance64x64_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance8x16 = aom_dist_wtd_sub_pixel_avg_variance8x16_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance8x4 = aom_dist_wtd_sub_pixel_avg_variance8x4_ssse3;
+    if (flags & HAS_SSSE3) aom_dist_wtd_sub_pixel_avg_variance8x8 = aom_dist_wtd_sub_pixel_avg_variance8x8_ssse3;
   /*if (flags & HAS_SSSE3) aom_dist_wtd_sad128x128_avg = aom_dist_wtd_sad128x128_avg_ssse3;
   if (flags & HAS_SSSE3) aom_dist_wtd_sad128x64_avg = aom_dist_wtd_sad128x64_avg_ssse3;
   if (flags & HAS_SSSE3) aom_dist_wtd_sad64x128_avg = aom_dist_wtd_sad64x128_avg_ssse3;
@@ -31433,9 +33161,54 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) aom_masked_sub_pixel_variance32x8 = aom_masked_sub_pixel_variance32x8_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sub_pixel_variance16x64 = aom_masked_sub_pixel_variance16x64_ssse3;
   if (flags & HAS_SSSE3) aom_masked_sub_pixel_variance64x16 = aom_masked_sub_pixel_variance64x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance128x128 = aom_sub_pixel_variance128x128_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance128x64 = aom_sub_pixel_variance128x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance64x128 = aom_sub_pixel_variance64x128_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance64x64 = aom_sub_pixel_variance64x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance64x32 = aom_sub_pixel_variance64x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance32x64 = aom_sub_pixel_variance32x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance32x32 = aom_sub_pixel_variance32x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance32x16 = aom_sub_pixel_variance32x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance16x32 = aom_sub_pixel_variance16x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance16x16 = aom_sub_pixel_variance16x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance16x8 = aom_sub_pixel_variance16x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance8x16 = aom_sub_pixel_variance8x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance8x8 = aom_sub_pixel_variance8x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance8x4 = aom_sub_pixel_variance8x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance4x8 = aom_sub_pixel_variance4x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance4x4 = aom_sub_pixel_variance4x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance4x16 = aom_sub_pixel_variance4x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance16x4 = aom_sub_pixel_variance16x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance8x32 = aom_sub_pixel_variance8x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance32x8 = aom_sub_pixel_variance32x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance16x64 = aom_sub_pixel_variance16x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_variance64x16 = aom_sub_pixel_variance64x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance128x128 = aom_sub_pixel_avg_variance128x128_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance128x64 = aom_sub_pixel_avg_variance128x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance64x128 = aom_sub_pixel_avg_variance64x128_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance64x64 = aom_sub_pixel_avg_variance64x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance64x32 = aom_sub_pixel_avg_variance64x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance32x64 = aom_sub_pixel_avg_variance32x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance32x32 = aom_sub_pixel_avg_variance32x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance32x16 = aom_sub_pixel_avg_variance32x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance16x32 = aom_sub_pixel_avg_variance16x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance16x16 = aom_sub_pixel_avg_variance16x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance16x8 = aom_sub_pixel_avg_variance16x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance8x16 = aom_sub_pixel_avg_variance8x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance8x8 = aom_sub_pixel_avg_variance8x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance8x4 = aom_sub_pixel_avg_variance8x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance4x8 = aom_sub_pixel_avg_variance4x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance4x4 = aom_sub_pixel_avg_variance4x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance4x16 = aom_sub_pixel_avg_variance4x16_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance16x4 = aom_sub_pixel_avg_variance16x4_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance8x32 = aom_sub_pixel_avg_variance8x32_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance32x8 = aom_sub_pixel_avg_variance32x8_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance16x64 = aom_sub_pixel_avg_variance16x64_ssse3;
+  if (flags & HAS_SSSE3) aom_sub_pixel_avg_variance64x16 = aom_sub_pixel_avg_variance64x16_ssse3;
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
-  if (flags & HAS_SSE4_1) av1_compute_cross_correlation = av1_compute_cross_correlation_sse4_1;
+  if (flags & HAS_SSE4_1) aom_compute_mean_stddev = aom_compute_mean_stddev_sse4_1;
+  if (flags & HAS_SSE4_1) aom_compute_correlation = aom_compute_correlation_sse4_1;
   if (flags & HAS_SSE4_1) aom_compute_flow_at_point = aom_compute_flow_at_point_sse4_1;
   if (flags & HAS_SSE4_1) aom_vector_var = aom_vector_var_sse4_1;
   if (flags & HAS_SSE4_1) aom_obmc_sad128x128 = aom_obmc_sad128x128_sse4_1;
@@ -31521,8 +33294,13 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_avg_8x8_quad = aom_avg_8x8_quad_avx2;
   if (flags & HAS_AVX2) aom_satd = aom_satd_avx2;
   if (flags & HAS_AVX2) aom_satd_lp = aom_satd_lp_avx2;
-  if (flags & HAS_AVX2)
-    av1_compute_cross_correlation = av1_compute_cross_correlation_avx2;
+  if (flags & HAS_AVX2) aom_comp_mask_pred = aom_comp_mask_pred_avx2;
+  if (flags & HAS_AVX2) aom_hadamard_32x32 = aom_hadamard_32x32_avx2;
+  if (flags & HAS_AVX2) aom_hadamard_16x16 = aom_hadamard_16x16_avx2;
+  if (flags & HAS_AVX2) aom_hadamard_lp_16x16 = aom_hadamard_lp_16x16_avx2;
+  if (flags & HAS_AVX2) aom_hadamard_lp_8x8_dual = aom_hadamard_lp_8x8_dual_avx2;
+  if (flags & HAS_AVX2) aom_compute_mean_stddev = aom_compute_mean_stddev_avx2;
+  if (flags & HAS_AVX2) aom_compute_correlation = aom_compute_correlation_avx2;
   if (flags & HAS_AVX2) aom_obmc_sad128x128 = aom_obmc_sad128x128_avx2;
   if (flags & HAS_AVX2) aom_obmc_sad128x64 = aom_obmc_sad128x64_avx2;
   if (flags & HAS_AVX2) aom_obmc_sad64x128 = aom_obmc_sad64x128_avx2;
@@ -31581,8 +33359,6 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_quantize_b = aom_quantize_b_avx2;
   if (flags & HAS_AVX2) aom_quantize_b_32x32 = aom_quantize_b_32x32_avx2;
   if (flags & HAS_AVX2) aom_quantize_b_64x64 = aom_quantize_b_64x64_avx2;
-  //if (flags & HAS_AVX2) aom_convolve8_horiz = aom_convolve8_horiz_ssse3; // AVX2
-  //if (flags & HAS_AVX2) aom_convolve8_vert = aom_convolve8_vert_ssse3; // AVX2
   //if (flags & HAS_AVX2) aom_scaled_2d = aom_scaled_2d_ssse3; // AVX2
   if (flags & HAS_AVX2) aom_convolve8_horiz = aom_convolve8_horiz_avx2; // AVX2
   if (flags & HAS_AVX2) aom_convolve8_vert = aom_convolve8_vert_avx2; // AVX2
@@ -31749,6 +33525,29 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_sad_skip_16x32x4d = aom_sad_skip_16x32x4d_avx2;
   if (flags & HAS_AVX2) aom_sad_skip_16x16x4d = aom_sad_skip_16x16x4d_avx2;
   if (flags & HAS_AVX2) aom_sad_skip_16x8x4d = aom_sad_skip_16x8x4d_avx2;
+
+  if (flags & HAS_AVX2) aom_sub_pixel_variance128x128 = aom_sub_pixel_variance128x128_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance128x64 = aom_sub_pixel_variance128x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance64x128 = aom_sub_pixel_variance64x128_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance64x64 = aom_sub_pixel_variance64x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance64x32 = aom_sub_pixel_variance64x32_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance32x64 = aom_sub_pixel_variance32x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance32x32 = aom_sub_pixel_variance32x32_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance32x16 = aom_sub_pixel_variance32x16_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance16x32 = aom_sub_pixel_variance16x32_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance16x16 = aom_sub_pixel_variance16x16_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance16x8 = aom_sub_pixel_variance16x8_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance16x4 = aom_sub_pixel_variance16x4_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_variance16x64 = aom_sub_pixel_variance16x64_avx2;
+
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance128x128 = aom_sub_pixel_avg_variance128x128_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance128x64 = aom_sub_pixel_avg_variance128x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance64x128 = aom_sub_pixel_avg_variance64x128_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance64x64 = aom_sub_pixel_avg_variance64x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance64x32 = aom_sub_pixel_avg_variance64x32_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance32x64 = aom_sub_pixel_avg_variance32x64_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance32x32 = aom_sub_pixel_avg_variance32x32_avx2;
+  if (flags & HAS_AVX2) aom_sub_pixel_avg_variance32x16 = aom_sub_pixel_avg_variance32x16_avx2;
 #endif
 
 #if CONFIG_AV1_HIGHBITDEPTH
