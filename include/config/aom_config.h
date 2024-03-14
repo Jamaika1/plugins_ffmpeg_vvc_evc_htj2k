@@ -12,15 +12,15 @@
 #define AOM_CONFIG_H_
 
 
-#define ARCH_ARM 0
-#define ARCH_MIPS 0
-#define ARCH_PPC 0
+#define AOM_ARCH_ARM 0
+#define AOM_ARCH_MIPS 0
+#define AOM_ARCH_PPC 0
 #if defined(__X86_64__)
-#define ARCH_X86 0
-#define ARCH_X86_64 1
+#define AOM_ARCH_X86 0
+#define AOM_ARCH_X86_64 1
 #else
-#define ARCH_X86 1
-#define ARCH_X86_64 0
+#define AOM_ARCH_X86 1
+#define AOM_ARCH_X86_64 0
 #endif
 //#define CONFIG_2PASS_PARTITION_SEARCH_LVL 1
 //#define CONFIG_ACCOUNTING 1
@@ -81,6 +81,7 @@
 #define CONFIG_TFLITE 0
 #define CONFIG_THREE_PASS 0
 #define CONFIG_OUTPUT_FRAME_SIZE 0
+#define CONFIG_QUANT_MATRIX 1
 //#define CONFIG_STATIC 1
 //#define CONFIG_TUNE_BUTTERAUGLI 1
 //#define CONFIG_TUNE_VMAF 0

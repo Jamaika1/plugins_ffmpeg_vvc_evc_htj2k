@@ -28384,7 +28384,22 @@ void aom_sad_skip_16x4x4d_c(const uint8_t* src_ptr,
      const uint8_t* const ref_ptr[4],
      int ref_stride,
      uint32_t sad_array[4]);
+#if HAVE_SIMD
+RTCD_EXTERN void (*aom_sad_skip_16x4x4d)(const uint8_t* src_ptr,
+     int src_stride,
+     const uint8_t* const ref_ptr[4],
+     int ref_stride,
+     uint32_t sad_array[4]);
+#if defined(__AVX2__)
+void aom_sad_skip_16x4x4d_avx2(const uint8_t* src_ptr,
+     int src_stride,
+     const uint8_t* const ref_ptr[4],
+     int ref_stride,
+     uint32_t sad_array[4]);
+#endif
+#else
 #define aom_sad_skip_16x4x4d aom_sad_skip_16x4x4d_c
+#endif
 
 unsigned int aom_sad_skip_16x64_c(const uint8_t* src_ptr,
      int src_stride,
@@ -32387,6 +32402,17 @@ RTCD_EXTERN void (*aom_compute_flow_at_point)(const uint8_t *src,
      double *u,
      double *v);
 #endif
+#if defined(__AVX2__)
+void aom_compute_flow_at_point_avx2(const uint8_t *src,
+     const uint8_t *ref,
+     int x,
+     int y,
+     int width,
+     int height,
+     int stride,
+     double *u,
+     double *v);
+#endif
 #else
 #define aom_compute_flow_at_point aom_compute_flow_at_point_c
 #endif
@@ -32399,25 +32425,6 @@ static void setup_rtcd_internal(void) {
   int flags = x86_simd_caps();
 
   (void)flags;
-
-    aom_dist_wtd_sub_pixel_avg_variance128x128 = aom_dist_wtd_sub_pixel_avg_variance128x128_c;
-    aom_dist_wtd_sub_pixel_avg_variance128x64 = aom_dist_wtd_sub_pixel_avg_variance128x64_c;
-    aom_dist_wtd_sub_pixel_avg_variance16x16 = aom_dist_wtd_sub_pixel_avg_variance16x16_c;
-    aom_dist_wtd_sub_pixel_avg_variance16x32 = aom_dist_wtd_sub_pixel_avg_variance16x32_c;
-    aom_dist_wtd_sub_pixel_avg_variance16x8 = aom_dist_wtd_sub_pixel_avg_variance16x8_c;
-    aom_dist_wtd_sub_pixel_avg_variance32x16 = aom_dist_wtd_sub_pixel_avg_variance32x16_c;
-    aom_dist_wtd_sub_pixel_avg_variance32x32 = aom_dist_wtd_sub_pixel_avg_variance32x32_c;
-    aom_dist_wtd_sub_pixel_avg_variance32x64 = aom_dist_wtd_sub_pixel_avg_variance32x64_c;
-    aom_dist_wtd_sub_pixel_avg_variance4x4 = aom_dist_wtd_sub_pixel_avg_variance4x4_c;
-    aom_dist_wtd_sub_pixel_avg_variance4x8 = aom_dist_wtd_sub_pixel_avg_variance4x8_c;
-    aom_dist_wtd_sub_pixel_avg_variance64x128 = aom_dist_wtd_sub_pixel_avg_variance64x128_c;
-    aom_dist_wtd_sub_pixel_avg_variance64x32 = aom_dist_wtd_sub_pixel_avg_variance64x32_c;
-    aom_dist_wtd_sub_pixel_avg_variance64x64 = aom_dist_wtd_sub_pixel_avg_variance64x64_c;
-    aom_dist_wtd_sub_pixel_avg_variance8x16 = aom_dist_wtd_sub_pixel_avg_variance8x16_c;
-    aom_dist_wtd_sub_pixel_avg_variance8x4 = aom_dist_wtd_sub_pixel_avg_variance8x4_c;
-    aom_dist_wtd_sub_pixel_avg_variance8x8 = aom_dist_wtd_sub_pixel_avg_variance8x8_c;
-    aom_hadamard_32x32 = aom_hadamard_32x32_sse2;
-    aom_hadamard_16x16 = aom_hadamard_16x16_sse2;
 
     /*
     aom_dc_left_predictor_32x16 = aom_dc_left_predictor_32x16_sse2;
@@ -32618,6 +32625,22 @@ static void setup_rtcd_internal(void) {
   aom_dist_wtd_sad32x8_avg = aom_dist_wtd_sad32x8_avg_c;
   aom_dist_wtd_sad16x64_avg = aom_dist_wtd_sad16x64_avg_c;
   aom_dist_wtd_sad64x16_avg = aom_dist_wtd_sad64x16_avg_c;*/
+  aom_dist_wtd_sub_pixel_avg_variance128x128 = aom_dist_wtd_sub_pixel_avg_variance128x128_c;
+  aom_dist_wtd_sub_pixel_avg_variance128x64 = aom_dist_wtd_sub_pixel_avg_variance128x64_c;
+  aom_dist_wtd_sub_pixel_avg_variance16x16 = aom_dist_wtd_sub_pixel_avg_variance16x16_c;
+  aom_dist_wtd_sub_pixel_avg_variance16x32 = aom_dist_wtd_sub_pixel_avg_variance16x32_c;
+  aom_dist_wtd_sub_pixel_avg_variance16x8 = aom_dist_wtd_sub_pixel_avg_variance16x8_c;
+  aom_dist_wtd_sub_pixel_avg_variance32x16 = aom_dist_wtd_sub_pixel_avg_variance32x16_c;
+  aom_dist_wtd_sub_pixel_avg_variance32x32 = aom_dist_wtd_sub_pixel_avg_variance32x32_c;
+  aom_dist_wtd_sub_pixel_avg_variance32x64 = aom_dist_wtd_sub_pixel_avg_variance32x64_c;
+  aom_dist_wtd_sub_pixel_avg_variance4x4 = aom_dist_wtd_sub_pixel_avg_variance4x4_c;
+  aom_dist_wtd_sub_pixel_avg_variance4x8 = aom_dist_wtd_sub_pixel_avg_variance4x8_c;
+  aom_dist_wtd_sub_pixel_avg_variance64x128 = aom_dist_wtd_sub_pixel_avg_variance64x128_c;
+  aom_dist_wtd_sub_pixel_avg_variance64x32 = aom_dist_wtd_sub_pixel_avg_variance64x32_c;
+  aom_dist_wtd_sub_pixel_avg_variance64x64 = aom_dist_wtd_sub_pixel_avg_variance64x64_c;
+  aom_dist_wtd_sub_pixel_avg_variance8x16 = aom_dist_wtd_sub_pixel_avg_variance8x16_c;
+  aom_dist_wtd_sub_pixel_avg_variance8x4 = aom_dist_wtd_sub_pixel_avg_variance8x4_c;
+  aom_dist_wtd_sub_pixel_avg_variance8x8 = aom_dist_wtd_sub_pixel_avg_variance8x8_c;
   aom_masked_sad128x128 = aom_masked_sad128x128_c;
   aom_masked_sad128x64 = aom_masked_sad128x64_c;
   aom_masked_sad64x128 = aom_masked_sad64x128_c;
@@ -32665,7 +32688,8 @@ static void setup_rtcd_internal(void) {
   aom_masked_sad4x16x4d = aom_masked_sad4x16x4d_c;
   aom_masked_sad4x8x4d = aom_masked_sad4x8x4d_c;
   aom_masked_sad4x4x4d = aom_masked_sad4x4x4d_c;
-  aom_sad128x128x3d = aom_sad128x128x4d_c;
+  aom_sad_skip_16x4x4d = aom_sad_skip_16x4x4d_c;
+  /*aom_sad128x128x3d = aom_sad128x128x4d_c;
   aom_sad128x64x3d = aom_sad128x64x4d_c;
   aom_sad64x128x3d = aom_sad64x128x4d_c;
   aom_sad64x64x3d = aom_sad64x64x4d_c;
@@ -32679,6 +32703,7 @@ static void setup_rtcd_internal(void) {
   aom_sad16x32x3d = aom_sad16x32x4d_c;
   aom_sad16x16x3d = aom_sad16x16x4d_c;
   aom_sad16x8x3d = aom_sad16x8x4d_c;
+  aom_sad16x4x3d = aom_sad16x4x4d_c;*/
   aom_scaled_2d = aom_scaled_2d_c;
   aom_masked_sub_pixel_variance128x128 = aom_masked_sub_pixel_variance128x128_c;
   aom_masked_sub_pixel_variance128x64 = aom_masked_sub_pixel_variance128x64_c;
@@ -32750,6 +32775,8 @@ static void setup_rtcd_internal(void) {
   aom_sub_pixel_avg_variance64x16 = aom_sub_pixel_avg_variance64x16_c;
 #endif
 #if defined(__SSE2__) && HAVE_SIMD
+  aom_hadamard_32x32 = aom_hadamard_32x32_sse2;
+  aom_hadamard_16x16 = aom_hadamard_16x16_sse2;
   aom_avg_8x8_quad = aom_avg_8x8_quad_sse2;
   aom_satd = aom_satd_sse2;
   aom_satd_lp = aom_satd_lp_sse2;
@@ -33291,6 +33318,7 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX) aom_quantize_b_32x32 = aom_quantize_b_32x32_avx;
 #endif
 #if defined(__AVX2__) && HAVE_SIMD
+  if (flags & HAS_AVX2) aom_compute_flow_at_point = aom_compute_flow_at_point_avx2;
   if (flags & HAS_AVX2) aom_avg_8x8_quad = aom_avg_8x8_quad_avx2;
   if (flags & HAS_AVX2) aom_satd = aom_satd_avx2;
   if (flags & HAS_AVX2) aom_satd_lp = aom_satd_lp_avx2;
@@ -33494,6 +33522,7 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_sad16x32x3d = aom_sad16x32x3d_avx2;
   if (flags & HAS_AVX2) aom_sad16x16x3d = aom_sad16x16x3d_avx2;
   if (flags & HAS_AVX2) aom_sad16x8x3d = aom_sad16x8x3d_avx2;
+  if (flags & HAS_AVX2) aom_sad16x4x3d = aom_sad16x4x3d_avx2;
   //
   if (flags & HAS_AVX2) aom_sad128x128x4d = aom_sad128x128x4d_avx2;
   if (flags & HAS_AVX2) aom_sad128x64x4d = aom_sad128x64x4d_avx2;
@@ -33525,6 +33554,7 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) aom_sad_skip_16x32x4d = aom_sad_skip_16x32x4d_avx2;
   if (flags & HAS_AVX2) aom_sad_skip_16x16x4d = aom_sad_skip_16x16x4d_avx2;
   if (flags & HAS_AVX2) aom_sad_skip_16x8x4d = aom_sad_skip_16x8x4d_avx2;
+  if (flags & HAS_AVX2) aom_sad_skip_16x4x4d = aom_sad_skip_16x4x4d_avx2;
 
   if (flags & HAS_AVX2) aom_sub_pixel_variance128x128 = aom_sub_pixel_variance128x128_avx2;
   if (flags & HAS_AVX2) aom_sub_pixel_variance128x64 = aom_sub_pixel_variance128x64_avx2;

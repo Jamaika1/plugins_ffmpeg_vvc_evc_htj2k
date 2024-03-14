@@ -65,8 +65,8 @@ void aom_vertical_band_2_1_scale_i_c(unsigned char* source,
 int aom_yv12_realloc_with_new_border_c(struct yv12_buffer_config* ybf,
                                        int new_border,
                                        int byte_alignment,
-                                       int num_planes,
-                                       int enable_global_motion);
+                                       int num_pyramid_levels,
+                                       int num_planes);
 #define aom_yv12_realloc_with_new_border aom_yv12_realloc_with_new_border_c
 
 void aom_yv12_extend_frame_borders_c(struct yv12_buffer_config* ybf,
