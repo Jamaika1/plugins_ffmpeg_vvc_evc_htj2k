@@ -1553,7 +1553,7 @@ static float codes2[] = {
 0.086151 ,-0.113571 ,-0.019466 ,-0.009167 ,0.003662
 };
 
-const struct lsp_codebook lsp_cbjvm[] = {
+const struct lsp_codebook lsp_cbjmv[] = {
   /* /Users/brandon/freetel-code/codec2/branches/0.6/src/codebook/lspjvm1.txt */
   {
     10,
