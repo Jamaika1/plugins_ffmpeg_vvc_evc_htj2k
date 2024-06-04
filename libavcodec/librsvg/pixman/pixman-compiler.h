@@ -182,8 +182,8 @@
 
 #elif defined(HAVE_PTHREADS)
 
-//#include <pthread.h>
-#include "../../libpthread_win32/pthread.h"
+#include <pthread.h>
+//#include "../../libpthread_win32/pthread.h"
 
 #  define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static pthread_once_t tls_ ## name ## _once_control = PTHREAD_ONCE_INIT; \
