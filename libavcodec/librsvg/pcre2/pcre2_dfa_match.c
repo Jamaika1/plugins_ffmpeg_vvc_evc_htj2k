@@ -1241,6 +1241,13 @@ for (;;)
           break;
 
           case PT_CLIST:
+#if PCRE2_CODE_UNIT_WIDTH == 32
+          if (c > MAX_UTF_CODE_POINT)
+            {
+            OK = FALSE;
+            break;
+            }
+#endif
           cp = PRIV(ucd_caseless_sets) + code[2];
           for (;;)
             {
@@ -1516,6 +1523,13 @@ for (;;)
           break;
 
           case PT_CLIST:
+#if PCRE2_CODE_UNIT_WIDTH == 32
+          if (c > MAX_UTF_CODE_POINT)
+            {
+            OK = FALSE;
+            break;
+            }
+#endif
           cp = PRIV(ucd_caseless_sets) + code[3];
           for (;;)
             {
@@ -1774,6 +1788,13 @@ for (;;)
           break;
 
           case PT_CLIST:
+#if PCRE2_CODE_UNIT_WIDTH == 32
+          if (c > MAX_UTF_CODE_POINT)
+            {
+            OK = FALSE;
+            break;
+            }
+#endif
           cp = PRIV(ucd_caseless_sets) + code[3];
           for (;;)
             {
@@ -2058,6 +2079,13 @@ for (;;)
           break;
 
           case PT_CLIST:
+#if PCRE2_CODE_UNIT_WIDTH == 32
+          if (c > MAX_UTF_CODE_POINT)
+            {
+            OK = FALSE;
+            break;
+            }
+#endif
           cp = PRIV(ucd_caseless_sets) + code[1 + IMM2_SIZE + 2];
           for (;;)
             {
@@ -2913,7 +2941,6 @@ for (;;)
         int *local_workspace;
         PCRE2_SIZE *local_offsets;
         RWS_anchor *rws = (RWS_anchor *)RWS;
-        dfa_recursion_info *ri;
         PCRE2_SPTR callpat = start_code + GET(code, 1);
         uint32_t recno = (callpat == mb->start_code)? 0 :
           GET2(callpat, 1 + LINK_SIZE);
@@ -2930,18 +2957,24 @@ for (;;)
         rws->free -= RWS_RSIZE + RWS_OVEC_RSIZE;
 
         /* Check for repeating a recursion without advancing the subject
-        pointer. This should catch convoluted mutual recursions. (Some simple
-        cases are caught at compile time.) */
+        pointer or last used character. This should catch convoluted mutual
+        recursions. (Some simple cases are caught at compile time.) */
 
-        for (ri = mb->recursive; ri != NULL; ri = ri->prevrec)
-          if (recno == ri->group_num && ptr == ri->subject_position)
+        for (dfa_recursion_info *ri = mb->recursive;
+             ri != NULL;
+             ri = ri->prevrec)
+          {
+          if (recno == ri->group_num && ptr == ri->subject_position &&
+              mb->last_used_ptr == ri->last_used_ptr)
             return PCRE2_ERROR_RECURSELOOP;
+          }
 
         /* Remember this recursion and where we started it so as to
         catch infinite loops. */
 
         new_recursive.group_num = recno;
         new_recursive.subject_position = ptr;
+        new_recursive.last_used_ptr = mb->last_used_ptr;
         new_recursive.prevrec = mb->recursive;
         mb->recursive = &new_recursive;
 
@@ -4015,7 +4048,7 @@ for (;;)
       }
     match_data->subject_length = length;
     match_data->leftchar = (PCRE2_SIZE)(mb->start_used_ptr - subject);
-    match_data->rightchar = (PCRE2_SIZE)( mb->last_used_ptr - subject);
+    match_data->rightchar = (PCRE2_SIZE)(mb->last_used_ptr - subject);
     match_data->startchar = (PCRE2_SIZE)(start_match - subject);
     match_data->rc = rc;
 

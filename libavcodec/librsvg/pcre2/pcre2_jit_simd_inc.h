@@ -55,11 +55,17 @@ typedef enum {
 static SLJIT_INLINE sljit_s32 max_fast_forward_char_pair_offset(void)
 {
 #if PCRE2_CODE_UNIT_WIDTH == 8
-return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 31 : 15;
+/* The AVX2 code path is currently disabled. */
+/* return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 31 : 15; */
+return 15;
 #elif PCRE2_CODE_UNIT_WIDTH == 16
-return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 15 : 7;
+/* The AVX2 code path is currently disabled. */
+/* return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 15 : 7; */
+return 7;
 #elif PCRE2_CODE_UNIT_WIDTH == 32
-return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 7 : 3;
+/* The AVX2 code path is currently disabled. */
+/* return sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? 7 : 3; */
+return 3;
 #else
 #error "Unsupported unit width"
 #endif
@@ -228,7 +234,9 @@ static void fast_forward_char_simd(compiler_common *common, PCRE2_UCHAR char1, P
 {
 DEFINE_COMPILER;
 sljit_u8 instruction[8];
-sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128;
+/* The AVX2 code path is currently disabled. */
+/* sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128; */
+sljit_s32 reg_type = SLJIT_SIMD_REG_128;
 sljit_s32 value;
 struct sljit_label *start;
 #if defined SUPPORT_UNICODE && PCRE2_CODE_UNIT_WIDTH != 32
@@ -363,7 +371,9 @@ static jump_list *fast_requested_char_simd(compiler_common *common, PCRE2_UCHAR 
 {
 DEFINE_COMPILER;
 sljit_u8 instruction[8];
-sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128;
+/* The AVX2 code path is currently disabled. */
+/* sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128; */
+sljit_s32 reg_type = SLJIT_SIMD_REG_128;
 sljit_s32 value;
 struct sljit_label *start;
 struct sljit_jump *quit;
@@ -468,7 +478,9 @@ static void fast_forward_char_pair_simd(compiler_common *common, sljit_s32 offs1
 {
 DEFINE_COMPILER;
 sljit_u8 instruction[8];
-sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128;
+/* The AVX2 code path is currently disabled. */
+/* sljit_s32 reg_type = sljit_has_cpu_feature(SLJIT_HAS_AVX2) ? SLJIT_SIMD_REG_256 : SLJIT_SIMD_REG_128; */
+sljit_s32 reg_type = SLJIT_SIMD_REG_128;
 sljit_s32 value;
 vector_compare_type compare1_type = vector_compare_match1;
 vector_compare_type compare2_type = vector_compare_match1;
@@ -483,11 +495,7 @@ sljit_s32 cmp2a_ind = sljit_get_register_index(SLJIT_FLOAT_REGISTER, SLJIT_FR3);
 sljit_s32 cmp1b_ind = sljit_get_register_index(SLJIT_FLOAT_REGISTER, SLJIT_FR4);
 sljit_s32 cmp2b_ind = sljit_get_register_index(SLJIT_FLOAT_REGISTER, SLJIT_FR5);
 sljit_s32 tmp1_ind = sljit_get_register_index(SLJIT_FLOAT_REGISTER, SLJIT_FR6);
-#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32)
-sljit_s32 tmp2_ind = 0;
-#else /* !SLJIT_CONFIG_X86_32 */
-sljit_s32 tmp2_ind = 4;
-#endif /* SLJIT_CONFIG_X86_32 */
+sljit_s32 tmp2_ind = sljit_get_register_index(SLJIT_FLOAT_REGISTER, SLJIT_TMP_FR0);
 struct sljit_label *start;
 #if defined SUPPORT_UNICODE && PCRE2_CODE_UNIT_WIDTH != 32
 struct sljit_label *restart;
@@ -660,19 +668,7 @@ for (i = 0; i < 4; i++)
   fast_forward_char_pair_sse2_compare(compiler, compare1_type, reg_type, i, data1_ind, cmp1a_ind, cmp1b_ind, tmp1_ind);
   }
 
-/* PAND xmm1, xmm2/m128 */
-if (reg_type == SLJIT_SIMD_REG_256)
-  {
-  instruction[0] = 0xc5;
-  instruction[1] = (sljit_u8)(0xfd ^ (data1_ind << 3));
-  }
-
-/* instruction[0] = 0x66 / 0xc5; */
-/* instruction[1] = 0x0f; */
-instruction[2] = 0xdb;
-instruction[3] = 0xc0 | (data1_ind << 3) | data2_ind;
-sljit_emit_op_custom(compiler, instruction, 4);
-
+sljit_emit_simd_op2(compiler, SLJIT_SIMD_OP2_AND | reg_type, SLJIT_FR0, SLJIT_FR0, SLJIT_FR1);
 sljit_emit_simd_sign(compiler, SLJIT_SIMD_STORE | reg_type | SLJIT_SIMD_ELEM_8, SLJIT_FR0, TMP1, 0);
 
 /* Ignore matches before the first STR_PTR. */
@@ -700,16 +696,7 @@ for (i = 0; i < 4; i++)
   fast_forward_char_pair_sse2_compare(compiler, compare2_type, reg_type, i, data2_ind, cmp2a_ind, cmp2b_ind, tmp1_ind);
   }
 
-/* PAND xmm1, xmm2/m128 */
-if (reg_type == SLJIT_SIMD_REG_256)
-  instruction[1] = (sljit_u8)(0xfd ^ (data1_ind << 3));
-
-/* instruction[0] = 0x66 / 0xc5; */
-/* instruction[1] = 0x0f; */
-instruction[2] = 0xdb;
-instruction[3] = 0xc0 | (data1_ind << 3) | data2_ind;
-sljit_emit_op_custom(compiler, instruction, 4);
-
+sljit_emit_simd_op2(compiler, SLJIT_SIMD_OP2_AND | reg_type, SLJIT_FR0, SLJIT_FR0, SLJIT_FR1);
 sljit_emit_simd_sign(compiler, SLJIT_SIMD_STORE | reg_type | SLJIT_SIMD_ELEM_8, SLJIT_FR0, TMP1, 0);
 
 CMPTO(SLJIT_ZERO, TMP1, 0, SLJIT_IMM, 0, start);
@@ -2189,7 +2176,7 @@ struct sljit_label *restart;
 struct sljit_jump *jump[2];
 
 SLJIT_ASSERT(common->mode == PCRE2_JIT_COMPLETE && offs1 > offs2);
-SLJIT_ASSERT(diff <= IN_UCHARS(max_fast_forward_char_pair_offset()));
+SLJIT_ASSERT(diff <= (unsigned)IN_UCHARS(max_fast_forward_char_pair_offset()));
 
 /* Initialize. */
 if (common->match_end_ptr != 0)
