@@ -32,10 +32,10 @@
 #include "opus_multistream.h"
 #include "opus.h"
 #include "opus_private.h"
-#include "..\libcelt\stack_alloc.h"
+#include "libcelt/stack_alloc.h"
 #include <stdarg.h>
-#include "..\libcelt\float_cast.h"
-#include "..\libcelt\os_support.h"
+#include "libcelt/float_cast.h"
+#include "libcelt/os_support.h"
 
 /* DECODER */
 
@@ -162,11 +162,7 @@ static int opus_multistream_packet_validate(const unsigned char *data,
       if (len<=0)
          return OPUS_INVALID_PACKET;
       count = opus_packet_parse_impl(data, len, s!=nb_streams-1, &toc, NULL,
-#ifdef FIX_PADDING
                                      size, NULL, &packet_offset, NULL, NULL);
-#else
-                                     size, NULL, &packet_offset);
-#endif
       if (count<0)
          return count;
       tmp_samples = opus_packet_get_nb_samples(data, packet_offset, Fs);
@@ -254,11 +250,7 @@ int opus_multistream_decode_native(
          return OPUS_INTERNAL_ERROR;
       }
       packet_offset = 0;
-#ifdef FIX_PADDING
       ret = opus_decode_native(dec, data, len, buf, frame_size, decode_fec, s!=st->layout.nb_streams-1, &packet_offset, soft_clip, NULL, 0);
-#else
-      ret = opus_decode_native(dec, data, len, buf, frame_size, decode_fec, s!=st->layout.nb_streams-1, &packet_offset, soft_clip);
-#endif
       if (!do_plc)
       {
         data += packet_offset;

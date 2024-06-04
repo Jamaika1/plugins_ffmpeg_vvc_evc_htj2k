@@ -29,14 +29,14 @@
 #include "config.h"
 #endif
 
-#include "..\libcelt\mathops.h"
-#include "..\libcelt\os_support.h"
+#include "libcelt/mathops.h"
+#include "libcelt/os_support.h"
 #include "opus_private.h"
 #include "opus_defines.h"
 #include "opus_projection.h"
 #include "opus_multistream.h"
 #include "mapping_matrix.h"
-#include "..\libcelt\stack_alloc.h"
+#include "libcelt/stack_alloc.h"
 
 struct OpusProjectionDecoder
 {

@@ -29,13 +29,13 @@
 #include "config.h"
 #endif
 
-#include "..\libcelt\mathops.h"
-#include "..\libcelt\os_support.h"
+#include "libcelt/mathops.h"
+#include "libcelt/os_support.h"
 #include "opus_private.h"
 #include "opus_defines.h"
 #include "opus_projection.h"
 #include "opus_multistream.h"
-#include "..\libcelt\stack_alloc.h"
+#include "libcelt/stack_alloc.h"
 #include "mapping_matrix.h"
 
 struct OpusProjectionEncoder
@@ -87,7 +87,7 @@ static int get_order_plus_one_from_channels(int channels, int *order_plus_one)
   if (channels < 1 || channels > 227)
     return OPUS_BAD_ARG;
 
-  order_plus_one_ = celt2_isqrt32(channels);
+  order_plus_one_ = isqrt32(channels);
   acn_channels = order_plus_one_ * order_plus_one_;
   nondiegetic_channels = channels - acn_channels;
   if (nondiegetic_channels != 0 && nondiegetic_channels != 2)
@@ -177,6 +177,20 @@ opus_int32 opus_projection_ambisonics_encoder_get_size(int channels,
     demixing_matrix_rows = mapping_matrix_toa_demixing.rows;
     demixing_matrix_cols = mapping_matrix_toa_demixing.cols;
   }
+  else if (order_plus_one == 5)
+  {
+    mixing_matrix_rows = mapping_matrix_fourthoa_mixing.rows;
+    mixing_matrix_cols = mapping_matrix_fourthoa_mixing.cols;
+    demixing_matrix_rows = mapping_matrix_fourthoa_demixing.rows;
+    demixing_matrix_cols = mapping_matrix_fourthoa_demixing.cols;
+  }
+  else if (order_plus_one == 6)
+  {
+    mixing_matrix_rows = mapping_matrix_fifthoa_mixing.rows;
+    mixing_matrix_cols = mapping_matrix_fifthoa_mixing.cols;
+    demixing_matrix_rows = mapping_matrix_fifthoa_demixing.rows;
+    demixing_matrix_cols = mapping_matrix_fifthoa_demixing.cols;
+  }
   else
     return 0;
 
@@ -245,6 +259,20 @@ int opus_projection_ambisonics_encoder_init(OpusProjectionEncoder *st, opus_int3
         mapping_matrix_toa_mixing_data,
         sizeof(mapping_matrix_toa_mixing_data));
     }
+    else if (order_plus_one == 5)
+    {
+      mapping_matrix_init(mixing_matrix, mapping_matrix_fourthoa_mixing.rows,
+        mapping_matrix_fourthoa_mixing.cols, mapping_matrix_fourthoa_mixing.gain,
+        mapping_matrix_fourthoa_mixing_data,
+        sizeof(mapping_matrix_fourthoa_mixing_data));
+    }
+    else if (order_plus_one == 6)
+    {
+      mapping_matrix_init(mixing_matrix, mapping_matrix_fifthoa_mixing.rows,
+        mapping_matrix_fifthoa_mixing.cols, mapping_matrix_fifthoa_mixing.gain,
+        mapping_matrix_fifthoa_mixing_data,
+        sizeof(mapping_matrix_fifthoa_mixing_data));
+    }
     else
       return OPUS_BAD_ARG;
 
@@ -275,6 +303,20 @@ int opus_projection_ambisonics_encoder_init(OpusProjectionEncoder *st, opus_int3
         mapping_matrix_toa_demixing.cols, mapping_matrix_toa_demixing.gain,
         mapping_matrix_toa_demixing_data,
         sizeof(mapping_matrix_toa_demixing_data));
+    }
+      else if (order_plus_one == 5)
+    {
+      mapping_matrix_init(demixing_matrix, mapping_matrix_fourthoa_demixing.rows,
+        mapping_matrix_fourthoa_demixing.cols, mapping_matrix_fourthoa_demixing.gain,
+        mapping_matrix_fourthoa_demixing_data,
+        sizeof(mapping_matrix_fourthoa_demixing_data));
+    }
+    else if (order_plus_one == 6)
+    {
+      mapping_matrix_init(demixing_matrix, mapping_matrix_fifthoa_demixing.rows,
+        mapping_matrix_fifthoa_demixing.cols, mapping_matrix_fifthoa_demixing.gain,
+        mapping_matrix_fifthoa_demixing_data,
+        sizeof(mapping_matrix_fifthoa_demixing_data));
     }
     else
       return OPUS_BAD_ARG;

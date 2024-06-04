@@ -32,7 +32,7 @@
 #include <math.h>
 #include "opus_types.h"
 #include "opus_defines.h"
-#include "..\libcelt\arch.h"
+#include "libcelt/arch.h"
 #include "mlp.h"
 
 #define fmadd(a, b, c) ((a)*(b)+(c))

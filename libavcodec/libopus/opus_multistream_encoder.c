@@ -32,16 +32,16 @@
 #include "opus_multistream.h"
 #include "opus.h"
 #include "opus_private.h"
-#include "..\libcelt\stack_alloc.h"
+#include "libcelt/stack_alloc.h"
 #include <stdarg.h>
-#include "..\libcelt\float_cast.h"
-#include "..\libcelt\os_support.h"
-#include "..\libcelt\mathops.h"
-#include "..\libcelt\mdct.h"
-#include "..\libcelt\modes.h"
-#include "..\libcelt\bands.h"
-#include "..\libcelt\quant_bands.h"
-#include "..\libcelt\pitch.h"
+#include "libcelt/float_cast.h"
+#include "libcelt/os_support.h"
+#include "libcelt/mathops.h"
+#include "libcelt/mdct.h"
+#include "libcelt/modes.h"
+#include "libcelt/bands.h"
+#include "libcelt/quant_bands.h"
+#include "libcelt/pitch.h"
 
 typedef struct {
    int nb_streams;
@@ -110,7 +110,7 @@ static int validate_ambisonics(int nb_channels, int *nb_streams, int *nb_coupled
    if (nb_channels < 1 || nb_channels > 227)
       return 0;
 
-   order_plus_one = celt2_isqrt32(nb_channels);
+   order_plus_one = isqrt32(nb_channels);
    acn_channels = order_plus_one * order_plus_one;
    nondiegetic_channels = nb_channels - acn_channels;
 
@@ -295,12 +295,12 @@ void surround_analysis(const CELTMode *celt_mode, const void *pcm, opus_val16 *b
                freq[i] = 0;
          }
 
-         celt2_compute_band_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
+         compute_band_energies(celt_mode, freq, tmpE, 21, 1, LM, arch);
          /* If we have multiple frames, take the max energy. */
          for (i=0;i<21;i++)
             bandE[i] = MAX32(bandE[i], tmpE[i]);
       }
-      celt2_amp2Log2(celt_mode, 21, 21, bandE, bandLogE+21*c, 1);
+      amp2Log2(celt_mode, 21, 21, bandE, bandLogE+21*c, 1);
       /* Apply spreading function with -6 dB/band going up and -12 dB/band going down. */
       for (i=1;i<21;i++)
          bandLogE[21*c+i] = MAX16(bandLogE[21*c+i], bandLogE[21*c+i-1]-QCONST16(1.f, DB_SHIFT));
@@ -1003,11 +1003,7 @@ int opus_multistream_encode_native
          return OPUS_INTERNAL_ERROR;
       }
       len = opus_repacketizer_out_range_impl(&rp, 0, opus_repacketizer_get_nb_frames(&rp),
-#ifdef FIX_PADDING
             data, max_data_bytes-tot_size, s != st->layout.nb_streams-1, !vbr && s == st->layout.nb_streams-1, NULL, 0);
-#else
-            data, max_data_bytes-tot_size, s != st->layout.nb_streams-1, !vbr && s == st->layout.nb_streams-1);
-#endif
       data += len;
       tot_size += len;
    }

@@ -35,16 +35,16 @@
 #include <stdio.h>
 #endif
 
-#include "..\libcelt\mathops.h"
-#include "..\libcelt\kiss_fft.h"
-#include "..\libcelt\celt.h"
-#include "..\libcelt\modes.h"
-#include "..\libcelt\arch.h"
-#include "..\libcelt\quant_bands.h"
+#include "libcelt/mathops.h"
+#include "libcelt/kiss_fft.h"
+#include "libcelt/celt.h"
+#include "libcelt/modes.h"
+#include "libcelt/arch.h"
+#include "libcelt/quant_bands.h"
 #include "analysis.h"
 #include "mlp.h"
-#include "..\libcelt\stack_alloc.h"
-#include "..\libcelt\float_cast.h"
+#include "libcelt/stack_alloc.h"
+#include "libcelt/float_cast.h"
 
 #ifndef M_PI
 #define M_PI 3.141592653
@@ -446,9 +446,9 @@ static int is_digital_silence32(const opus_val32* pcm, int frame_size, int chann
 static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt_mode, const void *x, int len, int offset, int c1, int c2, int C, int lsb_depth, downmix_func downmix)
 {
     int i, b;
-    const celt2_kiss_fft_state *kfft;
-    VARDECL(celt2_kiss_fft_cpx, in);
-    VARDECL(celt2_kiss_fft_cpx, out);
+    const kiss_fft_state *kfft;
+    VARDECL(kiss_fft_cpx, in);
+    VARDECL(kiss_fft_cpx, out);
     int N = 480, N2=240;
     float * OPUS_RESTRICT A = tonal->angle;
     float * OPUS_RESTRICT dA = tonal->d_angle;
@@ -529,17 +529,17 @@ static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt
 
     is_silence = is_digital_silence32(tonal->inmem, ANALYSIS_BUF_SIZE, 1, lsb_depth);
 
-    ALLOC(in, 480, celt2_kiss_fft_cpx);
-    ALLOC(out, 480, celt2_kiss_fft_cpx);
+    ALLOC(in, 480, kiss_fft_cpx);
+    ALLOC(out, 480, kiss_fft_cpx);
     ALLOC(tonality, 240, float);
     ALLOC(noisiness, 240, float);
     for (i=0;i<N2;i++)
     {
        float w = analysis_window[i];
-       in[i].r = (celt2_kiss_fft_scalar)(w*tonal->inmem[i]);
-       in[i].i = (celt2_kiss_fft_scalar)(w*tonal->inmem[N2+i]);
-       in[N-i-1].r = (celt2_kiss_fft_scalar)(w*tonal->inmem[N-i-1]);
-       in[N-i-1].i = (celt2_kiss_fft_scalar)(w*tonal->inmem[N+N2-i-1]);
+       in[i].r = (kiss_fft_scalar)(w*tonal->inmem[i]);
+       in[i].i = (kiss_fft_scalar)(w*tonal->inmem[N2+i]);
+       in[N-i-1].r = (kiss_fft_scalar)(w*tonal->inmem[N-i-1]);
+       in[N-i-1].i = (kiss_fft_scalar)(w*tonal->inmem[N+N2-i-1]);
     }
     OPUS_MOVE(tonal->inmem, tonal->inmem+ANALYSIS_BUF_SIZE-240, 240);
     remaining = len - (ANALYSIS_BUF_SIZE-tonal->mem_fill);

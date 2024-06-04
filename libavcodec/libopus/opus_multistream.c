@@ -32,10 +32,10 @@
 #include "opus_multistream.h"
 #include "opus.h"
 #include "opus_private.h"
-#include "..\libcelt\stack_alloc.h"
+#include "libcelt/stack_alloc.h"
 #include <stdarg.h>
-#include "..\libcelt\float_cast.h"
-#include "..\libcelt\os_support.h"
+#include "libcelt/float_cast.h"
+#include "libcelt/os_support.h"
 
 
 int validate_layout(const ChannelLayout *layout)
