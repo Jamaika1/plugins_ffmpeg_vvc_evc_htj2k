@@ -9,6 +9,10 @@
 #ifndef	CONFIG_H
 #define	CONFIG_H
 
+#if __cplusplus >= 202002L
+#deifne SASR 1
+#endif
+
 //#define	SIGHANDLER_T	int 		/* signal handlers are void	*/
 //#define HAS_SYSV_SIGNAL	1		/* sigs not blocked/reset?	*/
 
