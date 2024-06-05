@@ -49,8 +49,8 @@
 
 #elif !defined(HB_NO_MT) && !defined(HB_MUTEX_IMPL_STD_MUTEX) && (defined(HAVE_PTHREAD) || defined(__APPLE__))
 
-//#include <pthread.h>
-#include "../../libpthread_win32/pthread.h"
+#include <pthread.h>
+//#include "../../libpthread_win32/pthread.h"
 typedef pthread_mutex_t hb_mutex_impl_t;
 #define hb_mutex_impl_init(M)	pthread_mutex_init (M, nullptr)
 #define hb_mutex_impl_lock(M)	pthread_mutex_lock (M)
