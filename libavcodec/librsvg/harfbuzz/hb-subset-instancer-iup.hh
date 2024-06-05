@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2024  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,41 +20,18 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-face.hh"
+#ifndef HB_SUBSET_INSTANCER_IUP_HH
+#define HB_SUBSET_INSTANCER_IUP_HH
 
-#include "hb-ot-cmap-table.hh"
-#include "hb-ot-glyf-table.hh"
-#include "hb-ot-cff1-table.hh"
-#include "hb-ot-cff2-table.hh"
-#include "hb-ot-hmtx-table.hh"
-#include "hb-ot-kern-table.hh"
-#include "hb-ot-meta-table.hh"
-#include "hb-ot-name-table.hh"
-#include "hb-ot-post-table.hh"
-#include "OT/Color/CBDT/CBDT.hh"
-#include "OT/Color/sbix/sbix.hh"
-#include "OT/Color/svg/svg.hh"
-#include "hb-ot-layout-gdef-table.hh"
-#include "hb-ot-layout-gsub-table.hh"
-#include "hb-ot-layout-gpos-table.hh"
-#include "hb-aat-layout-kerx-table.hh"
-#include "hb-aat-layout-morx-table.hh"
+#include "hb-subset-plan.hh"
+/* given contour points and deltas, optimize a set of referenced points within error
+ * tolerance. Returns optimized referenced point indices */
+HB_INTERNAL bool iup_delta_optimize (const contour_point_vector_t& contour_points,
+                                     const hb_vector_t<int>& x_deltas,
+                                     const hb_vector_t<int>& y_deltas,
+                                     hb_vector_t<bool>& opt_indices, /* OUT */
+                                     double tolerance = 0.0);
 
-
-void hb_ot_face_t::init0 (hb_face_t *face)
-{
-  this->face = face;
-#define HB_OT_TABLE(Namespace, Type) Type.init0 ();
-#include "hb-ot-face-table-list.hh"
-#undef HB_OT_TABLE
-}
-void hb_ot_face_t::fini ()
-{
-#define HB_OT_TABLE(Namespace, Type) Type.fini ();
-#include "hb-ot-face-table-list.hh"
-#undef HB_OT_TABLE
-}
+#endif /* HB_SUBSET_INSTANCER_IUP_HH */
