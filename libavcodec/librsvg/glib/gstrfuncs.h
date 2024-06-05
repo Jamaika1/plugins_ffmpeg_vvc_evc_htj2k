@@ -204,23 +204,6 @@ gboolean             (g_str_has_prefix) (const gchar *str,
     (g_str_has_suffix) (STR, SUFFIX)                                          \
   )
 
-#define g_strdup(STR)                                                         \
-  (__builtin_constant_p ((STR)) ?                                             \
-    (G_LIKELY ((STR) != NULL) ?                                               \
-      G_GNUC_EXTENSION ({                                                     \
-        const char *const ___str = ((STR));                                   \
-        const char *const __str = _G_STR_NONNULL (___str);                    \
-        const size_t __str_len = strlen (__str) + 1;                          \
-        char *__dup_str = (char *) g_malloc (__str_len);                      \
-        (char *) memcpy (__dup_str, __str, __str_len);                        \
-      })                                                                      \
-      :                                                                       \
-      (char *) (NULL)                                                         \
-    )                                                                         \
-    :                                                                         \
-    (g_strdup) ((STR))                                                        \
-  )
-
 #endif /* !defined (__GI_SCANNER__) */
 #endif /* !defined (__GTK_DOC_IGNORE__) */
 #endif /* G_GNUC_CHECK_VERSION (2, 0) */
@@ -318,21 +301,35 @@ GLIB_AVAILABLE_IN_ALL
 gchar*                g_strjoin	       (const gchar  *separator,
 					...) G_GNUC_MALLOC G_GNUC_NULL_TERMINATED;
 
-/* Make a copy of a string interpreting C string -style escape
- * sequences. Inverse of g_strescape. The recognized sequences are \b
- * \f \n \r \t \\ \" and the octal format.
- */
+#if G_GNUC_CHECK_VERSION(2, 0)
+#ifndef __GTK_DOC_IGNORE__
+#ifndef __GI_SCANNER__
+
+G_ALWAYS_INLINE static inline char *
+g_strdup_inline (const char *str)
+{
+  if (__builtin_constant_p (!str) && !str)
+    return NULL;
+
+  if (__builtin_constant_p (!!str) && !!str && __builtin_constant_p (strlen (str)))
+    {
+      const size_t len = strlen (str) + 1;
+      char *dup_str = (char *) g_malloc (len);
+      return (char *) memcpy (dup_str, str, len);
+    }
+
+  return g_strdup (str);
+}
+
+#define g_strdup(x) g_strdup_inline (x)
+
+#endif /* !defined (__GI_SCANNER__) */
+#endif /* !defined (__GTK_DOC_IGNORE__) */
+#endif /* G_GNUC_CHECK_VERSION (2, 0) */
+
 GLIB_AVAILABLE_IN_ALL
 gchar*                g_strcompress    (const gchar *source) G_GNUC_MALLOC;
 
-/* Copy a string escaping nonprintable characters like in C strings.
- * Inverse of g_strcompress. The exceptions parameter, if non-NULL, points
- * to a string containing characters that are not to be escaped.
- *
- * Deprecated API: gchar* g_strescape (const gchar *source);
- * Luckily this function wasn't used much, using NULL as second parameter
- * provides mostly identical semantics.
- */
 GLIB_AVAILABLE_IN_ALL
 gchar*                g_strescape      (const gchar *source,
 					const gchar *exceptions) G_GNUC_MALLOC;
@@ -403,8 +400,8 @@ gboolean              g_strv_equal     (const gchar * const *strv1,
 
 /**
  * GNumberParserError:
- * @G_NUMBER_PARSER_ERROR_INVALID: String was not a valid number.
- * @G_NUMBER_PARSER_ERROR_OUT_OF_BOUNDS: String was a number, but out of bounds.
+ * @G_NUMBER_PARSER_ERROR_INVALID: string was not a valid number
+ * @G_NUMBER_PARSER_ERROR_OUT_OF_BOUNDS: string was a number, but out of bounds
  *
  * Error codes returned by functions converting a string to a number.
  *
@@ -447,28 +444,34 @@ gboolean              g_ascii_string_to_unsigned   (const gchar  *str,
 
 /**
  * g_set_str: (skip)
- * @str_pointer: (inout) (not optional) (nullable): a pointer to either a string or %NULL
- * @new_str: (nullable): a string to assign to @str_pointer, or %NULL
+ * @str_pointer: (inout) (not optional) (nullable): a pointer to either
+ *   a string or `NULL`
+ * @new_str: (nullable): a string to assign to @str_pointer
  *
- * Updates a pointer to a string to a copy of @new_str. The previous string
- * pointed to by @str_pointer will be freed with g_free().
+ * Updates a pointer to a string to a copy of @new_str and returns whether the
+ * string was changed.
  *
- * @str_pointer must not be %NULL, but can point to a %NULL value.
+ * If @new_str matches the previous string, this function is a no-op. If
+ * @new_str is different, a copy of it will be assigned to @str_pointer and
+ * the previous string pointed to by @str_pointer will be freed with
+ * [func@GLib.free].
+ *
+ * @str_pointer must not be `NULL`, but can point to a `NULL` value.
  *
  * One convenient usage of this function is in implementing property settings:
- * |[
- *   void
- *   foo_set_bar (Foo        *foo,
- *                const char *new_bar)
- *   {
- *     g_return_if_fail (IS_FOO (foo));
+ * ```C
+ * void
+ * foo_set_bar (Foo        *foo,
+ *              const char *new_bar)
+ * {
+ *   g_return_if_fail (IS_FOO (foo));
  *
- *     if (g_set_str (&foo->bar, new_bar))
- *       g_object_notify (foo, "bar");
- *   }
- * ]|
+ *   if (g_set_str (&foo->bar, new_bar))
+ *     g_object_notify (foo, "bar");
+ * }
+ * ```
  *
- * Returns: %TRUE if the value of @str_pointer changed, %FALSE otherwise
+ * Returns: true if the value of @str_pointer changed, false otherwise
  *
  * Since: 2.76
  */

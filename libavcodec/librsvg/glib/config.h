@@ -5,52 +5,17 @@
    systems. This function is required for `alloca.c' support on those systems.
 */
 
-#define _GLIB_EXTERN extern
-#define _GIO_EXTERN extern
-#define _GMODULE_EXTERN extern
-#define GLIB_DEPRECATED G_DEPRECATED _GLIB_EXTERN
-#define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
-#define GLIB_VAR _GLIB_EXTERN
-#define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_80
-#define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_80
-#define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_80
-#define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_80
-#define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
-#define GLIB_COMPILATION
-#define GIO_COMPILATION
-#define GOBJECT_COMPILATION
-#define G_SETTINGS_ENABLE_BACKEND
-//#define G_DISABLE_ASSERT
-//#define G_DISABLE_CHECKS
-
-//__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
-//__ATOMIC_SEQ_CST
-//_GLIB_GCC_HAVE_SYNC_SWAP
-//#define G_ATOMIC_LOCK_FREE
-//#define HAVE__ALIGNED_MALLOC 1
-#define SIZEOF_WCHAR_T 2
-#define G_ENABLE_DEBUG 1
-//
-
-#define USE_SYSTEM_PRINTF
-//#define __GI_SCANNER__ 1
-
-#define ALIGNOF_GUINT32 4
-#define ALIGNOF_GUINT64 8
-#define ALIGNOF_UNSIGNED_LONG 8
+#include "config_win32.h"
 
 #define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR "/run/glib"
-#define GDK_PIXBUF_LIBDIR "/gdk-pixbuf"
-#define GDK_PIXBUF_LOCALEDIR "/usr/share/locale"
+#define GLIB_RUNSTATEDIR "@glib_runstatedir@"
+#define GLIB_LOCALE_DIR "@glib_locale_dir@"
+#define GDK_PIXBUF_LIBDIR "@gdk_pixbuf_libdir@"
+#define GDK_PIXBUF_LOCALEDIR "@gdk_pixbuf_localedir@"
 //#define G_LOG_DOMAIN "GLib-GIO"
-#define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
-#define GIO_MODULE_DIR "/gio/gio-module-dir"
-#define LOCALSTATEDIR "/usr/local/var"
+#define GIO_LAUNCH_DESKTOP "@gio-launch-desktop@"
+#define GIO_MODULE_DIR "@gio-module-dir@"
+#define LOCALSTATEDIR "@localstatedir@"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1
@@ -73,35 +38,16 @@
 /* Define the gettext package to be used */
 #define GETTEXT_PACKAGE "dummy"
 /* Define to the GLIB binary age */
-#define GLIB_BINARY_AGE 7701
+#define GLIB_BINARY_AGE 8100
 /* Byte contents of gmutex */
 /* #undef GLIB_BYTE_CONTENTS_GMUTEX */
 /* Define to the GLIB interface age */
 #define GLIB_INTERFACE_AGE 0
-/* Define the location where the catalogs will be installed */
-#define GLIB_LOCALE_DIR "NONE/lib/locale"
-/* Define to the GLIB major version */
-#define GLIB_MAJOR_VERSION 2
-/* Define to the GLIB micro version */
-#define GLIB_MICRO_VERSION 0
-/* Define to the GLIB minor version */
-#define GLIB_MINOR_VERSION 79
+
 /* The size of gmutex, as computed by sizeof. */
 /* #undef GLIB_SIZEOF_GMUTEX */
 /* The size of system_thread, as computed by sizeof. */
 #define GLIB_SIZEOF_SYSTEM_THREAD 4
-/* alpha atomic implementation */
-/* #undef G_ATOMIC_ALPHA */
-/* i486 atomic implementation */
-/* #undef G_ATOMIC_I486 1 */
-/* ia64 atomic implementation */
-/* #undef G_ATOMIC_IA64 */
-/* powerpc atomic implementation */
-/* #undef G_ATOMIC_POWERPC */
-/* sparcv9 atomic implementation */
-/* #undef G_ATOMIC_SPARCV9 */
-/* x86_64 atomic implementation */
-#define G_ATOMIC_X86_64 1
 /* Whether glib was compiled with debugging enabled */
 #define G_COMPILED_WITH_DEBUGGING "yes"
 /* Have inline keyword */
@@ -111,7 +57,7 @@
 /* Have __inline__ keyword */
 #define G_HAVE___INLINE__ 1
 /* Source file containing theread implementation */
-#define G_THREAD_SOURCE "gthread-win32.c"
+//#define G_THREAD_SOURCE "gthread-win32.c"
 /* A 'va_copy' style function */
 #define G_VA_COPY va_copy
 /* 'va_lists' cannot be copies as values */
@@ -293,11 +239,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.79.0-f09bd17"
+#define PACKAGE_STRING "glib 2.81.0-59fd9b8"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.79.0-f09bd17"
+#define PACKAGE_VERSION "2.81.0-59fd9b8"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */
@@ -356,7 +302,6 @@
 /* #undef signed */
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
-#define GLIB_STATIC_COMPILATION 1
 
 #if ((__GNUC__ \
       ? defined __GNUC_STDC_INLINE__ && __GNUC_STDC_INLINE__ \

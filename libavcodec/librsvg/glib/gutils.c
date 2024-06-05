@@ -196,7 +196,7 @@ g_find_program_in_path (const gchar *program)
       strchr (last_dot, '\\') != NULL ||
       strchr (last_dot, '/') != NULL)
     {
-      const gint program_length = strlen (program);
+      const size_t program_length = strlen (program);
       gchar *pathext = g_build_path (";",
 				     ".exe;.cmd;.bat;.com",
 				     g_getenv ("PATHEXT"),
@@ -664,12 +664,12 @@ g_get_user_database_entry (void)
         struct passwd *pw = NULL;
         gpointer buffer = NULL;
         gint error;
-        gchar *logname;
+        const char *logname;
 
 #  if defined (HAVE_GETPWUID_R)
         struct passwd pwd;
 #    ifdef _SC_GETPW_R_SIZE_MAX
-        /* This reurns the maximum length */
+        /* This returns the maximum length */
         glong bufsize = sysconf (_SC_GETPW_R_SIZE_MAX);
 
         if (bufsize < 0)
@@ -678,7 +678,7 @@ g_get_user_database_entry (void)
         glong bufsize = 64;
 #    endif /* _SC_GETPW_R_SIZE_MAX */
 
-        logname = (gchar *) g_getenv ("LOGNAME");
+        logname = g_getenv ("LOGNAME");
 
         do
           {
@@ -3281,7 +3281,7 @@ g_check_setuid (void)
   if (errsv)
     g_error ("getauxval () failed: %s", g_strerror (errsv));
   return value;
-#elif defined(HAVE_ISSETUGID) && !defined(__BIONIC__)
+#elif defined(HAVE_ISSETUGID) && !defined(__ANDROID__)
   /* BSD: http://www.freebsd.org/cgi/man.cgi?query=issetugid&sektion=2 */
 
   /* Android had it in older versions but the new 64 bit ABI does not

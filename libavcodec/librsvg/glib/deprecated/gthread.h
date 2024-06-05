@@ -123,12 +123,11 @@ void     g_thread_foreach      (GFunc             thread_func,
 
 #if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
 #include <sys/types.h>
-//#include <pthread.h>
-#include "../../../libpthread_win32/pthread.h"
+#include <pthread.h>
 #endif
 
 #define g_static_mutex_get_mutex g_static_mutex_get_mutex_impl GLIB_DEPRECATED_MACRO_IN_2_32
-#if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
+#if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
 #define G_STATIC_MUTEX_INIT { NULL, PTHREAD_MUTEX_INITIALIZER } GLIB_DEPRECATED_MACRO_IN_2_32_FOR(g_mutex_init)
 #else
 #define G_STATIC_MUTEX_INIT { NULL } GLIB_DEPRECATED_MACRO_IN_2_32_FOR(g_mutex_init)
@@ -136,10 +135,12 @@ void     g_thread_foreach      (GFunc             thread_func,
 typedef struct
 {
   GMutex *mutex;
-#if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
+#ifndef __GI_SCANNER__
+# if defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE)
   /* only for ABI compatibility reasons */
   pthread_mutex_t unused;
-#endif
+# endif
+#endif /* !__GI_SCANNER__ */
 } GStaticMutex GLIB_DEPRECATED_TYPE_IN_2_32_FOR(GMutex);
 
 #define g_static_mutex_lock(mutex) \
@@ -163,15 +164,17 @@ struct _GStaticRecMutex
   GStaticMutex mutex;
   guint depth;
 
+#ifndef __GI_SCANNER__
   /* ABI compat only */
   union {
-#if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
+# if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
     void *owner;
-#else
+# else
     pthread_t owner;
-#endif
+# endif
     gdouble dummy;
   } unused;
+#endif /* !__GI_SCANNER__ */
 } GLIB_DEPRECATED_TYPE_IN_2_32_FOR(GRecMutex);
 
 #define G_STATIC_REC_MUTEX_INIT { G_STATIC_MUTEX_INIT, 0, { 0 } } GLIB_DEPRECATED_MACRO_IN_2_32_FOR(g_rec_mutex_init)

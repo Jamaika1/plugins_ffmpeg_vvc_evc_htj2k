@@ -373,7 +373,7 @@ g_file_test (const gchar *filename,
     {
       const gchar *lastdot = strrchr (filename, '.');
       const gchar *pathext = NULL, *p;
-      int extlen;
+      size_t extlen;
 
       if (lastdot == NULL)
         break;
@@ -401,7 +401,7 @@ g_file_test (const gchar *filename,
 	  const gchar *q = strchr (p, ';');
 	  if (q == NULL)
 	    q = p + strlen (p);
-	  if (extlen == q - p &&
+	  if (extlen == (size_t) (q - p) &&
 	      memcmp (lastdot, p, extlen) == 0)
 	    {
 	      g_free ((gchar *) pathext);
@@ -709,14 +709,19 @@ get_contents_stdio (const gchar  *filename,
 
           if (tmp == NULL)
             {
+              char *display_size = g_format_size_full (total_allocated, G_FORMAT_SIZE_LONG_FORMAT);
               display_filename = g_filename_display_name (filename);
               g_set_error (error,
                            G_FILE_ERROR,
                            G_FILE_ERROR_NOMEM,
-                           g_dngettext (GETTEXT_PACKAGE, "Could not allocate %" G_GSIZE_MODIFIER "u byte to read file “%s”", "Could not allocate %" G_GSIZE_MODIFIER "u bytes to read file “%s”", total_allocated),
-                           total_allocated,
+                           /* Translators: the first %s contains the file size
+                            * (already formatted with units), and the second %s
+                            * contains the file name */
+                           _("Could not allocate %s to read file “%s”"),
+                           display_size,
                            display_filename);
               g_free (display_filename);
+              g_free (display_size);
 
               goto error;
             }
@@ -813,14 +818,19 @@ get_contents_regfile (const gchar  *filename,
 
   if (buf == NULL)
     {
+      char *display_size = g_format_size_full (alloc_size, G_FORMAT_SIZE_LONG_FORMAT);
       display_filename = g_filename_display_name (filename);
       g_set_error (error,
                    G_FILE_ERROR,
                    G_FILE_ERROR_NOMEM,
-                   g_dngettext (GETTEXT_PACKAGE, "Could not allocate %" G_GSIZE_MODIFIER "u byte to read file “%s”", "Could not allocate %" G_GSIZE_MODIFIER "u bytes to read file “%s”", alloc_size),
-                   alloc_size,
+                   /* Translators: the first %s contains the file size
+                    * (already formatted with units), and the second %s
+                    * contains the file name */
+                   _("Could not allocate %s to read file “%s”"),
+                   display_size,
                    display_filename);
       g_free (display_filename);
+      g_free (display_size);
       goto error;
     }
   

@@ -47,7 +47,11 @@
 
 #ifdef G_OS_UNIX
 #include <unistd.h>
+
+#if defined(THREADS_POSIX) && defined(HAVE_PTHREAD_GETAFFINITY_NP)
+#include <pthread.h>
 #endif
+#endif /* G_OS_UNIX */
 
 #ifndef G_OS_WIN32
 #include <sys/time.h>
@@ -136,6 +140,20 @@
  *
  * Works like g_mutex_unlock(), but for a lock defined with
  * %G_LOCK_DEFINE.
+ */
+
+/**
+ * G_AUTO_LOCK:
+ * @name: the name of the lock
+ *
+ * Works like [func@GLib.MUTEX_AUTO_LOCK], but for a lock defined with
+ * [func@GLib.LOCK_DEFINE].
+ *
+ * This feature is only supported on GCC and clang. This macro is not defined on
+ * other compilers and should not be used in programs that are intended to be
+ * portable to those compilers.
+ *
+ * Since: 2.80
  */
 
 /* GMutex Documentation {{{1 ------------------------------------------ */
@@ -1072,6 +1090,20 @@ g_get_num_processors (void)
 
   if (count > 0)
     return count;
+#elif defined(_SC_NPROCESSORS_ONLN) && defined(THREADS_POSIX) && defined(HAVE_PTHREAD_GETAFFINITY_NP)
+  {
+    int ncores = MIN (sysconf (_SC_NPROCESSORS_ONLN), CPU_SETSIZE);
+    cpu_set_t cpu_mask;
+    CPU_ZERO (&cpu_mask);
+
+    int af_count = 0;
+    int err = pthread_getaffinity_np (pthread_self (), sizeof (cpu_mask), &cpu_mask);
+    if (!err)
+      af_count = CPU_COUNT (&cpu_mask);
+
+    int count = (af_count > 0) ? af_count : ncores;
+    return count;
+  }
 #elif defined(_SC_NPROCESSORS_ONLN)
   {
     int count;

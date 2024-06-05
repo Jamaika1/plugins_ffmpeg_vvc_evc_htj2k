@@ -30,6 +30,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif
+#ifdef HAVE_FTW_H
+#include <ftw.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1407,6 +1410,61 @@ parse_args (gint    *argc_p,
   *argc_p = e;
 }
 
+#ifdef HAVE_FTW_H
+static int
+rm_rf_nftw_visitor (const char *fpath,
+                    const struct stat *sb,
+                    int typeflag,
+                    struct FTW *ftwbuf)
+{
+  switch (typeflag)
+    {
+    case FTW_DP:
+    case FTW_D:
+    case FTW_DNR:
+      if (g_rmdir (fpath) != 0)
+        {
+          int errsv = errno;
+          g_printerr ("Unable to clean up temporary directory %s: %s\n",
+                      fpath,
+                      g_strerror (errsv));
+        }
+      break;
+
+    default:
+      if (g_remove (fpath) != 0)
+        {
+          int errsv = errno;
+          g_printerr ("Unable to clean up temporary file %s: %s\n",
+                      fpath,
+                      g_strerror (errsv));
+        }
+      break;
+    }
+
+  return 0;
+}
+
+static void
+rm_rf (const gchar *path)
+{
+  /* nopenfd specifies the maximum number of directories that [n]ftw() will
+   * hold open simultaneously. Rather than attempt to determine how many file
+   * descriptors are available, we assume that 5 are available when tearing
+   * down a test case; if that assumption is invalid, the only harm is leaving
+   * a temporary directory on disk.
+   */
+  const int nopenfd = 5;
+  int ret = nftw (path, rm_rf_nftw_visitor, nopenfd, FTW_DEPTH | FTW_MOUNT | FTW_PHYS);
+  if (ret != 0)
+    {
+      int errsv = errno;
+      g_printerr ("Unable to clean up temporary directory %s: %s\n",
+                  path,
+                  g_strerror (errsv));
+    }
+}
+#else
 /* A fairly naive `rm -rf` implementation to clean up after unit tests. */
 static void
 rm_rf (const gchar *path)
@@ -1433,6 +1491,7 @@ rm_rf (const gchar *path)
 
   g_rmdir (path);
 }
+#endif
 
 /* Implement the %G_TEST_OPTION_ISOLATE_DIRS option, iff it’s enabled. Create
  * a temporary directory for this unit test (disambiguated using @test_run_name)
@@ -2885,12 +2944,13 @@ g_test_queue_free (gpointer gfree_pointer)
  * @destroy_func:       Destroy callback for teardown phase.
  * @destroy_data:       Destroy callback data.
  *
- * This function enqueus a callback @destroy_func to be executed
- * during the next test case teardown phase. This is most useful
- * to auto destruct allocated test resources at the end of a test run.
- * Resources are released in reverse queue order, that means enqueueing
- * callback A before callback B will cause B() to be called before
- * A() during teardown.
+ * Enqueues a callback @destroy_func to be executed during the next test case
+ * teardown phase.
+ *
+ * This is most useful to auto destroy allocated test resources at the end of a
+ * test run. Resources are released in reverse queue order, that means
+ * enqueueing callback `A` before callback `B` will cause `B()` to be called
+ * before `A()` during teardown.
  *
  * Since: 2.16
  */
@@ -2925,17 +2985,30 @@ test_has_prefix (gconstpointer a,
     return g_strcmp0 (test_run_name_local, test_path_skipped_local);
 }
 
+static gboolean test_should_run (const char *test_path,
+                                 const char *cmp_path);
+
 static gboolean
-test_case_run (GTestCase *tc)
+test_case_run (GTestCase  *tc,
+               const char *test_run_name,
+               const char *path)
 {
-  gchar *old_base = g_strdup (test_uri_base);
+  gchar *old_base = NULL;
   GSList **old_free_list, *filename_free_list = NULL;
   gboolean success = G_TEST_RUN_SUCCESS;
+  gboolean free_test_data = TRUE;
 
+  old_base = g_strdup (test_uri_base);
   old_free_list = test_filename_free_list;
   test_filename_free_list = &filename_free_list;
 
-  if (++test_run_count <= test_startup_skip_count)
+  if (!test_should_run (test_run_name, path))
+    {
+      /* Silently skip the test and return success. This happens if it’s a
+       * /subprocess path. */
+      success = G_TEST_RUN_SKIPPED;
+    }
+  else if (++test_run_count <= test_startup_skip_count)
     g_test_log (G_TEST_LOG_SKIP_CASE, test_run_name, NULL, 0, NULL);
   else if (test_run_list)
     {
@@ -2982,6 +3055,7 @@ test_case_run (GTestCase *tc)
                 }
               if (tc->fixture_teardown)
                 tc->fixture_teardown (fixture, tc->test_data);
+              free_test_data = FALSE;
               if (tc->fixture_size)
                 g_free (fixture);
               g_timer_stop (test_run_timer);
@@ -2999,6 +3073,13 @@ test_case_run (GTestCase *tc)
       g_timer_destroy (test_run_timer);
     }
 
+  /* In case the test didn’t run (due to being skipped or an error), the test
+   * data may still need to be freed, as the client’s main() function may have
+   * passed ownership of it into g_test_add_data_func_full() with a
+   * #GDestroyNotify. */
+  if (free_test_data && tc->fixture_size == 0 && tc->fixture_teardown != NULL)
+    tc->fixture_teardown (tc->test_data, tc->test_data);
+
   g_slist_free_full (filename_free_list, g_free);
   test_filename_free_list = old_free_list;
   g_free (test_uri_base);
@@ -3013,7 +3094,7 @@ static gboolean
 path_has_prefix (const char *path,
                  const char *prefix)
 {
-  int prefix_len = strlen (prefix);
+  size_t prefix_len = strlen (prefix);
 
   return (strncmp (path, prefix, prefix_len) == 0 &&
           (path[prefix_len] == '\0' ||
@@ -3064,11 +3145,10 @@ g_test_run_suite_internal (GTestSuite *suite,
 
       test_run_name = g_build_path ("/", old_name, tc->name, NULL);
       test_run_name_path = g_build_path (G_DIR_SEPARATOR_S, old_name_path, tc->name, NULL);
-      if (test_should_run (test_run_name, path))
-        {
-          if (!test_case_run (tc))
-            n_bad++;
-        }
+
+      if (!test_case_run (tc, test_run_name, path))
+        n_bad++;
+
       g_free (test_run_name);
       g_free (test_run_name_path);
     }
@@ -4287,7 +4367,9 @@ g_test_log_dump (GTestLogMsg *msg,
   gstring_append_int (gstring, 0);      /* reserved */
   for (ui = 0; ui < msg->n_strings; ui++)
     {
-      guint l = strlen (msg->strings[ui]);
+      guint l;
+      g_assert (msg->strings[ui] != NULL);
+      l = strlen (msg->strings[ui]);
       gstring_append_int (gstring, l);
       g_string_append_len (gstring, msg->strings[ui], l);
     }

@@ -6,23 +6,26 @@
 #ifndef __GLIBCONFIG_H__
 #define __GLIBCONFIG_H__
 
+#include "config_win32.h"
 #include "gmacros.h"
 
 #include <limits.h>
 #include <float.h>
-/* #undef GLIB_HAVE_ALLOCA_H */
+#undef GLIB_HAVE_ALLOCA_H
+
+#define GLIB_STATIC_COMPILATION 1
+#define GOBJECT_STATIC_COMPILATION 1
+#define GIO_STATIC_COMPILATION 1
+#define GMODULE_STATIC_COMPILATION 1
+#define GI_STATIC_COMPILATION 1
+#define G_INTL_STATIC_COMPILATION 1
+#define FFI_STATIC_BUILD 1
 
 /* Specifies that GLib's g_print*() functions wrap the
  * system printf functions.  This is useful to know, for example,
  * when using glibc's register_printf_function().
  */
-#undef GLIB_USING_SYSTEM_PRINTF
-
-#ifndef G_LIB_STATIC
-#define G_LIB_EXPORT __declspec(dllexport)
-#else
-#define G_LIB_EXPORT extern
-#endif
+#define GLIB_USING_SYSTEM_PRINTF 1
 
 G_BEGIN_DECLS
 
@@ -161,13 +164,6 @@ typedef gint64 goffset;
 
 #endif
 
-#define GLIB_MAJOR_VERSION 2
-#define GLIB_MINOR_VERSION 79
-#define GLIB_MICRO_VERSION 0
-
-#define G_OS_WIN32 1
-#define G_PLATFORM_WIN32 1
-
 /* #undef G_VA_COPY */
 
 #define G_HAVE_ISO_VARARGS 1
@@ -201,7 +197,6 @@ typedef gint64 goffset;
 #define G_THREADS_IMPL_WIN32
 
 #undef G_ATOMIC_OP_MEMORY_BARRIER_NEEDED
-//#define G_ATOMIC_LOCK_FREE
 
 #define GINT16_TO_LE(val)	((gint16) (val))
 #define GUINT16_TO_LE(val)	((guint16) (val))

@@ -283,9 +283,8 @@ is_canonical (const gchar *key)
  * Validate a signal name. This can be useful for dynamically-generated signals
  * which need to be validated at run-time before actually trying to create them.
  *
- * See [canonical parameter names][canonical-parameter-names] for details of
- * the rules for valid names. The rules for signal names are the same as those
- * for property names.
+ * See [func@GObject.signal_new] for details of the rules for valid names.
+ * The rules for signal names are the same as those for property names.
  *
  * Returns: %TRUE if @name is a valid signal name, %FALSE otherwise.
  * Since: 2.66
@@ -395,17 +394,9 @@ handler_list_ensure (guint    signal_id,
   if (!hlbsa)
     {
       hlbsa = g_bsearch_array_create (&g_signal_hlbsa_bconfig);
-      hlbsa = g_bsearch_array_insert (hlbsa, &g_signal_hlbsa_bconfig, &key);
-      g_hash_table_insert (g_handler_list_bsa_ht, instance, hlbsa);
     }
-  else
-    {
-      GBSearchArray *o = hlbsa;
-
-      hlbsa = g_bsearch_array_insert (o, &g_signal_hlbsa_bconfig, &key);
-      if (hlbsa != o)
-	g_hash_table_insert (g_handler_list_bsa_ht, instance, hlbsa);
-    }
+  hlbsa = g_bsearch_array_insert (hlbsa, &g_signal_hlbsa_bconfig, &key);
+  g_hash_table_insert (g_handler_list_bsa_ht, instance, hlbsa);
   return g_bsearch_array_lookup (hlbsa, &g_signal_hlbsa_bconfig, &key);
 }
 
@@ -2309,7 +2300,10 @@ g_signal_get_invocation_hint (gpointer instance)
  * If @closure is a floating reference (see g_closure_sink()), this function
  * takes ownership of @closure.
  *
- * Returns: the handler ID (always greater than 0 for successful connections)
+ * This function cannot fail. If the given signal doesn’t exist, a critical
+ * warning is emitted.
+ *
+ * Returns: the handler ID (always greater than 0)
  */
 gulong
 g_signal_connect_closure_by_id (gpointer  instance,
@@ -2374,7 +2368,10 @@ g_signal_connect_closure_by_id (gpointer  instance,
  * If @closure is a floating reference (see g_closure_sink()), this function
  * takes ownership of @closure.
  *
- * Returns: the handler ID (always greater than 0 for successful connections)
+ * This function cannot fail. If the given signal doesn’t exist, a critical
+ * warning is emitted.
+ *
+ * Returns: the handler ID (always greater than 0)
  */
 gulong
 g_signal_connect_closure (gpointer     instance,
@@ -2470,7 +2467,10 @@ node_check_deprecated (const SignalNode *node)
  * used. Specify @connect_flags if you need `..._after()` or
  * `..._swapped()` variants of this function.
  *
- * Returns: the handler ID (always greater than 0 for successful connections)
+ * This function cannot fail. If the given signal doesn’t exist, a critical
+ * warning is emitted.
+ *
+ * Returns: the handler ID (always greater than 0)
  */
 gulong
 g_signal_connect_data (gpointer       instance,

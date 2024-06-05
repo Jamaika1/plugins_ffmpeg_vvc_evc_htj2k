@@ -30,15 +30,15 @@ extern "C" {
 #define	G_MODULE_IMPL_WIN32	3
 #define	G_MODULE_IMPL_AR	7
 
-#define	G_MODULE_IMPL		G_MODULE_IMPL_WIN32
+#define	G_MODULE_IMPL		3
 #undef	G_MODULE_HAVE_DLERROR
-#if	(@G_MODULE_HAVE_DLERROR@)
+#if	(0)
 #define	G_MODULE_HAVE_DLERROR
 #endif
-#if	(@G_MODULE_NEED_USCORE@)
+#if	(0)
 #define	G_MODULE_NEED_USCORE
 #endif
-#if	(@G_MODULE_BROKEN_RTLD_GLOBAL@)
+#if	(0)
 #define G_MODULE_BROKEN_RTLD_GLOBAL
 #endif
 

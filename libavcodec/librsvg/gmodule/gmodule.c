@@ -28,7 +28,6 @@
  * MT safe
  */
 
-#include "config.h"
 #include "../glib/config.h"
 
 #include "../glib/glib.h"
@@ -235,11 +234,11 @@ g_module_set_error (const gchar *error)
 /* --- include platform specific code --- */
 #define	SUPPORT_OR_RETURN(rv)	{ g_module_set_error (NULL); }
 #if	(G_MODULE_IMPL == G_MODULE_IMPL_DL)
-#include "gmodule-dl.c"
+#include "extra/gmodule-dl.c"
 #elif	(G_MODULE_IMPL == G_MODULE_IMPL_WIN32)
-#include "gmodule-win32.c"
+#include "extra/gmodule-win32.c"
 #elif	(G_MODULE_IMPL == G_MODULE_IMPL_AR)
-#include "gmodule-ar.c"
+#include "extra/gmodule-ar.c"
 #else
 #undef	SUPPORT_OR_RETURN
 #define	SUPPORT_OR_RETURN(rv)	{ g_module_set_error ("dynamic modules are " \
@@ -436,7 +435,9 @@ static GRecMutex g_module_global_lock;
  * @error: #GError.
  *
  * Opens a module. If the module has already been opened, its reference count
- * is incremented. If not, the module is searched in the following order:
+ * is incremented. If not, the module is searched using @file_name.
+ *
+ * Since 2.76, the search order/behavior is as follows:
  *
  * 1. If @file_name exists as a regular file, it is used as-is; else
  * 2. If @file_name doesn't have the correct suffix and/or prefix for the
@@ -447,10 +448,15 @@ static GRecMutex g_module_global_lock;
  *    libtool archive is parsed to find the actual file name, and that is
  *    used.
  *
- * At the end of all this, we would have a file path that we can access on
- * disk, and it is opened as a module. If not, @file_name is opened as
- * a module verbatim in the hopes that the system implementation will somehow
- * be able to access it.
+ * If, at the end of all this, we have a file path that we can access on disk,
+ * it is opened as a module. If not, @file_name is attempted to be opened as a
+ * module verbatim in the hopes that the system implementation will somehow be
+ * able to access it. If that is not possible, %NULL is returned.
+ *
+ * Note that this behaviour was different prior to 2.76, but there is some
+ * overlap in functionality. If backwards compatibility is an issue, kindly
+ * consult earlier #GModule documentation for the prior search order/behavior
+ * of @file_name.
  *
  * Returns: a #GModule on success, or %NULL on failure
  *
@@ -484,7 +490,7 @@ g_module_open_full (const gchar   *file_name,
 	  handle = _g_module_self ();
 /* On Android 64 bit, RTLD_DEFAULT is (void *)0x0
  * so it always fails to create main_module if file_name is NULL */
-#if !defined(__BIONIC__) || !defined(__LP64__)
+#if !defined(__ANDROID__) || !defined(__LP64__)
 	  if (handle)
 #endif
 	    {

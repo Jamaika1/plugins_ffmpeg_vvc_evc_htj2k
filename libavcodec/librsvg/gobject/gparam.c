@@ -389,8 +389,8 @@ is_canonical (const gchar *key)
  * dynamically-generated properties which need to be validated at run-time
  * before actually trying to create them.
  *
- * See [canonical parameter names][canonical-parameter-names] for details of
- * the rules for valid names.
+ * See [canonical parameter names][class@GObject.ParamSpec#parameter-names]
+ * for details of the rules for valid names.
  *
  * Returns: %TRUE if @name is a valid property name, %FALSE otherwise.
  * Since: 2.66
@@ -429,9 +429,9 @@ g_param_spec_is_valid_name (const gchar *name)
  *
  * Creates a new #GParamSpec instance.
  *
- * See [canonical parameter names][canonical-parameter-names] for details of
- * the rules for @name. Names which violate these rules lead to undefined
- * behaviour.
+ * See [canonical parameter names][class@GObject.ParamSpec#parameter-names]
+ * for details of the rules for @name. Names which violate these rules lead
+ * to undefined behaviour.
  *
  * Beyond the name, #GParamSpecs have two more descriptive strings, the
  * @nick and @blurb, which may be used as a localized label and description.
@@ -994,9 +994,30 @@ g_param_spec_pool_new (gboolean type_prefixing)
 
   memcpy (&pool->mutex, &init_mutex, sizeof (init_mutex));
   pool->type_prefixing = type_prefixing != FALSE;
-  pool->hash_table = g_hash_table_new (param_spec_pool_hash, param_spec_pool_equals);
+  pool->hash_table = g_hash_table_new_full (param_spec_pool_hash,
+                                            param_spec_pool_equals,
+                                            (GDestroyNotify) g_param_spec_unref,
+                                            NULL);
 
   return pool;
+}
+
+/**
+ * g_param_spec_pool_free:
+ * @pool: (transfer full): a #GParamSpecPool
+ *
+ * Frees the resources allocated by a #GParamSpecPool.
+ *
+ * Since: 2.80
+ */
+void
+g_param_spec_pool_free (GParamSpecPool *pool)
+{
+  g_mutex_lock (&pool->mutex);
+  g_hash_table_unref (pool->hash_table);
+  g_mutex_unlock (&pool->mutex);
+  g_mutex_clear (&pool->mutex);
+  g_free (pool);
 }
 
 /**
@@ -1053,9 +1074,7 @@ g_param_spec_pool_remove (GParamSpecPool *pool,
   if (pool && pspec)
     {
       g_mutex_lock (&pool->mutex);
-      if (g_hash_table_remove (pool->hash_table, pspec))
-	g_param_spec_unref (pspec);
-      else
+      if (!g_hash_table_remove (pool->hash_table, pspec))
 	g_critical (G_STRLOC ": attempt to remove unknown pspec '%s' from pool", pspec->name);
       g_mutex_unlock (&pool->mutex);
     }
@@ -1318,8 +1337,8 @@ pool_depth_list (gpointer key,
  * the prerequisite class, not from the interface that
  * prerequires it.
  * 
- * also 'depth' isn't a meaningful concept for interface
- * prerequites.
+ * Also 'depth' isn't a meaningful concept for interface
+ * prerequisites.
  */
 static void
 pool_depth_list_for_interface (gpointer key,

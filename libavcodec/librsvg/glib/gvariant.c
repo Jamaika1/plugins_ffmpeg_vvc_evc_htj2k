@@ -48,7 +48,7 @@
  *
  * `GVariant` is useful whenever data needs to be serialized, for example when
  * sending method parameters in D-Bus, or when saving settings using
- * [class@Gio.Settings].
+ * [`GSettings`](../gio/class.Settings.html).
  *
  * When creating a new `GVariant`, you pass the data you want to store in it
  * along with a string representing the type of data you wish to pass to it.
@@ -93,7 +93,7 @@
  * `GVariant` instances can be sent over D-Bus.  See [type@GLib.VariantType] for
  * exceptions.  (However, `GVariant`’s serialization format is not the same
  * as the serialization format of a D-Bus message body: use
- * [class@Gio.DBusMessage], in the GIO library, for those.)
+ * [GDBusMessage](../gio/class.DBusMessage.html), in the GIO library, for those.)
  *
  * For space-efficiency, the `GVariant` serialization format does not
  * automatically include the variant’s length, type or endianness,
@@ -1112,7 +1112,7 @@ g_variant_lookup_value (GVariant           *dictionary,
  *
  * @element_size must be the size of a single element in the array,
  * as given by the section on
- * [serialized data memory][gvariant-serialized-data-memory].
+ * [serialized data memory](struct.Variant.html#serialized-data-memory).
  *
  * In particular, arrays of these fixed-sized types can be interpreted
  * as an array of the given C type, with @element_size set to the size
@@ -1258,7 +1258,7 @@ g_variant_new_fixed_array (const GVariantType  *element_type,
  *
  * @string must be valid UTF-8, and must not be %NULL. To encode
  * potentially-%NULL strings, use g_variant_new() with `ms` as the
- * [format string][gvariant-format-strings-maybe-types].
+ * [format string](gvariant-format-strings.html#maybe-types).
  *
  * Returns: (transfer none): a floating reference to a new string #GVariant instance
  *
@@ -2641,7 +2641,7 @@ g_variant_print_string (GVariant *value,
  *
  * Pretty-prints @value in the format understood by g_variant_parse().
  *
- * The format is described [here][gvariant-text].
+ * The format is described [here](gvariant-text-format.html).
  *
  * If @type_annotate is %TRUE, then type information is included in
  * the output.
@@ -3978,7 +3978,11 @@ g_variant_dict_new (GVariant *from_asv)
 {
   GVariantDict *dict;
 
-  dict = g_slice_alloc (sizeof (struct heap_dict));
+  /* We actually want to treat the allocation as a `struct heap_dict`, but the
+   * compiler will warn if it’s not at least as big as `struct GVariantDict`. */
+  G_STATIC_ASSERT (sizeof (GVariantDict) >= sizeof (struct heap_dict));
+
+  dict = g_malloc (sizeof (GVariantDict));
   g_variant_dict_init (dict, from_asv);
   GVHD(dict)->magic = GVHD_MAGIC;
   GVHD(dict)->ref_count = 1;
@@ -4331,7 +4335,7 @@ g_variant_dict_unref (GVariantDict *dict)
   if (--GVHD(dict)->ref_count == 0)
     {
       g_variant_dict_clear (dict);
-      g_slice_free (struct heap_dict, (struct heap_dict *) dict);
+      g_free_sized (dict, sizeof (GVariantDict));
     }
 }
 
@@ -4357,7 +4361,7 @@ g_variant_dict_unref (GVariantDict *dict)
  * not be accessed and the effect is otherwise equivalent to if the
  * character at @limit were nul.
  *
- * See the section on [GVariant format strings][gvariant-format-strings].
+ * See the section on [GVariant format strings](gvariant-format-strings.html).
  *
  * Returns: %TRUE if there was a valid format string
  *
@@ -4616,7 +4620,7 @@ g_variant_format_string_scan_type (const gchar  *string,
                                    const gchar **endptr)
 {
   const gchar *my_end;
-  gchar *dest;
+  gsize i;
   gchar *new;
 
   if (endptr == NULL)
@@ -4625,16 +4629,19 @@ g_variant_format_string_scan_type (const gchar  *string,
   if (!g_variant_format_string_scan (string, limit, endptr))
     return NULL;
 
-  dest = new = g_malloc (*endptr - string + 1);
+  new = g_malloc (*endptr - string + 1);
+  i = 0;
   while (string != *endptr)
     {
       if (*string != '@' && *string != '&' && *string != '^')
-        *dest++ = *string;
+        new[i++] = *string;
       string++;
     }
-  *dest = '\0';
+  new[i++] = '\0';
 
-  return (GVariantType *) G_VARIANT_TYPE (new);
+  g_assert (g_variant_type_string_is_valid (new));
+
+  return (GVariantType *) new;
 }
 
 static gboolean
@@ -5372,7 +5379,7 @@ g_variant_valist_get (const gchar **str,
  *
  * The type of the created instance and the arguments that are expected
  * by this function are determined by @format_string. See the section on
- * [GVariant format strings][gvariant-format-strings]. Please note that
+ * [GVariant format strings](gvariant-format-strings.html). Please note that
  * the syntax of the format string is very likely to be extended in the
  * future.
  *
@@ -5382,7 +5389,7 @@ g_variant_valist_get (const gchar **str,
  *
  * Note that the arguments must be of the correct width for their types
  * specified in @format_string. This can be achieved by casting them. See
- * the [GVariant varargs documentation][gvariant-varargs].
+ * the [GVariant varargs documentation](gvariant-format-strings.html#varargs).
  *
  * |[<!-- language="C" -->
  * MyFlags some_flags = FLAG_ONE | FLAG_TWO;
@@ -5443,7 +5450,7 @@ g_variant_new (const gchar *format_string,
  *
  * Note that the arguments in @app must be of the correct width for their
  * types specified in @format_string when collected into the #va_list.
- * See the [GVariant varargs documentation][gvariant-varargs].
+ * See the [GVariant varargs documentation](gvariant-format-strings.html#varargs).
  *
  * These two generalisations allow mixing of multiple calls to
  * g_variant_new_va() and g_variant_get_va() within a single actual
@@ -5499,7 +5506,7 @@ g_variant_new_va (const gchar  *format_string,
  * determined by @format_string.  @format_string also restricts the
  * permissible types of @value.  It is an error to give a value with
  * an incompatible type.  See the section on
- * [GVariant format strings][gvariant-format-strings].
+ * [GVariant format strings](gvariant-format-strings.html).
  * Please note that the syntax of the format string is very likely to be
  * extended in the future.
  *
@@ -5599,7 +5606,7 @@ g_variant_get_va (GVariant     *value,
  *
  * Note that the arguments must be of the correct width for their types
  * specified in @format_string. This can be achieved by casting them. See
- * the [GVariant varargs documentation][gvariant-varargs].
+ * the [GVariant varargs documentation](gvariant-format-strings.html#varargs).
  *
  * This function might be used as follows:
  *

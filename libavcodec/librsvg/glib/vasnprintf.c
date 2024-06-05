@@ -379,7 +379,7 @@ multiply (mpn_t src1, mpn_t src2, mpn_t *dest)
     {
       /* src1 or src2 is zero.  */
       dest->nlimbs = 0;
-      dest->limbs = (mp_limb_t *) malloc (1);
+      dest->limbs = (mp_limb_t *) malloc (sizeof (mp_limb_t));
     }
   else
     {
@@ -4877,7 +4877,7 @@ VASNPRINTF (DCHAR_T *resultbuf, size_t *lengthp,
          && !defined __UCLIBC__)                                            \
         || (defined __APPLE__ && defined __MACH__)                          \
         || defined __ANDROID__                                              \
-        || ((defined _WIN32 && FALSE) && ! defined __CYGWIN__))
+        || (defined _WIN32 && ! defined __CYGWIN__))
                 fbp[1] = '%';
                 fbp[2] = 'n';
                 fbp[3] = '\0';
