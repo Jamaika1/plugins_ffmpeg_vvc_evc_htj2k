@@ -151,7 +151,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.4.4"
+#define PACKAGE_VERSION "3.4.6-3d0ce1e"
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE (sizeof(double))
@@ -184,7 +184,7 @@
 /* #undef USING_PURIFY */
 
 /* Version number of package */
-#define VERSION "3.4.4"
+#define VERSION "3.4.6-3d0ce1e"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
