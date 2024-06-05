@@ -4,7 +4,7 @@
  *
  *   TrueType Glyph Loader (body).
  *
- * Copyright (C) 1996-2023 by
+ * Copyright (C) 1996-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -418,10 +418,8 @@
       /* and thus allocate the bytecode array size by ourselves     */
       if ( n_ins )
       {
-        if ( FT_QNEW_ARRAY( exec->glyphIns, n_ins ) )
+        if ( FT_DUP( exec->glyphIns, p, n_ins ) )
           return error;
-
-        FT_MEM_COPY( exec->glyphIns, p, (FT_Long)n_ins );
 
         exec->glyphSize  = n_ins;
       }

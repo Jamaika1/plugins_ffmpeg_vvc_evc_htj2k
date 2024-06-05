@@ -4,7 +4,7 @@
  *
  *   A new `perfect' anti-aliasing renderer (body).
  *
- * Copyright (C) 2000-2023 by
+ * Copyright (C) 2000-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -489,7 +489,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
   typedef struct  gray_TWorker_
   {
-    ft_jmp_buf  jump_buffer;
+    FT_BBox     cbox;
 
     TCoord  min_ex, max_ex;  /* min and max integer pixel coordinates */
     TCoord  min_ey, max_ey;
@@ -509,6 +509,8 @@ typedef ptrdiff_t  FT_PtrDist;
 
     FT_Raster_Span_Func  render_span;
     void*                render_span_data;
+
+    ft_jmp_buf  jump_buffer;
 
   } gray_TWorker, *gray_PWorker;
 
@@ -997,49 +999,12 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif
 
   /*
-   * Benchmarking shows that using DDA to flatten the quadratic Bézier arcs
-   * is slightly faster in the following cases:
-   *
-   *   - When the host CPU is 64-bit.
-   *   - When SSE2 SIMD registers and instructions are available (even on
-   *     x86).
-   *
-   * For other cases, using binary splits is actually slightly faster.
+   * For now, the code that uses DDA to render conic curves requires
+   * `FT_Int64` to be defined.  See for example
+   *    https://gitlab.freedesktop.org/freetype/freetype/-/issues/1071.
    */
-#if ( defined( __SSE2__ )                          ||   \
-      defined( __x86_64__ )                        ||   \
-      defined( _M_AMD64 )                          ||   \
-      ( defined( _M_IX86_FP ) && _M_IX86_FP >= 2 ) ) && \
-    !defined( __VMS )
-#  define FT_SSE2 1
-#else
-#  define FT_SSE2 0
-#endif
 
-#if FT_SSE2                || \
-    defined( __aarch64__ ) || \
-    defined( _M_ARM64 )
-#  define BEZIER_USE_DDA  1
-#else
-#  define BEZIER_USE_DDA  0
-#endif
-
-  /*
-   * For now, the code that depends on `BEZIER_USE_DDA` requires `FT_Int64`
-   * to be defined.  If `FT_INT64` is not defined, meaning there is no
-   * 64-bit type available, disable it to avoid compilation errors.  See for
-   * example https://gitlab.freedesktop.org/freetype/freetype/-/issues/1071.
-   */
-#if !defined( FT_INT64 )
-#  undef BEZIER_USE_DDA
-#  define BEZIER_USE_DDA  0
-#endif
-
-#if BEZIER_USE_DDA
-
-#if FT_SSE2
-#  include <emmintrin.h>
-#endif
+#ifdef FT_INT64
 
 #define LEFT_SHIFT( a, b )  (FT_Int64)( (FT_UInt64)(a) << (b) )
 
@@ -1151,61 +1116,6 @@ typedef ptrdiff_t  FT_PtrDist;
      *             = (B << (33 - N)) + (A << (32 - 2*N))
      */
 
-#if FT_SSE2
-    /* Experience shows that for small counts, SSE2 is actually slower. */
-    if ( count > 4 )
-    {
-      union
-      {
-        struct { FT_Int64  ax, ay, bx, by; }  i;
-        struct { __m128i  a, b; }  vec;
-
-      } u;
-
-      union
-      {
-        struct { FT_Int32  px_lo, px_hi, py_lo, py_hi; }  i;
-        __m128i  vec;
-
-      } v;
-
-      __m128i  p, q, r;
-
-
-      u.i.ax = ax;
-      u.i.ay = ay;
-      u.i.bx = bx;
-      u.i.by = by;
-
-      q = _mm_load_si128( &u.vec.b );
-      r = _mm_load_si128( &u.vec.a );
-
-      q = _mm_slli_epi64( q, shift + 17);
-      r = _mm_slli_epi64( r, shift + shift );
-      q = _mm_add_epi64( q, r );
-      r = _mm_add_epi64( r, r );
-
-      v.i.px_lo = 0;
-      v.i.px_hi = p0.x;
-      v.i.py_lo = 0;
-      v.i.py_hi = p0.y;
-
-      p = _mm_load_si128( &v.vec );
-
-      do
-      {
-        p = _mm_add_epi64( p, q );
-        q = _mm_add_epi64( q, r );
-
-        _mm_store_si128( &v.vec, p );
-
-        gray_render_line( RAS_VAR_ v.i.px_hi, v.i.py_hi );
-      } while ( --count );
-
-      return;
-    }
-#endif  /* FT_SSE2 */
-
     rx = LEFT_SHIFT( ax, shift + shift );
     ry = LEFT_SHIFT( ay, shift + shift );
 
@@ -1230,7 +1140,7 @@ typedef ptrdiff_t  FT_PtrDist;
     } while ( --count );
   }
 
-#else  /* !BEZIER_USE_DDA */
+#else  /* !FT_INT64 */
 
   /*
    * Note that multiple attempts to speed up the function below
@@ -1324,7 +1234,7 @@ typedef ptrdiff_t  FT_PtrDist;
     } while ( --draw );
   }
 
-#endif  /* !BEZIER_USE_DDA */
+#endif  /* !FT_INT64 */
 
 
   /*
@@ -1955,11 +1865,8 @@ typedef ptrdiff_t  FT_PtrDist;
   static int
   gray_convert_glyph( RAS_ARG )
   {
-    const TCoord  yMin = ras.min_ey;
-    const TCoord  yMax = ras.max_ey;
-
     TCell    buffer[FT_MAX_GRAY_POOL];
-    size_t   height = (size_t)( yMax - yMin );
+    size_t   height = (size_t)( ras.cbox.yMax - ras.cbox.yMin );
     size_t   n = FT_MAX_GRAY_POOL / 8;
     TCoord   y;
     TCoord   bands[32];  /* enough to accommodate bisections */
@@ -1985,35 +1892,36 @@ typedef ptrdiff_t  FT_PtrDist;
       height  = ( height + n - 1 ) / n;
     }
 
-    for ( y = yMin; y < yMax; )
+    for ( y = ras.cbox.yMin; y < ras.cbox.yMax; )
     {
       ras.min_ey = y;
       y         += height;
-      ras.max_ey = FT_MIN( y, yMax );
+      ras.max_ey = FT_MIN( y, ras.cbox.yMax );
+
+      ras.count_ey = ras.max_ey - ras.min_ey;
 
       band    = bands;
-      band[1] = ras.min_ey;
-      band[0] = ras.max_ey;
+      band[1] = ras.cbox.xMin;
+      band[0] = ras.cbox.xMax;
 
       do
       {
-        TCoord  width = band[0] - band[1];
-        TCoord  w;
+        TCoord  i;
         int     error;
 
 
-        for ( w = 0; w < width; ++w )
-          ras.ycells[w] = ras.cell_null;
+        ras.min_ex = band[1];
+        ras.max_ex = band[0];
 
-        /* memory management: skip ycells */
-        n = ( (size_t)width * sizeof ( PCell ) + sizeof ( TCell ) - 1 ) /
-              sizeof ( TCell );
+        /* memory management: zero out and skip ycells */
+        for ( i = 0; i < ras.count_ey; ++i )
+          ras.ycells[i] = ras.cell_null;
+
+        n = ( (size_t)ras.count_ey * sizeof ( PCell ) + sizeof ( TCell ) - 1 )
+              / sizeof ( TCell );
 
         ras.cell_free = buffer + n;
         ras.cell      = ras.cell_null;
-        ras.min_ey    = band[1];
-        ras.max_ey    = band[0];
-        ras.count_ey  = width;
 
         error     = gray_convert_glyph_inner( RAS_VAR_ continued );
         continued = 1;
@@ -2031,10 +1939,10 @@ typedef ptrdiff_t  FT_PtrDist;
           return error;
 
         /* render pool overflow; we will reduce the render band by half */
-        width >>= 1;
+        i = ( band[0] - band[1] ) >> 1;
 
         /* this should never happen even with tiny rendering pool */
-        if ( width == 0 )
+        if ( i == 0 )
         {
           FT_TRACE7(( "gray_convert_glyph: rotten glyph\n" ));
           return FT_THROW( Raster_Overflow );
@@ -2042,7 +1950,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
         band++;
         band[1]  = band[0];
-        band[0] += width;
+        band[0] += i;
       } while ( band >= bands );
     }
 
@@ -2093,10 +2001,7 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.render_span      = (FT_Raster_Span_Func)params->gray_spans;
       ras.render_span_data = params->user;
 
-      ras.min_ex = params->clip_box.xMin;
-      ras.min_ey = params->clip_box.yMin;
-      ras.max_ex = params->clip_box.xMax;
-      ras.max_ey = params->clip_box.yMax;
+      ras.cbox = params->clip_box;
     }
     else
     {
@@ -2122,14 +2027,14 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.render_span      = (FT_Raster_Span_Func)NULL;
       ras.render_span_data = NULL;
 
-      ras.min_ex = 0;
-      ras.min_ey = 0;
-      ras.max_ex = (FT_Pos)target_map->width;
-      ras.max_ey = (FT_Pos)target_map->rows;
+      ras.cbox.xMin = 0;
+      ras.cbox.yMin = 0;
+      ras.cbox.xMax = (FT_Pos)target_map->width;
+      ras.cbox.yMax = (FT_Pos)target_map->rows;
     }
 
     /* exit if nothing to do */
-    if ( ras.max_ex <= ras.min_ex || ras.max_ey <= ras.min_ey )
+    if ( ras.cbox.xMin >= ras.cbox.xMax || ras.cbox.yMin >= ras.cbox.yMax )
       return Smooth_Err_Ok;
 
     return gray_convert_glyph( RAS_VAR );

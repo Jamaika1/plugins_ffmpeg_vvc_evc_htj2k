@@ -224,7 +224,7 @@ FT_BEGIN_HEADER
    *   `configure` script) and you define this macro, you also have to pass
    *   `SYSTEM_ZLIB=yes` as an argument to make.
    */
-#define FT_CONFIG_OPTION_SYSTEM_ZLIB 1
+#define FT_CONFIG_OPTION_SYSTEM_ZLIB
 
 
   /**************************************************************************
@@ -244,7 +244,7 @@ FT_BEGIN_HEADER
    *   options set by those programs have precedence, overwriting the value
    *   here with the configured one.
    */
-#define FT_CONFIG_OPTION_USE_BZIP2 1
+#define FT_CONFIG_OPTION_USE_BZIP2
 
 
   /**************************************************************************
@@ -290,7 +290,7 @@ FT_BEGIN_HEADER
    *   options set by those programs have precedence, overwriting the value
    *   here with the configured one.
    */
-/* #define FT_CONFIG_OPTION_USE_HARFBUZZ */
+#define FT_CONFIG_OPTION_USE_HARFBUZZ
 
 
   /**************************************************************************
@@ -306,7 +306,7 @@ FT_BEGIN_HEADER
    *   options set by those programs have precedence, overwriting the value
    *   here with the configured one.
    */
-/* #define FT_CONFIG_OPTION_USE_BROTLI */
+#define FT_CONFIG_OPTION_USE_BROTLI
 
 
   /**************************************************************************
@@ -755,6 +755,22 @@ FT_BEGIN_HEADER
 #ifndef TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES
 #define TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES  1000000L
 #endif
+
+
+  /**************************************************************************
+   *
+   * Option `TT_CONFIG_OPTION_GPOS_KERNING` enables a basic GPOS kerning
+   * implementation (for TrueType fonts only).  With this defined, FreeType
+   * is able to get kerning pair data from the GPOS 'kern' feature as well as
+   * legacy 'kern' tables; without this defined, FreeType will only be able
+   * to use legacy 'kern' tables.
+   *
+   * Note that FreeType does not support more advanced GPOS layout features;
+   * even the 'kern' feature implemented here doesn't handle more
+   * sophisticated kerning variants.  Use a higher-level library like
+   * HarfBuzz instead for that.
+   */
+/* #define TT_CONFIG_OPTION_GPOS_KERNING */
 
 
   /*************************************************************************/
