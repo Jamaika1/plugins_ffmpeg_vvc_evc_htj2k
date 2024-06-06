@@ -93,13 +93,6 @@ static const float exc_gain_quant_scal1[2]={0.70469f, 1.05127f};
 
 #endif
 
-#ifdef VORBIS_PSYCHO
-#define EXTRA_BUFFER 100
-#else
-#define EXTRA_BUFFER 0
-#endif
-
-
 extern const spx_word16_t lag_window[];
 extern const spx_word16_t lpc_window[];
 
@@ -1471,6 +1464,11 @@ int nb_decode(void *state, SpeexBits *bits, void *vout)
 
       /* Final signal synthesis from excitation */
       iir_mem16(st->exc, lpc, out, NB_FRAME_SIZE, NB_ORDER, st->mem_sp, stack);
+
+      /* Normally this is written to later but since this is returning early,
+         avoid reading uninitialized memory in caller */
+      if (st->innov_save)
+         SPEEX_MEMSET(st->innov_save, 0, NB_NB_SUBFRAMES*NB_SUBFRAME_SIZE);
 
       st->count_lost=0;
       return 0;
