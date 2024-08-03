@@ -80,6 +80,7 @@ static av_cold int libuvg266_init(AVCodecContext *avctx)
 
     cfg->width  = avctx->width;
     cfg->height = avctx->height;
+    cfg->input_bitdepth = av_pix_fmt_desc_get(avctx->pix_fmt)->comp[0].depth;
 
     if (avctx->framerate.num > 0 && avctx->framerate.den > 0) {
         cfg->framerate_num   = avctx->framerate.num;
@@ -95,42 +96,22 @@ FF_DISABLE_DEPRECATION_WARNINGS
 FF_ENABLE_DEPRECATION_WARNINGS
     }
     cfg->target_bitrate = (int32_t)avctx->bit_rate;
-    if (avctx->pix_fmt == AV_PIX_FMT_GRAY8) {
-        cfg->input_bitdepth = 8;
+    if (avctx->pix_fmt == AV_PIX_FMT_GRAY8 ||
+        avctx->pix_fmt == AV_PIX_FMT_GRAY10LE ||
+        avctx->pix_fmt == AV_PIX_FMT_GRAY12LE) {
         cfg->input_format   = UVG_FORMAT_P400;
-    /*} else if (avctx->pix_fmt == AV_PIX_FMT_GRAY10LE) {
-        cfg->input_bitdepth = 10;
-        cfg->input_format   = UVG_FORMAT_P400;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_GRAY12LE) {
-        cfg->input_bitdepth = 12;
-        cfg->input_format   = UVG_FORMAT_P400;*/
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P) {
-        cfg->input_bitdepth = 8;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV420P10LE ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV420P12LE) {
         cfg->input_format   = UVG_FORMAT_P420;
-/*    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P10LE) {
-        cfg->input_bitdepth = 10;
-        cfg->input_format   = UVG_FORMAT_P420;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV420P12LE) {
-        cfg->input_bitdepth = 12;
-        cfg->input_format   = UVG_FORMAT_P420;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P) {
-        cfg->input_bitdepth = 8;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV422P10LE ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV422P12LE) {
         cfg->input_format   = UVG_FORMAT_P422;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P10LE) {
-        cfg->input_bitdepth = 10;
-        cfg->input_format   = UVG_FORMAT_P422;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV422P12LE) {
-        cfg->input_bitdepth = 12;
-        cfg->input_format   = UVG_FORMAT_P422;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P) {
-        cfg->input_bitdepth = 8;
+    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV444P10LE ||
+               avctx->pix_fmt == AV_PIX_FMT_YUV444P12LE) {
         cfg->input_format   = UVG_FORMAT_P444;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P10LE) {
-        cfg->input_bitdepth = 10;
-        cfg->input_format   = UVG_FORMAT_P444;
-    } else if (avctx->pix_fmt == AV_PIX_FMT_YUV444P12LE) {
-        cfg->input_bitdepth = 12;
-        cfg->input_format   = UVG_FORMAT_P444;*/
     } else {
         return -1;
     }
@@ -140,11 +121,18 @@ FF_ENABLE_DEPRECATION_WARNINGS
         cfg->rc_algorithm = UVG_LAMBDA;
     }
 
+    cfg->vui.fullrange   = avctx->color_range == AVCOL_RANGE_JPEG;
+    cfg->vui.colorprim   = avctx->color_primaries;
+    cfg->vui.transfer    = avctx->color_trc;
+    cfg->vui.colormatrix = avctx->colorspace;
+    if (avctx->chroma_sample_location != AVCHROMA_LOC_UNSPECIFIED)
+        cfg->vui.chroma_loc = avctx->chroma_sample_location - 1;
+
     if (ctx->uvg_params) {
         AVDictionary *dict = NULL;
         if (!av_dict_parse_string(&dict, ctx->uvg_params, "=", ",", 0)) {
-            AVDictionaryEntry *entry = NULL;
-            while ((entry = av_dict_get(dict, "", entry, AV_DICT_IGNORE_SUFFIX))) {
+            const AVDictionaryEntry *entry = NULL;
+            while ((entry = av_dict_iterate(dict, entry))) {
                 if (!api->config_parse(cfg, entry->key, entry->value)) {
                     av_log(avctx, AV_LOG_WARNING, "Invalid option: %s=%s.\n",
                            entry->key, entry->value);
@@ -260,9 +248,9 @@ static int libuvg266_encode(AVCodecContext *avctx,
               frame->width / 2,
               0
             };
-            av_image_copy(dst, dst_linesizes,
-                          (const uint8_t **)frame->data, frame->linesize,
-                          frame->format, frame->width, frame->height);
+            av_image_copy2(dst, dst_linesizes,
+                           frame->data, frame->linesize,
+                           frame->format, frame->width, frame->height);
         }
 
         input_pic->pts = frame->pts;
@@ -338,7 +326,7 @@ static const enum AVPixelFormat pix_fmts[] = {
     AV_PIX_FMT_YUV420P,
     //AV_PIX_FMT_YUV422P,
     //AV_PIX_FMT_YUV444P,
-    //AV_PIX_FMT_YUV420P10,
+    AV_PIX_FMT_YUV420P10,
     AV_PIX_FMT_NONE
 };
 
@@ -379,8 +367,8 @@ const FFCodec ff_libuvg266_encoder = {
     FF_CODEC_ENCODE_CB(libuvg266_encode),
     .close            = libuvg266_close,
 
-    .caps_internal    = FF_CODEC_CAP_INIT_CLEANUP |
-                        FF_CODEC_CAP_AUTO_THREADS,
+    .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE |
+                      FF_CODEC_CAP_AUTO_THREADS,
 
     .p.wrapper_name   = "libuvg266",
 };
