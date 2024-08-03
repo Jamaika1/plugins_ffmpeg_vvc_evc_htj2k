@@ -3,18 +3,18 @@
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
-   
+
    - Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
-   
+
    - Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
-   
+
    - Neither the name of the copyright owner, nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -104,7 +104,7 @@ int xeve_bsw_write_trace(XEVE_BSW * bs, u32 val, char * name, int len) /* len(1 
     int leftbits;
 
     xeve_assert(bs);
-    
+
     if (name)
     {
         XEVE_TRACE_STR(name);
@@ -198,7 +198,7 @@ int xeve_bsw_write(XEVE_BSW * bs, u32 val, int len) /* len(1 ~ 32) */
     int leftbits;
 
     xeve_assert(bs);
-    xeve_assert(len <= 32); // to avoid shifting by a negative value
+    xeve_assert(len > 0); // to avoid shifting by a negative value
 
     leftbits = bs->leftbits;
     val <<= (32 - len);
@@ -213,7 +213,7 @@ int xeve_bsw_write(XEVE_BSW * bs, u32 val, int len) /* len(1 ~ 32) */
         xeve_assert_rv(bs->cur + 4 <= bs->end, -1);
 
         bs->leftbits = 0;
-        bs->fn_flush(bs);        
+        bs->fn_flush(bs);
         bs->code = (leftbits < 32 ? val << leftbits : 0);
         bs->leftbits = 32 - (len - leftbits);
     }
@@ -240,7 +240,7 @@ void xeve_bsw_write_ue(XEVE_BSW * bs, u32 val)
     xeve_bsw_write(bs, code, len_c);
 }
 
-void xeve_bsw_write_se(XEVE_BSW * bs, int val)
+void xeve_bsw_write_se(XEVE_BSW * bs, u32 val)
 {
     xeve_bsw_write_ue(bs, val <= 0 ? (-val * 2) : (val * 2 - 1));
 }

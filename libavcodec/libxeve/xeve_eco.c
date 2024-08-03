@@ -32,8 +32,6 @@
 #include <limits.h>
 #include <math.h>
 
-#pragma warning(disable:4018)
-
 int xeve_eco_nal_unit_len(void * buf, int size)
 {
     int i;
@@ -289,8 +287,8 @@ int xeve_eco_sh(XEVE_BSW * bs, XEVE_SPS * sps, XEVE_PPS * pps, XEVE_SH * sh, int
     xeve_bsw_write1(bs, sh->deblocking_filter_on);
 
     xeve_bsw_write(bs, sh->qp, 6);
-    xeve_bsw_write_se(bs, sh->qp_u_offset);
-    xeve_bsw_write_se(bs, sh->qp_v_offset);
+    xeve_bsw_write_se(bs, (u32)sh->qp_u_offset);
+    xeve_bsw_write_se(bs, (u32)sh->qp_v_offset);
 
     /* byte align */
     u32 t0 = 0;
@@ -1330,7 +1328,7 @@ int cu_init(XEVE_CTX *ctx, XEVE_CORE *core, int x, int y, int cup, int cuw, int 
     {
         xeve_assert(xeve_check_luma(core->tree_cons));
 
-        if((cu_data->pred_mode[cup] == MODE_SKIP))
+        if(cu_data->pred_mode[cup] == MODE_SKIP)
         {
             core->skip_flag = 1;
         }

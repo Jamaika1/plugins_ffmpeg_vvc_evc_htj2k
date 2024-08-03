@@ -41,8 +41,6 @@
 #if GRAB_STAT
 #include "xevem_stat.h"
 #endif
-#pragma warning(disable:4018)
-
 
 static void sbac_write_unary_sym_ep(u32 sym, XEVE_SBAC *sbac, XEVE_BSW *bs, u32 max_val)
 {
@@ -644,13 +642,13 @@ int xevem_eco_sh(XEVE_BSW * bs, XEVE_SPS * sps, XEVE_PPS * pps, XEVE_SH * sh, in
 
     if(sh->deblocking_filter_on && sps->tool_addb)
     {
-        xeve_bsw_write_se(bs, sh->sh_deblock_alpha_offset);
-        xeve_bsw_write_se(bs, sh->sh_deblock_beta_offset);
+        xeve_bsw_write_se(bs, (u32)sh->sh_deblock_alpha_offset);
+        xeve_bsw_write_se(bs, (u32)sh->sh_deblock_beta_offset);
     }
 
     xeve_bsw_write(bs, sh->qp, 6);
-    xeve_bsw_write_se(bs, sh->qp_u_offset);
-    xeve_bsw_write_se(bs, sh->qp_v_offset);
+    xeve_bsw_write_se(bs, (u32)sh->qp_u_offset);
+    xeve_bsw_write_se(bs, (u32)sh->qp_v_offset);
 
     if (!sh->single_tile_in_slice_flag)
     {
@@ -2316,7 +2314,7 @@ int xevem_eco_unit(XEVE_CTX * ctx, XEVE_CORE * core, int x, int y, int cup, int 
         XEVE_TRACE_STR("mode status ");
         XEVE_TRACE_INT(core->tree_cons.mode_cons);
     }
-#endif  
+#endif
     XEVE_TRACE_STR("\n");
 
     xeve_get_ctx_some_flags(core->x_scu, core->y_scu, cuw, cuh, ctx->w_scu, ctx->map_scu, ctx->map_cu_mode, core->ctx_flags
@@ -2437,7 +2435,7 @@ int xevem_eco_unit(XEVE_CTX * ctx, XEVE_CORE * core, int x, int y, int cup, int 
                             xevem_eco_mmvd_flag(bs, cu_data->pred_mode[cup] == MODE_DIR_MMVD);
                         }
 
-                        if((cu_data->pred_mode[cup] == MODE_DIR_MMVD))
+                        if(cu_data->pred_mode[cup] == MODE_DIR_MMVD)
                         {
                             xevem_eco_mmvd_info(bs, cu_data->mmvd_idx[cup], ctx->sh->mmvd_group_enable_flag && !(cuw*cuh <= NUM_SAMPLES_BLOCK));
                         }
