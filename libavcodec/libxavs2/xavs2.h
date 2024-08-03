@@ -157,9 +157,9 @@ typedef struct xavs2_image_t {
     int      i_width[3];               /* widths  for each plane */
     int      i_lines[3];               /* heights for each plane */
     int      i_stride[3];              /* strides for each plane */
-    uint8_t *img_planes[4];            /* pointers to each plane (planes[3]: start buffer address) */
+    uint8_t *img8_planes[4];            /* pointers to each plane (planes[3]: start buffer address) */
+    uint16_t *img10_planes[4];            /* pointers to each plane (planes[3]: start buffer address) */
 } xavs2_image_t;
-
 
 /* ---------------------------------------------------------------------------
  * xavs2_picture_t
@@ -188,6 +188,7 @@ typedef struct xavs2_picture_t {
     int64_t     i_dts;
     /* [IN ]    raw data */
     xavs2_image_t  img;
+    //xavs2_image_t  img10;
     /* [IN ]    private pointer, DO NOT change it */
     void       *priv;
 } xavs2_picture_t;
@@ -349,6 +350,7 @@ typedef struct xavs2_api_t {
      * ---------------------------------------------------------------------------
      */
     int (*encoder_encode)(void *coder, xavs2_picture_t *pic, xavs2_outpacket_t *packet);
+
 
     /**
      * ---------------------------------------------------------------------------
