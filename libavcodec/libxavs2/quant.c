@@ -227,6 +227,7 @@ void xavs2_quant_init(uint32_t cpuid, dct_funcs_t *dctf)
         dctf->abs_coeff = abs_coeff_sse128;
         dctf->add_sign  = add_sign_sse128;
     }
+
 #if defined(__AVX2__)
     if (cpuid & XAVS2_CPU_AVX2) {
         dctf->quant     = quant_c_avx2;

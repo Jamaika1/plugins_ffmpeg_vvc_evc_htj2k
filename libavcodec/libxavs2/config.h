@@ -37,7 +37,7 @@
 #ifndef XAVS2_CONFIGW_H
 #define XAVS2_CONFIGW_H
 
-#if defined(__ICL) || defined(_MSC_VER)
+#if defined(__ICL) || defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
 
 /* arch */
 #define ARCH_X86_64             1
@@ -57,11 +57,11 @@
 #ifndef __SSE__
 #define __SSE__
 #endif
-#if defined(__AVX2__)
-#define HAVE_MMX                1     /* X86     */
+/*#if defined(__AVX2__)
+#define HAVE_MMX                1
 #else
-//#define HAVE_MMX                0     /* X86     */
-#endif
+#define HAVE_MMX                0
+#endif*/
 #define HAVE_ALTIVEC            0     /* ALTIVEC */
 #define HAVE_ALTIVEC_H          0
 #define HAVE_ARMV6              0
