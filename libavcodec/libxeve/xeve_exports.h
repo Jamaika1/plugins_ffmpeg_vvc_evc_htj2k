@@ -1,1 +1,0 @@
-#define XEVE_EXPORT
