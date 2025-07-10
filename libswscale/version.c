@@ -1,4 +1,6 @@
 /*
+ * Version functions.
+ *
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -16,20 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef SWSCALE_VERSION_MAJOR_H
-#define SWSCALE_VERSION_MAJOR_H
+#include <assert.h>
 
-/**
- * @file
- * swscale version macros
- */
+#include "libavutil/config.h"
+#include "libswscale/swscale.h"
+#include "libswscale/version.h"
 
-#define LIBSWSCALE_VERSION_MAJOR   9
+unsigned swscale_version(void)
+{
+    static_assert(LIBSWSCALE_VERSION_MICRO >= 100, "micro version starts at 100");
+    return LIBSWSCALE_VERSION_INT;
+}
 
-/**
- * FF_API_* defines may be placed below to indicate public API that will be
- * dropped at a future version bump. The defines themselves are not part of
- * the public API and may change, break or disappear at any time.
- */
+const char *swscale_configuration(void)
+{
+    return FFMPEG_CONFIGURATION;
+}
 
-#endif /* SWSCALE_VERSION_MAJOR_H */
+const char *swscale_license(void)
+{
+#define LICENSE_PREFIX "libswscale license: "
+    return &LICENSE_PREFIX FFMPEG_LICENSE[sizeof(LICENSE_PREFIX) - 1];
+}
