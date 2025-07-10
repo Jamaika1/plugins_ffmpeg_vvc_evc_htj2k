@@ -8,7 +8,7 @@
 
 #ifdef ARCH_X86_64
 // for get_cpu_flags
-#include "../libsvtav1/cpuinfo/cpuinfo.h"
+#include "cpuinfo/cpuinfo.h"
 #endif
 
 /**************************************
