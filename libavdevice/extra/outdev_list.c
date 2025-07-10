@@ -4,12 +4,8 @@ static const FFOutputFormat * const outdev_list[] = {
 //&ff_caca_muxer,
 //&ff_decklink_muxer,
 //&ff_fbdev_muxer,
-&ff_opengl_muxer,
 //&ff_oss_muxer,
 //&ff_pulse_muxer,
-#if CONFIG_SDL2
-&ff_sdl2_muxer,
-#endif
 //&ff_sndio_muxer,
 //&ff_v4l2_muxer,
 //&ff_xv_muxer,

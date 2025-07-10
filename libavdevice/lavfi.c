@@ -39,6 +39,7 @@
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/buffersink.h"
+#include "libavformat/demux.h"
 #include "libavformat/internal.h"
 #include "libavdevice/avdevice.h"
 
@@ -248,16 +249,22 @@ av_cold static int lavfi_read_header(AVFormatContext *avctx)
                 AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_DBL,
             };
 
-            ret = avfilter_graph_create_filter(&sink, abuffersink,
-                                               inout->name, NULL,
-                                               NULL, lavfi->graph);
-            if (ret >= 0)
-                ret = av_opt_set_bin(sink, "sample_fmts", (const uint8_t*)sample_fmts,
-                                     sizeof(sample_fmts), AV_OPT_SEARCH_CHILDREN);
+            sink = avfilter_graph_alloc_filter(lavfi->graph, abuffersink, inout->name);
+            if (!sink) {
+                ret = AVERROR(ENOMEM);
+                goto end;
+            }
+
+            ret = av_opt_set_bin(sink, "sample_fmts", (const uint8_t*)sample_fmts,
+                                 sizeof(sample_fmts), AV_OPT_SEARCH_CHILDREN);
             if (ret < 0)
                 goto end;
             ret = av_opt_set_int(sink, "all_channel_counts", 1,
                                  AV_OPT_SEARCH_CHILDREN);
+            if (ret < 0)
+                goto end;
+
+            ret = avfilter_init_dict(sink, NULL);
             if (ret < 0)
                 goto end;
         } else {
@@ -346,11 +353,6 @@ static int create_subcc_packet(AVFormatContext *avctx, AVFrame *frame,
     memcpy(lavfi->subcc_packet.data, sd->data, sd->size);
     lavfi->subcc_packet.stream_index = stream_idx;
     lavfi->subcc_packet.pts = frame->pts;
-#if FF_API_FRAME_PKT
-FF_DISABLE_DEPRECATION_WARNINGS
-    lavfi->subcc_packet.pos = frame->pkt_pos;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
     return 0;
 }
 
@@ -365,7 +367,7 @@ static int lavfi_read_packet(AVFormatContext *avctx, AVPacket *pkt)
     LavfiContext *lavfi = avctx->priv_data;
     double min_pts = DBL_MAX;
     int stream_idx, min_pts_sink_idx = 0;
-    AVFrame *frame;
+    AVFrame *frame, *frame_to_free;
     AVDictionary *frame_metadata;
     int ret, i;
     AVStream *st;
@@ -378,6 +380,7 @@ static int lavfi_read_packet(AVFormatContext *avctx, AVPacket *pkt)
     frame = av_frame_alloc();
     if (!frame)
         return AVERROR(ENOMEM);
+    frame_to_free = frame;
 
     /* iterate through all the graph sinks. Select the sink with the
      * minimum PTS */
@@ -423,6 +426,7 @@ static int lavfi_read_packet(AVFormatContext *avctx, AVPacket *pkt)
             ret = AVERROR(ENOMEM);
             goto fail;
         }
+        frame_to_free = NULL;
 
         pkt->data   = pkt->buf->data;
         pkt->size   = pkt->buf->size;
@@ -457,18 +461,12 @@ static int lavfi_read_packet(AVFormatContext *avctx, AVPacket *pkt)
 
     pkt->stream_index = stream_idx;
     pkt->pts = frame->pts;
-#if FF_API_FRAME_PKT
-FF_DISABLE_DEPRECATION_WARNINGS
-    pkt->pos = frame->pkt_pos;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
-    if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO)
-        av_frame_free(&frame);
+    av_frame_free(&frame_to_free);
 
     return pkt->size;
 fail:
-    av_frame_free(&frame);
+    av_frame_free(&frame_to_free);
     return ret;
 
 }
@@ -492,14 +490,14 @@ static const AVClass lavfi_class = {
     .category   = AV_CLASS_CATEGORY_DEVICE_INPUT,
 };
 
-const AVInputFormat ff_lavfi_demuxer = {
-    .name           = "lavfi",
-    .long_name      = NULL_IF_CONFIG_SMALL("Libavfilter virtual input device"),
+const FFInputFormat ff_lavfi_demuxer = {
+    .p.name         = "lavfi",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("Libavfilter virtual input device"),
+    .p.flags        = AVFMT_NOFILE,
+    .p.priv_class   = &lavfi_class,
     .priv_data_size = sizeof(LavfiContext),
     .read_header    = lavfi_read_header,
     .read_packet    = lavfi_read_packet,
     .read_close     = lavfi_read_close,
-    .flags          = AVFMT_NOFILE,
-    .priv_class     = &lavfi_class,
-    .flags_internal = FF_FMT_INIT_CLEANUP,
+    .flags_internal = FF_INFMT_FLAG_INIT_CLEANUP,
 };
