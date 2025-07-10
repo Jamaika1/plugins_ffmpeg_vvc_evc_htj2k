@@ -34,7 +34,7 @@
 #include "svt.h"
 #include "temporalfilter.h"
 #ifdef ENABLE_HDR10_PLUS
-    #include "dynamicHDR10/hdr10plus.h"
+    #include "../libx265/dynamicHDR10/hdr10plus.h"
 #endif
 struct x265_encoder {};
 namespace X265_NS {
@@ -238,13 +238,13 @@ public:
 
     int                m_saveCtuDistortionLevel;
 
-    /* Begin intra refresh when one not in progress or else begin one as soon as the current 
+    /* Begin intra refresh when one not in progress or else begin one as soon as the current
      * one is done. Requires bIntraRefresh to be set.*/
     int                m_bQueuedIntraRefresh;
 
     /* For optimising slice QP */
     Lock               m_sliceQpLock;
-    int                m_iFrameNum;   
+    int                m_iFrameNum;
     int                m_iPPSQpMinus26;
     int64_t            m_iBitsCostSum[QP_MAX_MAX + 1];
     Lock               m_sliceRefIdxLock;
