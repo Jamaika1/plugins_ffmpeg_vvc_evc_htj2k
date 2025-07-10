@@ -21,7 +21,7 @@
 #define false 0
 #define true 1
 
-#undef int16_t
+/*#undef int16_t
 #undef int32_t
 #undef int64_t
 #undef uint32_t
@@ -41,6 +41,6 @@
   #endif
 #endif
 #define uint32_t unsigned int32_t
-#define uint64_t unsigned int64_t
+#define uint64_t unsigned int64_t*/
 
 #endif

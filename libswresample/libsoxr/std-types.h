@@ -22,7 +22,8 @@
 #if HAVE_STDINT_H
   #include <stdint.h>
 #else
-  #undef int16_t
+  #include <inttypes.h>
+  /*#undef int16_t
   #undef int32_t
   #undef int64_t
   #undef uint32_t
@@ -42,7 +43,7 @@
     #endif
   #endif
   #define uint32_t unsigned int32_t
-  #define uint64_t unsigned int64_t
+  #define uint64_t unsigned int64_t*/
 #endif
 
 #endif

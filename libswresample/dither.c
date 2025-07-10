@@ -19,6 +19,7 @@
  */
 
 #include "libavutil/avassert.h"
+#include "libavutil/mem.h"
 #include "libswresample/swresample_internal.h"
 
 #include "extra/noise_shaping_data.c"
