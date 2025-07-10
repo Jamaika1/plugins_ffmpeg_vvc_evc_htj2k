@@ -32,16 +32,6 @@
 #define P_NOISECURVES 3
 
 #define NOISE_COMPAND_LEVELS 40
-/*typedef struct vp_couple{
-  int limit;
-
-  int outofphase_redundant_flip_p;
-  float outofphase_requant_limit;
-
-  float amppost_point;
-
-} vp_couple;*/
-
 typedef struct vorbis_info_psy{
   int   blockflag;
 

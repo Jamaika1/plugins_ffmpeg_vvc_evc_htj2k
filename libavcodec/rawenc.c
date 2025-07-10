@@ -24,11 +24,11 @@
  * Raw Video Encoder
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "raw.h"
-#include "internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/raw.h"
+#include "libavcodec/internal.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/imgutils.h"

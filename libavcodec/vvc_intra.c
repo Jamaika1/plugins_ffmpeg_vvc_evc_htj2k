@@ -19,11 +19,17 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+#include "libavutil/frame.h"
+#include "libavutil/imgutils.h"
 
 #include "libavcodec/vvc_data.h"
 #include "libavcodec/vvc_inter.h"
 #include "libavcodec/vvc_intra.h"
 #include "libavcodec/vvc_itx_1d.h"
+
+#define POS(c_idx, x, y)    \
+    &fc->frame->data[c_idx][((y) >> fc->ps.sps->vshift[c_idx]) * fc->frame->linesize[c_idx] +   \
+        (((x) >> fc->ps.sps->hshift[c_idx]) << fc->ps.sps->pixel_shift)]
 
 static int is_cclm(enum IntraPredMode mode)
 {
@@ -126,15 +132,15 @@ static void ilfnst_transform(const VVCLocalContext *lc, TransformBlock *tb)
 }
 
 //part of 8.7.4 Transformation process for scaled transform coefficients
-static void derive_transform_type(const VVCFrameContext *fc, const VVCLocalContext *lc, const TransformBlock *tb, enum TxType *trh, enum TxType *trv)
+static void derive_transform_type(const VVCFrameContext *fc, const VVCLocalContext *lc, const TransformBlock *tb, enum VVCTxType *trh, enum VVCTxType *trv)
 {
     const CodingUnit *cu = lc->cu;
-    static const enum TxType mts_to_trh[] = {DCT2, DST7, DCT8, DST7, DCT8};
-    static const enum TxType mts_to_trv[] = {DCT2, DST7, DST7, DCT8, DCT8};
+    static const enum VVCTxType mts_to_trh[] = { VVC_DCT2, VVC_DST7, VVC_DCT8, VVC_DST7, VVC_DCT8 };
+    static const enum VVCTxType mts_to_trv[] = { VVC_DCT2, VVC_DST7, VVC_DST7, VVC_DCT8, VVC_DCT8 };
     const VVCSPS *sps       = fc->ps.sps;
     int implicit_mts_enabled = 0;
     if (tb->c_idx || (cu->isp_split_type != ISP_NO_SPLIT && cu->lfnst_idx)) {
-        *trh = *trv = DCT2;
+        *trh = *trv = VVC_DCT2;
         return;
     }
 
@@ -150,38 +156,16 @@ static void derive_transform_type(const VVCFrameContext *fc, const VVCLocalConte
         const int w = tb->tb_width;
         const int h = tb->tb_height;
         if (cu->sbt_flag) {
-            *trh = (cu->sbt_horizontal_flag  || cu->sbt_pos_flag) ? DST7 : DCT8;
-            *trv = (!cu->sbt_horizontal_flag || cu->sbt_pos_flag) ? DST7 : DCT8;
+            *trh = (cu->sbt_horizontal_flag  || cu->sbt_pos_flag) ? VVC_DST7 : VVC_DCT8;
+            *trv = (!cu->sbt_horizontal_flag || cu->sbt_pos_flag) ? VVC_DST7 : VVC_DCT8;
         } else {
-            *trh = (w >= 4 && w <= 16) ? DST7 : DCT2;
-            *trv = (h >= 4 && h <= 16) ? DST7 : DCT2;
+            *trh = (w >= 4 && w <= 16) ? VVC_DST7 : VVC_DCT2;
+            *trv = (h >= 4 && h <= 16) ? VVC_DST7 : VVC_DCT2;
         }
         return;
     }
     *trh = mts_to_trh[cu->mts_idx];
     *trv = mts_to_trv[cu->mts_idx];
-}
-
-static void add_residual_for_joint_coding_chroma(VVCLocalContext *lc,
-    const TransformUnit *tu, TransformBlock *tb, const int chroma_scale)
-{
-    const VVCFrameContext *fc  = lc->fc;
-    const CodingUnit *cu = lc->cu;
-    const int c_sign = 1 - 2 * fc->ps.ph.r->ph_joint_cbcr_sign_flag;
-    const int shift  = tu->coded_flag[1] ^ tu->coded_flag[2];
-    const int c_idx  = 1 + tu->coded_flag[1];
-    const ptrdiff_t stride = fc->frame->linesize[c_idx];
-    const int hs = fc->ps.sps->hshift[c_idx];
-    const int vs = fc->ps.sps->vshift[c_idx];
-    uint8_t *dst = &fc->frame->data[c_idx][(tb->y0 >> vs) * stride +
-                                          ((tb->x0 >> hs) << fc->ps.sps->pixel_shift)];
-    if (chroma_scale) {
-        fc->vvcdsp.itx.pred_residual_joint(tb->coeffs, tb->tb_width, tb->tb_height, c_sign, shift);
-        fc->vvcdsp.intra.lmcs_scale_chroma(lc, tb->coeffs, tb->coeffs, tb->tb_width, tb->tb_height, cu->x0, cu->y0);
-        fc->vvcdsp.itx.add_residual(dst, tb->coeffs, tb->tb_width, tb->tb_height, stride);
-    } else {
-        fc->vvcdsp.itx.add_residual_joint(dst, tb->coeffs, tb->tb_width, tb->tb_height, stride, c_sign, shift);
-    }
 }
 
 static int add_reconstructed_area(VVCLocalContext *lc, const int ch_type, const int x0, const int y0, const int w, const int h)
@@ -301,21 +285,15 @@ static void scale(int *out, const int *in, const int w, const int h, const int s
 // part of 8.7.3 Scaling process for transform coefficients
 static void derive_qp(const VVCLocalContext *lc, const TransformUnit *tu, TransformBlock *tb)
 {
-    const VVCSPS *sps               = lc->fc->ps.sps;
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const CodingUnit *cu            = lc->cu;
-    int qp, qp_act_offset;
+    const VVCSPS *sps             = lc->fc->ps.sps;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const CodingUnit *cu          = lc->cu;
+    const bool is_jcbcr           = tb->c_idx && tu->joint_cbcr_residual_flag && tu->coded_flag[CB] && tu->coded_flag[CR];
+    const int idx                 = is_jcbcr ? JCBCR : tb->c_idx;
+    const int qp                  = cu->qp[idx] + (idx ? 0 : sps->qp_bd_offset);
+    const int act_offset[]        = { -5, 1, 3, 1 };
+    const int qp_act_offset       = cu->act_enabled_flag ? act_offset[idx] : 0;
 
-    if (tb->c_idx == 0) {
-        //fix me
-        qp = cu->qp[LUMA] + sps->qp_bd_offset;
-        qp_act_offset = cu->act_enabled_flag ? -5 : 0;
-    } else {
-        const int is_jcbcr = tu->joint_cbcr_residual_flag && tu->coded_flag[CB] && tu->coded_flag[CR];
-        const int idx = is_jcbcr ? JCBCR : tb->c_idx;
-        qp = cu->qp[idx];
-        qp_act_offset = cu->act_enabled_flag ? 1 : 0;
-    }
     if (tb->ts) {
         const int qp_prime_ts_min = 4 + 6 * sps->r->sps_min_qp_prime_ts;
 
@@ -334,27 +312,30 @@ static void derive_qp(const VVCLocalContext *lc, const TransformUnit *tu, Transf
     tb->bd_offset = (1 << tb->bd_shift) >> 1;
 }
 
+static const uint8_t rem6[63 + 8 * 6 + 1] = {
+    0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,
+    0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,
+    0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,
+    0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,
+    0,  1,  2,  3,  4,  5,  0,  1,  2,  3,  4,  5,  0,  1,  2,  3,
+};
+
+static const uint8_t div6[63 + 8 * 6 + 1] = {
+    0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  3,
+    4,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  6,  6,  6,  6,  6,  6,  7,  7,  7,  7,  7,  7,
+    8,  8,  8,  8,  8,  8,  9,  9,  9,  9,  9,  9, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11,
+   12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15,
+   16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18,
+};
+
+const static int level_scale[2][6] = {
+   { 40, 45, 51, 57, 64, 72 },
+   { 57, 64, 72, 80, 90, 102 }
+};
+
 //8.7.3 Scaling process for transform coefficients
 static av_always_inline int derive_scale(const TransformBlock *tb, const int sh_dep_quant_used_flag)
 {
-    static const uint8_t rem6[63 + 2 * 6 + 1] = {
-        0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2,
-        3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5,
-        0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3,
-        4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3
-    };
-
-    static const uint8_t div6[63 + 2 * 6 + 1] = {
-        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3,  3,  3,
-        3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6,  6,  6,
-        7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
-        10, 10, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12
-    };
-
-    const static int level_scale[2][6] = {
-        { 40, 45, 51, 57, 64, 72 },
-        { 57, 64, 72, 80, 90, 102 }
-    };
     const int addin = sh_dep_quant_used_flag && !tb->ts;
     const int qp    = tb->qp + addin;
 
@@ -386,14 +367,14 @@ static const uint8_t* derive_scale_m(const VVCLocalContext *lc, const TransformB
     const int log2_matrix_size = (id < 2) ? 1 : (id < 8) ? 2 : 3;
     uint8_t *p = scale_m;
 
-    av_assert0(!sps->r->sps_scaling_matrix_for_alternative_colour_space_disabled_flag);
-
     if (!rsh->sh_explicit_scaling_list_used_flag || tb->ts ||
-        sps->r->sps_scaling_matrix_for_lfnst_disabled_flag && cu->apply_lfnst_flag[tb->c_idx])
+        (sps->r->sps_scaling_matrix_for_lfnst_disabled_flag && cu->apply_lfnst_flag[tb->c_idx]) ||
+        (sps->r->sps_scaling_matrix_for_alternative_colour_space_disabled_flag &&
+            sps->r->sps_scaling_matrix_designated_colour_space_flag == cu->act_enabled_flag))
         return ff_vvc_default_scale_m;
 
     if (!sl) {
-        av_log(lc->fc->avctx, AV_LOG_WARNING, "bug: no scaling list aps, id = %d", ps->ph.r->ph_scaling_list_aps_id);
+        av_log(lc->fc->log_ctx, AV_LOG_WARNING, "bug: no scaling list aps, id = %d", ps->ph.r->ph_scaling_list_aps_id);
         return ff_vvc_default_scale_m;
     }
 
@@ -414,7 +395,7 @@ static const uint8_t* derive_scale_m(const VVCLocalContext *lc, const TransformB
 static av_always_inline int scale_coeff(const TransformBlock *tb, int coeff,
     const int scale, const int scale_m, const int log2_transform_range)
 {
-    coeff = (coeff * scale * scale_m + tb->bd_offset) >> tb->bd_shift;
+    coeff = ((int64_t) coeff * scale * scale_m + tb->bd_offset) >> tb->bd_shift;
     coeff = av_clip_intp2(coeff, log2_transform_range);
     return coeff;
 }
@@ -441,33 +422,61 @@ static void dequant(const VVCLocalContext *lc, const TransformUnit *tu, Transfor
     }
 }
 
-static void itx_2d(const VVCFrameContext *fc, TransformBlock *tb, const enum TxType trh, const enum TxType trv, int *temp)
+//transmatrix[0][0]
+#define DCT_A 64
+static void itx_2d(const VVCFrameContext *fc, TransformBlock *tb, const enum VVCTxType trh, const enum VVCTxType trv)
 {
     const VVCSPS *sps   = fc->ps.sps;
     const int w         = tb->tb_width;
     const int h         = tb->tb_height;
-    const int nzw       = tb->max_scan_x + 1;
+    const size_t nzw    = tb->max_scan_x + 1;
+    const size_t nzh    = tb->max_scan_y + 1;
+    const int shift[]   = { 7, 5 + sps->log2_transform_range - sps->bit_depth };
+
+    if (w == h && nzw == 1 && nzh == 1 && trh == VVC_DCT2 && trv == VVC_DCT2) {
+        const int add[] = { 1 << (shift[0] - 1), 1 << (shift[1] - 1) };
+        const int t     = (tb->coeffs[0] * DCT_A + add[0]) >> shift[0];
+        const int dc    = (t * DCT_A + add[1]) >> shift[1];
+
+        for (int i = 0; i < w * h; i++)
+            tb->coeffs[i] = dc;
+
+        return;
+    }
 
     for (int x = 0; x < nzw; x++)
-        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](temp + x, w, tb->coeffs + x, w);
-    scale_clip(temp, nzw, w, h, 7, sps->log2_transform_range);
+        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](tb->coeffs + x, w, nzh);
+    scale_clip(tb->coeffs, nzw, w, h, shift[0], sps->log2_transform_range);
 
     for (int y = 0; y < h; y++)
-        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](tb->coeffs + y * w, 1, temp + y * w, 1);
-    scale(tb->coeffs, tb->coeffs, w, h, 5 + sps->log2_transform_range - sps->bit_depth);
+        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](tb->coeffs + y * w, 1, nzw);
+    scale(tb->coeffs, tb->coeffs, w, h, shift[1]);
 }
 
-static void itx_1d(const VVCFrameContext *fc, TransformBlock *tb, const enum TxType trh, const enum TxType trv, int  *temp)
+static void itx_1d(const VVCFrameContext *fc, TransformBlock *tb, const enum VVCTxType trh, const enum VVCTxType trv)
 {
     const VVCSPS *sps   = fc->ps.sps;
     const int w         = tb->tb_width;
     const int h         = tb->tb_height;
+    const size_t nzw    = tb->max_scan_x + 1;
+    const size_t nzh    = tb->max_scan_y + 1;
+
+    if ((w > 1 && nzw == 1 && trh == VVC_DCT2) || (h > 1 && nzh == 1 && trv == VVC_DCT2)) {
+        const int shift = 6 + sps->log2_transform_range - sps->bit_depth;
+        const int add   = 1 << (shift - 1);
+        const int dc    = (tb->coeffs[0] * DCT_A + add) >> shift;
+
+        for (int i = 0; i < w * h; i++)
+            tb->coeffs[i] = dc;
+
+        return;
+    }
 
     if (w > 1)
-        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](temp, 1, tb->coeffs, 1);
+        fc->vvcdsp.itx.itx[trh][tb->log2_tb_width - 1](tb->coeffs, 1, nzw);
     else
-        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](temp, 1, tb->coeffs, 1);
-    scale(tb->coeffs, temp, w, h, 6 + sps->log2_transform_range - sps->bit_depth);
+        fc->vvcdsp.itx.itx[trv][tb->log2_tb_height - 1](tb->coeffs, 1, nzh);
+    scale(tb->coeffs, tb->coeffs, w, h, 6 + sps->log2_transform_range - sps->bit_depth);
 }
 
 static void transform_bdpcm(TransformBlock *tb, const VVCLocalContext *lc, const CodingUnit *cu)
@@ -483,52 +492,92 @@ static void transform_bdpcm(TransformBlock *tb, const VVCLocalContext *lc, const
         tb->max_scan_x = tb->tb_width - 1;
 }
 
-static void itransform(VVCLocalContext *lc, TransformUnit *tu, const int tu_idx, const int target_ch_type)
+static void lmcs_scale_chroma(VVCLocalContext *lc, TransformUnit *tu, TransformBlock *tb, const int target_ch_type)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const VVCSH *sh             = &lc->sc->sh;
-    const CodingUnit *cu        = lc->cu;
-    const int ps                = fc->ps.sps->pixel_shift;
-    DECLARE_ALIGNED(32, int, temp)[MAX_TB_SIZE * MAX_TB_SIZE];
+    const VVCFrameContext *fc = lc->fc;
+    const VVCSH *sh           = &lc->sc->sh;
+    const CodingUnit *cu      = lc->cu;
+    const int c_idx           = tb->c_idx;
+    const int ch_type         = c_idx > 0;
+    const int w               = tb->tb_width;
+    const int h               = tb->tb_height;
+    const int chroma_scale    = ch_type && sh->r->sh_lmcs_used_flag && fc->ps.ph.r->ph_chroma_residual_scale_flag && (w * h > 4);
+    const int has_jcbcr       = tu->joint_cbcr_residual_flag && c_idx;
+
+    for (int j = 0; j < 1 + has_jcbcr; j++) {
+        const bool is_jcbcr   = j > 0;
+        const int jcbcr_idx   = CB + tu->coded_flag[CB];
+        TransformBlock *jcbcr = &tu->tbs[jcbcr_idx - tu->tbs[0].c_idx];
+        int *coeffs           = is_jcbcr ? jcbcr->coeffs : tb->coeffs;
+
+        if (!j && has_jcbcr) {
+            const int c_sign = 1 - 2 * fc->ps.ph.r->ph_joint_cbcr_sign_flag;
+            const int shift  = tu->coded_flag[CB] ^ tu->coded_flag[CR];
+            fc->vvcdsp.itx.pred_residual_joint(jcbcr->coeffs, tb->coeffs, w, h, c_sign, shift);
+        }
+        if (chroma_scale)
+            fc->vvcdsp.intra.lmcs_scale_chroma(lc, coeffs, w, h, cu->x0, cu->y0);
+    }
+}
+
+static void add_residual(const VVCLocalContext *lc, TransformUnit *tu, const int target_ch_type)
+{
+    const VVCFrameContext *fc = lc->fc;
+    const CodingUnit *cu      = lc->cu;
 
     for (int i = 0; i < tu->nb_tbs; i++) {
-        TransformBlock *tb  = &tu->tbs[i];
-        const int c_idx     = tb->c_idx;
-        const int ch_type   = c_idx > 0;
+        TransformBlock *tb      = tu->tbs + i;
+        const int c_idx         = tb->c_idx;
+        const int ch_type       = c_idx > 0;
+        const ptrdiff_t stride  = fc->frame->linesize[c_idx];
+        const bool has_residual = tb->has_coeffs || cu->act_enabled_flag ||
+                                  (c_idx && tu->joint_cbcr_residual_flag);
+        uint8_t *dst            = POS(c_idx, tb->x0, tb->y0);
 
-        if (ch_type == target_ch_type && tb->has_coeffs) {
-            const int w             = tb->tb_width;
-            const int h             = tb->tb_height;
-            const int chroma_scale  = ch_type && sh->r->sh_lmcs_used_flag && fc->ps.ph.r->ph_chroma_residual_scale_flag && (w * h > 4);
-            const ptrdiff_t stride  = fc->frame->linesize[c_idx];
-            const int hs            = sps->hshift[c_idx];
-            const int vs            = sps->vshift[c_idx];
-            uint8_t *dst            = &fc->frame->data[c_idx][(tb->y0 >> vs) * stride + ((tb->x0 >> hs) << ps)];
+        if (ch_type == target_ch_type && has_residual)
+             fc->vvcdsp.itx.add_residual(dst, tb->coeffs, tb->tb_width, tb->tb_height, stride);
+    }
+}
 
+static void itransform(VVCLocalContext *lc, TransformUnit *tu, const int target_ch_type)
+{
+    const VVCFrameContext *fc = lc->fc;
+    const CodingUnit *cu      = lc->cu;
+    TransformBlock *tbs       = tu->tbs;
+    const bool is_act_luma    = cu->act_enabled_flag && target_ch_type == LUMA;
+
+    for (int i = 0; i < tu->nb_tbs; i++) {
+        TransformBlock *tb = tbs + i;
+        const int c_idx    = tb->c_idx;
+        const int ch_type  = c_idx > 0;
+        const bool do_itx  = is_act_luma || !cu->act_enabled_flag && ch_type == target_ch_type;
+
+        if (tb->has_coeffs && do_itx) {
             if (cu->bdpcm_flag[tb->c_idx])
                 transform_bdpcm(tb, lc, cu);
             dequant(lc, tu, tb);
             if (!tb->ts) {
-                enum TxType trh, trv;
+                enum VVCTxType trh, trv;
 
                 if (cu->apply_lfnst_flag[c_idx])
                     ilfnst_transform(lc, tb);
                 derive_transform_type(fc, lc, tb, &trh, &trv);
-                if (w > 1 && h > 1)
-                    itx_2d(fc, tb, trh, trv, temp);
+                if (tb->tb_width > 1 && tb->tb_height > 1)
+                    itx_2d(fc, tb, trh, trv);
                 else
-                    itx_1d(fc, tb, trh, trv, temp);
+                    itx_1d(fc, tb, trh, trv);
             }
-
-            if (chroma_scale)
-                fc->vvcdsp.intra.lmcs_scale_chroma(lc, temp, tb->coeffs, w, h, cu->x0, cu->y0);
-            fc->vvcdsp.itx.add_residual(dst, chroma_scale ? temp : tb->coeffs, w, h, stride);
-
-            if (tu->joint_cbcr_residual_flag && tb->c_idx)
-                add_residual_for_joint_coding_chroma(lc, tu, tb, chroma_scale);
+            lmcs_scale_chroma(lc, tu, tb, target_ch_type);
         }
     }
+
+    if (is_act_luma) {
+        fc->vvcdsp.itx.adaptive_color_transform(
+            tbs[LUMA].coeffs, tbs[CB].coeffs, tbs[CR].coeffs,
+            tbs[LUMA].tb_width, tbs[LUMA].tb_height);
+    }
+
+    add_residual(lc, tu, target_ch_type);
 }
 
 static int reconstruct(VVCLocalContext *lc)
@@ -542,11 +591,114 @@ static int reconstruct(VVCLocalContext *lc)
         TransformUnit *tu = cu->tus.head;
         for (int i = 0; tu; i++) {
             predict_intra(lc, tu, i, ch_type);
-            itransform(lc, tu, i, ch_type);
+            itransform(lc, tu, ch_type);
             tu = tu->next;
         }
     }
     return 0;
+}
+
+#define IBC_POS(c_idx, x, y) \
+    (fc->tab.ibc_vir_buf[c_idx] + \
+        (x << ps) + (y + ((cu->y0 & ~(sps->ctb_size_y - 1)) >> vs)) * ibc_stride)
+#define IBC_X(x)  ((x) & ((fc->tab.sz.ibc_buffer_width >> hs) - 1))
+#define IBC_Y(y)  ((y) & ((1 << sps->ctb_log2_size_y >> vs) - 1))
+
+static void intra_block_copy(const VVCLocalContext *lc, const int c_idx)
+{
+    const CodingUnit *cu      = lc->cu;
+    const PredictionUnit *pu  = &cu->pu;
+    const VVCFrameContext *fc = lc->fc;
+    const VVCSPS *sps         = fc->ps.sps;
+    const Mv *bv              = &pu->mi.mv[L0][0];
+    const int hs              = sps->hshift[c_idx];
+    const int vs              = sps->vshift[c_idx];
+    const int ps              = sps->pixel_shift;
+    const int ref_x           = IBC_X((cu->x0 >> hs) + (bv->x >> (4 + hs)));
+    const int ref_y           = IBC_Y((cu->y0 >> vs) + (bv->y >> (4 + vs)));
+    const int w               = cu->cb_width >> hs;
+    const int h               = cu->cb_height >> vs;
+    const int ibc_buf_width   = fc->tab.sz.ibc_buffer_width >> hs;    ///< IbcBufWidthY and IbcBufWidthC
+    const int rw              = FFMIN(w, ibc_buf_width - ref_x);
+    const int ibc_stride      = ibc_buf_width << ps;
+    const int dst_stride      = fc->frame->linesize[c_idx];
+    const uint8_t *ibc_buf    = IBC_POS(c_idx, ref_x, ref_y);
+    uint8_t *dst              = POS(c_idx, cu->x0, cu->y0);
+
+    av_image_copy_plane(dst, dst_stride, ibc_buf, ibc_stride, rw << ps, h);
+
+    if (w > rw) {
+        //wrap around, left part
+        ibc_buf = IBC_POS(c_idx, 0, ref_y);
+        dst  += rw << ps;
+        av_image_copy_plane(dst, dst_stride, ibc_buf, ibc_stride, (w - rw) << ps, h);
+    }
+}
+
+static void vvc_predict_ibc(const VVCLocalContext *lc)
+{
+    const H266RawSPS *rsps = lc->fc->ps.sps->r;
+
+    intra_block_copy(lc, LUMA);
+    if (lc->cu->tree_type == SINGLE_TREE && rsps->sps_chroma_format_idc) {
+        intra_block_copy(lc, CB);
+        intra_block_copy(lc, CR);
+    }
+}
+
+static void ibc_fill_vir_buf(const VVCLocalContext *lc, const CodingUnit *cu)
+{
+    const VVCFrameContext *fc = lc->fc;
+    const VVCSPS *sps         = fc->ps.sps;
+    int start, end;
+
+    ff_vvc_channel_range(&start, &end, cu->tree_type, sps->r->sps_chroma_format_idc);
+
+    for (int c_idx = start; c_idx < end; c_idx++) {
+        const int hs = sps->hshift[c_idx];
+        const int vs = sps->vshift[c_idx];
+        const int ps = sps->pixel_shift;
+        const int x  = IBC_X(cu->x0 >> hs);
+        const int y  = IBC_Y(cu->y0 >> vs);
+        const int src_stride = fc->frame->linesize[c_idx];
+        const int ibc_stride = fc->tab.sz.ibc_buffer_width >> hs << ps;
+        const uint8_t *src   = POS(c_idx, cu->x0, cu->y0);
+        uint8_t *ibc_buf     = IBC_POS(c_idx, x, y);
+
+        av_image_copy_plane(ibc_buf, ibc_stride, src, src_stride, cu->cb_width >> hs << ps , cu->cb_height >> vs);
+    }
+}
+
+int ff_vvc_palette_derive_scale(VVCLocalContext *lc, const TransformUnit *tu, TransformBlock *tb)
+{
+    const VVCSPS *sps = lc->fc->ps.sps;
+    const int qp_prime_ts_min  = 4 + 6 * sps->r->sps_min_qp_prime_ts;
+    int qp;
+
+    derive_qp(lc, tu, tb);
+    qp = FFMAX(qp_prime_ts_min, tb->qp);
+    return level_scale[0][rem6[qp]] << div6[qp];
+}
+
+// 8.4.5.3 Decoding process for palette mode
+static void vvc_predict_palette(VVCLocalContext *lc)
+{
+    const VVCFrameContext *fc = lc->fc;
+    const CodingUnit *cu      = lc->cu;
+    TransformUnit *tu         = cu->tus.head;
+    const VVCSPS *sps         = fc->ps.sps;
+    const int ps              = sps->pixel_shift;
+
+    for (int i = 0; i < tu->nb_tbs; i++) {
+        TransformBlock *tb     = &tu->tbs[i];
+        const int c_idx        = tb->c_idx;
+        const int w            = tb->tb_width;
+        const int h            = tb->tb_height;
+        const ptrdiff_t stride = fc->frame->linesize[c_idx];
+        uint8_t *dst           = POS(c_idx, cu->x0, cu->y0);
+
+        av_image_copy_plane(dst, stride, (uint8_t*)tb->coeffs, w << ps, w << ps, h);
+    }
 }
 
 int ff_vvc_reconstruct(VVCLocalContext *lc, const int rs, const int rx, const int ry)
@@ -555,8 +707,7 @@ int ff_vvc_reconstruct(VVCLocalContext *lc, const int rs, const int rx, const in
     const VVCSPS *sps           = fc->ps.sps;
     const int x_ctb             = rx << sps->ctb_log2_size_y;
     const int y_ctb             = ry << sps->ctb_log2_size_y;
-    CTU *ctu                    = fc->tab.ctus + rs;
-    CodingUnit *cu              = ctu->cus;
+    CodingUnit *cu              = fc->tab.cus[rs];
     int ret                     = 0;
 
     lc->num_ras[0] = lc->num_ras[1] = 0;
@@ -568,201 +719,23 @@ int ff_vvc_reconstruct(VVCLocalContext *lc, const int rs, const int rx, const in
 
         if (cu->ciip_flag)
             ff_vvc_predict_ciip(lc);
+        else if (cu->pred_mode == MODE_IBC)
+            vvc_predict_ibc(lc);
+        else if (cu->pred_mode == MODE_PLT)
+            vvc_predict_palette(lc);
         if (cu->coded_flag) {
             ret = reconstruct(lc);
         } else {
-            add_reconstructed_area(lc, LUMA, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
-            add_reconstructed_area(lc, CHROMA, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
+            if (cu->tree_type != DUAL_TREE_CHROMA)
+                add_reconstructed_area(lc, LUMA, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
+            if (sps->r->sps_chroma_format_idc && cu->tree_type != DUAL_TREE_LUMA)
+                add_reconstructed_area(lc, CHROMA, cu->x0, cu->y0, cu->cb_width, cu->cb_height);
         }
+        if (sps->r->sps_ibc_enabled_flag)
+            ibc_fill_vir_buf(lc, cu);
         cu = cu->next;
     }
-    ff_vvc_ctu_free_cus(ctu);
+    ff_vvc_ctu_free_cus(fc->tab.cus + rs);
     return ret;
 }
 
-int ff_vvc_get_mip_size_id(const int w, const int h)
-{
-    if (w == 4 && h == 4)
-        return 0;
-    if ((w == 4 || h == 4) || (w == 8 && h == 8))
-        return 1;
-    return 2;
-}
-
-int ff_vvc_nscale_derive(const int w, const int h, const int mode)
-{
-    int side_size, nscale;
-    av_assert0(mode < INTRA_LT_CCLM && !(mode > INTRA_HORZ && mode < INTRA_VERT));
-    if (mode == INTRA_PLANAR || mode == INTRA_DC ||
-        mode == INTRA_HORZ || mode == INTRA_VERT) {
-        nscale = (av_log2(w) + av_log2(h) - 2) >> 2;
-    } else {
-        const int intra_pred_angle = ff_vvc_intra_pred_angle_derive(mode);
-        const int inv_angle        = ff_vvc_intra_inv_angle_derive(intra_pred_angle);
-        if (mode >= INTRA_VERT)
-            side_size = h;
-        if (mode <= INTRA_HORZ)
-            side_size = w;
-        nscale = FFMIN(2, av_log2(side_size) - av_log2(3 * inv_angle - 2) + 8);
-    }
-    return nscale;
-}
-
-int ff_vvc_need_pdpc(const int w, const int h, const uint8_t bdpcm_flag, const int mode, const int ref_idx)
-{
-    av_assert0(mode < INTRA_LT_CCLM);
-    if ((w >= 4 && h >= 4) && !ref_idx && !bdpcm_flag) {
-        int nscale;
-        if (mode == INTRA_PLANAR || mode == INTRA_DC ||
-            mode == INTRA_HORZ || mode == INTRA_VERT)
-            return 1;
-        if (mode > INTRA_HORZ && mode < INTRA_VERT)
-            return 0;
-        nscale = ff_vvc_nscale_derive(w, h, mode);
-        return nscale >= 0;
-
-    }
-    return 0;
-}
-
-static const ReconstructedArea* get_reconstructed_area(const VVCLocalContext *lc, const int x, const int y, const int c_idx)
-{
-    const int ch_type = c_idx > 0;
-    for (int i = lc->num_ras[ch_type] - 1; i >= 0; i--) {
-        const ReconstructedArea* a = &lc->ras[ch_type][i];
-        const int r = (a->x + a->w);
-        const int b = (a->y + a->h);
-        if (a->x <= x && x < r && a->y <= y && y < b)
-            return a;
-
-        //it's too far away, no need check it;
-        if (x >= r && y >= b)
-            break;
-    }
-    return NULL;
-}
-
-int ff_vvc_get_top_available(const VVCLocalContext *lc, const int x, const int y, int target_size, const int c_idx)
-{
-    const VVCFrameContext *fc = lc->fc;
-    const VVCSPS *sps = fc->ps.sps;
-    const int hs = sps->hshift[c_idx];
-    const int vs = sps->vshift[c_idx];
-    const int log2_ctb_size_v   = sps->ctb_log2_size_y - vs;
-    const int end_of_ctb_x      = ((lc->cu->x0 >> sps->ctb_log2_size_y) + 1) << sps->ctb_log2_size_y;
-    const int y0b               = av_mod_uintp2(y, log2_ctb_size_v);
-    const int max_x             = FFMIN(fc->ps.pps->width, end_of_ctb_x) >> hs;
-    const ReconstructedArea *a;
-    int px = x;
-
-    if (!y0b) {
-        if (!lc->ctb_up_flag)
-            return 0;
-        target_size = FFMIN(target_size, (lc->end_of_tiles_x >> hs) - x);
-        if (sps->r->sps_entropy_coding_sync_enabled_flag)
-            target_size = FFMIN(target_size, (end_of_ctb_x >> hs) - x);
-        return target_size;
-    }
-
-    target_size = FFMAX(0, FFMIN(target_size, max_x - x));
-    while (target_size > 0 && (a = get_reconstructed_area(lc, px, y - 1, c_idx))) {
-        const int sz = FFMIN(target_size, a->x + a->w - px);
-        px += sz;
-        target_size -= sz;
-    }
-    return px - x;
-}
-
-int ff_vvc_get_left_available(const VVCLocalContext *lc, const int x, const int y, int target_size, const int c_idx)
-{
-    const VVCFrameContext *fc = lc->fc;
-    const VVCSPS *sps = fc->ps.sps;
-    const int hs = sps->hshift[c_idx];
-    const int vs = sps->vshift[c_idx];
-    const int log2_ctb_size_h   =  sps->ctb_log2_size_y - hs;
-    const int x0b               = av_mod_uintp2(x, log2_ctb_size_h);
-    const int end_of_ctb_y      = ((lc->cu->y0 >> sps->ctb_log2_size_y) + 1) << sps->ctb_log2_size_y;
-    const int max_y             = FFMIN(fc->ps.pps->height, end_of_ctb_y) >> vs;
-    const ReconstructedArea *a;
-    int  py = y;
-
-    if (!x0b && !lc->ctb_left_flag)
-        return 0;
-
-    target_size = FFMAX(0, FFMIN(target_size, max_y - y));
-    if (!x0b)
-        return target_size;
-
-    while (target_size > 0 && (a = get_reconstructed_area(lc, x - 1, py, c_idx))) {
-        const int sz = FFMIN(target_size, a->y + a->h - py);
-        py += sz;
-        target_size -= sz;
-    }
-    return py - y;
-}
-
-static int less(const void *a, const void *b)
-{
-    return *(const int*)a - *(const int*)b;
-}
-
-int ff_vvc_ref_filter_flag_derive(const int mode)
-{
-    static const int modes[] = { -14, -12, -10, -6, INTRA_PLANAR, 2, 34, 66, 72, 76, 78, 80};
-    return bsearch(&mode, modes, FF_ARRAY_ELEMS(modes), sizeof(int), less) != NULL;
-}
-
-int ff_vvc_intra_pred_angle_derive(const int pred_mode)
-{
-    static const int angles[] = {
-          0,   1,   2,   3,   4,   6,   8,  10,  12,  14,  16,  18,  20,  23,  26, 29,
-         32,  35,  39,  45,  51,  57,  64,  73,  86, 102, 128, 171, 256, 341, 512
-    };
-    int sign = 1, idx, intra_pred_angle;
-    if (pred_mode > INTRA_DIAG) {
-        idx = pred_mode - INTRA_VERT;
-    } else if (pred_mode > 0) {
-        idx = INTRA_HORZ - pred_mode;
-    } else {
-        idx = INTRA_HORZ - 2 - pred_mode;
-    }
-    if (idx < 0) {
-        idx = -idx;
-        sign = -1;
-    }
-    intra_pred_angle = sign * angles[idx];
-    return intra_pred_angle;
-}
-
-#define ROUND(f) (int)(f < 0 ? -(-f + 0.5) : (f + 0.5))
-int ff_vvc_intra_inv_angle_derive(const int intra_pred_angle)
-{
-    float inv_angle;
-    av_assert0(intra_pred_angle);
-    inv_angle = 32 * 512.0 / intra_pred_angle;
-    return ROUND(inv_angle);
-}
-
-//8.4.5.2.7 Wide angle intra prediction mode mapping proces
-int ff_vvc_wide_angle_mode_mapping(const CodingUnit *cu,
-    const int tb_width, const int tb_height, const int c_idx, int pred_mode_intra)
-{
-    int nw, nh, wh_ratio, min, max;
-
-    if (cu->isp_split_type == ISP_NO_SPLIT || c_idx) {
-        nw = tb_width;
-        nh = tb_height;
-    } else {
-        nw = cu->cb_width;
-        nh = cu->cb_height;
-    }
-    wh_ratio    = FFABS(ff_log2(nw) - ff_log2(nh));
-    max         = (wh_ratio > 1) ? (8  + 2 * wh_ratio) : 8;
-    min         = (wh_ratio > 1) ? (60 - 2 * wh_ratio) : 60;
-
-    if (nw > nh && pred_mode_intra >=2 && pred_mode_intra < max)
-        pred_mode_intra += 65;
-    else if (nh > nw && pred_mode_intra <= 66 && pred_mode_intra > min)
-        pred_mode_intra -= 67;
-    return pred_mode_intra;
-}

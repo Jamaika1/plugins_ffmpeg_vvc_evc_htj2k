@@ -689,12 +689,14 @@ g_ascii_strtod (const gchar *nptr,
                 gchar      **endptr)
 {
 #if defined(USE_XLOCALE) && defined(HAVE_STRTOD_L)
+  locale_t c_locale;
 
   g_return_val_if_fail (nptr != NULL, 0);
 
+  c_locale = get_C_locale ();
   errno = 0;
 
-  return strtod_l (nptr, endptr, get_C_locale ());
+  return strtod_l (nptr, endptr, c_locale);
 
 #else
 
@@ -1176,7 +1178,10 @@ g_ascii_strtoull (const gchar *nptr,
                   guint        base)
 {
 #if defined(USE_XLOCALE) && defined(HAVE_STRTOULL_L)
-  return strtoull_l (nptr, endptr, base, get_C_locale ());
+  locale_t c_locale = get_C_locale ();
+
+  errno = 0;
+  return strtoull_l (nptr, endptr, base, c_locale);
 #else
   gboolean negative;
   guint64 result;
@@ -1224,7 +1229,10 @@ g_ascii_strtoll (const gchar *nptr,
                  guint        base)
 {
 #if defined(USE_XLOCALE) && defined(HAVE_STRTOLL_L)
-  return strtoll_l (nptr, endptr, base, get_C_locale ());
+  locale_t c_locale = get_C_locale ();
+
+  errno = 0;
+  return strtoll_l (nptr, endptr, base, c_locale);
 #else
   gboolean negative;
   guint64 result;
@@ -1594,29 +1602,6 @@ g_ascii_strup (const gchar *str,
     *s = g_ascii_toupper (*s);
 
   return result;
-}
-
-/**
- * g_str_is_ascii:
- * @str: a string
- *
- * Determines if a string is pure ASCII. A string is pure ASCII if it
- * contains no bytes with the high bit set.
- *
- * Returns: true if @str is ASCII
- *
- * Since: 2.40
- */
-gboolean
-g_str_is_ascii (const gchar *str)
-{
-  gsize i;
-
-  for (i = 0; str[i]; i++)
-    if (str[i] & 0x80)
-      return FALSE;
-
-  return TRUE;
 }
 
 /**
@@ -3268,10 +3253,6 @@ g_strv_contains (const gchar * const *strv,
  *
  * Checks if two arrays of strings contain exactly the same elements in
  * exactly the same order.
- *
- * Elements are compared using [func@GLib.str_equal]. To match independently
- * of order, sort the arrays first (using [func@GLib.qsort_with_data]
- * or similar).
  *
  * Elements are compared using [func@GLib.str_equal]. To match independently
  * of order, sort the arrays first (using [func@GLib.qsort_with_data]

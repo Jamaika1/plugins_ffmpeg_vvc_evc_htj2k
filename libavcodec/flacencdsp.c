@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "flacencdsp.h"
+#include "libavutil/config.h"
+#include "libavcodec/flacencdsp.h"
 
 #define SAMPLE_SIZE 16
 #include "extra/flacdsp_lpc_template.c"

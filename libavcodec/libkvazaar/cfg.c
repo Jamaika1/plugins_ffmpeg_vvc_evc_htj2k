@@ -1112,13 +1112,20 @@ int kvz_config_parse(kvz_config *cfg, const char *name, const char *value)
     }
 
     if (preset_values[preset_line][0] != NULL) {
-      fprintf(stderr, "Using preset %s: ", value);
+      if (cfg->enable_logging_output) {
+        fprintf(stderr, "Using preset %s: ", value);
+      }
+
       // Loop all the name and value pairs and push to the config parser
       for (int preset_value = 1; preset_values[preset_line][preset_value] != NULL; preset_value += 2) {
-        fprintf(stderr, "--%s=%s ", preset_values[preset_line][preset_value], preset_values[preset_line][preset_value + 1]);
+        if (cfg->enable_logging_output) {
+          fprintf(stderr, "--%s=%s ", preset_values[preset_line][preset_value], preset_values[preset_line][preset_value + 1]);
+        }
         kvz_config_parse(cfg, preset_values[preset_line][preset_value], preset_values[preset_line][preset_value + 1]);
       }
-      fprintf(stderr, "\n");
+      if (cfg->enable_logging_output) {
+        fprintf(stderr, "\n");
+      }
     } else {
       fprintf(stderr, "Input error: unknown preset \"%s\"\n", value);
       return 0;
@@ -1409,6 +1416,9 @@ int kvz_config_parse(kvz_config *cfg, const char *name, const char *value)
   }
   else if OPT("fast-bipred") {
     cfg->fast_bipred = atobool(value);
+  }
+  else if OPT("enable-logging") {
+    cfg->enable_logging_output = atobool(value);
   }
   else {
     return 0;
@@ -1724,7 +1734,7 @@ int kvz_config_validate(const kvz_config *const cfg)
   }
 
   if (cfg->implicit_rdpcm && !cfg->lossless) {
-    fprintf(stderr, "Input error: --implicit-rdpcm is not suppoted without --lossless\n");
+    fprintf(stderr, "Input error: --implicit-rdpcm is not supported without --lossless\n");
     error = 1;
   }
 

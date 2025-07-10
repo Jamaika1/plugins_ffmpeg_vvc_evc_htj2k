@@ -23,12 +23,12 @@
 
 #include <math.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #define FRAC_BITS 14
 #include "libavutil/macros.h"
-#include "mathops.h"
-#include "lsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/lsp.h"
 #if ARCH_MIPS
 #include "libavcodec/mips/lsp_mips.h"
 #endif /* ARCH_MIPS */
@@ -150,7 +150,13 @@ static void lsp2polyf(const double *lsp, double *f, int lp_half_order)
 }
 #endif /* lsp2polyf */
 
-void ff_acelp_lsp2lpc(int16_t* lp, const int16_t* lsp, int lp_half_order)
+/**
+ * @brief LSP to LP conversion (3.2.6 of G.729)
+ * @param[out] lp decoded LP coefficients (-0x8000 <= (3.12) < 0x8000)
+ * @param lsp LSP coefficients (-0x8000 <= (0.15) < 0x8000)
+ * @param lp_half_order LP filter order, divided by 2
+ */
+static void acelp_lsp2lpc(int16_t lp[], const int16_t lsp[], int lp_half_order)
 {
     int i;
     int f1[MAX_LP_HALF_ORDER+1]; // (3.22)
@@ -211,10 +217,10 @@ void ff_acelp_lp_decode(int16_t* lp_1st, int16_t* lp_2nd, const int16_t* lsp_2nd
         lsp_1st[i] = (lsp_2nd[i] + lsp_prev[i]) >> 1;
 #endif
 
-    ff_acelp_lsp2lpc(lp_1st, lsp_1st, lp_order >> 1);
+    acelp_lsp2lpc(lp_1st, lsp_1st, lp_order >> 1);
 
     /* LSP values for second subframe (3.2.5 of G.729)*/
-    ff_acelp_lsp2lpc(lp_2nd, lsp_2nd, lp_order >> 1);
+    acelp_lsp2lpc(lp_2nd, lsp_2nd, lp_order >> 1);
 }
 
 void ff_acelp_lspd2lpc(const double *lsp, float *lpc, int lp_half_order)

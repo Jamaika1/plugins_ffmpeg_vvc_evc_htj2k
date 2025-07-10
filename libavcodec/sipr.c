@@ -30,20 +30,20 @@
 #include "libavutil/mathematics.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "lsp.h"
-#include "acelp_vectors.h"
-#include "acelp_pitch_delay.h"
-#include "acelp_filters.h"
-#include "celp_filters.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/lsp.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/acelp_pitch_delay.h"
+#include "libavcodec/acelp_filters.h"
+#include "libavcodec/celp_filters.h"
 
 #define MAX_SUBFRAME_COUNT   5
 
-#include "sipr.h"
-#include "siprdata.h"
+#include "libavcodec/sipr.h"
+#include "libavcodec/siprdata.h"
 
 typedef struct SiprModeParam {
     const char *mode_name;
@@ -412,9 +412,9 @@ static void decode_frame(SiprContext *ctx, SiprParameters *params,
         convolute_with_sparse(fixed_vector, &fixed_cb, impulse_response,
                               SUBFR_SIZE);
 
-        avg_energy = (0.01 + avpriv_scalarproduct_float_c(fixed_vector,
-                                                          fixed_vector,
-                                                          SUBFR_SIZE)) /
+        avg_energy = (0.01 + ff_scalarproduct_float_c(fixed_vector,
+                                                      fixed_vector,
+                                                      SUBFR_SIZE)) /
                      SUBFR_SIZE;
 
         ctx->past_pitch_gain = pitch_gain = gain_cb[params->gc_index[i]][0];
@@ -456,9 +456,9 @@ static void decode_frame(SiprContext *ctx, SiprParameters *params,
 
     if (ctx->mode == MODE_5k0) {
         for (i = 0; i < subframe_count; i++) {
-            float energy = avpriv_scalarproduct_float_c(ctx->postfilter_syn5k0 + LP_FILTER_ORDER + i * SUBFR_SIZE,
-                                                        ctx->postfilter_syn5k0 + LP_FILTER_ORDER + i * SUBFR_SIZE,
-                                                        SUBFR_SIZE);
+            float energy = ff_scalarproduct_float_c(ctx->postfilter_syn5k0 + LP_FILTER_ORDER + i * SUBFR_SIZE,
+                                                    ctx->postfilter_syn5k0 + LP_FILTER_ORDER + i * SUBFR_SIZE,
+                                                    SUBFR_SIZE);
             ff_adaptive_gain_control(&synth[i * SUBFR_SIZE],
                                      &synth[i * SUBFR_SIZE], energy,
                                      SUBFR_SIZE, 0.9, &ctx->postfilter_agc);
@@ -532,7 +532,6 @@ static int sipr_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     int subframe_size = ctx->mode == MODE_16k ? L_SUBFR_16k : SUBFR_SIZE;
     int i, ret;
 
-    ctx->avctx = avctx;
     if (avpkt->size < (mode_par->bits_per_frame >> 3)) {
         av_log(avctx, AV_LOG_ERROR,
                "Error processing packet: packet size (%d) too small\n",

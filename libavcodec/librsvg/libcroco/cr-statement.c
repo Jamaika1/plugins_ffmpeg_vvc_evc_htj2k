@@ -652,9 +652,7 @@ cr_statement_ruleset_to_string (CRStatement const * a_this, glong a_indent)
                 cr_utils_dump_n_chars2 (' ', stringue, a_indent);
         }
         g_string_append (stringue, "}");
-        result = stringue->str;
-
-        g_string_free (stringue, FALSE);
+        result = g_string_free (stringue, FALSE);
         stringue = NULL;
 
         if (tmp_str) {
@@ -707,8 +705,7 @@ cr_statement_font_face_rule_to_string (CRStatement const * a_this,
                 g_string_append (stringue, "\n}");
         }
         if (stringue) {
-                result = stringue->str ;
-                g_string_free (stringue, FALSE) ;
+                result = g_string_free (stringue, FALSE);
                 stringue = NULL ;
         }
         return result ;
@@ -748,8 +745,7 @@ cr_statement_charset_to_string (CRStatement const *a_this,
                                         a_this->kind.charset_rule->charset->stryng->str);
         }
         if (stringue) {
-                str = stringue->str ;
-                g_string_free (stringue, FALSE) ;
+                str = g_string_free (stringue, FALSE);
         }
         return str ;
 }
@@ -802,8 +798,7 @@ cr_statement_at_page_rule_to_string (CRStatement const *a_this,
                 }
                 g_string_append (stringue, "\n}\n");
         }
-        result = stringue->str ;
-        g_string_free (stringue, FALSE) ;
+        result = g_string_free (stringue, FALSE);
         stringue = NULL ;
         return result ;
 }
@@ -861,8 +856,7 @@ cr_statement_media_rule_to_string (CRStatement const *a_this,
                 g_string_append (stringue, "\n}");
         }
         if (stringue) {
-                str = stringue->str ;
-                g_string_free (stringue, FALSE) ;
+                str = g_string_free (stringue, FALSE);
         }
         return str ;
 }
@@ -918,8 +912,7 @@ cr_statement_import_rule_to_string (CRStatement const *a_this,
                 g_string_append (stringue, " ;");
         }
         if (stringue) {
-                str = stringue->str ;
-                g_string_free (stringue, FALSE) ;
+                str = g_string_free (stringue, FALSE);
                 stringue = NULL ;
         }
         return str ;
@@ -2578,8 +2571,7 @@ cr_statement_list_to_string (CRStatement const *a_this, gulong a_indent)
                         str = NULL ;
                 }                
         }
-        str = stringue->str ;
-        g_string_free (stringue, FALSE) ;
+        str = g_string_free (stringue, FALSE);
         return str ;
 }
 

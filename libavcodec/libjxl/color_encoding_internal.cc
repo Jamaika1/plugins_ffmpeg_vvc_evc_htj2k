@@ -5,11 +5,19 @@
 
 #include "lib/jxl/color_encoding_internal.h"
 
-#include <array>
+#include <jxl/cms_interface.h>
+#include <jxl/color_encoding.h>
+#include <jxl/types.h>
 
-#include "lib/jxl/base/common.h"
+#include <array>
+#include <cstdint>
+#include <vector>
+
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/cms/jxl_cms_internal.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/pack_signed.h"
 
@@ -17,7 +25,7 @@ namespace jxl {
 
 bool CustomTransferFunction::SetImplicit() {
   if (nonserialized_color_space == ColorSpace::kXYB) {
-    if (!storage_.SetGamma(1.0 / 3)) JXL_ASSERT(false);
+    JXL_RETURN_IF_ERROR(storage_.SetGamma(1.0 / 3));
     return true;
   }
   return false;
@@ -32,14 +40,18 @@ std::array<ColorEncoding, 2> ColorEncoding::CreateC2(Primaries pr,
   c_rgb->storage_.white_point = WhitePoint::kD65;
   c_rgb->storage_.primaries = pr;
   c_rgb->storage_.tf.SetTransferFunction(tf);
-  JXL_CHECK(c_rgb->CreateICC());
+  Status status = c_rgb->CreateICC();
+  (void)status;
+  JXL_DASSERT(status);
 
   ColorEncoding* c_gray = c2.data() + 1;
   c_gray->SetColorSpace(ColorSpace::kGray);
   c_gray->storage_.white_point = WhitePoint::kD65;
   c_gray->storage_.primaries = pr;
   c_gray->storage_.tf.SetTransferFunction(tf);
-  JXL_CHECK(c_gray->CreateICC());
+  status = c_gray->CreateICC();
+  (void)status;
+  JXL_DASSERT(status);
 
   return c2;
 }
@@ -47,23 +59,23 @@ std::array<ColorEncoding, 2> ColorEncoding::CreateC2(Primaries pr,
 const ColorEncoding& ColorEncoding::SRGB(bool is_gray) {
   static std::array<ColorEncoding, 2> c2 =
       CreateC2(Primaries::kSRGB, TransferFunction::kSRGB);
-  return c2[is_gray];
+  return c2[is_gray ? 1 : 0];
 }
 const ColorEncoding& ColorEncoding::LinearSRGB(bool is_gray) {
   static std::array<ColorEncoding, 2> c2 =
       CreateC2(Primaries::kSRGB, TransferFunction::kLinear);
-  return c2[is_gray];
+  return c2[is_gray ? 1 : 0];
 }
 
 Status ColorEncoding::SetWhitePointType(const WhitePoint& wp) {
-  JXL_DASSERT(storage_.have_fields);
+  JXL_ENSURE(storage_.have_fields);
   storage_.white_point = wp;
   return true;
 }
 
 Status ColorEncoding::SetPrimariesType(const Primaries& p) {
-  JXL_DASSERT(storage_.have_fields);
-  JXL_ASSERT(HasPrimaries());
+  JXL_ENSURE(storage_.have_fields);
+  JXL_ENSURE(HasPrimaries());
   storage_.primaries = p;
   return true;
 }
@@ -79,11 +91,8 @@ void ColorEncoding::DecideIfWantICC(const JxlCmsInterface& cms) {
   }
   if (cmyk) return;
 
-  uint8_t* new_icc_ptr;
-  size_t new_icc_size;
-  if (!JxlCmsCreateProfile(&c, &new_icc_ptr, &new_icc_size)) return;
-  IccBytes new_icc(new_icc_ptr, new_icc_ptr + new_icc_size);
-  free(new_icc_ptr);
+  std::vector<uint8_t> icc;
+  if (!MaybeCreateProfile(c, &icc)) return;
 
   want_icc_ = false;
 }

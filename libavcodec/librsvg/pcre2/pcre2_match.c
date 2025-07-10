@@ -39,11 +39,9 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "pcre2_internal.h"
+
+
 
 /* These defines enable debugging code */
 
@@ -155,17 +153,17 @@ changed, the code at RETURN_SWITCH below must be updated in sync.  */
 enum { RM1=1, RM2,  RM3,  RM4,  RM5,  RM6,  RM7,  RM8,  RM9,  RM10,
        RM11,  RM12, RM13, RM14, RM15, RM16, RM17, RM18, RM19, RM20,
        RM21,  RM22, RM23, RM24, RM25, RM26, RM27, RM28, RM29, RM30,
-       RM31,  RM32, RM33, RM34, RM35, RM36, RM37 };
+       RM31,  RM32, RM33, RM34, RM35, RM36, RM37, RM38, RM39 };
 
 #ifdef SUPPORT_WIDE_CHARS
-enum { RM100=100, RM101 };
+enum { RM100=100, RM101, RM102, RM103 };
 #endif
 
 #ifdef SUPPORT_UNICODE
 enum { RM200=200, RM201, RM202, RM203, RM204, RM205, RM206, RM207,
        RM208,     RM209, RM210, RM211, RM212, RM213, RM214, RM215,
        RM216,     RM217, RM218, RM219, RM220, RM221, RM222, RM223,
-       RM224,     RM225 };
+       RM224 };
 #endif
 
 /* Define short names for general fields in the current backtrack frame, which
@@ -348,6 +346,7 @@ seems unlikely.)
 Arguments:
   offset      index into the offset vector
   caseless    TRUE if caseless
+  caseopts    bitmask of REFI_FLAG_XYZ values
   F           the current backtracking frame pointer
   mb          points to match block
   lengthptr   pointer for returning the length matched
@@ -358,13 +357,17 @@ Returns:      = 0 sucessful match; number of code units matched is set
 */
 
 static int
-match_ref(PCRE2_SIZE offset, BOOL caseless, heapframe *F, match_block *mb,
-  PCRE2_SIZE *lengthptr)
+match_ref(PCRE2_SIZE offset, BOOL caseless, int caseopts, heapframe *F,
+  match_block *mb, PCRE2_SIZE *lengthptr)
 {
 PCRE2_SPTR p;
 PCRE2_SIZE length;
 PCRE2_SPTR eptr;
 PCRE2_SPTR eptr_start;
+
+#ifndef SUPPORT_UNICODE
+(void)caseopts; /* Avoid compiler warning. */
+#endif
 
 /* Deal with an unset group. The default is no match, but there is an option to
 match an empty string. */
@@ -389,6 +392,8 @@ if (caseless)
   {
 #if defined SUPPORT_UNICODE
   BOOL utf = (mb->poptions & PCRE2_UTF) != 0;
+  BOOL caseless_restrict = (caseopts & REFI_FLAG_CASELESS_RESTRICT) != 0;
+  BOOL turkish_casing = !caseless_restrict && (caseopts & REFI_FLAG_TURKISH_CASING) != 0;
 
   if (utf || (mb->poptions & PCRE2_UCP) != 0)
     {
@@ -420,10 +425,20 @@ if (caseless)
         d = *p++;
         }
 
-      ur = GET_UCD(d);
-      if (c != d && c != (uint32_t)((int)d + ur->other_case))
+      if (turkish_casing && UCD_ANY_I(d))
+        {
+        c = UCD_FOLD_I_TURKISH(c);
+        d = UCD_FOLD_I_TURKISH(d);
+        if (c != d) return -1;  /* No match */
+        }
+      else if (c != d && c != (uint32_t)((int)d + (ur = GET_UCD(d))->other_case))
         {
         const uint32_t *pp = PRIV(ucd_caseless_sets) + ur->caseset;
+
+        /* When PCRE2_EXTRA_CASELESS_RESTRICT is set, ignore any caseless sets
+        that start with an ASCII character. */
+        if (caseless_restrict && *pp < 128) return -1;  /* No match */
+
         for (;;)
           {
           if (c < *pp) return -1;  /* No match */
@@ -482,6 +497,75 @@ return 0;  /* Match */
 
 
 
+/*************************************************
+*     Restore offsets after a recurse            *
+*************************************************/
+
+/* This function restores the ovector values when
+a recursive block reaches its end, and the triggering
+recurse has and argument list.
+
+Arguments:
+  F           the current backtracking frame pointer
+  P           the previous backtracking frame pointer
+*/
+
+static void
+recurse_update_offsets(heapframe *F, heapframe *P)
+{
+PCRE2_SIZE *dst = F->ovector;
+PCRE2_SIZE *src = P->ovector;
+/* The first bracket has offset 2, because
+offset 0 is reserved for the full match. */
+PCRE2_SIZE offset = 2;
+PCRE2_SIZE offset_top = Foffset_top + 2;
+PCRE2_SIZE diff;
+PCRE2_SPTR ecode = Fecode;
+
+do
+  {
+  diff = (GET2(ecode, 1) << 1) - offset;
+  ecode += 1 + IMM2_SIZE;
+
+  if (offset + diff >= offset_top)
+    {
+    /* Some OP_CREF opcodes are not
+    processed, they must be skipped. */
+    while (*ecode == OP_CREF) ecode += 1 + IMM2_SIZE;
+    break;
+    }
+
+  if (diff == 2)
+    {
+    dst[0] = src[0];
+    dst[1] = src[1];
+    }
+  else if (diff >= 4)
+    memcpy(dst, src, diff * sizeof(PCRE2_SIZE));
+
+  /* Skip the unmodified entry. */
+  diff += 2;
+  offset += diff;
+  dst += diff;
+  src += diff;
+  }
+while (*ecode == OP_CREF);
+
+diff = offset_top - offset;
+if (diff == 2)
+  {
+  dst[0] = src[0];
+  dst[1] = src[1];
+  }
+else if (diff >= 4)
+  memcpy(dst, src, diff * sizeof(PCRE2_SIZE));
+
+Fecode = ecode;
+Foffset_top = (offset <= P->offset_top) ? P->offset_top : (offset - 2);
+}
+
+
+
 /******************************************************************************
 *******************************************************************************
                    "Recursion" in the match() function
@@ -528,38 +612,46 @@ For hard partial matching, we immediately return a partial match. Otherwise,
 carrying on means that a complete match on the current subject will be sought.
 A partial match is returned only if no complete match can be found. */
 
-#define CHECK_PARTIAL()\
-  if (Feptr >= mb->end_subject) \
-    { \
-    SCHECK_PARTIAL(); \
-    }
+#define CHECK_PARTIAL() \
+  do { \
+     if (Feptr >= mb->end_subject) \
+       { \
+       SCHECK_PARTIAL(); \
+       } \
+     } \
+  while (0)
 
-#define SCHECK_PARTIAL()\
-  if (mb->partial != 0 && \
-      (Feptr > mb->start_used_ptr || mb->allowemptypartial)) \
-    { \
-    mb->hitend = TRUE; \
-    if (mb->partial > 1) return PCRE2_ERROR_PARTIAL; \
-    }
+#define SCHECK_PARTIAL() \
+  do { \
+     if (mb->partial != 0 && \
+         (Feptr > mb->start_used_ptr || mb->allowemptypartial)) \
+       { \
+       mb->hitend = TRUE; \
+       if (mb->partial > 1) return PCRE2_ERROR_PARTIAL; \
+       } \
+     } \
+  while (0)
 
 
 /* These macros are used to implement backtracking. They simulate a recursive
 call to the match() function by means of a local vector of frames which
 remember the backtracking points. */
 
-#define RMATCH(ra,rb)\
-  {\
-  start_ecode = ra;\
-  Freturn_id = rb;\
-  goto MATCH_RECURSE;\
-  L_##rb:;\
-  }
+#define RMATCH(ra,rb) \
+  do { \
+     start_ecode = ra; \
+     Freturn_id = rb; \
+     goto MATCH_RECURSE; \
+     L_##rb:; \
+     } \
+  while (0)
 
-#define RRETURN(ra)\
-  {\
-  rrc = ra;\
-  goto RETURN_SWITCH;\
-  }
+#define RRETURN(ra) \
+  do { \
+     rrc = ra; \
+     goto RETURN_SWITCH; \
+     } \
+  while (0)
 
 
 
@@ -813,7 +905,10 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       offset = Flast_group_offset;
       for(;;)
         {
+        /* Corrupted heapframes?. Trigger an assert and return an error */
+        PCRE2_ASSERT(offset != PCRE2_UNSET);
         if (offset == PCRE2_UNSET) return PCRE2_ERROR_INTERNAL;
+
         N = (heapframe *)((char *)match_data->heapframes + offset);
         P = (heapframe *)((char *)N - frame_size);
         if (N->group_frame_type == (GF_CAPTURE | number)) break;
@@ -852,7 +947,10 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       offset = Flast_group_offset;
       for(;;)
         {
+        /* Corrupted heapframes?. Trigger an assert and return an error */
+        PCRE2_ASSERT(offset != PCRE2_UNSET);
         if (offset == PCRE2_UNSET) return PCRE2_ERROR_INTERNAL;
+
         N = (heapframe *)((char *)match_data->heapframes + offset);
         P = (heapframe *)((char *)N - frame_size);
         if (GF_IDMASK(N->group_frame_type) == GF_RECURSE) break;
@@ -1329,7 +1427,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
               RRETURN(MATCH_NOMATCH);
               }
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
           }
 
         else  /* Maximize */
@@ -1430,7 +1528,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           if (Lc != cc && Loc != cc) RRETURN(MATCH_NOMATCH);
           Feptr++;
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
 
       else  /* Maximize */
@@ -1488,7 +1586,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             }
           if (Lc != UCHAR21INCTEST(Feptr)) RRETURN(MATCH_NOMATCH);
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
       else  /* Maximize */
         {
@@ -1706,7 +1804,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             Feptr++;
             }
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
 
       /* Maximize case */
@@ -1844,7 +1942,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if (Lc == *Feptr++) RRETURN(MATCH_NOMATCH);
             }
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
 
       /* Maximize case */
@@ -1928,7 +2026,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 #define Lmax               F->temp_32[1]
 #define Lstart_eptr        F->temp_sptr[0]
 #define Lbyte_map_address  F->temp_sptr[1]
-#define Lbyte_map          ((unsigned char *)Lbyte_map_address)
+#define Lbyte_map          ((const unsigned char *)Lbyte_map_address)
 
     case OP_NCLASS:
     case OP_CLASS:
@@ -2071,7 +2169,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((Lbyte_map[fc/8] & (1u << (fc&7))) == 0) RRETURN(MATCH_NOMATCH);
             }
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
 
       /* If maximizing, find the longest possible run, then work backwards. */
@@ -2151,7 +2249,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         RRETURN(MATCH_NOMATCH);
         }
       }
-    /* Control never gets here */
+
+    PCRE2_UNREACHABLE(); /* Control never reaches here */
 
 #undef Lbyte_map_address
 #undef Lbyte_map
@@ -2219,7 +2318,9 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           RRETURN(MATCH_NOMATCH);
           }
         GETCHARINCTEST(fc, Feptr);
-        if (!PRIV(xclass)(fc, Lxclass_data, utf)) RRETURN(MATCH_NOMATCH);
+        if (!PRIV(xclass)(fc, Lxclass_data,
+            (const uint8_t*)mb->start_code, utf))
+          RRETURN(MATCH_NOMATCH);
         }
 
       /* If Lmax == Lmin we can just continue with the main loop. */
@@ -2242,9 +2343,11 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             RRETURN(MATCH_NOMATCH);
             }
           GETCHARINCTEST(fc, Feptr);
-          if (!PRIV(xclass)(fc, Lxclass_data, utf)) RRETURN(MATCH_NOMATCH);
+          if (!PRIV(xclass)(fc, Lxclass_data,
+              (const uint8_t*)mb->start_code, utf))
+            RRETURN(MATCH_NOMATCH);
           }
-        /* Control never gets here */
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
         }
 
       /* If maximizing, find the longest possible run, then work backwards. */
@@ -2265,7 +2368,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 #else
           fc = *Feptr;
 #endif
-          if (!PRIV(xclass)(fc, Lxclass_data, utf)) break;
+          if (!PRIV(xclass)(fc, Lxclass_data,
+              (const uint8_t*)mb->start_code, utf)) break;
           Feptr += len;
           }
 
@@ -2287,12 +2391,157 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         RRETURN(MATCH_NOMATCH);
         }
 
-      /* Control never gets here */
+      PCRE2_UNREACHABLE(); /* Control never reaches here */
       }
 #endif  /* SUPPORT_WIDE_CHARS: end of XCLASS */
 
 #undef Lstart_eptr
 #undef Lxclass_data
+#undef Lmin
+#undef Lmax
+
+
+    /* ===================================================================== */
+    /* Match a complex, set-based character class. This opcodes are used when
+    there is complex nesting or logical operations within the character
+    class. */
+
+#define Lstart_eptr  F->temp_sptr[0]
+#define Leclass_data F->temp_sptr[1]
+#define Leclass_len  F->temp_size
+#define Lmin         F->temp_32[0]
+#define Lmax         F->temp_32[1]
+
+#ifdef SUPPORT_WIDE_CHARS
+    case OP_ECLASS:
+      {
+      Leclass_data = Fecode + 1 + LINK_SIZE;  /* Save for matching */
+      Fecode += GET(Fecode, 1);               /* Advance past the item */
+      Leclass_len = (PCRE2_SIZE)(Fecode - Leclass_data);
+
+      switch (*Fecode)
+        {
+        case OP_CRSTAR:
+        case OP_CRMINSTAR:
+        case OP_CRPLUS:
+        case OP_CRMINPLUS:
+        case OP_CRQUERY:
+        case OP_CRMINQUERY:
+        case OP_CRPOSSTAR:
+        case OP_CRPOSPLUS:
+        case OP_CRPOSQUERY:
+        fc = *Fecode++ - OP_CRSTAR;
+        Lmin = rep_min[fc];
+        Lmax = rep_max[fc];
+        reptype = rep_typ[fc];
+        break;
+
+        case OP_CRRANGE:
+        case OP_CRMINRANGE:
+        case OP_CRPOSRANGE:
+        Lmin = GET2(Fecode, 1);
+        Lmax = GET2(Fecode, 1 + IMM2_SIZE);
+        if (Lmax == 0) Lmax = UINT32_MAX;  /* Max 0 => infinity */
+        reptype = rep_typ[*Fecode - OP_CRSTAR];
+        Fecode += 1 + 2 * IMM2_SIZE;
+        break;
+
+        default:               /* No repeat follows */
+        Lmin = Lmax = 1;
+        break;
+        }
+
+      /* First, ensure the minimum number of matches are present. */
+
+      for (i = 1; i <= Lmin; i++)
+        {
+        if (Feptr >= mb->end_subject)
+          {
+          SCHECK_PARTIAL();
+          RRETURN(MATCH_NOMATCH);
+          }
+        GETCHARINCTEST(fc, Feptr);
+        if (!PRIV(eclass)(fc, Leclass_data, Leclass_data + Leclass_len,
+                          (const uint8_t*)mb->start_code, utf))
+          RRETURN(MATCH_NOMATCH);
+        }
+
+      /* If Lmax == Lmin we can just continue with the main loop. */
+
+      if (Lmin == Lmax) continue;
+
+      /* If minimizing, keep testing the rest of the expression and advancing
+      the pointer while it matches the class. */
+
+      if (reptype == REPTYPE_MIN)
+        {
+        for (;;)
+          {
+          RMATCH(Fecode, RM102);
+          if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+          if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
+          if (Feptr >= mb->end_subject)
+            {
+            SCHECK_PARTIAL();
+            RRETURN(MATCH_NOMATCH);
+            }
+          GETCHARINCTEST(fc, Feptr);
+          if (!PRIV(eclass)(fc, Leclass_data, Leclass_data + Leclass_len,
+                            (const uint8_t*)mb->start_code, utf))
+            RRETURN(MATCH_NOMATCH);
+          }
+        PCRE2_UNREACHABLE(); /* Control never reaches here */
+        }
+
+      /* If maximizing, find the longest possible run, then work backwards. */
+
+      else
+        {
+        Lstart_eptr = Feptr;
+        for (i = Lmin; i < Lmax; i++)
+          {
+          int len = 1;
+          if (Feptr >= mb->end_subject)
+            {
+            SCHECK_PARTIAL();
+            break;
+            }
+#ifdef SUPPORT_UNICODE
+          GETCHARLENTEST(fc, Feptr, len);
+#else
+          fc = *Feptr;
+#endif
+          if (!PRIV(eclass)(fc, Leclass_data, Leclass_data + Leclass_len,
+                            (const uint8_t*)mb->start_code, utf))
+            break;
+          Feptr += len;
+          }
+
+        if (reptype == REPTYPE_POS) continue;    /* No backtracking */
+
+        /* After \C in UTF mode, Lstart_eptr might be in the middle of a
+        Unicode character. Use <= Lstart_eptr to ensure backtracking doesn't
+        go too far. */
+
+        for(;;)
+          {
+          RMATCH(Fecode, RM103);
+          if (rrc != MATCH_NOMATCH) RRETURN(rrc);
+          if (Feptr-- <= Lstart_eptr) break;  /* Tried at original position */
+#ifdef SUPPORT_UNICODE
+          if (utf) BACKCHAR(Feptr);
+#endif
+          }
+        RRETURN(MATCH_NOMATCH);
+        }
+
+      PCRE2_UNREACHABLE(); /* Control never reaches here */
+      }
+#endif  /* SUPPORT_WIDE_CHARS: end of ECLASS */
+
+#undef Lstart_eptr
+#undef Leclass_data
+#undef Leclass_len
 #undef Lmin
 #undef Lmax
 
@@ -2492,10 +2741,6 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
       switch(Fecode[1])
         {
-        case PT_ANY:
-        if (notmatch) RRETURN(MATCH_NOMATCH);
-        break;
-
         case PT_LAMP:
         chartype = prop->chartype;
         if ((chartype == ucp_Lu ||
@@ -2606,6 +2851,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         /* This should never occur */
 
         default:
+        PCRE2_DEBUG_UNREACHABLE();
         return PCRE2_ERROR_INTERNAL;
         }
 
@@ -2728,19 +2974,6 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         BOOL notmatch = Lctype == OP_NOTPROP;
         switch(proptype)
           {
-          case PT_ANY:
-          if (notmatch) RRETURN(MATCH_NOMATCH);
-          for (i = 1; i <= Lmin; i++)
-            {
-            if (Feptr >= mb->end_subject)
-              {
-              SCHECK_PARTIAL();
-              RRETURN(MATCH_NOMATCH);
-              }
-            GETCHARINCTEST(fc, Feptr);
-            }
-          break;
-
           case PT_LAMP:
           for (i = 1; i <= Lmin; i++)
             {
@@ -2969,6 +3202,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           /* This should not occur */
 
           default:
+          PCRE2_DEBUG_UNREACHABLE();
           return PCRE2_ERROR_INTERNAL;
           }
         }
@@ -3244,6 +3478,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         break;
 
         default:
+        PCRE2_DEBUG_UNREACHABLE();
         return PCRE2_ERROR_INTERNAL;
         }  /* End switch(Lctype) */
 
@@ -3496,6 +3731,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         break;
 
         default:
+        PCRE2_DEBUG_UNREACHABLE();
         return PCRE2_ERROR_INTERNAL;
         }
       }
@@ -3516,27 +3752,11 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         {
         switch(proptype)
           {
-          case PT_ANY:
-          for (;;)
-            {
-            RMATCH(Fecode, RM208);
-            if (rrc != MATCH_NOMATCH) RRETURN(rrc);
-            if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
-            if (Feptr >= mb->end_subject)
-              {
-              SCHECK_PARTIAL();
-              RRETURN(MATCH_NOMATCH);
-              }
-            GETCHARINCTEST(fc, Feptr);
-            if (Lctype == OP_NOTPROP) RRETURN(MATCH_NOMATCH);
-            }
-          /* Control never gets here */
-
           case PT_LAMP:
           for (;;)
             {
             int chartype;
-            RMATCH(Fecode, RM209);
+            RMATCH(Fecode, RM208);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3551,12 +3771,12 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
                  chartype == ucp_Lt) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_GC:
           for (;;)
             {
-            RMATCH(Fecode, RM210);
+            RMATCH(Fecode, RM209);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3568,12 +3788,12 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((UCD_CATEGORY(fc) == Lpropvalue) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_PC:
           for (;;)
             {
-            RMATCH(Fecode, RM211);
+            RMATCH(Fecode, RM210);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3585,12 +3805,12 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((UCD_CHARTYPE(fc) == Lpropvalue) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_SC:
           for (;;)
             {
-            RMATCH(Fecode, RM212);
+            RMATCH(Fecode, RM211);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3602,14 +3822,14 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((UCD_SCRIPT(fc) == Lpropvalue) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_SCX:
           for (;;)
             {
             BOOL ok;
             const ucd_record *prop;
-            RMATCH(Fecode, RM225);
+            RMATCH(Fecode, RM224);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3624,13 +3844,13 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if (ok == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_ALNUM:
           for (;;)
             {
             int category;
-            RMATCH(Fecode, RM213);
+            RMATCH(Fecode, RM212);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3643,7 +3863,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((category == ucp_L || category == ucp_N) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           /* Perl space used to exclude VT, but from Perl 5.18 it is included,
           which means that Perl space and POSIX space are now identical. PCRE
@@ -3653,7 +3873,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           case PT_PXSPACE:  /* POSIX space */
           for (;;)
             {
-            RMATCH(Fecode, RM214);
+            RMATCH(Fecode, RM213);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3675,13 +3895,13 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
               break;
               }
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_WORD:
           for (;;)
             {
             int chartype, category;
-            RMATCH(Fecode, RM215);
+            RMATCH(Fecode, RM214);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3698,13 +3918,13 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
                  chartype == ucp_Pc) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_CLIST:
           for (;;)
             {
             const uint32_t *cp;
-            RMATCH(Fecode, RM216);
+            RMATCH(Fecode, RM215);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3735,12 +3955,12 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
                 }
               }
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_UCNC:
           for (;;)
             {
-            RMATCH(Fecode, RM217);
+            RMATCH(Fecode, RM216);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3754,12 +3974,12 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
                  fc >= 0xe000) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_BIDICL:
           for (;;)
             {
-            RMATCH(Fecode, RM224);
+            RMATCH(Fecode, RM223);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3771,14 +3991,14 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if ((UCD_BIDICLASS(fc) == Lpropvalue) == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           case PT_BOOL:
           for (;;)
             {
             BOOL ok;
             const ucd_record *prop;
-            RMATCH(Fecode, RM223);
+            RMATCH(Fecode, RM222);
             if (rrc != MATCH_NOMATCH) RRETURN(rrc);
             if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
             if (Feptr >= mb->end_subject)
@@ -3793,10 +4013,11 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             if (ok == (Lctype == OP_NOTPROP))
               RRETURN(MATCH_NOMATCH);
             }
-          /* Control never gets here */
+          PCRE2_UNREACHABLE(); /* Control never reaches here */
 
           /* This should never occur */
           default:
+          PCRE2_DEBUG_UNREACHABLE();
           return PCRE2_ERROR_INTERNAL;
           }
         }
@@ -3808,7 +4029,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         {
         for (;;)
           {
-          RMATCH(Fecode, RM218);
+          RMATCH(Fecode, RM217);
           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
           if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
           if (Feptr >= mb->end_subject)
@@ -3835,7 +4056,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         {
         for (;;)
           {
-          RMATCH(Fecode, RM219);
+          RMATCH(Fecode, RM218);
           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
           if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
           if (Feptr >= mb->end_subject)
@@ -3951,6 +4172,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             break;
 
             default:
+            PCRE2_DEBUG_UNREACHABLE();
             return PCRE2_ERROR_INTERNAL;
             }
           }
@@ -4095,11 +4317,13 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
             break;
 
             default:
+            PCRE2_DEBUG_UNREACHABLE();
             return PCRE2_ERROR_INTERNAL;
             }
           }
         }
-      /* Control never gets here */
+
+      PCRE2_DEBUG_UNREACHABLE(); /* Control should never reach here */
       }
 
     /* If maximizing, it is worth using inline code for speed, doing the type
@@ -4117,21 +4341,6 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         BOOL notmatch = Lctype == OP_NOTPROP;
         switch(proptype)
           {
-          case PT_ANY:
-          for (i = Lmin; i < Lmax; i++)
-            {
-            int len = 1;
-            if (Feptr >= mb->end_subject)
-              {
-              SCHECK_PARTIAL();
-              break;
-              }
-            GETCHARLENTEST(fc, Feptr, len);
-            if (notmatch) break;
-            Feptr+= len;
-            }
-          break;
-
           case PT_LAMP:
           for (i = Lmin; i < Lmax; i++)
             {
@@ -4377,6 +4586,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           break;
 
           default:
+          PCRE2_DEBUG_UNREACHABLE();
           return PCRE2_ERROR_INTERNAL;
           }
 
@@ -4391,7 +4601,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         for(;;)
           {
           if (Feptr <= Lstart_eptr) break;
-          RMATCH(Fecode, RM222);
+          RMATCH(Fecode, RM221);
           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
           Feptr--;
           if (utf) BACKCHAR(Feptr);
@@ -4434,7 +4644,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           PCRE2_SPTR fptr;
 
           if (Feptr <= Lstart_eptr) break;   /* At start of char run */
-          RMATCH(Fecode, RM220);
+          RMATCH(Fecode, RM219);
           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
 
           /* Backtracking over an extended grapheme cluster involves inspecting
@@ -4695,6 +4905,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           break;
 
           default:
+          PCRE2_DEBUG_UNREACHABLE();
           return PCRE2_ERROR_INTERNAL;
           }
 
@@ -4707,7 +4918,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         for(;;)
           {
           if (Feptr <= Lstart_eptr) break;
-          RMATCH(Fecode, RM221);
+          RMATCH(Fecode, RM220);
           if (rrc != MATCH_NOMATCH) RRETURN(rrc);
           Feptr--;
           BACKCHAR(Feptr);
@@ -4952,6 +5163,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           break;
 
           default:
+          PCRE2_DEBUG_UNREACHABLE();
           return PCRE2_ERROR_INTERNAL;
           }
 
@@ -4988,16 +5200,18 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 #define Lmin      F->temp_32[0]
 #define Lmax      F->temp_32[1]
 #define Lcaseless F->temp_32[2]
+#define Lcaseopts F->temp_32[3]
 #define Lstart    F->temp_sptr[0]
 #define Loffset   F->temp_size
 
     case OP_DNREF:
     case OP_DNREFI:
     Lcaseless = (Fop == OP_DNREFI);
+    Lcaseopts = (Fop == OP_DNREFI)? Fecode[1 + 2*IMM2_SIZE] : 0;
       {
       int count = GET2(Fecode, 1+IMM2_SIZE);
       PCRE2_SPTR slot = mb->name_table + GET2(Fecode, 1) * mb->name_entry_size;
-      Fecode += 1 + 2*IMM2_SIZE;
+      Fecode += 1 + 2*IMM2_SIZE + (Fop == OP_DNREFI? 1 : 0);
 
       while (count-- > 0)
         {
@@ -5011,8 +5225,9 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
     case OP_REF:
     case OP_REFI:
     Lcaseless = (Fop == OP_REFI);
+    Lcaseopts = (Fop == OP_REFI)? Fecode[1 + IMM2_SIZE] : 0;
     Loffset = (GET2(Fecode, 1) << 1) - 2;
-    Fecode += 1 + IMM2_SIZE;
+    Fecode += 1 + IMM2_SIZE + (Fop == OP_REFI? 1 : 0);
 
     /* Set up for repetition, or handle the non-repeated case. The maximum and
     minimum must be in the heap frame, but as they are short-term values, we
@@ -5044,7 +5259,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
       default:                  /* No repeat follows */
         {
-        rrc = match_ref(Loffset, Lcaseless, F, mb, &length);
+        rrc = match_ref(Loffset, Lcaseless, Lcaseopts, F, mb, &length);
         if (rrc != 0)
           {
           if (rrc > 0) Feptr = mb->end_subject;   /* Partial match */
@@ -5078,7 +5293,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
     for (i = 1; i <= Lmin; i++)
       {
       PCRE2_SIZE slength;
-      rrc = match_ref(Loffset, Lcaseless, F, mb, &slength);
+      rrc = match_ref(Loffset, Lcaseless, Lcaseopts, F, mb, &slength);
       if (rrc != 0)
         {
         if (rrc > 0) Feptr = mb->end_subject;   /* Partial match */
@@ -5102,7 +5317,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         RMATCH(Fecode, RM20);
         if (rrc != MATCH_NOMATCH) RRETURN(rrc);
         if (Lmin++ >= Lmax) RRETURN(MATCH_NOMATCH);
-        rrc = match_ref(Loffset, Lcaseless, F, mb, &slength);
+        rrc = match_ref(Loffset, Lcaseless, Lcaseopts, F, mb, &slength);
         if (rrc != 0)
           {
           if (rrc > 0) Feptr = mb->end_subject;   /* Partial match */
@@ -5111,7 +5326,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           }
         Feptr += slength;
         }
-      /* Control never gets here */
+
+      PCRE2_UNREACHABLE(); /* Control never reaches here */
       }
 
     /* If maximizing, find the longest string and work backwards, as long as
@@ -5126,7 +5342,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       for (i = Lmin; i < Lmax; i++)
         {
         PCRE2_SIZE slength;
-        rrc = match_ref(Loffset, Lcaseless, F, mb, &slength);
+        rrc = match_ref(Loffset, Lcaseless, Lcaseopts, F, mb, &slength);
         if (rrc != 0)
           {
           /* Can't use CHECK_PARTIAL because we don't want to update Feptr in
@@ -5177,7 +5393,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
           for (i = Lmin; i < Lmax; i++)
             {
             PCRE2_SIZE slength;
-            (void)match_ref(Loffset, Lcaseless, F, mb, &slength);
+            (void)match_ref(Loffset, Lcaseless, Lcaseopts, F, mb, &slength);
             Feptr += slength;
             }
           }
@@ -5185,7 +5401,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
       RRETURN(MATCH_NOMATCH);
       }
-    /* Control never gets here */
+
+    PCRE2_DEBUG_UNREACHABLE(); /* Control should never reach here */
 
 #undef Lcaseless
 #undef Lmin
@@ -5409,7 +5626,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       Fecode += GET(Fecode, 1);
       if (*Fecode != OP_ALT) RRETURN(MATCH_NOMATCH);
       }
-    /* Control never reaches here. */
+    PCRE2_UNREACHABLE(); /* Control never reaches here */
 
 #undef Lframe_type
 
@@ -5494,7 +5711,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       Lstart_branch = next_ecode;
       if (*Lstart_branch != OP_ALT) RRETURN(MATCH_NOMATCH);
       }
-    /* Control never reaches here. */
+    PCRE2_UNREACHABLE(); /* Control never reaches here */
 
 #undef Lframe_type
 #undef Lstart_branch
@@ -5585,6 +5802,132 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
 #undef Lframe_type
 
+    /* ===================================================================== */
+    /* Handle scan substring operation. */
+
+#define Lframe_type          F->temp_32[0]
+#define Lextra_size          F->temp_32[1]
+#define Lsaved_moptions      F->temp_32[2]
+#define Lsaved_end_subject   F->temp_sptr[0]
+#define Lsaved_eptr          F->temp_sptr[1]
+#define Ltrue_end_extra      F->temp_size
+
+    case OP_ASSERT_SCS:
+      {
+      PCRE2_SPTR ecode = Fecode + 1 + LINK_SIZE;
+      uint32_t extra_size = 0;
+      int count;
+      PCRE2_SPTR slot;
+
+      /* Disable compiler warning. */
+      offset = 0;
+      (void)offset;
+
+      for (;;)
+        {
+        if (*ecode == OP_CREF)
+          {
+          extra_size += 1+IMM2_SIZE;
+          offset = (GET2(ecode, 1) << 1) - 2;
+          ecode += 1+IMM2_SIZE;
+          if (offset < Foffset_top && Fovector[offset] != PCRE2_UNSET)
+            goto SCS_OFFSET_FOUND;
+          continue;
+          }
+
+        if (*ecode != OP_DNCREF) RRETURN(MATCH_NOMATCH);
+
+        count = GET2(ecode, 1 + IMM2_SIZE);
+        slot = mb->name_table + GET2(ecode, 1) * mb->name_entry_size;
+        extra_size += 1+2*IMM2_SIZE;
+        ecode += 1+2*IMM2_SIZE;
+
+        while (count > 0)
+          {
+          offset = (GET2(slot, 0) << 1) - 2;
+          if (offset < Foffset_top && Fovector[offset] != PCRE2_UNSET)
+            goto SCS_OFFSET_FOUND;
+          slot += mb->name_entry_size;
+          count--;
+          }
+        }
+
+      SCS_OFFSET_FOUND:
+
+      /* Skip remaining options. */
+      for (;;)
+        {
+        if (*ecode == OP_CREF)
+          {
+          extra_size += 1+IMM2_SIZE;
+          ecode += 1+IMM2_SIZE;
+          }
+        else if (*ecode == OP_DNCREF)
+          {
+          extra_size += 1+2*IMM2_SIZE;
+          ecode += 1+2*IMM2_SIZE;
+          }
+        else break;
+        }
+
+      Lextra_size = extra_size;
+      }
+
+    Lsaved_end_subject = mb->end_subject;
+    Ltrue_end_extra = mb->true_end_subject - mb->end_subject;
+    Lsaved_eptr = Feptr;
+    Lsaved_moptions = mb->moptions;
+
+    Feptr = mb->start_subject + Fovector[offset];
+    mb->true_end_subject = mb->end_subject =
+      mb->start_subject + Fovector[offset + 1];
+    mb->moptions &= ~PCRE2_NOTEOL;
+
+    Lframe_type = GF_NOCAPTURE | Fop;
+    for (;;)
+      {
+      group_frame_type = Lframe_type;
+      RMATCH(Fecode + 1 + LINK_SIZE + Lextra_size, RM38);
+      if (rrc == MATCH_ACCEPT)
+        {
+        memcpy(Fovector,
+              (char *)assert_accept_frame + offsetof(heapframe, ovector),
+              assert_accept_frame->offset_top * sizeof(PCRE2_SIZE));
+        Foffset_top = assert_accept_frame->offset_top;
+        Fmark = assert_accept_frame->mark;
+        break;
+        }
+
+      if (rrc != MATCH_NOMATCH && rrc != MATCH_THEN)
+        {
+        mb->end_subject = Lsaved_end_subject;
+        mb->true_end_subject = mb->end_subject + Ltrue_end_extra;
+        mb->moptions = Lsaved_moptions;
+        RRETURN(rrc);
+        }
+
+      Fecode += GET(Fecode, 1);
+      if (*Fecode != OP_ALT)
+        {
+        mb->end_subject = Lsaved_end_subject;
+        mb->true_end_subject = mb->end_subject + Ltrue_end_extra;
+        mb->moptions = Lsaved_moptions;
+        RRETURN(MATCH_NOMATCH);
+        }
+      Lextra_size = 0;
+      }
+
+    do Fecode += GET(Fecode, 1); while (*Fecode == OP_ALT);
+    Fecode += 1 + LINK_SIZE;
+    Feptr = Lsaved_eptr;
+    break;
+
+#undef Lframe_type
+#undef Lextra_size
+#undef Lsaved_end_subject
+#undef Lsaved_eptr
+#undef Ltrue_end_extra
+#undef Lsave_moptions
 
     /* ===================================================================== */
     /* The callout item calls an external function, if one is provided, passing
@@ -5795,8 +6138,11 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 #ifdef SUPPORT_UNICODE
     if (utf)
       {
-      while (number-- > 0)
+      /* We used to do a simpler `while (number-- > 0)` but that triggers
+      clang's unsigned integer overflow sanitizer. */
+      while (number > 0)
         {
+        --number;
         if (Feptr <= mb->check_subject) RRETURN(MATCH_NOMATCH);
         Feptr--;
         BACKCHAR(Feptr);
@@ -5862,14 +6208,14 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
       {
       ptrdiff_t diff = Feptr - mb->start_subject;
-      uint32_t available = (diff > 65535)? 65535 : ((diff > 0)? diff : 0);
+      uint32_t available = (diff > 65535)? 65535 : ((diff > 0)? (int)diff : 0);
       if (Lmin > available) RRETURN(MATCH_NOMATCH);
       if (Lmax > available) Lmax = available;
       Feptr -= Lmax;
       }
 
     /* Now try matching, moving forward one character on failure, until we
-    reach the mimimum back length. */
+    reach the minimum back length. */
 
     for (;;)
       {
@@ -5881,7 +6227,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       if (utf) { FORWARDCHARTEST(Feptr, mb->end_subject); }
 #endif
       }
-    /* Control never reaches here */
+    PCRE2_UNREACHABLE(); /* Control never reaches here */
 
 #undef Lmin
 #undef Lmax
@@ -5931,14 +6277,20 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
         (char *)P->eptr - (char *)mb->start_subject);
 #endif
 
-      /* If we are at the end of an assertion that is a condition, return a
-      match, discarding any intermediate backtracking points. Copy back the
-      mark setting and the captures into the frame before N so that they are
-      set on return. Doing this for all assertions, both positive and negative,
-      seems to match what Perl does. */
+      /* If we are at the end of an assertion that is a condition, first check
+      to see if we are at the end of a variable-length branch in a lookbehind.
+      If this is the case and we have not landed on the current character,
+      return no match. Compare code below for non-condition lookbehinds. In
+      other cases, return a match, discarding any intermediate backtracking
+      points. Copy back the mark setting and the captures into the frame before
+      N so that they are set on return. Doing this for all assertions, both
+      positive and negative, seems to match what Perl does. */
 
       if (GF_IDMASK(N->group_frame_type) == GF_CONDASSERT)
         {
+        if ((*bracode == OP_ASSERTBACK || *bracode == OP_ASSERTBACK_NOT) &&
+            branch_start[1 + LINK_SIZE] == OP_VREVERSE && Feptr != P->eptr)
+          RRETURN(MATCH_NOMATCH);
         memcpy((char *)P + offsetof(heapframe, ovector), Fovector,
           Foffset_top * sizeof(PCRE2_SIZE));
         P->offset_top = Foffset_top;
@@ -5967,7 +6319,11 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       /* It is the end of whole-pattern recursion. */
 
       offset = Flast_group_offset;
+
+      /* Corrupted heapframes?. Trigger an assert and return an error */
+      PCRE2_ASSERT(offset != PCRE2_UNSET);
       if (offset == PCRE2_UNSET) return PCRE2_ERROR_INTERNAL;
+
       N = (heapframe *)((char *)match_data->heapframes + offset);
       P = (heapframe *)((char *)N - frame_size);
       Flast_group_offset = P->last_group_offset;
@@ -5975,12 +6331,18 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       /* Reinstate the previous set of captures and then carry on after the
       recursion call. */
 
-      memcpy((char *)F + offsetof(heapframe, ovector), P->ovector,
-        Foffset_top * sizeof(PCRE2_SIZE));
-      Foffset_top = P->offset_top;
+      Fecode = P->ecode + 1 + LINK_SIZE;
+
+      if (*Fecode != OP_CREF)
+        {
+        memcpy(F->ovector, P->ovector, Foffset_top * sizeof(PCRE2_SIZE));
+        Foffset_top = P->offset_top;
+        }
+      else
+        recurse_update_offsets(F, P);
+
       Fcapture_last = P->capture_last;
       Fcurrent_recurse = P->current_recurse;
-      Fecode = P->ecode + 1 + LINK_SIZE;
       continue;  /* With next opcode */
 
       case OP_COND:     /* No need to do anything for these */
@@ -6042,6 +6404,23 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       case OP_ASSERT_NOT:
       RRETURN(MATCH_MATCH);
 
+      /* A scan substring group must preserve the current end_subject,
+      and restore it before the backtracking is performed into its sub
+      pattern. */
+
+      case OP_ASSERT_SCS:
+      F->temp_sptr[0] = mb->end_subject;
+      mb->end_subject = P->temp_sptr[0];
+      mb->true_end_subject = mb->end_subject + P->temp_size;
+      Feptr = P->temp_sptr[1];
+
+      RMATCH(Fecode + 1 + LINK_SIZE, RM39);
+
+      mb->end_subject = F->temp_sptr[0];
+      mb->true_end_subject = mb->end_subject;
+      RRETURN(rrc);
+      break;
+
       /* At the end of a script run, apply the script-checking rules. This code
       will never by exercised if Unicode support it not compiled, because in
       that environment script runs cause an error at compile time. */
@@ -6065,12 +6444,18 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
       if (Fcurrent_recurse == number)
         {
         P = (heapframe *)((char *)N - frame_size);
-        memcpy((char *)F + offsetof(heapframe, ovector), P->ovector,
-          Foffset_top * sizeof(PCRE2_SIZE));
-        Foffset_top = P->offset_top;
+        Fecode = P->ecode + 1 + LINK_SIZE;
+
+        if (*Fecode != OP_CREF)
+          {
+          memcpy(F->ovector, P->ovector, Foffset_top * sizeof(PCRE2_SIZE));
+          Foffset_top = P->offset_top;
+          }
+        else
+          recurse_update_offsets(F, P);
+
         Fcapture_last = P->capture_last;
         Fcurrent_recurse = P->current_recurse;
-        Fecode = P->ecode + 1 + LINK_SIZE;
         continue;  /* With next opcode */
         }
 
@@ -6165,8 +6550,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
 
     case OP_EODN:
     ASSERT_NL_OR_EOS:
-    if (Feptr < mb->end_subject &&
-        (!IS_NEWLINE(Feptr) || Feptr != mb->end_subject - mb->nllen))
+    if (Feptr < mb->true_end_subject &&
+        (!IS_NEWLINE(Feptr) || Feptr != mb->true_end_subject - mb->nllen))
       {
       if (mb->partial != 0 &&
           Feptr + 1 >= mb->end_subject &&
@@ -6447,6 +6832,7 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
     something seriously wrong in the code above or the OP_xxx definitions. */
 
     default:
+    PCRE2_DEBUG_UNREACHABLE();
     return PCRE2_ERROR_INTERNAL;
     }
 
@@ -6455,8 +6841,8 @@ fprintf(stderr, "++ %2ld op=%3d %s\n", Fecode - mb->start_code, *Fecode,
   loop. */
 
   }  /* End of main loop */
-/* Control never reaches here */
 
+PCRE2_DEBUG_UNREACHABLE(); /* Control should never reach here */
 
 /* ========================================================================= */
 /* The RRETURN() macro jumps here. The number that is saved in Freturn_id
@@ -6482,20 +6868,21 @@ switch (Freturn_id)
   LBL( 9) LBL(10) LBL(11) LBL(12) LBL(13) LBL(14) LBL(15) LBL(16)
   LBL(17) LBL(18) LBL(19) LBL(20) LBL(21) LBL(22) LBL(23) LBL(24)
   LBL(25) LBL(26) LBL(27) LBL(28) LBL(29) LBL(30) LBL(31) LBL(32)
-  LBL(33) LBL(34) LBL(35) LBL(36) LBL(37)
+  LBL(33) LBL(34) LBL(35) LBL(36) LBL(37) LBL(38) LBL(39)
 
 #ifdef SUPPORT_WIDE_CHARS
-  LBL(100) LBL(101)
+  LBL(100) LBL(101) LBL(102) LBL(103)
 #endif
 
 #ifdef SUPPORT_UNICODE
   LBL(200) LBL(201) LBL(202) LBL(203) LBL(204) LBL(205) LBL(206)
   LBL(207) LBL(208) LBL(209) LBL(210) LBL(211) LBL(212) LBL(213)
   LBL(214) LBL(215) LBL(216) LBL(217) LBL(218) LBL(219) LBL(220)
-  LBL(221) LBL(222) LBL(223) LBL(224) LBL(225)
+  LBL(221) LBL(222) LBL(223) LBL(224)
 #endif
 
   default:
+  PCRE2_DEBUG_UNREACHABLE();
   return PCRE2_ERROR_INTERNAL;
   }
 #undef LBL
@@ -6552,6 +6939,7 @@ PCRE2_UCHAR first_cu2 = 0;
 PCRE2_UCHAR req_cu = 0;
 PCRE2_UCHAR req_cu2 = 0;
 
+PCRE2_UCHAR null_str[1] = { 0xcd };
 PCRE2_SPTR bumpalong_limit;
 PCRE2_SPTR end_subject;
 PCRE2_SPTR true_end_subject;
@@ -6590,7 +6978,7 @@ match_block *mb = &actual_match_block;
 
 /* Recognize NULL, length 0 as an empty string. */
 
-if (subject == NULL && length == 0) subject = (PCRE2_SPTR)"";
+if (subject == NULL && length == 0) subject = null_str;
 
 /* Plausibility checks */
 
@@ -6621,7 +7009,7 @@ if ((re->flags & PCRE2_MODE_MASK) != PCRE2_CODE_UNIT_WIDTH/8)
 /* PCRE2_NOTEMPTY and PCRE2_NOTEMPTY_ATSTART are match-time flags in the
 options variable for this function. Users of PCRE2 who are not calling the
 function directly would like to have a way of setting these flags, in the same
-way that they can set pcre2_compile() flags like PCRE2_NO_AUTOPOSSESS with
+way that they can set pcre2_compile() flags like PCRE2_NO_AUTO_POSSESS with
 constructions like (*NO_AUTOPOSSESS). To enable this, (*NOTEMPTY) and
 (*NOTEMPTY_ATSTART) set bits in the pattern's "flag" function which we now
 transfer to the options for this function. The bits are guaranteed to be
@@ -6703,9 +7091,6 @@ if (use_jit)
 #ifdef SUPPORT_UNICODE
   if (utf && (options & PCRE2_NO_UTF_CHECK) == 0 && !allow_invalid)
     {
-#if PCRE2_CODE_UNIT_WIDTH != 32
-    unsigned int i;
-#endif
 
     /* For 8-bit and 16-bit UTF, check that the first code unit is a valid
     character start. */
@@ -6726,7 +7111,7 @@ if (use_jit)
     start of matching. */
 
 #if PCRE2_CODE_UNIT_WIDTH != 32
-    for (i = re->max_lookbehind; i > 0 && start_match > subject; i--)
+    for (unsigned int i = re->max_lookbehind; i > 0 && start_match > subject; i--)
       {
       start_match--;
       while (start_match > subject &&
@@ -6973,10 +7358,10 @@ mb->mark = mb->nomatch_mark = NULL;          /* In case never set */
 /* The name table is needed for finding all the numbers associated with a
 given name, for condition testing. The code follows the name table. */
 
-mb->name_table = (PCRE2_UCHAR *)((uint8_t *)re + sizeof(pcre2_real_code));
+mb->name_table = (PCRE2_SPTR)((const uint8_t *)re + sizeof(pcre2_real_code));
 mb->name_count = re->name_count;
 mb->name_entry_size = re->name_entry_size;
-mb->start_code = mb->name_table + re->name_count * re->name_entry_size;
+mb->start_code = (PCRE2_SPTR)((const uint8_t *)re + re->code_start);
 
 /* Process the \R and newline settings. */
 
@@ -7013,7 +7398,9 @@ switch(re->newline_convention)
   mb->nltype = NLTYPE_ANYCRLF;
   break;
 
-  default: return PCRE2_ERROR_INTERNAL;
+  default:
+  PCRE2_DEBUG_UNREACHABLE();
+  return PCRE2_ERROR_INTERNAL;
   }
 
 /* The backtracking frames have fixed data at the front, and a PCRE2_SIZE
@@ -7159,7 +7546,7 @@ for(;;)
   However, there is an option (settable at compile time) that disables these,
   for testing and for ensuring that all callouts do actually occur. */
 
-  if ((re->overall_options & PCRE2_NO_START_OPTIMIZE) == 0)
+  if ((re->optimization_flags & PCRE2_OPTIM_START_OPTIMIZE) != 0)
     {
     /* If firstline is TRUE, the start of the match is constrained to the first
     line of a multiline string. That is, the match must be before or at the
@@ -7716,6 +8103,7 @@ if (rc == MATCH_MATCH)
   match_data->rc = ((int)mb->end_offset_top >= 2 * match_data->oveccount)?
     0 : (int)mb->end_offset_top/2 + 1;
   match_data->subject_length = length;
+  match_data->start_offset = start_offset;
   match_data->startchar = start_match - subject;
   match_data->leftchar = mb->start_used_ptr - subject;
   match_data->rightchar = ((mb->last_used_ptr > mb->end_match_ptr)?
@@ -7753,6 +8141,7 @@ else if (match_partial != NULL)
   {
   match_data->subject = subject;
   match_data->subject_length = length;
+  match_data->start_offset = start_offset;
   match_data->ovector[0] = match_partial - subject;
   match_data->ovector[1] = end_subject - subject;
   match_data->startchar = match_partial - subject;

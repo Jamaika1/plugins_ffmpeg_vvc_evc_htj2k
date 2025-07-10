@@ -459,7 +459,7 @@ g_application_pack_option_entries (GApplication *application,
           break;
 
         case G_OPTION_ARG_DOUBLE:
-          if (*(gdouble *) entry->arg_data)
+          if (*(gdouble *) entry->arg_data != 0.0)
             value = g_variant_new_double (*(gdouble *) entry->arg_data);
           break;
 
@@ -1614,6 +1614,9 @@ g_application_class_init (GApplicationClass *class)
    * The group of actions that the application exports.
    *
    * Since: 2.28
+   * Deprecated: 2.32: Use the [iface@Gio.ActionMap] interface instead.
+   *   Never ever mix use of this API with use of `GActionMap` on the
+   *   same @application or things will go very badly wrong.
    */
   g_object_class_install_property (object_class, PROP_ACTION_GROUP,
     g_param_spec_object ("action-group", NULL, NULL,
@@ -2063,10 +2066,10 @@ g_application_get_resource_base_path (GApplication *application)
  *
  * Sets (or unsets) the base resource path of @application.
  *
- * The path is used to automatically load various [application
- * resources][gresource] such as menu layouts and action descriptions.
- * The various types of resources will be found at fixed names relative
- * to the given base path.
+ * The path is used to automatically load various
+ * [application resources][struct@Gio.Resource] such as menu layouts and
+ * action descriptions. The various types of resources will be found at
+ * fixed names relative to the given base path.
  *
  * By default, the resource base path is determined from the application
  * ID by prefixing '/' and replacing each '.' with '/'.  This is done at
@@ -3074,11 +3077,11 @@ g_application_get_is_busy (GApplication *application)
  * notification. This works even for notifications sent from a previous
  * execution of the application, as long as @id is the same string.
  *
- * @id may be %NULL, but it is impossible to replace or withdraw
+ * @id may be `NULL`, but it is impossible to replace or withdraw
  * notifications without an id.
  *
  * If @notification is no longer relevant, it can be withdrawn with
- * g_application_withdraw_notification().
+ * [method@Gio.Application.withdraw_notification].
  *
  * It is an error to call this function if @application has no
  * application ID.

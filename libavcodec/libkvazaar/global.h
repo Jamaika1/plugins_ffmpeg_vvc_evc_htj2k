@@ -215,10 +215,8 @@ typedef int16_t coeff_t;
 #define QUOTE(x) #x
 #define QUOTE_EXPAND(x) QUOTE(x)
 
-// NOTE: When making a release, check to see if incrementing libversion in
-// configure.ac is necessary.
 #ifndef KVZ_VERSION
-#define KVZ_VERSION 2.2.0-91f04b4
+#define KVZ_VERSION 2.3.1-32fb346
 #endif
 #define VERSION_STRING QUOTE_EXPAND(KVZ_VERSION)
 
@@ -246,6 +244,12 @@ typedef int16_t coeff_t;
   #define ALIGNED(alignment) __declspec(align(alignment))
 #else
   #define ALIGNED(alignment) __attribute__((aligned (alignment)))
+#endif
+
+#ifdef _MSC_VER
+#define NO_ASAN
+#else
+#define NO_ASAN __attribute__((no_sanitize("address")))
 #endif
 
 #ifdef _MSC_VER
@@ -355,7 +359,7 @@ typedef enum { COLOR_Y = 0, COLOR_U, COLOR_V } color_t;
 #  define COMPILE_POWERPC 0
 #endif
 
-#if defined (_M_ARM) || defined(__arm__) || defined(__thumb__)
+#if defined (_M_ARM) || defined(_M_ARM64) || defined(__arm__) || defined(__thumb__)
 #  define COMPILE_ARM 1
 #else
 #  define COMPILE_ARM 0

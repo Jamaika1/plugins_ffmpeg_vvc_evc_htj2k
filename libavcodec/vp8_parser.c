@@ -18,7 +18,7 @@
 
 #include "libavutil/intreadwrite.h"
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
 
 static int parse(AVCodecParserContext *s,
                  AVCodecContext *avctx,

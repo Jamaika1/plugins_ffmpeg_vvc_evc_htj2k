@@ -32,8 +32,8 @@
  ****************************************************************************/
 
 #ifndef UVG_VERSION
-#define UVG_VERSION 0.4.1-c6764df
+#define UVG_VERSION 0.8.1-d753f74
 #endif
-#define UVG_COMPILER_STRING "GCC: (GNU) 11.3.1"
-#define UVG_COMPILE_DATE "20220924 (prerelease)"
+#define UVG_COMPILER_STRING "GCC: (GNU) " __VERSION__
+#define UVG_COMPILE_DATE "20241129"
 #define VERSION_STRING QUOTE_EXPAND(UVG_VERSION)

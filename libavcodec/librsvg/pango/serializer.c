@@ -250,6 +250,7 @@ static const char *wrap_names[] = {
   "word",
   "char",
   "word-char",
+  "none",
   NULL
 };
 
@@ -1187,7 +1188,7 @@ json_parser_fill_tabs (GtkJsonParser *parser,
   index = 0;
   do
     {
-      int pos;
+      int pos = 0;
       PangoTabAlign align = PANGO_TAB_LEFT;
       gunichar ch = 0;
 
@@ -1713,7 +1714,7 @@ pango_layout_deserialize (PangoContext                 *context,
         code = PANGO_LAYOUT_DESERIALIZE_INVALID;
 
       g_set_error (error, PANGO_LAYOUT_DESERIALIZE_ERROR, code,
-                   "%lld:%lld: %s", start, end, parser_error->message);
+                   "%" G_GSIZE_FORMAT ":%" G_GSIZE_FORMAT ": %s", start, end, parser_error->message);
 
       g_clear_object (&layout);
     }

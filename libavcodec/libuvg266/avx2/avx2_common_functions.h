@@ -3,21 +3,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- *
+ * 
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- *
+ * 
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -163,8 +163,8 @@ static INLINE void get_first_last_nz_int16(__m256i ints, int32_t *first, int32_t
 
   __m256i zeros = _mm256_cmpeq_epi16(ints, zero);
   uint32_t nonzero_bytes = ~((uint32_t)_mm256_movemask_epi8(zeros));
-  *first = (    (int32_t)__builtin_ia32_tzcnt_u32(nonzero_bytes)) >> 1;
-  *last = (31 - (int32_t)__builtin_ia32_lzcnt_u32(nonzero_bytes)) >> 1;
+  *first = (    (int32_t)_tzcnt_u32(nonzero_bytes)) >> 1;
+  *last = (31 - (int32_t)_lzcnt_u32(nonzero_bytes)) >> 1;
 }
 
 static int32_t FIX_NOINLINE hsum_8x32b(const __m256i v)

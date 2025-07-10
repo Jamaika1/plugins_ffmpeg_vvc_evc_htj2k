@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 #define BUILD_TABLES
+#include "libavutil/config.h"
+#undef CONFIG_HARDCODED_TABLES
 #define CONFIG_HARDCODED_TABLES 0
 #include "libavcodec/aac_defines.h"
 

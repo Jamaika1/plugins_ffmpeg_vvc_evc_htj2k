@@ -21,13 +21,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 #include "libavutil/mem_internal.h"
 
-#include "vp9dsp.h"
+#include "libavcodec/vp9dsp.h"
 
 const DECLARE_ALIGNED(16, int16_t, ff_vp9_subpel_filters)[3][16][8] = {
     [FILTER_8TAP_REGULAR] = {
@@ -100,6 +100,8 @@ av_cold void ff_vp9dsp_init(VP9DSPContext *dsp, int bpp, int bitexact)
     ff_vp9dsp_init_aarch64(dsp, bpp);
 #elif ARCH_ARM
     ff_vp9dsp_init_arm(dsp, bpp);
+#elif ARCH_RISCV
+    ff_vp9dsp_init_riscv(dsp, bpp, bitexact);
 #elif ARCH_X86
     ff_vp9dsp_init_x86(dsp, bpp, bitexact);
 #elif ARCH_MIPS

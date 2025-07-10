@@ -38,18 +38,19 @@
 #include "libavutil/common.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/mathematics.h"
+#include "libavutil/mem.h"
 #include "libavutil/thread.h"
 #include "libavutil/tx.h"
 
-#include "audio_frame_queue.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "nellymoser.h"
-#include "sinewin.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/nellymoser.h"
+#include "libavcodec/sinewin.h"
 
 #define BITSTREAM_WRITER_LE
-#include "put_bits.h"
+#include "libavcodec/put_bits.h"
 
 #define POW_TABLE_SIZE (1<<11)
 #define POW_TABLE_OFFSET 3
@@ -426,8 +427,7 @@ const FFCodec ff_nellymoser_encoder = {
     .init           = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
     .close          = encode_end,
-    .p.sample_fmts  = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_FLT,
-                                                     AV_SAMPLE_FMT_NONE },
-    .p.ch_layouts   = (const AVChannelLayout[]){ AV_CHANNEL_LAYOUT_MONO, { 0 } },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLT),
+    CODEC_CH_LAYOUTS(AV_CHANNEL_LAYOUT_MONO),
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

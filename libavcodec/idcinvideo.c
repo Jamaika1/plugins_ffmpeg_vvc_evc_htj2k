@@ -47,9 +47,9 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/internal.h"
 
 #define HUFFMAN_TABLE_SIZE 64 * 1024
@@ -224,7 +224,14 @@ static int idcin_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     if (idcin_decode_vlcs(s, frame))
         return AVERROR_INVALIDDATA;
 
-    frame->palette_has_changed = ff_copy_palette(s->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
+    frame->palette_has_changed =
+#endif
+    ff_copy_palette(s->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     /* make the palette available on the way out */
     memcpy(frame->data[1], s->pal, AVPALETTE_SIZE);
 

@@ -206,8 +206,8 @@ _cairo_atomic_int_cmpxchg_return_old_impl(cairo_atomic_int_t *x,
 static cairo_always_inline cairo_bool_t
 _cairo_atomic_ptr_cmpxchg_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
 {
-    void *expected = oldv;
-    return __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    intptr_t expected = (intptr_t)oldv;
+    return __atomic_compare_exchange_n(x, &expected, (intptr_t)newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 }
 
 #define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
@@ -216,9 +216,9 @@ _cairo_atomic_ptr_cmpxchg_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
 static cairo_always_inline void *
 _cairo_atomic_ptr_cmpxchg_return_old_impl(cairo_atomic_intptr_t *x, void *oldv, void *newv)
 {
-    void *expected = oldv;
-    (void) __atomic_compare_exchange_n(x, &expected, newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-    return expected;
+    intptr_t expected = (intptr_t)oldv;
+    (void) __atomic_compare_exchange_n(x, &expected, (intptr_t)newv, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    return (void*)expected;
 }
 
 #define _cairo_atomic_ptr_cmpxchg_return_old(x, oldv, newv) \
@@ -484,6 +484,37 @@ _cairo_atomic_ptr_cmpxchg_return_old_fallback(cairo_atomic_intptr_t *x, void *ol
     (void) ret__; \
 } while (0)
 
+#if defined (_WIN32)
+#include <windows.h>
+
+typedef INIT_ONCE cairo_atomic_once_t;
+#define CAIRO_ATOMIC_ONCE_INIT INIT_ONCE_STATIC_INIT
+
+static cairo_always_inline cairo_bool_t
+_cairo_atomic_init_once_enter(cairo_atomic_once_t *once)
+{
+    BOOL pending;
+
+    if (unlikely (!InitOnceBeginInitialize (once, 0, &pending, NULL))) {
+        assert (0 && "InitOnceBeginInitialize failed");
+    }
+
+    if (likely (!pending))
+        return 0;
+
+    return 1;
+}
+
+static cairo_always_inline void
+_cairo_atomic_init_once_leave(cairo_atomic_once_t *once)
+{
+    if (unlikely (!InitOnceComplete (once, 0, NULL))) {
+        assert (0 && "InitOnceComplete failed");
+    }
+}
+
+#else
+
 typedef cairo_atomic_int_t cairo_atomic_once_t;
 
 #define CAIRO_ATOMIC_ONCE_UNINITIALIZED (0)
@@ -514,6 +545,8 @@ _cairo_atomic_init_once_leave(cairo_atomic_once_t *once)
 					    CAIRO_ATOMIC_ONCE_INITIALIZED)))
 	assert (0 && "incorrect use of _cairo_atomic_init_once API (once != CAIRO_ATOMIC_ONCE_INITIALIZING)");
 }
+
+#endif /* !_WIN32 */
 
 CAIRO_END_DECLS
 

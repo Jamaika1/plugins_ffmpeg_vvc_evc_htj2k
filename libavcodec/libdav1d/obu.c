@@ -110,7 +110,7 @@ static NOINLINE int parse_seq_hdr(Dav1dSequenceHeader *const hdr,
             hdr->equal_picture_interval = dav1d_get_bit(gb);
             if (hdr->equal_picture_interval) {
                 const unsigned num_ticks_per_picture = dav1d_get_vlc(gb);
-                if (num_ticks_per_picture == 0xFFFFFFFFU)
+                if (num_ticks_per_picture == UINT32_MAX)
                     goto error;
                 hdr->num_ticks_per_picture = num_ticks_per_picture + 1;
             }
@@ -979,23 +979,22 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
 #endif
     hdr->skip_mode_allowed = 0;
     if (hdr->switchable_comp_refs && IS_INTER_OR_SWITCH(hdr) && seqhdr->order_hint) {
-        const unsigned poc = hdr->frame_offset;
-        unsigned off_before = 0xFFFFFFFFU;
-        int off_after = -1;
+        const int poc = hdr->frame_offset;
+        int off_before = -1, off_after = -1;
         int off_before_idx, off_after_idx;
         for (int i = 0; i < 7; i++) {
             if (!c->refs[hdr->refidx[i]].p.p.frame_hdr) goto error;
-            const unsigned refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
+            const int refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
 
             const int diff = get_poc_diff(seqhdr->order_hint_n_bits, refpoc, poc);
             if (diff > 0) {
-                if (off_after == -1 || get_poc_diff(seqhdr->order_hint_n_bits,
-                                                    off_after, refpoc) > 0)
+                if (off_after < 0 || get_poc_diff(seqhdr->order_hint_n_bits,
+                                                  off_after, refpoc) > 0)
                 {
                     off_after = refpoc;
                     off_after_idx = i;
                 }
-            } else if (diff < 0 && (off_before == 0xFFFFFFFFU ||
+            } else if (diff < 0 && (off_before < 0 ||
                                     get_poc_diff(seqhdr->order_hint_n_bits,
                                                  refpoc, off_before) > 0))
             {
@@ -1004,21 +1003,20 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
             }
         }
 
-        if (off_before != 0xFFFFFFFFU && off_after != -1) {
+        if ((off_before | off_after) >= 0) {
             hdr->skip_mode_refs[0] = imin(off_before_idx, off_after_idx);
             hdr->skip_mode_refs[1] = imax(off_before_idx, off_after_idx);
             hdr->skip_mode_allowed = 1;
-        } else if (off_before != 0xFFFFFFFFU) {
-            unsigned off_before2 = 0xFFFFFFFFU;
+        } else if (off_before >= 0) {
+            int off_before2 = -1;
             int off_before2_idx;
             for (int i = 0; i < 7; i++) {
                 if (!c->refs[hdr->refidx[i]].p.p.frame_hdr) goto error;
-                const unsigned refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
+                const int refpoc = c->refs[hdr->refidx[i]].p.p.frame_hdr->frame_offset;
                 if (get_poc_diff(seqhdr->order_hint_n_bits,
                                  refpoc, off_before) < 0) {
-                    if (off_before2 == 0xFFFFFFFFU ||
-                        get_poc_diff(seqhdr->order_hint_n_bits,
-                                     refpoc, off_before2) > 0)
+                    if (off_before2 < 0 || get_poc_diff(seqhdr->order_hint_n_bits,
+                                                        refpoc, off_before2) > 0)
                     {
                         off_before2 = refpoc;
                         off_before2_idx = i;
@@ -1026,7 +1024,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
                 }
             }
 
-            if (off_before2 != 0xFFFFFFFFU) {
+            if (off_before2 >= 0) {
                 hdr->skip_mode_refs[0] = imin(off_before_idx, off_before2_idx);
                 hdr->skip_mode_refs[1] = imax(off_before_idx, off_before2_idx);
                 hdr->skip_mode_allowed = 1;
@@ -1550,7 +1548,8 @@ ptrdiff_t dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in) {
             break;
         default:
             // print a warning but don't fail for unknown types
-            dav1d_log(c, "Unknown Metadata OBU type %d\n", meta_type);
+            if (meta_type > 31) // Types 6 to 31 are "Unregistered user private", so ignore them.
+                dav1d_log(c, "Unknown Metadata OBU type %d\n", meta_type);
             break;
         }
 

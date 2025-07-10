@@ -21,8 +21,8 @@
  * G723_1 audio parser
  */
 
-#include "parser.h"
-#include "g723_1.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/g723_1.h"
 
 typedef struct G723_1ParseContext {
     ParseContext pc;

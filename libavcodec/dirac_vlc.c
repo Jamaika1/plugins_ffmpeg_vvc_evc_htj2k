@@ -18,7 +18,7 @@
 
 #include "libavutil/mem_internal.h"
 
-#include "dirac_vlc.h"
+#include "libavcodec/dirac_vlc.h"
 
 enum {
     /* Next byte contains an exactly aligned start to a new symbol (even bit) */

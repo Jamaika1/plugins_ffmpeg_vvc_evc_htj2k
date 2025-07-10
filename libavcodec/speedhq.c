@@ -20,7 +20,7 @@
  */
 
 #include <stdint.h>
-#include "speedhq.h"
+#include "libavcodec/speedhq.h"
 
 /* AC codes: Very similar but not identical to MPEG-2. */
 const uint16_t ff_speedhq_vlc_table[SPEEDHQ_RL_NB_ELEMS + 2][2] = {

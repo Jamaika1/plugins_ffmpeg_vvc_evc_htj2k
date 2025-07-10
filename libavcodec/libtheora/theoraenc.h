@@ -11,15 +11,14 @@
  ********************************************************************
 
   function:
-  last mod: $Id: theora.h,v 1.8 2004/03/15 22:17:32 derf Exp $
 
  ********************************************************************/
 
 /**\file
  * The <tt>libtheoraenc</tt> C encoding API.*/
 
-#if !defined(_O_THEORA_THEORAENC_H_)
-# define _O_THEORA_THEORAENC_H_ (1)
+#if !defined(OGG_THEORA_THEORAENC_HEADER)
+# define OGG_THEORA_THEORAENC_HEADER (1)
 # include <stddef.h>
 # include "../libogg/ogg.h"
 # include "codec.h"
@@ -545,4 +544,4 @@ extern void th_encode_free(th_enc_ctx *_enc);
 }
 #endif
 
-#endif
+#endif /* OGG_THEORA_THEORAENC_HEADER */

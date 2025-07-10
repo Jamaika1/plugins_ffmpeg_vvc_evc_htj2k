@@ -24,10 +24,10 @@
  * X-Face encoder, based on libcompface, by James Ashton.
  */
 
-#include "xface.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
+#include "libavcodec/xface.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
 #include "libavutil/avassert.h"
 
 typedef struct XFaceContext {
@@ -217,7 +217,7 @@ const FFCodec ff_xface_encoder = {
     .p.type         = AVMEDIA_TYPE_VIDEO,
     .p.id           = AV_CODEC_ID_XFACE,
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_MONOWHITE, AV_PIX_FMT_NONE },
+    CODEC_PIXFMTS(AV_PIX_FMT_MONOWHITE),
     .priv_data_size = sizeof(XFaceContext),
     FF_CODEC_ENCODE_CB(xface_encode_frame),
 };

@@ -20,8 +20,8 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
-#include "config.h"
-#include "h263dsp.h"
+#include "libavutil/config.h"
+#include "libavcodec/h263dsp.h"
 
 const uint8_t ff_h263_loop_filter_strength[32] = {
     0, 1, 1, 2, 2, 3, 3,  4,  4,  4,  5,  5,  6,  6,  7, 7,
@@ -119,7 +119,9 @@ av_cold void ff_h263dsp_init(H263DSPContext *ctx)
     ctx->h263_h_loop_filter = h263_h_loop_filter_c;
     ctx->h263_v_loop_filter = h263_v_loop_filter_c;
 
-#if ARCH_X86
+#if ARCH_RISCV
+    ff_h263dsp_init_riscv(ctx);
+#elif ARCH_X86
     ff_h263dsp_init_x86(ctx);
 #elif ARCH_MIPS
     ff_h263dsp_init_mips(ctx);

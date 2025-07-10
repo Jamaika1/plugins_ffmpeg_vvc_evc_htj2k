@@ -24,8 +24,8 @@
  * DNxHD/VC-3 parser
  */
 
-#include "parser.h"
-#include "dnxhddata.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/dnxhddata.h"
 
 typedef struct {
     ParseContext pc;

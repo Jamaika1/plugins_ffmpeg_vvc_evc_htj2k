@@ -30,15 +30,15 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/float_dsp.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "qcelpdata.h"
-#include "celp_filters.h"
-#include "acelp_filters.h"
-#include "acelp_vectors.h"
-#include "lsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/qcelpdata.h"
+#include "libavcodec/celp_filters.h"
+#include "libavcodec/acelp_filters.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/lsp.h"
 
 typedef enum {
     I_F_Q = -1,    /**< insufficient frame quality */
@@ -397,7 +397,7 @@ static void apply_gain_ctrl(float *v_out, const float *v_ref, const float *v_in)
     int i;
 
     for (i = 0; i < 160; i += 40) {
-        float res = avpriv_scalarproduct_float_c(v_ref + i, v_ref + i, 40);
+        float res = ff_scalarproduct_float_c(v_ref + i, v_ref + i, 40);
         ff_scale_vector_to_given_sum_of_squares(v_out + i, v_in + i, res, 40);
     }
 }
@@ -676,9 +676,9 @@ static void postfilter(QCELPContext *q, float *samples, float *lpc)
     ff_tilt_compensation(&q->postfilter_tilt_mem, 0.3, pole_out + 10, 160);
 
     ff_adaptive_gain_control(samples, pole_out + 10,
-                             avpriv_scalarproduct_float_c(q->formant_mem + 10,
-                                                          q->formant_mem + 10,
-                                                          160),
+                             ff_scalarproduct_float_c(q->formant_mem + 10,
+                                                      q->formant_mem + 10,
+                                                      160),
                              160, 0.9375, &q->postfilter_agc_mem);
 }
 

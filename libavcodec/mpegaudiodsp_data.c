@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "mpegaudiodsp.h"
+#include "libavcodec/mpegaudiodsp.h"
 
 /* half mpeg encoding window (full precision) */
 const int32_t ff_mpa_enwindow[257] = {

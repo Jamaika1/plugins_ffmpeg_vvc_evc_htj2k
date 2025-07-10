@@ -382,7 +382,7 @@ void uvg_quant_avx2(const encoder_state_t * const state, const coeff_t * __restr
   const encoder_control_t * const encoder = state->encoder_control;
   const uint32_t log2_tr_width  = uvg_g_convert_to_log2[width];
   const uint32_t log2_tr_height = uvg_g_convert_to_log2[height];
-  const uint32_t* const scan = uvg_get_scan_order_table(SCAN_GROUP_4X4, scan_idx, log2_tr_width, log2_tr_height);
+  const uint32_t* const scan = uvg_get_scan_order_table(SCAN_GROUP_4X4, scan_idx, log2_tr_width, log2_tr_height, 0);
 
   int32_t qp_scaled = uvg_get_scaled_qp(color, state->qp, (encoder->bitdepth - 8) * 6, encoder->qp_map[0]);
   qp_scaled = transform_skip ? MAX(qp_scaled, 4 + 6 * MIN_QP_PRIME_TS) : qp_scaled;
@@ -725,7 +725,7 @@ int uvg_quantize_residual_avx2(encoder_state_t *const state,
       (width > 4 || !state->encoder_control->cfg.rdoq_skip) && !use_trskip)
   {
     uvg_rdoq(state, coeff, coeff_out, width, height, color,
-      scan_order, cur_cu->type, cur_cu->cbf, lfnst_index);
+      scan_order, cur_cu->type, cur_cu->cbf, lfnst_index, color == 0 ? cur_cu->tr_idx : 0);
   }
   else if (state->encoder_control->cfg.rdoq_enable && use_trskip) {
     uvg_ts_rdoq(state, coeff, coeff_out, width, height, color,
@@ -960,7 +960,7 @@ int uvg_strategy_register_quant_avx2(void* opaque, uint8_t bitdepth)
 #if COMPILE_INTEL_AVX2 && defined X86_64
 #if UVG_BIT_DEPTH == 8
   if (bitdepth == 8) {
-    //success &= uvg_strategyselector_register(opaque, "quantize_residual", "avx2", 40, &uvg_quantize_residual_avx2);
+    success &= uvg_strategyselector_register(opaque, "quantize_residual", "avx2", 40, &uvg_quantize_residual_avx2);
     success &= uvg_strategyselector_register(opaque, "dequant", "avx2", 40, &uvg_dequant_avx2);
   }
 #endif // UVG_BIT_DEPTH == 8

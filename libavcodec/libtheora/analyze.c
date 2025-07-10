@@ -5,13 +5,12 @@
  * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
- * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009                *
+ * THE Theora SOURCE CODE IS COPYRIGHT (C) 2002-2009,2025           *
  * by the Xiph.Org Foundation http://www.xiph.org/                  *
  *                                                                  *
  ********************************************************************
 
   function: mode selection code
-  last mod: $Id$
 
  ********************************************************************/
 #include <limits.h>
@@ -2168,14 +2167,14 @@ static void oc_cost_inter(oc_enc_ctx *_enc,oc_mode_choice *_modec,
 
 static void oc_cost_inter_nomv(oc_enc_ctx *_enc,oc_mode_choice *_modec,
  unsigned _mbi,int _mb_mode,const oc_fr_state *_fr,const oc_qii_state *_qs,
- const unsigned _skip_ssd[12],const unsigned _rd_scale[4]){
+ const unsigned _skip_ssd[12],const unsigned _rd_scale[5]){
   oc_cost_inter(_enc,_modec,_mbi,_mb_mode,0,_fr,_qs,_skip_ssd,_rd_scale);
 }
 
 static int oc_cost_inter1mv(oc_enc_ctx *_enc,oc_mode_choice *_modec,
  unsigned _mbi,int _mb_mode,oc_mv _mv,
  const oc_fr_state *_fr,const oc_qii_state *_qs,const unsigned _skip_ssd[12],
- const unsigned _rd_scale[4]){
+ const unsigned _rd_scale[5]){
   int bits0;
   oc_cost_inter(_enc,_modec,_mbi,_mb_mode,_mv,_fr,_qs,_skip_ssd,_rd_scale);
   bits0=OC_MV_BITS[0][OC_MV_X(_mv)+31]+OC_MV_BITS[0][OC_MV_Y(_mv)+31];

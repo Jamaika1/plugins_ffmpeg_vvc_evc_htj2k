@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/mem.h"
 #include "libavutil/thread.h"
 
 #include "libavutil/config.h"
@@ -31,7 +32,7 @@
 
 #define MAX_HUFF_CODES 16
 
-#include "motionpixels_tablegen.h"
+#include "libavcodec/motionpixels_tablegen.h"
 
 typedef struct HuffCode {
     uint8_t size;
@@ -69,7 +70,6 @@ static av_cold int mp_decode_end(AVCodecContext *avctx)
 
 static av_cold int mp_decode_init(AVCodecContext *avctx)
 {
-    av_unused static AVOnce init_static_once = AV_ONCE_INIT;
     MotionPixelsContext *mp = avctx->priv_data;
     int w4 = (avctx->width  + 3) & ~3;
     int h4 = (avctx->height + 3) & ~3;
@@ -94,6 +94,7 @@ static av_cold int mp_decode_init(AVCodecContext *avctx)
         return AVERROR(ENOMEM);
 
 #if !CONFIG_HARDCODED_TABLES
+    static AVOnce init_static_once = AV_ONCE_INIT;
     ff_thread_once(&init_static_once, motionpixels_tableinit);
 #endif
 

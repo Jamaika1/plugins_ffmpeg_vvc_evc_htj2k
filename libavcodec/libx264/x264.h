@@ -1,7 +1,7 @@
 /*****************************************************************************
  * x264.h: x264 public header
  *****************************************************************************
- * Copyright (C) 2003-2022 x264 project
+ * Copyright (C) 2003-2024 x264 project
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Loren Merritt <lorenm@u.washington.edu>
@@ -48,15 +48,15 @@ extern "C" {
 #define X264_BUILD 164
 
 //#ifdef _WIN32
-#   define X264_DLL_IMPORT __declspec(dllimport)
-#   define X264_DLL_EXPORT __declspec(dllexport)
+//#   define X264_DLL_IMPORT __declspec(dllimport)
+//#   define X264_DLL_EXPORT __declspec(dllexport)
 //#else
 //#   if defined(__GNUC__) && (__GNUC__ >= 4)
 //#       define X264_DLL_IMPORT
 //#       define X264_DLL_EXPORT __attribute__((visibility("default")))
 //#   else
-//#       define X264_DLL_IMPORT
-//#       define X264_DLL_EXPORT
+#       define X264_DLL_IMPORT
+#       define X264_DLL_EXPORT
 //#   endif
 //#endif
 

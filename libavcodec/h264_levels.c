@@ -18,7 +18,7 @@
 
 #include <stddef.h>
 #include "libavutil/macros.h"
-#include "h264_levels.h"
+#include "libavcodec/h264_levels.h"
 
 // H.264 table A-1.
 static const H264LevelDescriptor h264_levels[] = {

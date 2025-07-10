@@ -24,16 +24,17 @@
 #include "libavutil/frame.h"
 #include "libavutil/error.h"
 #include "libavutil/log.h"
+#include "libavutil/mem.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "packet.h"
-#include "png.h"
-#include "pngdsp.h"
-#include "zlib_wrapper.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/packet.h"
+#include "libavcodec/png.h"
+#include "libavcodec/pngdsp.h"
+#include "libavcodec/zlib_wrapper.h"
 
 typedef struct LSCRContext {
     PNGDSPContext   dsp;
@@ -212,7 +213,7 @@ static int decode_frame_lscr(AVCodecContext *avctx, AVFrame *rframe,
     return avpkt->size;
 }
 
-static int lscr_decode_close(AVCodecContext *avctx)
+static av_cold int lscr_decode_close(AVCodecContext *avctx)
 {
     LSCRContext *s = avctx->priv_data;
 
@@ -224,7 +225,7 @@ static int lscr_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-static int lscr_decode_init(AVCodecContext *avctx)
+static av_cold int lscr_decode_init(AVCodecContext *avctx)
 {
     LSCRContext *s = avctx->priv_data;
 
@@ -241,7 +242,7 @@ static int lscr_decode_init(AVCodecContext *avctx)
     return ff_inflate_init(&s->zstream, avctx);
 }
 
-static void lscr_decode_flush(AVCodecContext *avctx)
+static av_cold void lscr_decode_flush(AVCodecContext *avctx)
 {
     LSCRContext *s = avctx->priv_data;
     av_frame_unref(s->last_picture);

@@ -24,10 +24,11 @@
  * GEM Raster image decoder
  */
 
-#include "libavcodec/avcodec.h"
-#include "libavcodec/bytestream.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
+#include "libavutil/mem.h"
+#include "avcodec.h"
+#include "bytestream.h"
+#include "codec_internal.h"
+#include "decode.h"
 
 static const uint32_t gem_color_palette[16]={
     0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFFFFFF00,
@@ -181,7 +182,11 @@ static int gem_decode_frame(AVCodecContext *avctx, AVFrame *p,
 
     p->pict_type = AV_PICTURE_TYPE_I;
     p->flags |= AV_FRAME_FLAG_KEY;
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
     p->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     palette = (uint32_t  *)p->data[1];
 
     if (tag == AV_RB32("STTT")) {

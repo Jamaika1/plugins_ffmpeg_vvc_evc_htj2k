@@ -38,6 +38,7 @@
  * Initialization of encoder_control_t.
  */
 
+#include "dep_quant.h"
 #include "global.h" // IWYU pragma: keep
 #include "uvg266.h"
 #include "scalinglist.h"
@@ -98,6 +99,10 @@ typedef struct encoder_control_t
   //scaling list
   scaling_list_t scaling_list;
 
+  NbInfoSbb* m_scanId2NbInfoSbbArray[7 + 1][7 + 1];
+  NbInfoOut* m_scanId2NbInfoOutArray[7 + 1][7 + 1];
+  struct dep_quant_scan_info* scan_info[7 + 1][7 + 1];
+
   //spec: references to variables defined in Rec. ITU-T H.265 (04/2013)
   int8_t tiles_enable; /*!<spec: tiles_enabled */
 
@@ -132,8 +137,6 @@ typedef struct encoder_control_t
 
   FILE *roi_file;
 
-  int tr_depth_inter;
-
   //! pic_parameter_set
   struct {
     uint8_t dependent_slice_segments_enabled_flag;
@@ -155,8 +158,8 @@ typedef struct encoder_control_t
 
 } encoder_control_t;
 
-encoder_control_t* uvg_encoder_control_init(const uvg_config *cfg);
-void uvg_encoder_control_free(encoder_control_t *encoder);
+encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg);
+void uvg_encoder_control_free(encoder_control_t *const encoder);
 
-void uvg_encoder_control_input_init(encoder_control_t *encoder, int32_t width, int32_t height);
+void uvg_encoder_control_input_init(encoder_control_t *const encoder, const int32_t width, int32_t height);
 #endif

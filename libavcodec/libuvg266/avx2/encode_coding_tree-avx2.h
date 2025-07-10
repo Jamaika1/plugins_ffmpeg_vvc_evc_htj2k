@@ -38,6 +38,7 @@
  * Functions for writing the coding quadtree and related syntax.
  */
 
+#include "../cu.h"
 #include "../encoderstate.h"
 #include "../global.h"
 

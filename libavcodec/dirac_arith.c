@@ -25,7 +25,7 @@
  * @author Marco Gerards <marco@gnu.org>
  */
 
-#include "dirac_arith.h"
+#include "libavcodec/dirac_arith.h"
 
 
 static const uint16_t dirac_prob[256] = {

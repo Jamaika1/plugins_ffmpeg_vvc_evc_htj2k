@@ -81,7 +81,7 @@ cairo_font_iface_init (PangoCairoFontIface *iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (PangoCairoWin32Font, pango_cairo_win32_font, PANGO_TYPE_WIN32_FONT,
-    { G_IMPLEMENT_INTERFACE (PANGO_TYPE_CAIRO_FONT, cairo_font_iface_init) });
+                         G_IMPLEMENT_INTERFACE (PANGO_TYPE_CAIRO_FONT, cairo_font_iface_init))
 
 static cairo_font_face_t *
 pango_cairo_win32_font_create_font_face (PangoCairoFont *font)
@@ -96,7 +96,7 @@ pango_cairo_win32_font_create_font_face (PangoCairoFont *font)
     {
       cairo_font_face_t *cairo_face = cairo_dwrite_font_face_create_for_dwrite_fontface (dwrite_font_face);
 
-      if (cairo_face != NULL)
+      if (cairo_font_face_status (cairo_face) == CAIRO_STATUS_SUCCESS)
         {
           static const cairo_user_data_key_t key;
 
@@ -110,6 +110,7 @@ pango_cairo_win32_font_create_font_face (PangoCairoFont *font)
         {
           g_warning ("cairo_font_face creation failed with DirectWrite, fallback to GDI");
           pango_win32_dwrite_font_face_release (dwrite_font_face);
+          cairo_font_face_destroy (cairo_face);
         }
     }
 #endif
@@ -241,12 +242,10 @@ _pango_cairo_win32_font_new (PangoCairoWin32FontMap     *cwfontmap,
   PangoWin32Font *win32font;
   double size;
   double dpi;
-#define USE_FACE_CACHED_FONTS
-#ifdef USE_FACE_CACHED_FONTS
-  PangoWin32FontMap *win32fontmap;
   GSList *tmp_list;
-#endif
   cairo_matrix_t font_matrix;
+  cairo_font_options_t *options;
+  const char *variations;
 
   g_return_val_if_fail (PANGO_IS_CAIRO_WIN32_FONT_MAP (cwfontmap), NULL);
 
@@ -257,49 +256,68 @@ _pango_cairo_win32_font_new (PangoCairoWin32FontMap     *cwfontmap,
       dpi = pango_cairo_context_get_resolution (context);
 
       if (dpi <= 0)
-	dpi = cwfontmap->dpi;
+        dpi = ((PangoWin32FontMap *) cwfontmap)->dpi;
+
+      options = cairo_font_options_copy (_pango_cairo_context_get_merged_font_options (context));
     }
   else
-    dpi = cwfontmap->dpi;
+    {
+      dpi = ((PangoWin32FontMap *) cwfontmap)->dpi;
+      options = cairo_font_options_create ();
+    }
 
   if (!pango_font_description_get_size_is_absolute (desc))
     size *= dpi / 72.;
 
-#ifdef USE_FACE_CACHED_FONTS
-  win32fontmap = PANGO_WIN32_FONT_MAP (cwfontmap);
+  variations = pango_font_description_get_variations (desc);
+  cairo_font_options_set_variations (options, variations);
 
   tmp_list = face->cached_fonts;
   while (tmp_list)
     {
-      win32font = tmp_list->data;
-      if (ABS (win32font->size - size * PANGO_SCALE) < 2)
-	{
-	  g_object_ref (win32font);
-	  if (win32font->in_cache)
-	    _pango_win32_fontmap_cache_remove (PANGO_FONT_MAP (win32fontmap), win32font);
+      cairo_font_options_t *options2;
 
-	  return PANGO_FONT (win32font);
-	}
+      win32font = tmp_list->data;
+      cwfont = PANGO_CAIRO_WIN32_FONT (win32font);
+
+      options2 = cairo_font_options_create ();
+      pango_cairo_font_get_font_options ((PangoCairoFont *) cwfont, options2);
+
+      if (ABS (win32font->size - size * PANGO_SCALE) < 2 &&
+          cairo_font_options_equal (options, options2))
+        {
+          g_object_ref (win32font);
+
+          cairo_font_options_destroy (options);
+          cairo_font_options_destroy (options2);
+
+          return PANGO_FONT (win32font);
+        }
+
+      cairo_font_options_destroy (options2);
       tmp_list = tmp_list->next;
     }
-#endif
+
   cwfont = g_object_new (PANGO_TYPE_CAIRO_WIN32_FONT, NULL);
   win32font = PANGO_WIN32_FONT (cwfont);
 
   g_assert (win32font->fontmap == NULL);
-  win32font->fontmap = (PangoFontMap *) cwfontmap;
-  g_object_add_weak_pointer (G_OBJECT (win32font->fontmap), (gpointer *) (gpointer) &win32font->fontmap);
 
-  win32font->win32face = face;
+  if (cwfontmap)
+    {
+      win32font->fontmap = (PangoFontMap *) cwfontmap;
+      g_object_add_weak_pointer (G_OBJECT (win32font->fontmap), (gpointer *) &win32font->fontmap);
+    }
 
-#ifdef USE_FACE_CACHED_FONTS
+  win32font->win32face = g_object_ref (face);
   face->cached_fonts = g_slist_prepend (face->cached_fonts, win32font);
-#endif
 
   /* FIXME: This is a pixel size, so not really what we want for describe(),
    * but it's what we need when computing the scale factor.
    */
   win32font->size = size * PANGO_SCALE;
+
+  win32font->variations = g_strdup (variations);
 
   _pango_win32_make_matching_logfontw (win32font->fontmap,
 				       &face->logfontw,
@@ -314,9 +332,11 @@ _pango_cairo_win32_font_new (PangoCairoWin32FontMap     *cwfontmap,
   _pango_cairo_font_private_initialize (&cwfont->cf_priv,
 					(PangoCairoFont *) cwfont,
 					pango_font_description_get_gravity (desc),
-					_pango_cairo_context_get_merged_font_options (context),
+                                        options,
 					pango_context_get_matrix (context),
 					&font_matrix);
+
+  cairo_font_options_destroy (options);
 
   return PANGO_FONT (cwfont);
 }

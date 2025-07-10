@@ -32,31 +32,31 @@
 
 #include "strategies-quant.h"
 #if defined(__AVX2__)
-#include "avx2/quant-avx2.h"
+//#include "avx2/quant-avx2.h"
 #endif
 #include "quant-generic.h"
 #include "strategyselector.h"
 
 
 // Define function pointers.
-quant_func *uvg_quant;
-quant_cbcr_func *uvg_quant_cbcr_residual;
-quant_residual_func *uvg_quantize_residual;
-dequant_func *uvg_dequant;
-coeff_abs_sum_func *uvg_coeff_abs_sum;
+quant_func           *uvg_quant;
+quant_cbcr_func      *uvg_quant_cbcr_residual;
+quant_residual_func  *uvg_quantize_residual;
+dequant_func         *uvg_dequant;
+coeff_abs_sum_func   *uvg_coeff_abs_sum;
 fast_coeff_cost_func *uvg_fast_coeff_cost;
 
 
-int uvg_strategy_register_quant(void* opaque, uint8_t bitdepth) {
+int uvg_strategy_register_quant(void *opaque, uint8_t bitdepth)
+{
   bool success = true;
 
   success &= uvg_strategy_register_quant_generic(opaque, bitdepth);
 
 #if defined(__AVX2__)
-  if (uvg_g_hardware_flags.intel_flags.avx2) {
-    success &= uvg_strategy_register_quant_avx2(opaque, bitdepth);
-  }
+  //if (uvg_g_hardware_flags.intel_flags.avx2) {
+    //success &= uvg_strategy_register_quant_avx2(opaque, bitdepth);
+  //}
 #endif
-
   return success;
 }

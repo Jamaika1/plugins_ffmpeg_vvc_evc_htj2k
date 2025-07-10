@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: 0BSD */
+
 /**
  * \file        lzma/index.h
  * \brief       Handling of .xz Index and related information
@@ -6,9 +8,6 @@
 
 /*
  * Author: Lasse Collin
- *
- * This file has been put into the public domain.
- * You can do whatever you want with this file.
  */
 
 #ifndef LZMA_H_INTERNAL
@@ -234,7 +233,7 @@ typedef struct {
 	} block;
 
 	/**
-	 * \private     Internal struct.
+	 * \private     Internal data
 	 *
 	 * Internal data which is used to store the state of the iterator.
 	 * The exact format may vary between liblzma versions, so don't
@@ -674,7 +673,7 @@ extern LZMA_API(lzma_bool) lzma_index_iter_locate(
  *                        function succeeds, the memory allocated for src
  *                        is freed or moved to be part of dest, and all
  *                        iterators pointing to src will become invalid.
-* \param       allocator  lzma_allocator for custom allocator functions.
+ * \param       allocator lzma_allocator for custom allocator functions.
  *                        Set to NULL to use malloc() and free().
  *
  * \return      Possible lzma_ret values:
@@ -794,7 +793,7 @@ extern LZMA_API(lzma_ret) lzma_index_buffer_encode(const lzma_index *i,
  *                          lzma_index is allowed to require. The value
  *                          pointed by this pointer is modified if and only
  *                          if LZMA_MEMLIMIT_ERROR is returned.
-  * \param      allocator   lzma_allocator for custom allocator functions.
+ * \param       allocator   lzma_allocator for custom allocator functions.
  *                          Set to NULL to use malloc() and free().
  * \param       in          Beginning of the input buffer
  * \param       in_pos      The next byte will be read from in[*in_pos].

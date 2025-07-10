@@ -27,6 +27,7 @@
 
 #include "libavcodec/config_components.h"
 
+#include "libavutil/mem.h"
 #include "libavcodec/mathops.h"
 #include "libavcodec/opustab.h"
 #include "libavcodec/opus_pvq.h"
@@ -80,7 +81,7 @@ static inline int celt_pulses2bits(const uint8_t *cache, int pulses)
    return (pulses == 0) ? 0 : cache[pulses] + 1;
 }
 
-static inline void celt_normalize_residual(const int * av_restrict iy, float * av_restrict X,
+static inline void celt_normalize_residual(const int * restrict iy, float * restrict X,
                                            int N, float g)
 {
     int i;
@@ -662,7 +663,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
         if (itheta == 0) {
             imid = 32767;
             iside = 0;
-            fill = av_mod_uintp2(fill, blocks);
+            fill = av_zero_extend(fill, blocks);
             delta = -16384;
         } else if (itheta == 16384) {
             imid = 0;
@@ -877,7 +878,7 @@ static av_always_inline uint32_t quant_band_template(CeltPVQ *pvq, CeltFrame *f,
             for (i = 0; i < N0; i++)
                 lowband_out[i] = n * X[i];
         }
-        cm = av_mod_uintp2(cm, blocks);
+        cm = av_zero_extend(cm, blocks);
     }
 
     return cm;

@@ -6,50 +6,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
 
-#define _GLIB_EXTERN extern
-#define _GIO_EXTERN extern
-#define _GMODULE_EXTERN extern
-#define GLIB_DEPRECATED G_DEPRECATED _GLIB_EXTERN
-#define GLIB_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) _GLIB_EXTERN
-#define GLIB_VAR _GLIB_EXTERN
-#define GOBJECT_VAR _GLIB_EXTERN
-#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_80
-#define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_26
-#define GOBJECT_VERSION_MAX_ALLOWED GOBJECT_VERSION_2_80
-#define GOBJECT_VERSION_MIN_REQUIRED GOBJECT_VERSION_2_26
-#define GIO_VERSION_MAX_ALLOWED GIO_VERSION_2_80
-#define GIO_VERSION_MIN_REQUIRED GIO_VERSION_2_26
-#define GMODULE_VERSION_MAX_ALLOWED GMODULE_VERSION_2_80
-#define GMODULE_VERSION_MIN_REQUIRED GMODULE_VERSION_2_26
-#define GLIB_COMPILATION
-#define GIO_COMPILATION
-#define GOBJECT_COMPILATION
-//#define G_DISABLE_ASSERT
-//#define G_DISABLE_CHECKS
-#define USE_SYSTEM_PRINTF
-#define G_ENABLE_DEBUG 1
+#include "glib/config_win32.h"
 
-#define ALIGNOF_GUINT32 4
-#define ALIGNOF_GUINT64 8
-#define ALIGNOF_UNSIGNED_LONG 8
-#define HAVE__ALIGNED_MALLOC 1
-
-#define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR "/run/glib"
-#define GIO_LAUNCH_DESKTOP "/gio/gio-launch-desktop"
-#define SRCDIR "/usr/local/src"
-#define GDK_PIXBUF_BINARY_VERSION "2.10"
-#define HAVE_ROUND 1
-#define HAVE_LRINT 1
-//#define GDK_PIXBUF_RELOCATABLE 1
-#define GDK_PIXBUF_ENABLE_BACKEND 1
-#define USE_GMODULE 1
-
-#ifndef G_LIB_STATIC
-#define G_LIB_EXPORT __declspec(dllexport)
-#else
-#define G_LIB_EXPORT extern
-#endif
+#define SRCDIR "/"
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #if !defined (_MSC_VER) || (_MSC_VER >= 1800)
@@ -85,7 +44,7 @@
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the `strtok_r' function. */
-#undef HAVE_STRTOK_R
+#define HAVE_STRTOK_R 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
@@ -112,7 +71,7 @@
 #define PACKAGE_NAME "RSVG"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "RSVG 2.40.21"
+#define PACKAGE_STRING "RSVG 2.40.21-13fbcd1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "librsvg"
@@ -121,13 +80,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.40.21"
+#define PACKAGE_VERSION "2.40.21-13fbcd1"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "2.40.21"
+#define VERSION "2.40.21-13fbcd1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

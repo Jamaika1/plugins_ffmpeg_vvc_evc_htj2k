@@ -32,9 +32,9 @@
  *   http://www.pcisys.net/~melanson/codecs/
  */
 
-#include "svq1.h"
-#include "svq1_cb.h"
-#include "svq1_vlc.h"
+#include "libavcodec/svq1.h"
+#include "libavcodec/svq1_cb.h"
+#include "libavcodec/svq1_vlc.h"
 
 /* standard video sizes */
 const uint16_t ff_svq1_frame_size_table[7][2] = {

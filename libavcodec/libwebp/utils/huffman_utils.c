@@ -14,9 +14,11 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "../utils/huffman_utils.h"
 #include "../utils/utils.h"
 #include "../webp/format_constants.h"
+#include "../webp/types.h"
 
 // Huffman data read via DecodeImageStream is represented in two (red and green)
 // bytes.
@@ -122,8 +124,12 @@ static int BuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
     const int symbol_code_length = code_lengths[symbol];
     if (code_lengths[symbol] > 0) {
       if (sorted != NULL) {
-        if(offset[symbol_code_length] >= code_lengths_size) {
-            return 0;
+        assert(offset[symbol_code_length] < code_lengths_size);
+        // The following check is not redundant with the assert. It prevents a
+        // potential buffer overflow that the optimizer might not be able to
+        // rule out on its own.
+        if (offset[symbol_code_length] >= code_lengths_size) {
+          return 0;
         }
         sorted[offset[symbol_code_length]++] = symbol;
       } else {

@@ -3,21 +3,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- *
+ * 
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- *
+ * 
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -389,10 +389,31 @@ threadqueue_queue_t * kvz_threadqueue_init(int thread_count)
   threadqueue->first              = NULL;
   threadqueue->last               = NULL;
 
+#ifndef _MSC_VER
+  pthread_attr_t attr;
+  if (pthread_attr_init(&attr) != 0) {
+    fprintf(stderr, "pthread_attr_init failed!\n");
+    goto failed;
+  }
+  size_t default_stack_size;
+  if (pthread_attr_getstacksize(&attr, &default_stack_size) != 0) {
+    fprintf(stderr, "pthread_attr_getstacksize failed!\n");
+    goto failed;
+  }
+  if (default_stack_size < 1024 * 1024) {
+    if (pthread_attr_setstacksize(&attr, 1024 * 1024) != 0) {
+      fprintf(stderr, "pthread_attr_setstacksize failed!\n");
+      goto failed;
+    }
+  }
+#else
+  pthread_attr_t attr;
+#endif
+
   // Lock the queue before creating threads, to ensure they all have correct information.
   PTHREAD_LOCK(&threadqueue->lock);
   for (int i = 0; i < thread_count; i++) {
-    if (pthread_create(&threadqueue->threads[i], NULL, threadqueue_worker, threadqueue) != 0) {
+    if (pthread_create(&threadqueue->threads[i], &attr, threadqueue_worker, threadqueue) != 0) {
         fprintf(stderr, "pthread_create failed!\n");
         goto failed;
     }
@@ -404,6 +425,11 @@ threadqueue_queue_t * kvz_threadqueue_init(int thread_count)
   return threadqueue;
 
 failed:
+#ifndef _MSC_VER
+  if (pthread_attr_destroy(&attr) != 0) {
+    fprintf(stderr, "pthread_attr_destroy failed!\n");
+  }
+#endif
   kvz_threadqueue_free(threadqueue);
   return NULL;
 }

@@ -31,11 +31,11 @@
  */
 
 #include "libavutil/channel_layout.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "ilbcdata.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/ilbcdata.h"
 
 #define LPC_N_20MS            1
 #define LPC_N_30MS            2
@@ -658,7 +658,7 @@ static void get_codebook(int16_t * cbvec,   /* (o) Constructed codebook vector *
     int16_t k, base_size;
     int16_t lag;
     /* Stack based */
-    int16_t tempbuff2[SUBL + 5];
+    int16_t tempbuff2[SUBL + 5] = {0};
 
     /* Determine size of codebook sections */
     base_size = lMem - cbveclen + 1;
@@ -1095,12 +1095,6 @@ static void do_plc(int16_t *plc_residual,      /* (o) concealed residual */
 
         if (s->consPLICount * s->block_samples > 320) {
             use_gain = 29491;   /* 0.9 in Q15 */
-        } else if (s->consPLICount * s->block_samples > 640) {
-            use_gain = 22938;   /* 0.7 in Q15 */
-        } else if (s->consPLICount * s->block_samples > 960) {
-            use_gain = 16384;   /* 0.5 in Q15 */
-        } else if (s->consPLICount * s->block_samples > 1280) {
-            use_gain = 0;       /* 0.0 in Q15 */
         }
 
         /* Compute mixing factor of picth repeatition and noise:

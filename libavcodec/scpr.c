@@ -22,6 +22,7 @@
 
 #include <string.h>
 
+#include "libavutil/mem.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/bytestream.h"
 #include "libavcodec/codec_internal.h"

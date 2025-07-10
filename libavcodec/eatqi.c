@@ -26,18 +26,19 @@
  * @see http://wiki.multimedia.cx/index.php?title=Electronic_Arts_TQI
  */
 
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 
-#include "avcodec.h"
-#include "blockdsp.h"
-#include "bswapdsp.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "aandcttab.h"
-#include "eaidct.h"
-#include "mpeg12data.h"
-#include "mpeg12dec.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/blockdsp.h"
+#include "libavcodec/bswapdsp.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/aandcttab.h"
+#include "libavcodec/eaidct.h"
+#include "libavcodec/mpeg12data.h"
+#include "libavcodec/mpeg12dec.h"
 
 typedef struct TqiContext {
     AVCodecContext *avctx;

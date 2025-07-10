@@ -11,10 +11,12 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "../dsp/cpu.h"
+#include "../webp/types.h"
 #include "../dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
-
+#include <emmintrin.h>
 #include <smmintrin.h>
 
 //------------------------------------------------------------------------------

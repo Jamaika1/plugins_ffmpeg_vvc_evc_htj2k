@@ -24,7 +24,7 @@
 #define __CR_PSEUDO_H__
 
 #include <stdio.h>
-#include "../config.h"
+#include "../glib/config_win32.h"
 #include "../glib/glib.h"
 #include "cr-attr-sel.h"
 #include "cr-parsing-location.h"

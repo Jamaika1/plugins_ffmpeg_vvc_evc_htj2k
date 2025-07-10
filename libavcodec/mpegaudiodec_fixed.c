@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "config_components.h"
+#include "libavutil/config.h"
+#include "libavcodec/config_components.h"
 #include "libavutil/samplefmt.h"
 
 #define USE_FLOATS 0
 
-#include "codec_internal.h"
-#include "mpegaudio.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/mpegaudio.h"
 
 #define SHR(a,b)       (((int)(a))>>(b))
 /* WARNING: only correct for positive numbers */
@@ -72,9 +72,7 @@ const FFCodec ff_mp1_decoder = {
     .p.capabilities = AV_CODEC_CAP_CHANNEL_CONF |
                       AV_CODEC_CAP_DR1,
     .flush          = flush,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S16),
 };
 #endif
 #if CONFIG_MP2_DECODER
@@ -89,9 +87,7 @@ const FFCodec ff_mp2_decoder = {
     .p.capabilities = AV_CODEC_CAP_CHANNEL_CONF |
                       AV_CODEC_CAP_DR1,
     .flush          = flush,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S16),
 };
 #endif
 #if CONFIG_MP3_DECODER
@@ -106,9 +102,7 @@ const FFCodec ff_mp3_decoder = {
     .p.capabilities = AV_CODEC_CAP_CHANNEL_CONF |
                       AV_CODEC_CAP_DR1,
     .flush          = flush,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S16),
 };
 #endif
 #if CONFIG_MP3ADU_DECODER
@@ -123,9 +117,7 @@ const FFCodec ff_mp3adu_decoder = {
     .p.capabilities = AV_CODEC_CAP_CHANNEL_CONF |
                       AV_CODEC_CAP_DR1,
     .flush          = flush,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_S16,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S16),
 };
 #endif
 #if CONFIG_MP3ON4_DECODER
@@ -141,8 +133,7 @@ const FFCodec ff_mp3on4_decoder = {
     .p.capabilities = AV_CODEC_CAP_CHANNEL_CONF |
                       AV_CODEC_CAP_DR1,
     .flush          = flush_mp3on4,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P),
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };
 #endif

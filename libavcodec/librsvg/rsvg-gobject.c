@@ -72,7 +72,7 @@ rsvg_handle_init (RsvgHandle * self)
     self->priv->load_policy = RSVG_LOAD_POLICY_DEFAULT;
     self->priv->defs = rsvg_defs_new (self);
     self->priv->handler_nest = 0;
-    self->priv->entities = g_hash_table_new_full (g_str_hash, 
+    self->priv->entities = g_hash_table_new_full (g_str_hash,
                                                   g_str_equal,
                                                   g_free,
                                                   (GDestroyNotify) xmlFreeNode);
@@ -223,9 +223,9 @@ rsvg_handle_class_init (RsvgHandleClass * klass)
 
     /**
      * RsvgHandle:flags:
-     * 
+     *
      * Flags from #RsvgHandleFlags.
-     * 
+     *
      * Since: 2.36
      */
     g_object_class_install_property (gobject_class,
@@ -351,12 +351,12 @@ rsvg_handle_free (RsvgHandle * handle)
  * handle can be used for dynamically loading an image.  You need to feed it
  * data using @rsvg_handle_write, then call @rsvg_handle_close when done.
  * Afterwords, you can render it using Cairo or get a GdkPixbuf from it. When
- * finished, free with g_object_unref(). No more than one image can be loaded 
+ * finished, free with g_object_unref(). No more than one image can be loaded
  * with one handle.
  *
  * Returns: A new #RsvgHandle
  **/
-RsvgHandle *
+RSVG_EXPORT RsvgHandle *
 rsvg_handle_new (void)
 {
     return RSVG_HANDLE (g_object_new (RSVG_TYPE_HANDLE, NULL));
@@ -370,13 +370,13 @@ rsvg_handle_new (void)
  * Creates a new #RsvgHandle with flags @flags.
  *
  * Returns: (transfer full): a new #RsvgHandle
- * 
+ *
  * Since: 2.36
  **/
-RsvgHandle *
+RSVG_EXPORT RsvgHandle *
 rsvg_handle_new_with_flags (RsvgHandleFlags flags)
 {
-    return g_object_new (RSVG_TYPE_HANDLE, 
+    return g_object_new (RSVG_TYPE_HANDLE,
                          "flags", flags,
                          NULL);
 }

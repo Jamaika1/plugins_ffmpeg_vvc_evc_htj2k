@@ -43,11 +43,8 @@ POSSIBILITY OF SUCH DAMAGE.
 into a UTF string. The behaviour is different for each code unit width. */
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "pcre2_internal.h"
+
 
 
 /* If SUPPORT_UNICODE is not defined, this function will never be called.
@@ -117,4 +114,4 @@ return 1;
 }
 #endif  /* SUPPORT_UNICODE */
 
-/* End of pcre_ord2utf.c */
+/* End of pcre2_ord2utf.c */

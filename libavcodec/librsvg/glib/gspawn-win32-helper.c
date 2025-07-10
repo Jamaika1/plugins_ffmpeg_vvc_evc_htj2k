@@ -25,7 +25,7 @@
 
 #undef G_LOG_DOMAIN
 #include "glib.h"
-//#define GSPAWN_HELPER
+#define GSPAWN_HELPER
 #include "extra/gspawn-win32.c"	/* For shared definitions */
 #include "glib-private.h"
 
@@ -80,8 +80,8 @@ protect_wargv (gint       argc,
     {
       wchar_t *p = wargv[i];
       wchar_t *q;
-      gint len = 0;
-      gint pre_bslash = 0;
+      size_t len = 0;
+      size_t pre_bslash = 0;
       gboolean need_dblquotes = FALSE;
       while (*p)
 	{

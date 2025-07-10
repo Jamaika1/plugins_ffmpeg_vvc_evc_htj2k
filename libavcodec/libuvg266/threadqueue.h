@@ -3,21 +3,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- *
+ * 
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- *
+ * 
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -39,8 +39,7 @@
 
 #include "global.h" // IWYU pragma: keep
 
-//#include <pthread.h>
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 
 typedef struct threadqueue_job_t threadqueue_job_t;
 typedef struct threadqueue_queue_t threadqueue_queue_t;
@@ -48,7 +47,7 @@ typedef struct threadqueue_queue_t threadqueue_queue_t;
 threadqueue_queue_t * uvg_threadqueue_init(int thread_count);
 
 threadqueue_job_t * uvg_threadqueue_job_create(void (*fptr)(void *arg), void *arg);
-int uvg_threadqueue_submit(threadqueue_queue_t * threadqueue, threadqueue_job_t *job);
+int uvg_threadqueue_submit(threadqueue_queue_t *const threadqueue, threadqueue_job_t *job);
 
 int uvg_threadqueue_job_dep_add(threadqueue_job_t *job, threadqueue_job_t *dependency);
 
@@ -57,5 +56,5 @@ threadqueue_job_t *uvg_threadqueue_copy_ref(threadqueue_job_t *job);
 void uvg_threadqueue_free_job(threadqueue_job_t **job_ptr);
 
 int uvg_threadqueue_waitfor(threadqueue_queue_t * threadqueue, threadqueue_job_t * job);
-int uvg_threadqueue_stop(threadqueue_queue_t * threadqueue);
+int uvg_threadqueue_stop(threadqueue_queue_t *const threadqueue);
 void uvg_threadqueue_free(threadqueue_queue_t * threadqueue);

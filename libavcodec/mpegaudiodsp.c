@@ -18,13 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/thread.h"
-#include "mpegaudio.h"
-#include "mpegaudiodsp.h"
-#include "dct.h"
-#include "dct32.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodsp.h"
+#include "libavcodec/dct32.h"
 
 static AVOnce mpadsp_table_init = AV_ONCE_INIT;
 
@@ -81,15 +80,12 @@ static av_cold void mpadsp_init_tabs(void)
 
 av_cold void ff_mpadsp_init(MPADSPContext *s)
 {
-    DCTContext dct;
-
-    ff_dct_init(&dct, 5, DCT_II);
     ff_thread_once(&mpadsp_table_init, &mpadsp_init_tabs);
 
     s->apply_window_float = ff_mpadsp_apply_window_float;
     s->apply_window_fixed = ff_mpadsp_apply_window_fixed;
 
-    s->dct32_float = dct.dct32;
+    s->dct32_float = ff_dct32_float;
     s->dct32_fixed = ff_dct32_fixed;
 
     s->imdct36_blocks_float = ff_imdct36_blocks_float;

@@ -82,7 +82,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #  endif
 # endif
 
-#if (defined(__GNUC__) && __SANITIZE_ADDRESS__) \
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
+#endif
+
+#if (defined(__GNUC__) && defined(__SANITIZE_ADDRESS__) && __SANITIZE_ADDRESS__ ) \
 	|| (defined(__clang__) \
 	&& ((__clang_major__ == 3 && __clang_minor__ >= 3) || (__clang_major__ > 3)))
 __attribute__((no_sanitize_address))
@@ -96,7 +101,7 @@ int_char ic;
 SLJIT_UNUSED_ARG(offs1);
 SLJIT_UNUSED_ARG(offs2);
 
-ic.x = chars;
+ic.x = (int)chars;  /* Cast is OK as chars come from an int_char in the first place. */
 
 #if defined(FFCS)
 sljit_u8 c1 = ic.c.c1;
@@ -119,7 +124,7 @@ vect_t vmask = VDUPQ(mask);
 compare_type compare1_type = compare_match1;
 compare_type compare2_type = compare_match1;
 vect_t cmp1a, cmp1b, cmp2a, cmp2b;
-const sljit_u32 diff = IN_UCHARS(offs1 - offs2);
+const sljit_uw diff = IN_UCHARS(offs1 - offs2);
 PCRE2_UCHAR char1a = ic.c.c1;
 PCRE2_UCHAR char2a = ic.c.c3;
 
@@ -198,14 +203,14 @@ vect_t data = VLD1Q(*str_ptr);
 #if PCRE2_CODE_UNIT_WIDTH != 8
 data = VANDQ(data, char_mask);
 #endif
- 
+
 #if defined(FFCS)
 vect_t eq = VCEQQ(data, vc1);
 
 #elif defined(FFCS_2)
 vect_t eq1 = VCEQQ(data, vc1);
 vect_t eq2 = VCEQQ(data, vc2);
-vect_t eq = VORRQ(eq1, eq2);    
+vect_t eq = VORRQ(eq1, eq2);
 
 #elif defined(FFCS_MASK)
 vect_t eq = VORRQ(data, vmask);
@@ -226,7 +231,7 @@ if (p1 < *str_ptr)
   }
 else
   data2 = shift_left_n_lanes(data, offs1 - offs2);
- 
+
 if (compare1_type == compare_match1)
   data = VCEQQ(data, cmp1a);
 else
@@ -281,7 +286,7 @@ while (*str_ptr < str_end)
 #elif defined(FFCS_2)
   eq1 = VCEQQ(data, vc1);
   eq2 = VCEQQ(data, vc2);
-  eq = VORRQ(eq1, eq2);    
+  eq = VORRQ(eq1, eq2);
 
 #elif defined(FFCS_MASK)
   eq = VORRQ(data, vmask);
@@ -352,3 +357,7 @@ match:;
 /* Failed match. */
 return NULL;
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif

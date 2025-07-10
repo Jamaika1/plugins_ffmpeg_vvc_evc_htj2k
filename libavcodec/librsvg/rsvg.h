@@ -35,13 +35,8 @@
 
 G_BEGIN_DECLS
 
-//#if defined(RSVG_DISABLE_DEPRECATION_WARNINGS) || !GLIB_CHECK_VERSION (2, 31, 0)
-//#define RSVG_DEPRECATED
-//#define RSVG_DEPRECATED_FOR(f)
-//#else
 #define RSVG_DEPRECATED extern
 #define RSVG_DEPRECATED_FOR(f) extern
-//#endif
 
 #define RSVG_TYPE_HANDLE                  (rsvg_handle_get_type ())
 #define RSVG_HANDLE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), RSVG_TYPE_HANDLE, RsvgHandle))
@@ -49,10 +44,6 @@ G_BEGIN_DECLS
 #define RSVG_IS_HANDLE(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), RSVG_TYPE_HANDLE))
 #define RSVG_IS_HANDLE_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), RSVG_TYPE_HANDLE))
 #define RSVG_HANDLE_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), RSVG_TYPE_HANDLE, RsvgHandleClass))
-
-#ifndef _MSC_VER
-  //#define RSVG_EXPORT extern
-#endif
 
 #ifndef RSVG_EXPORT
   #ifdef RSVG_STATIC
@@ -215,8 +206,11 @@ RsvgHandle *rsvg_handle_new_from_stream_sync (GInputStream   *input_stream,
                                               GCancellable   *cancellable,
                                               GError        **error);
 
-RSVG_EXPORT RsvgHandle *rsvg_handle_new_from_data (const guint8 * data, gsize data_len, GError ** error);
-RSVG_EXPORT RsvgHandle *rsvg_handle_new_from_file (const gchar * file_name, GError ** error);
+RSVG_EXPORT
+RsvgHandle *rsvg_handle_new_from_data (const guint8 * data, gsize data_len, GError ** error);
+
+RSVG_EXPORT
+RsvgHandle *rsvg_handle_new_from_file (const gchar * file_name, GError ** error);
 
 void rsvg_handle_internal_set_testing (RsvgHandle *handle, gboolean testing);
 

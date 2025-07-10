@@ -26,11 +26,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/lzo.h"
 #include "libavutil/imgutils.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/jpegquanttables.h"
-#include "libavcodec/rtjpeg.h"
+#include "libavutil/mem.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "jpegquanttables.h"
+#include "rtjpeg.h"
 
 typedef struct NuvContext {
     AVFrame *pic;

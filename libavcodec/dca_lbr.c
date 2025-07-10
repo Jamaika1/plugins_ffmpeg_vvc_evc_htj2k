@@ -21,14 +21,15 @@
 #define BITSTREAM_READER_LE
 
 #include "libavutil/channel_layout.h"
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 
-#include "libavcodec/dcadec.h"
-#include "libavcodec/dcadata.h"
-#include "libavcodec/dcahuff.h"
-#include "libavcodec/dca_syncwords.h"
-#include "libavcodec/bytestream.h"
-#include "libavcodec/decode.h"
+#include "dcadec.h"
+#include "dcadata.h"
+#include "dcahuff.h"
+#include "dca_syncwords.h"
+#include "bytestream.h"
+#include "decode.h"
 
 #define AMP_MAX     56
 

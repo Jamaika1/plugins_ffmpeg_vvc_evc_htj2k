@@ -1,12 +1,11 @@
+// SPDX-License-Identifier: 0BSD
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 /// \file       mythread.h
 /// \brief      Some threading related helper macros and functions
 //
 //  Author:     Lasse Collin
-//
-//  This file has been put into the public domain.
-//  You can do whatever you want with this file.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -201,7 +200,7 @@ mythread_join(mythread thread)
 }
 
 
-// Initiatlizes a mutex. Returns zero on success and non-zero on error.
+// Initializes a mutex. Returns zero on success and non-zero on error.
 static inline int
 mythread_mutex_init(mythread_mutex *mutex)
 {
@@ -359,7 +358,7 @@ mythread_condtime_set(mythread_condtime *condtime, const mythread_cond *cond,
 #define WIN32_LEAN_AND_MEAN
 #ifdef MYTHREAD_VISTA
 #	undef _WIN32_WINNT
-#	define _WIN32_WINNT 0x0600
+#	define _WIN32_WINNT 0x0A00
 #endif
 #include <windows.h>
 #include <process.h>

@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <memory.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "x265.h"
 
@@ -150,6 +151,7 @@ typedef uint64_t sse_t;
 #endif
 
 #define MAX_UINT        0xFFFFFFFFU // max. value of unsigned 32-bit integer
+#define MAX_UINT64      0xFFFFFFFFFFFFFFFFULL // max. value of unsigned 64-bit integer
 #define MAX_INT         2147483647  // max. value of signed 32-bit integer
 #define MAX_INT64       0x7FFFFFFFFFFFFFFFLL  // max. value of signed 64-bit integer
 #define MAX_DOUBLE      1.7e+308    // max. value of double-type value
@@ -175,6 +177,12 @@ inline T x265_clip3(T minVal, T maxVal, T a) { return x265_min(x265_max(minVal, 
 
 template<typename T> /* clip to pixel range, 0..255 or 0..1023 */
 inline pixel x265_clip(T x) { return (pixel)x265_min<T>(T((1 << X265_DEPTH) - 1), x265_max<T>(T(0), x)); }
+
+/* get the sign of input variable */
+static inline int8_t x265_signOf(int32_t x)
+{
+    return (x >> 31) | ((int32_t)((((uint32_t) - x)) >> 31));
+}
 
 typedef int16_t  coeff_t;      // transform coefficient
 
@@ -219,7 +227,7 @@ typedef int16_t  coeff_t;      // transform coefficient
 
 #define X265_MALLOC(type, count)    (type*)x265_malloc(sizeof(type) * (count))
 #define X265_FREE(ptr)              x265_free(ptr)
-#define X265_FREE_ZERO(ptr)         x265_free(ptr); (ptr) = NULL
+#define X265_FREE_ZERO(ptr)         { x265_free(ptr); (ptr) = NULL; }
 #define CHECKED_MALLOC(var, type, count) \
     { \
         var = (type*)x265_malloc(sizeof(type) * (count)); \

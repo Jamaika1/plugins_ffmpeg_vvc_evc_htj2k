@@ -43,7 +43,7 @@
  ****************************************************************************/
 static const s8 shuffle_2tap[16] = { 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6, 7, 6, 7, 8, 9 };
 
-void mc_filter_bilin_horz_sse(s16 const *ref,
+static void mc_filter_bilin_horz_sse(s16 const *ref,
     int src_stride,
     s16 *pred,
     int dst_stride,
@@ -352,7 +352,7 @@ void mc_filter_bilin_horz_sse(s16 const *ref,
     }
 }
 
-void mc_filter_bilin_vert_sse(s16 const *ref,
+static void mc_filter_bilin_vert_sse(s16 const *ref,
     int src_stride,
     s16 *pred,
     int dst_stride,
@@ -954,6 +954,7 @@ const XEVEM_MC xeve_tbl_bl_mc_l_sse[2][2] =
     }
 };
 
+// clang-format off
 #define CALC_EQUAL_COEFF_8PXLS(x1,x2,y1,y2,tmp0,tmp1,tmp2,tmp3,inter0,inter1,inter2,inter3,load_location)      \
 {                                                                                                              \
 inter0 = _mm_mul_epi32(x1, y1);                                                                                \
@@ -968,6 +969,7 @@ inter1 = _mm_srli_si128(inter3, 8);                                             
 inter3 = _mm_add_epi64(inter1, inter3);                                                                        \
 inter3 = _mm_add_epi64(inter0, inter3);                                                                        \
 }
+// clang-format on
 
 void xevem_scaled_horizontal_sobel_filter_sse(pel *pred, int pred_stride, int *derivate, int derivate_buf_stride, int width, int height)
 {

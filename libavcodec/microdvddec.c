@@ -29,9 +29,9 @@
 #include "libavutil/avstring.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/bprint.h"
-#include "avcodec.h"
-#include "ass.h"
-#include "codec_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
+#include "libavcodec/codec_internal.h"
 
 static int indexof(const char *s, int c)
 {
@@ -319,7 +319,7 @@ static int microdvd_decode_frame(AVCodecContext *avctx, AVSubtitle *sub,
     return avpkt->size;
 }
 
-static int microdvd_init(AVCodecContext *avctx)
+static av_cold int microdvd_init(AVCodecContext *avctx)
 {
     int i, sidx;
     AVBPrint font_buf;

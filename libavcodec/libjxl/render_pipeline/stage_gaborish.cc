@@ -5,6 +5,15 @@
 
 #include "lib/jxl/render_pipeline/stage_gaborish.h"
 
+#include <cstddef>
+#include <memory>
+
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"  // ssize_t
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/loop_filter.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_gaborish.cc"
 #include <hwy/foreach_target.h>
@@ -44,9 +53,9 @@ class GaborishStage : public RenderPipelineStage {
     }
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     const HWY_FULL(float) d;
     for (size_t c = 0; c < 3; c++) {
       float* JXL_RESTRICT row_t = GetInputRow(input_rows, c, -1);
@@ -66,7 +75,7 @@ class GaborishStage : public RenderPipelineStage {
       // Since GetInputRow(input_rows, c, {-1, 0, 1}) is aligned, rounding
       // xextra up to Lanes(d) doesn't access anything problematic.
       for (ssize_t x = -RoundUpTo(xextra, Lanes(d));
-           x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+           x < static_cast<ssize_t>(xsize + xextra); x += Lanes(d)) {
         const auto t = LoadMaybeU(d, row_t + x);
         const auto tl = LoadU(d, row_t + x - 1);
         const auto tr = LoadU(d, row_t + x + 1);
@@ -83,6 +92,7 @@ class GaborishStage : public RenderPipelineStage {
         Store(pixels, d, row_out + x);
       }
     }
+    return true;
   }
 #undef LoadMaybeU
 
@@ -112,7 +122,7 @@ namespace jxl {
 HWY_EXPORT(GetGaborishStage);
 
 std::unique_ptr<RenderPipelineStage> GetGaborishStage(const LoopFilter& lf) {
-  JXL_ASSERT(lf.gab == 1);
+  if (lf.gab != 1) return nullptr;
   return HWY_DYNAMIC_DISPATCH(GetGaborishStage)(lf);
 }
 

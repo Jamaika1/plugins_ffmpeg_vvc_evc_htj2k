@@ -23,12 +23,12 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
-#include "audio_frame_queue.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "mpegaudio.h"
-#include "mpegaudiodecheader.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodecheader.h"
 
 #define BUFFER_SIZE (4096 * 20)
 
@@ -137,13 +137,8 @@ const FFCodec ff_libshine_encoder = {
     .init                  = libshine_encode_init,
     FF_CODEC_ENCODE_CB(libshine_encode_frame),
     .close                 = libshine_encode_close,
-    .p.sample_fmts         = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16P,
-                                                            AV_SAMPLE_FMT_NONE },
-    .p.supported_samplerates = libshine_sample_rates,
-    CODEC_OLD_CHANNEL_LAYOUTS(AV_CH_LAYOUT_MONO, AV_CH_LAYOUT_STEREO)
-    .p.ch_layouts          = (const AVChannelLayout[]) { AV_CHANNEL_LAYOUT_MONO,
-                                                         AV_CHANNEL_LAYOUT_STEREO,
-                                                         { 0 },
-    },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16P),
+    CODEC_SAMPLERATES_ARRAY(libshine_sample_rates),
+    CODEC_CH_LAYOUTS(AV_CHANNEL_LAYOUT_MONO, AV_CHANNEL_LAYOUT_STEREO),
     .p.wrapper_name        = "libshine",
 };

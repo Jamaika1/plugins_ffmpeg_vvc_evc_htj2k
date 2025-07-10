@@ -14,7 +14,7 @@
 #define SIZEOF_LONG 4
 
 /* The number of bytes in a long double.  */
-#define SIZEOF_LONG_DOUBLE 12
+#define SIZEOF_LONG_DOUBLE 16
 
 /* The number of bytes in a short.  */
 #define SIZEOF_SHORT 2
@@ -29,16 +29,19 @@
 #define SIZEOF_UNSIGNED_SHORT 2
 
 /* Define if you have the ANSI C header files.  */
-#define STDC_HEADERS
+#define STDC_HEADERS 1
 
 /* Define if you have the <errno.h> header file.  */
-#define HAVE_ERRNO_H
+#define HAVE_ERRNO_H 1
 
 /* Define if you have the <fcntl.h> header file.  */
-#define HAVE_FCNTL_H
+#define HAVE_FCNTL_H 1
 
 /* Define if you have the <limits.h> header file.  */
-#define HAVE_LIMITS_H
+#define HAVE_LIMITS_H 1
+
+/* Define if you have the <inttypes.h> header file.  */
+#define HAVE_INTTYPES_H 1
 
 /* Name of package */
 #define PACKAGE "lame"
@@ -49,8 +52,8 @@
 /* faster log implementation with less but enough precission */
 #define USE_FAST_LOG 1
 
-#define HAVE_STRCHR
-#define HAVE_MEMCPY
+//#define HAVE_STRCHR 1
+//#define HAVE_MEMCPY 1
 
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 #pragma warning( disable : 4305 )
@@ -66,7 +69,7 @@
 
 	typedef float  float32_t;
 	typedef double float64_t;
-#elif defined (__GNUC__)
+/*#elif defined (__GNUC__)
 #define __int8_t_defined
 #define uint8_t unsigned char
 #define uint16_t unsigned short
@@ -76,7 +79,7 @@
 #define int8_t signed char
 #define int16_t signed short
 #define int32_t signed int
-#define int64_t signed long long
+#define int64_t signed long long*/
 #endif
 
 typedef long double ieee854_float80_t;
@@ -104,17 +107,17 @@ void acm_Free( void * mem);
 
 #ifdef HAVE_NASM
     #if (defined(__ICL) && (__ICL >= 450))
-        #define HAVE_XMMINTRIN_H
+        #define HAVE_XMMINTRIN_H 1
     #elif defined(_MSC_VER)
         #include <malloc.h>
         #ifdef _mm_malloc
-            #define HAVE_XMMINTRIN_H
+            #define HAVE_XMMINTRIN_H 1
         #endif
     #endif
 #endif
 
 #if defined(_M_X64) && !defined(HAVE_XMMINTRIN_H)
-        #define HAVE_XMMINTRIN_H
+        #define HAVE_XMMINTRIN_H 1
 #endif
 
 #endif

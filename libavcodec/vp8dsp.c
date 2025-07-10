@@ -25,13 +25,13 @@
  * VP8 compatible video decoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
 
-#include "mathops.h"
-#include "vp8dsp.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/vp8dsp.h"
 
 #define MK_IDCT_DC_ADD4_C(name)                                               \
 static void name ## _idct_dc_add4uv_c(uint8_t *dst, int16_t block[4][16],     \
@@ -681,6 +681,8 @@ av_cold void ff_vp78dsp_init(VP8DSPContext *dsp)
     ff_vp78dsp_init_arm(dsp);
 #elif ARCH_PPC
     ff_vp78dsp_init_ppc(dsp);
+#elif ARCH_RISCV
+    ff_vp78dsp_init_riscv(dsp);
 #elif ARCH_X86
     ff_vp78dsp_init_x86(dsp);
 #endif
@@ -710,6 +712,10 @@ av_cold void ff_vp7dsp_init(VP8DSPContext *dsp)
 
     dsp->vp8_v_loop_filter_simple = vp7_v_loop_filter_simple_c;
     dsp->vp8_h_loop_filter_simple = vp7_h_loop_filter_simple_c;
+
+#if ARCH_RISCV
+    ff_vp7dsp_init_riscv(dsp);
+#endif
 }
 #endif /* CONFIG_VP7_DECODER */
 
@@ -742,6 +748,8 @@ av_cold void ff_vp8dsp_init(VP8DSPContext *dsp)
     ff_vp8dsp_init_aarch64(dsp);
 #elif ARCH_ARM
     ff_vp8dsp_init_arm(dsp);
+#elif ARCH_RISCV
+    ff_vp8dsp_init_riscv(dsp);
 #elif ARCH_X86
     ff_vp8dsp_init_x86(dsp);
 #elif ARCH_MIPS

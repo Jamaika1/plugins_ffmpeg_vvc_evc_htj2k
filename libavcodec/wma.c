@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/attributes.h"
+#include "libavutil/mem.h"
 
 #include "libavcodec/avcodec.h"
 #include "libavcodec/sinewin.h"
@@ -85,8 +86,8 @@ av_cold int ff_wma_init(AVCodecContext *avctx, int flags2)
     int sample_rate1;
     int coef_vlc_table;
 
-    if (avctx->sample_rate <= 0 || avctx->sample_rate > 50000 ||
-        channels           <= 0 || channels    > 2            ||
+    if (avctx->sample_rate > 50000 ||
+        channels    > 2            ||
         avctx->bit_rate    <= 0)
         return -1;
 
@@ -363,7 +364,7 @@ int ff_wma_total_gain_to_bits(int total_gain)
         return  9;
 }
 
-int ff_wma_end(AVCodecContext *avctx)
+av_cold int ff_wma_end(AVCodecContext *avctx)
 {
     WMACodecContext *s = avctx->priv_data;
     int i;
@@ -424,7 +425,7 @@ unsigned int ff_wma_get_large_val(GetBitContext *gb)
  * @return 0 on success, -1 otherwise
  */
 int ff_wma_run_level_decode(AVCodecContext *avctx, GetBitContext *gb,
-                            VLC *vlc, const float *level_table,
+                            const VLCElem *vlc, const float *level_table,
                             const uint16_t *run_table, int version,
                             WMACoef *ptr, int offset, int num_coefs,
                             int block_len, int frame_len_bits,
@@ -435,7 +436,7 @@ int ff_wma_run_level_decode(AVCodecContext *avctx, GetBitContext *gb,
     uint32_t *iptr = (uint32_t *) ptr;
     const unsigned int coef_mask = block_len - 1;
     for (; offset < num_coefs; offset++) {
-        code = get_vlc2(gb, vlc->table, VLCBITS, VLCMAX);
+        code = get_vlc2(gb, vlc, VLCBITS, VLCMAX);
         if (code > 1) {
             /** normal code */
             offset                  += run_table[code];

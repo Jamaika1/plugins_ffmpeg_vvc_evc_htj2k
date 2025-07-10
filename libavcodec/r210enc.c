@@ -20,13 +20,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h"
-#include "bytestream.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/bytestream.h"
 
 static av_cold int encode_init(AVCodecContext *avctx)
 {
@@ -35,7 +35,7 @@ static av_cold int encode_init(AVCodecContext *avctx)
 
     avctx->bits_per_coded_sample = 32;
     if (avctx->width > 0)
-        avctx->bit_rate = ff_guess_coded_bitrate(avctx) * aligned_width / avctx->width;
+        avctx->bit_rate = av_rescale(ff_guess_coded_bitrate(avctx), aligned_width, avctx->width);
 
     return 0;
 }
@@ -99,7 +99,7 @@ const FFCodec ff_r210_encoder = {
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
     .init           = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
-    .p.pix_fmts     = pix_fmt,
+    CODEC_PIXFMTS_ARRAY(pix_fmt),
 };
 #endif
 #if CONFIG_R10K_ENCODER
@@ -111,7 +111,7 @@ const FFCodec ff_r10k_encoder = {
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
     .init           = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
-    .p.pix_fmts     = pix_fmt,
+    CODEC_PIXFMTS_ARRAY(pix_fmt),
 };
 #endif
 #if CONFIG_AVRP_ENCODER
@@ -123,6 +123,6 @@ const FFCodec ff_avrp_encoder = {
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
     .init           = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
-    .p.pix_fmts     = pix_fmt,
+    CODEC_PIXFMTS_ARRAY(pix_fmt),
 };
 #endif

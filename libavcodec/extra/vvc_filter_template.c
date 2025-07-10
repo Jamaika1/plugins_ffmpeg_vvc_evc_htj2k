@@ -20,9 +20,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const int width, const int height, const uint8_t *_lut)
+#include "h2656_sao_template.c"
+
+static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const int width, const int height, const void *_lut)
 {
-    const pixel *lut = (const pixel *)_lut;
+    const pixel *lut = _lut;
     pixel *dst = (pixel*)_dst;
     dst_stride /= sizeof(pixel);
 
@@ -32,197 +34,6 @@ static void FUNC(lmcs_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const in
         dst += dst_stride;
     }
 }
-
-static void FUNC(sao_band_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride, ptrdiff_t src_stride,
-    const int16_t *sao_offset_val, const int sao_left_class, const int width, const int height)
-{
-    pixel *dst       = (pixel *)_dst;
-    const pixel *src = (pixel *)_src;
-    int offset_table[32] = { 0 };
-    int k, y, x;
-    int shift  = BIT_DEPTH - 5;
-
-    dst_stride /= sizeof(pixel);
-    src_stride /= sizeof(pixel);
-
-    for (k = 0; k < 4; k++)
-        offset_table[(k + sao_left_class) & 31] = sao_offset_val[k + 1];
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++)
-            dst[x] = av_clip_pixel(src[x] + offset_table[src[x] >> shift]);
-        dst += dst_stride;
-        src += src_stride;
-    }
-}
-
-#define CMP(a, b) (((a) > (b)) - ((a) < (b)))
-
-static void FUNC(sao_edge_filter)(uint8_t *_dst, const uint8_t *_src, ptrdiff_t dst_stride,
-    const int16_t *sao_offset_val, const int eo, const int width, const int height)
-{
-    static const uint8_t edge_idx[] = { 1, 2, 0, 3, 4 };
-    static const int8_t pos[4][2][2] = {
-        { { -1,  0 }, {  1, 0 } }, // horizontal
-        { {  0, -1 }, {  0, 1 } }, // vertical
-        { { -1, -1 }, {  1, 1 } }, // 45 degree
-        { {  1, -1 }, { -1, 1 } }, // 135 degree
-    };
-    pixel *dst          = (pixel *)_dst;
-    const pixel *src    = (pixel *)_src;
-    int a_stride, b_stride;
-    int x, y;
-    ptrdiff_t src_stride = (2 * MAX_PB_SIZE + AV_INPUT_BUFFER_PADDING_SIZE) / sizeof(pixel);
-    dst_stride /= sizeof(pixel);
-
-    a_stride = pos[eo][0][0] + pos[eo][0][1] * src_stride;
-    b_stride = pos[eo][1][0] + pos[eo][1][1] * src_stride;
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
-            int diff0 = CMP(src[x], src[x + a_stride]);
-            int diff1 = CMP(src[x], src[x + b_stride]);
-            int offset_val        = edge_idx[2 + diff0 + diff1];
-            dst[x] = av_clip_pixel(src[x] + sao_offset_val[offset_val]);
-        }
-        src += src_stride;
-        dst += dst_stride;
-    }
-}
-
-static void FUNC(sao_edge_restore_0)(uint8_t *_dst, const uint8_t *_src,
-    ptrdiff_t dst_stride, ptrdiff_t src_stride, const SAOParams *sao,
-    const int *borders, const int _width, const int _height, const int c_idx,
-    const uint8_t *vert_edge, const uint8_t *horiz_edge, const uint8_t *diag_edge)
-{
-    int x, y;
-    pixel *dst                      = (pixel *)_dst;
-    const pixel *src                = (pixel *)_src;
-    const int16_t *sao_offset_val   = sao->offset_val[c_idx];
-    const int sao_eo_class          = sao->eo_class[c_idx];
-    int init_x = 0, width = _width, height = _height;
-
-    dst_stride /= sizeof(pixel);
-    src_stride /= sizeof(pixel);
-
-    if (sao_eo_class != SAO_EO_VERT) {
-        if (borders[0]) {
-            int offset_val = sao_offset_val[0];
-            for (y = 0; y < height; y++) {
-                dst[y * dst_stride] = av_clip_pixel(src[y * src_stride] + offset_val);
-            }
-            init_x = 1;
-        }
-        if (borders[2]) {
-            int offset_val = sao_offset_val[0];
-            int offset     = width - 1;
-            for (x = 0; x < height; x++) {
-                dst[x * dst_stride + offset] = av_clip_pixel(src[x * src_stride + offset] + offset_val);
-            }
-            width--;
-        }
-    }
-    if (sao_eo_class != SAO_EO_HORIZ) {
-        if (borders[1]) {
-            int offset_val = sao_offset_val[0];
-            for (x = init_x; x < width; x++)
-                dst[x] = av_clip_pixel(src[x] + offset_val);
-        }
-        if (borders[3]) {
-            int offset_val   = sao_offset_val[0];
-            ptrdiff_t y_dst_stride = dst_stride * (height - 1);
-            ptrdiff_t y_src_stride = src_stride * (height - 1);
-            for (x = init_x; x < width; x++)
-                dst[x + y_dst_stride] = av_clip_pixel(src[x + y_src_stride] + offset_val);
-            height--;
-        }
-    }
-}
-
-static void FUNC(sao_edge_restore_1)(uint8_t *_dst, const uint8_t *_src,
-    ptrdiff_t dst_stride, ptrdiff_t src_stride, const SAOParams *sao,
-    const int *borders, const int _width, const int _height, const int c_idx,
-    const uint8_t *vert_edge, const uint8_t *horiz_edge, const uint8_t *diag_edge)
-{
-    int x, y;
-    pixel *dst                      = (pixel *)_dst;
-    const pixel *src                = (pixel *)_src;
-    const int16_t *sao_offset_val   = sao->offset_val[c_idx];
-    const int sao_eo_class          = sao->eo_class[c_idx];
-    int init_x = 0, init_y = 0, width = _width, height = _height;
-
-    dst_stride /= sizeof(pixel);
-    src_stride /= sizeof(pixel);
-
-    if (sao_eo_class != SAO_EO_VERT) {
-        if (borders[0]) {
-            int offset_val = sao_offset_val[0];
-            for (y = 0; y < height; y++) {
-                dst[y * dst_stride] = av_clip_pixel(src[y * src_stride] + offset_val);
-            }
-            init_x = 1;
-        }
-        if (borders[2]) {
-            int offset_val = sao_offset_val[0];
-            int offset     = width - 1;
-            for (x = 0; x < height; x++) {
-                dst[x * dst_stride + offset] = av_clip_pixel(src[x * src_stride + offset] + offset_val);
-            }
-            width--;
-        }
-    }
-    if (sao_eo_class != SAO_EO_HORIZ) {
-        if (borders[1]) {
-            int offset_val = sao_offset_val[0];
-            for (x = init_x; x < width; x++)
-                dst[x] = av_clip_pixel(src[x] + offset_val);
-            init_y = 1;
-        }
-        if (borders[3]) {
-            int offset_val   = sao_offset_val[0];
-            ptrdiff_t y_dst_stride = dst_stride * (height - 1);
-            ptrdiff_t y_src_stride = src_stride * (height - 1);
-            for (x = init_x; x < width; x++)
-                dst[x + y_dst_stride] = av_clip_pixel(src[x + y_src_stride] + offset_val);
-            height--;
-        }
-    }
-
-    {
-        int save_upper_left  = !diag_edge[0] && sao_eo_class == SAO_EO_135D && !borders[0] && !borders[1];
-        int save_upper_right = !diag_edge[1] && sao_eo_class == SAO_EO_45D  && !borders[1] && !borders[2];
-        int save_lower_right = !diag_edge[2] && sao_eo_class == SAO_EO_135D && !borders[2] && !borders[3];
-        int save_lower_left  = !diag_edge[3] && sao_eo_class == SAO_EO_45D  && !borders[0] && !borders[3];
-
-        // Restore pixels that can't be modified
-        if (vert_edge[0] && sao_eo_class != SAO_EO_VERT) {
-            for (y = init_y + save_upper_left; y < height - save_lower_left; y++)
-                dst[y * dst_stride] = src[y * src_stride];
-        }
-        if (vert_edge[1] && sao_eo_class != SAO_EO_VERT) {
-            for (y = init_y + save_upper_right; y < height - save_lower_right; y++)
-                dst[y * dst_stride + width - 1] = src[y * src_stride + width - 1];
-        }
-
-        if (horiz_edge[0] && sao_eo_class != SAO_EO_HORIZ) {
-            for (x = init_x + save_upper_left; x < width - save_upper_right; x++)
-                dst[x] = src[x];
-        }
-        if (horiz_edge[1] && sao_eo_class != SAO_EO_HORIZ) {
-            for (x = init_x + save_lower_left; x < width - save_lower_right; x++)
-                dst[(height - 1) * dst_stride + x] = src[(height - 1) * src_stride + x];
-        }
-        if (diag_edge[0] && sao_eo_class == SAO_EO_135D)
-            dst[0] = src[0];
-        if (diag_edge[1] && sao_eo_class == SAO_EO_45D)
-            dst[width - 1] = src[width - 1];
-        if (diag_edge[2] && sao_eo_class == SAO_EO_135D)
-            dst[dst_stride * (height - 1) + width - 1] = src[src_stride * (height - 1) + width - 1];
-        if (diag_edge[3] && sao_eo_class == SAO_EO_45D)
-            dst[dst_stride * (height - 1)] = src[src_stride * (height - 1)];
-
-    }
-}
-
-#undef CMP
 
 static av_always_inline int16_t FUNC(alf_clip)(pixel curr, pixel v0, pixel v1, int16_t clip)
 {
@@ -266,7 +77,7 @@ static void FUNC(alf_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const uin
                 const int is_near_vb_below = (y + i >= vb_pos) && (y + i <= vb_pos);
                 const int is_near_vb = is_near_vb_above || is_near_vb_below;
 
-                if ((y + i < vb_pos) && ((y + i) >= vb_above)) {
+                if ((y + i < vb_pos) && ((y + i) > vb_above)) {
                     p1 = (y + i == vb_pos - 1) ? p0 : p1;
                     p3 = (y + i >= vb_pos - 2) ? p1 : p3;
                     p5 = (y + i >= vb_pos - 3) ? p3 : p5;
@@ -274,7 +85,7 @@ static void FUNC(alf_filter_luma)(uint8_t *_dst, ptrdiff_t dst_stride, const uin
                     p2 = (y + i == vb_pos - 1) ? p0 : p2;
                     p4 = (y + i >= vb_pos - 2) ? p2 : p4;
                     p6 = (y + i >= vb_pos - 3) ? p4 : p6;
-                } else if ((y + i >= vb_pos) && ((y + i) <= vb_below)) {
+                } else if ((y + i >= vb_pos) && ((y + i) < vb_below)) {
                     p2 = (y + i == vb_pos    ) ? p0 : p2;
                     p4 = (y + i <= vb_pos + 1) ? p2 : p4;
                     p6 = (y + i <= vb_pos + 2) ? p4 : p6;
@@ -342,8 +153,6 @@ static void FUNC(alf_filter_chroma)(uint8_t* _dst, ptrdiff_t dst_stride, const u
             const pixel *s2 = s0 - src_stride;
             const pixel *s3 = s1 + src_stride;
             const pixel *s4 = s2 - src_stride;
-            const pixel *s5 = s3 + src_stride;
-            const pixel *s6 = s4 - src_stride;
 
             for (int i = 0; i < ALF_BLOCK_SIZE; i++) {
                 pixel *dst = (pixel *)_dst + (y + i) * dst_stride + x;
@@ -353,8 +162,6 @@ static void FUNC(alf_filter_chroma)(uint8_t* _dst, ptrdiff_t dst_stride, const u
                 const pixel *p2 = s2 + i * src_stride;
                 const pixel *p3 = s3 + i * src_stride;
                 const pixel *p4 = s4 + i * src_stride;
-                const pixel *p5 = s5 + i * src_stride;
-                const pixel *p6 = s6 + i * src_stride;
 
                 const int is_near_vb_above = (y + i <  vb_pos) && (y + i >= vb_pos - 1);
                 const int is_near_vb_below = (y + i >= vb_pos) && (y + i <= vb_pos);
@@ -363,19 +170,15 @@ static void FUNC(alf_filter_chroma)(uint8_t* _dst, ptrdiff_t dst_stride, const u
                 if ((y + i < vb_pos) && ((y + i) >= vb_above)) {
                     p1 = (y + i == vb_pos - 1) ? p0 : p1;
                     p3 = (y + i >= vb_pos - 2) ? p1 : p3;
-                    p5 = (y + i >= vb_pos - 3) ? p3 : p5;
 
                     p2 = (y + i == vb_pos - 1) ? p0 : p2;
                     p4 = (y + i >= vb_pos - 2) ? p2 : p4;
-                    p6 = (y + i >= vb_pos - 3) ? p4 : p6;
                 } else if ((y + i >= vb_pos) && ((y + i) <= vb_below)) {
                     p2 = (y + i == vb_pos    ) ? p0 : p2;
                     p4 = (y + i <= vb_pos + 1) ? p2 : p4;
-                    p6 = (y + i <= vb_pos + 2) ? p4 : p6;
 
                     p1 = (y + i == vb_pos    ) ? p0 : p1;
                     p3 = (y + i <= vb_pos + 1) ? p1 : p3;
-                    p5 = (y + i <= vb_pos + 2) ? p3 : p5;
                 }
 
                 for (int j = 0; j < ALF_BLOCK_SIZE; j++) {
@@ -401,8 +204,6 @@ static void FUNC(alf_filter_chroma)(uint8_t* _dst, ptrdiff_t dst_stride, const u
                     p2++;
                     p3++;
                     p4++;
-                    p5++;
-                    p6++;
                 }
             }
         }
@@ -650,6 +451,8 @@ static void FUNC(alf_recon_coeff_and_clip)(int16_t *coeff, int16_t *clip,
 #define FQ2 pix[2  * xstride + 1 * ystride]
 #define FQ3 pix[3  * xstride + 1 * ystride]
 
+#include "h2656_deblock_template.c"
+
 static void FUNC(loop_filter_luma_large)(pixel *pix, const ptrdiff_t xstride, const ptrdiff_t ystride, const int32_t tc,
     const uint8_t no_p, const uint8_t no_q, const uint8_t max_len_p, const uint8_t max_len_q)
 {
@@ -730,149 +533,88 @@ static void FUNC(loop_filter_luma_large)(pixel *pix, const ptrdiff_t xstride, co
     }
 }
 
-static void FUNC(loop_filter_luma_strong)(pixel *pix, const ptrdiff_t xstride, const ptrdiff_t ystride, const int32_t tc,
-    const uint8_t no_p, const uint8_t no_q)
-{
-    const int tc2 = tc << 1;
-    const int tc3 = tc * 3;
-    for (int d = 0; d < 4; d++) {
-        const int p3 = P3;
-        const int p2 = P2;
-        const int p1 = P1;
-        const int p0 = P0;
-        const int q0 = Q0;
-        const int q1 = Q1;
-        const int q2 = Q2;
-        const int q3 = Q3;
-        if (!no_p) {
-            P0 = p0 + av_clip(((p2 + 2 * p1 + 2 * p0 + 2 * q0 + q1 + 4) >> 3) - p0, -tc3, tc3);
-            P1 = p1 + av_clip(((p2 + p1 + p0 + q0 + 2) >> 2) - p1, -tc2, tc2);
-            P2 = p2 + av_clip(((2 * p3 + 3 * p2 + p1 + p0 + q0 + 4) >> 3) - p2, -tc, tc);
-        }
-        if (!no_q) {
-            Q0 = q0 + av_clip(((p1 + 2 * p0 + 2 * q0 + 2 * q1 + q2 + 4) >> 3) - q0, -tc3, tc3);
-            Q1 = q1 + av_clip(((p0 + q0 + q1 + q2 + 2) >> 2) - q1, -tc2, tc2);
-            Q2 = q2 + av_clip(((2 * q3 + 3 * q2 + q1 + q0 + p0 + 4) >> 3) - q2, -tc, tc);
-        }
-        pix += ystride;
-    }
-}
-
-static void FUNC(loop_filter_luma_weak)(pixel *pix, const ptrdiff_t xstride, const ptrdiff_t ystride,
-    const int32_t tc, const int32_t beta, const uint8_t no_p, const uint8_t no_q, const int nd_p, const int nd_q)
-{
-    const int tc_2 = tc >> 1;
-    for (int d = 0; d < 4; d++) {
-        const int p2 = P2;
-        const int p1 = P1;
-        const int p0 = P0;
-        const int q0 = Q0;
-        const int q1 = Q1;
-        const int q2 = Q2;
-        int delta0 = (9 * (q0 - p0) - 3 * (q1 - p1) + 8) >> 4;
-        if (abs(delta0) < 10 * tc) {
-            delta0 = av_clip(delta0, -tc, tc);
-            if (!no_p)
-                P0 = av_clip_pixel(p0 + delta0);
-            if (!no_q)
-                Q0 = av_clip_pixel(q0 - delta0);
-            if (!no_p && nd_p > 1) {
-                const int deltap1 = av_clip((((p2 + p0 + 1) >> 1) - p1 + delta0) >> 1, -tc_2, tc_2);
-                P1 = av_clip_pixel(p1 + deltap1);
-            }
-            if (!no_q && nd_q > 1) {
-                const int deltaq1 = av_clip((((q2 + q0 + 1) >> 1) - q1 - delta0) >> 1, -tc_2, tc_2);
-                Q1 = av_clip_pixel(q1 + deltaq1);
-            }
-        }
-        pix += ystride;
-    }
-
-}
-
 static void FUNC(vvc_loop_filter_luma)(uint8_t* _pix, ptrdiff_t _xstride, ptrdiff_t _ystride,
     const int32_t *_beta, const int32_t *_tc, const uint8_t *_no_p, const uint8_t *_no_q,
-    const uint8_t *_max_len_p, const uint8_t *_max_len_q, int hor_ctu_edge)
+    const uint8_t *_max_len_p, const uint8_t *_max_len_q, const int hor_ctu_edge)
 {
     const ptrdiff_t xstride = _xstride / sizeof(pixel);
     const ptrdiff_t ystride = _ystride / sizeof(pixel);
 
     for (int i = 0; i < 2; i++) {
-        pixel* pix      = (pixel*)_pix + i * 4 * ystride;
-        const int dp0   = abs(P2 - 2 * P1 + P0);
-        const int dq0   = abs(Q2 - 2 * Q1 + Q0);
-        const int dp3   = abs(TP2 - 2 * TP1 + TP0);
-        const int dq3   = abs(TQ2 - 2 * TQ1 + TQ0);
-        const int d0    = dp0 + dq0;
-        const int d3    = dp3 + dq3;
 #if BIT_DEPTH < 10
         const int tc    = (_tc[i] + (1 << (9 - BIT_DEPTH))) >> (10 - BIT_DEPTH);
 #else
         const int tc    = _tc[i] << (BIT_DEPTH - 10);
 #endif
-        const int tc25  = ((tc * 5 + 1) >> 1);
+        if (tc) {
+            pixel* pix     = (pixel*)_pix + i * 4 * ystride;
+            const int dp0  = abs(P2 - 2 * P1 + P0);
+            const int dq0  = abs(Q2 - 2 * Q1 + Q0);
+            const int dp3  = abs(TP2 - 2 * TP1 + TP0);
+            const int dq3  = abs(TQ2 - 2 * TQ1 + TQ0);
+            const int d0   = dp0 + dq0;
+            const int d3   = dp3 + dq3;
+            const int tc25 = ((tc * 5 + 1) >> 1);
 
-        const int no_p  = _no_p[i];
-        const int no_q  = _no_q[i];
+            const int no_p = _no_p[i];
+            const int no_q = _no_q[i];
 
-        int max_len_p   = _max_len_p[i];
-        int max_len_q   = _max_len_q[i];
+            int max_len_p  = _max_len_p[i];
+            int max_len_q  = _max_len_q[i];
 
-        const int large_p = (max_len_p > 3 && !hor_ctu_edge);
-        const int large_q = max_len_q > 3;
-        const int beta = _beta[i] << BIT_DEPTH - 8;
+            const int large_p = (max_len_p > 3 && !hor_ctu_edge);
+            const int large_q = max_len_q > 3;
 
-        const int beta_3 = beta >> 3;
-        const int beta_2 = beta >> 2;
+            const int beta    = _beta[i] << BIT_DEPTH - 8;
+            const int beta_3  = beta >> 3;
+            const int beta_2  = beta >> 2;
 
-        if (!tc)
-            continue;
+            if (large_p || large_q) {
+                const int dp0l = large_p ? ((dp0 + abs(P5 - 2 * P4 + P3) + 1) >> 1) : dp0;
+                const int dq0l = large_q ? ((dq0 + abs(Q5 - 2 * Q4 + Q3) + 1) >> 1) : dq0;
+                const int dp3l = large_p ? ((dp3 + abs(TP5 - 2 * TP4 + TP3) + 1) >> 1) : dp3;
+                const int dq3l = large_q ? ((dq3 + abs(TQ5 - 2 * TQ4 + TQ3) + 1) >> 1) : dq3;
+                const int d0l = dp0l + dq0l;
+                const int d3l = dp3l + dq3l;
+                const int beta53 = beta * 3 >> 5;
+                const int beta_4 = beta >> 4;
+                max_len_p = large_p ? max_len_p : 3;
+                max_len_q = large_q ? max_len_q : 3;
 
-        if (large_p || large_q) {
-            const int dp0l = large_p ? ((dp0 + abs(P5 - 2 * P4 + P3) + 1) >> 1) : dp0;
-            const int dq0l = large_q ? ((dq0 + abs(Q5 - 2 * Q4 + Q3) + 1) >> 1) : dq0;
-            const int dp3l = large_p ? ((dp3 + abs(TP5 - 2 * TP4 + TP3) + 1) >> 1) : dp3;
-            const int dq3l = large_q ? ((dq3 + abs(TQ5 - 2 * TQ4 + TQ3) + 1) >> 1) : dq3;
-            const int d0l = dp0l + dq0l;
-            const int d3l = dp3l + dq3l;
-            const int beta53 = beta * 3 >> 5;
-            const int beta_4 = beta >> 4;
-            max_len_p = large_p ? max_len_p : 3;
-            max_len_q = large_q ? max_len_q : 3;
-
-            if (d0l + d3l < beta) {
-                const int sp0l = abs(P3 - P0) + (max_len_p == 7 ? abs(P7 - P6 - P5 + P4) : 0);
-                const int sq0l = abs(Q0 - Q3) + (max_len_q == 7 ? abs(Q4 - Q5 - Q6 + Q7) : 0);
-                const int sp3l = abs(TP3 - TP0) + (max_len_p == 7 ? abs(TP7 - TP6 - TP5 + TP4) : 0);
-                const int sq3l = abs(TQ0 - TQ3) + (max_len_q == 7 ? abs(TQ4 - TQ5 - TQ6 + TQ7) : 0);
-                const int sp0 = large_p ? ((sp0l + abs(P3 -   P(max_len_p)) + 1) >> 1) : sp0l;
-                const int sp3 = large_p ? ((sp3l + abs(TP3 - TP(max_len_p)) + 1) >> 1) : sp3l;
-                const int sq0 = large_q ? ((sq0l + abs(Q3 -   Q(max_len_q)) + 1) >> 1) : sq0l;
-                const int sq3 = large_q ? ((sq3l + abs(TQ3 - TQ(max_len_q)) + 1) >> 1) : sq3l;
-                if (sp0 + sq0 < beta53 && abs(P0 - Q0) < tc25 &&
-                    sp3 + sq3 < beta53 && abs(TP0 - TQ0) < tc25 &&
-                    (d0l << 1) < beta_4 && (d3l << 1) < beta_4) {
-                    FUNC(loop_filter_luma_large)(pix, xstride, ystride, tc, no_p, no_q, max_len_p, max_len_q);
-                    continue;
+                if (d0l + d3l < beta) {
+                    const int sp0l = abs(P3 - P0) + (max_len_p == 7 ? abs(P7 - P6 - P5 + P4) : 0);
+                    const int sq0l = abs(Q0 - Q3) + (max_len_q == 7 ? abs(Q4 - Q5 - Q6 + Q7) : 0);
+                    const int sp3l = abs(TP3 - TP0) + (max_len_p == 7 ? abs(TP7 - TP6 - TP5 + TP4) : 0);
+                    const int sq3l = abs(TQ0 - TQ3) + (max_len_q == 7 ? abs(TQ4 - TQ5 - TQ6 + TQ7) : 0);
+                    const int sp0 = large_p ? ((sp0l + abs(P3 -   P(max_len_p)) + 1) >> 1) : sp0l;
+                    const int sp3 = large_p ? ((sp3l + abs(TP3 - TP(max_len_p)) + 1) >> 1) : sp3l;
+                    const int sq0 = large_q ? ((sq0l + abs(Q3 -   Q(max_len_q)) + 1) >> 1) : sq0l;
+                    const int sq3 = large_q ? ((sq3l + abs(TQ3 - TQ(max_len_q)) + 1) >> 1) : sq3l;
+                    if (sp0 + sq0 < beta53 && abs(P0 - Q0) < tc25 &&
+                        sp3 + sq3 < beta53 && abs(TP0 - TQ0) < tc25 &&
+                        (d0l << 1) < beta_4 && (d3l << 1) < beta_4) {
+                        FUNC(loop_filter_luma_large)(pix, xstride, ystride, tc, no_p, no_q, max_len_p, max_len_q);
+                        continue;
+                    }
                 }
             }
-        }
-        if (d0 + d3 < beta) {
-            if (max_len_p > 2 && max_len_q > 2 &&
-                abs(P3 - P0) + abs(Q3 - Q0) < beta_3 && abs(P0 - Q0) < tc25 &&
-                abs(TP3 - TP0) + abs(TQ3 - TQ0) < beta_3 && abs(TP0 - TQ0) < tc25 &&
-                (d0 << 1) < beta_2 && (d3 << 1) < beta_2) {
-                FUNC(loop_filter_luma_strong)(pix, xstride, ystride, tc, no_p, no_q);
-            } else { // weak filtering
-                int nd_p = 1;
-                int nd_q = 1;
-                if (max_len_p > 1 && max_len_q > 1) {
-                    if (dp0 + dp3 < ((beta + (beta >> 1)) >> 3))
-                        nd_p = 2;
-                    if (dq0 + dq3 < ((beta + (beta >> 1)) >> 3))
-                        nd_q = 2;
+            if (d0 + d3 < beta) {
+                if (max_len_p > 2 && max_len_q > 2 &&
+                    abs(P3 - P0) + abs(Q3 - Q0) < beta_3 && abs(P0 - Q0) < tc25 &&
+                    abs(TP3 - TP0) + abs(TQ3 - TQ0) < beta_3 && abs(TP0 - TQ0) < tc25 &&
+                    (d0 << 1) < beta_2 && (d3 << 1) < beta_2) {
+                    FUNC(loop_filter_luma_strong)(pix, xstride, ystride, tc, tc << 1, tc * 3, no_p, no_q);
+                } else {
+                    int nd_p = 1;
+                    int nd_q = 1;
+                    if (max_len_p > 1 && max_len_q > 1) {
+                        if (dp0 + dp3 < ((beta + (beta >> 1)) >> 3))
+                            nd_p = 2;
+                        if (dq0 + dq3 < ((beta + (beta >> 1)) >> 3))
+                            nd_q = 2;
+                    }
+                    FUNC(loop_filter_luma_weak)(pix, xstride, ystride, tc, beta, no_p, no_q, nd_p, nd_q);
                 }
-                FUNC(loop_filter_luma_weak)(pix, xstride, ystride, tc, beta, no_p, no_q, nd_p, nd_q);
             }
         }
     }
@@ -926,24 +668,6 @@ static void FUNC(loop_filter_chroma_strong_one_side)(pixel *pix, const ptrdiff_t
     }
 }
 
-static void FUNC(loop_filter_chroma_weak)(pixel *pix, const ptrdiff_t xstride, const ptrdiff_t ystride,
-    const int size, const int32_t tc, const uint8_t no_p, const uint8_t no_q)
-{
-    for (int d = 0; d < size; d++) {
-        int delta0;
-        const int p1 = P1;
-        const int p0 = P0;
-        const int q0 = Q0;
-        const int q1 = Q1;
-        delta0 = av_clip((((q0 - p0) * 4) + p1 - q1 + 4) >> 3, -tc, tc);
-        if (!no_p)
-            P0 = av_clip_pixel(p0 + delta0);
-        if (!no_q)
-            Q0 = av_clip_pixel(q0 - delta0);
-        pix += ystride;
-    }
-}
-
 static void FUNC(vvc_loop_filter_chroma)(uint8_t *_pix, const ptrdiff_t  _xstride, const ptrdiff_t _ystride,
     const int32_t *_beta, const int32_t *_tc, const uint8_t *_no_p, const uint8_t *_no_q,
     const uint8_t *_max_len_p, const uint8_t *_max_len_q, const int shift)
@@ -954,65 +678,68 @@ static void FUNC(vvc_loop_filter_chroma)(uint8_t *_pix, const ptrdiff_t  _xstrid
     const int end           = 8 / size;         // 8 samples a loop
 
     for (int i = 0; i < end; i++) {
-        pixel *pix          = (pixel *)_pix + i * size * ystride;
-        const uint8_t no_p  = _no_p[i];
-        const uint8_t no_q  = _no_q[i];
-        const int beta      = _beta[i] << (BIT_DEPTH - 8);
-        const int beta_3    = beta >> 3;
-        const int beta_2    = beta >> 2;
-
 #if BIT_DEPTH < 10
         const int tc = (_tc[i] + (1 << (9 - BIT_DEPTH))) >> (10 - BIT_DEPTH);
 #else
         const int tc = _tc[i] << (BIT_DEPTH - 10);
 #endif
-        const int tc25      = ((tc * 5 + 1) >> 1);
+        if (tc) {
+            pixel *pix         = (pixel *)_pix + i * size * ystride;
+            const uint8_t no_p = _no_p[i];
+            const uint8_t no_q = _no_q[i];
 
-        uint8_t max_len_p   = _max_len_p[i];
-        uint8_t max_len_q   = _max_len_q[i];
+            const int beta     = _beta[i] << (BIT_DEPTH - 8);
+            const int beta_3   = beta >> 3;
+            const int beta_2   = beta >> 2;
 
-        if (!max_len_p || !max_len_q || !tc)
-            continue;
+            const int tc25     = ((tc * 5 + 1) >> 1);
 
-        if (max_len_q == 3){
-            const int p1n  = shift ? FP1 : TP1;
-            const int p2n = max_len_p == 1 ? p1n : (shift ? FP2 : TP2);
-            const int p0n  = shift ? FP0 : TP0;
-            const int q0n  = shift ? FQ0 : TQ0;
-            const int q1n  = shift ? FQ1 : TQ1;
-            const int q2n  = shift ? FQ2 : TQ2;
-            const int p3   = max_len_p == 1 ? P1 : P3;
-            const int p2   = max_len_p == 1 ? P1 : P2;
-            const int p1   = P1;
-            const int p0   = P0;
-            const int dp0  = abs(p2 - 2 * p1 + p0);
-            const int dq0  = abs(Q2 - 2 * Q1 + Q0);
+            uint8_t max_len_p  = _max_len_p[i];
+            uint8_t max_len_q  = _max_len_q[i];
 
-            const int dp1 = abs(p2n - 2 * p1n + p0n);
-            const int dq1 = abs(q2n - 2 * q1n + q0n);
-            const int d0  = dp0 + dq0;
-            const int d1  = dp1 + dq1;
+            if (!max_len_p || !max_len_q)
+                continue;
 
-            if (d0 + d1 < beta) {
-                const int p3n = max_len_p == 1 ? p1n : (shift ? FP3 : TP3);
-                const int q3n = shift ? FQ3 : TQ3;
-                const int dsam0 = (d0 << 1) < beta_2 && (abs(p3 - p0) + abs(Q0 - Q3)     < beta_3) &&
-                    abs(p0 - Q0)   < tc25;
-                const int dsam1 = (d1 << 1) < beta_2 && (abs(p3n - p0n) + abs(q0n - q3n) < beta_3) &&
-                    abs(p0n - q0n) < tc25;
-                if (!dsam0 || !dsam1)
+            if (max_len_q == 3){
+                const int p1n  = shift ? FP1 : TP1;
+                const int p2n = max_len_p == 1 ? p1n : (shift ? FP2 : TP2);
+                const int p0n  = shift ? FP0 : TP0;
+                const int q0n  = shift ? FQ0 : TQ0;
+                const int q1n  = shift ? FQ1 : TQ1;
+                const int q2n  = shift ? FQ2 : TQ2;
+                const int p3   = max_len_p == 1 ? P1 : P3;
+                const int p2   = max_len_p == 1 ? P1 : P2;
+                const int p1   = P1;
+                const int p0   = P0;
+                const int dp0  = abs(p2 - 2 * p1 + p0);
+                const int dq0  = abs(Q2 - 2 * Q1 + Q0);
+
+                const int dp1 = abs(p2n - 2 * p1n + p0n);
+                const int dq1 = abs(q2n - 2 * q1n + q0n);
+                const int d0  = dp0 + dq0;
+                const int d1  = dp1 + dq1;
+
+                if (d0 + d1 < beta) {
+                    const int p3n = max_len_p == 1 ? p1n : (shift ? FP3 : TP3);
+                    const int q3n = shift ? FQ3 : TQ3;
+                    const int dsam0 = (d0 << 1) < beta_2 && (abs(p3 - p0) + abs(Q0 - Q3)     < beta_3) &&
+                        abs(p0 - Q0)   < tc25;
+                    const int dsam1 = (d1 << 1) < beta_2 && (abs(p3n - p0n) + abs(q0n - q3n) < beta_3) &&
+                        abs(p0n - q0n) < tc25;
+                    if (!dsam0 || !dsam1)
+                        max_len_p = max_len_q = 1;
+                } else {
                     max_len_p = max_len_q = 1;
-            } else {
-                max_len_p = max_len_q = 1;
+                }
             }
-        }
 
-        if (max_len_p == 3 && max_len_q == 3)
-            FUNC(loop_filter_chroma_strong)(pix, xstride, ystride, size, tc, no_p, no_q);
-        else if (max_len_q == 3)
-            FUNC(loop_filter_chroma_strong_one_side)(pix, xstride, ystride, size, tc, no_p, no_q);
-        else
-            FUNC(loop_filter_chroma_weak)(pix, xstride, ystride, size, tc, no_p, no_q);
+            if (max_len_p == 3 && max_len_q == 3)
+                FUNC(loop_filter_chroma_strong)(pix, xstride, ystride, size, tc, no_p, no_q);
+            else if (max_len_q == 3)
+                FUNC(loop_filter_chroma_strong_one_side)(pix, xstride, ystride, size, tc, no_p, no_q);
+            else
+                FUNC(loop_filter_chroma_weak)(pix, xstride, ystride, size, tc, no_p, no_q);
+        }
     }
 }
 
@@ -1034,7 +761,7 @@ static void FUNC(vvc_v_loop_filter_chroma)(uint8_t *pix, ptrdiff_t stride,
 
 static void FUNC(vvc_h_loop_filter_luma)(uint8_t *pix, ptrdiff_t stride,
     const int32_t *beta, const int32_t *tc, const uint8_t *no_p, const uint8_t *no_q,
-    const uint8_t *max_len_p, const uint8_t *max_len_q, int hor_ctu_edge)
+    const uint8_t *max_len_p, const uint8_t *max_len_q, const int hor_ctu_edge)
 {
     FUNC(vvc_loop_filter_luma)(pix, stride, sizeof(pixel), beta, tc,
         no_p, no_q, max_len_p, max_len_q, hor_ctu_edge);
@@ -1042,7 +769,7 @@ static void FUNC(vvc_h_loop_filter_luma)(uint8_t *pix, ptrdiff_t stride,
 
 static void FUNC(vvc_v_loop_filter_luma)(uint8_t *pix, ptrdiff_t stride,
     const int32_t *beta, const int32_t *tc, const uint8_t *no_p, const uint8_t *no_q,
-    const uint8_t *max_len_p, const uint8_t *max_len_q, int hor_ctu_edge)
+    const uint8_t *max_len_p, const uint8_t *max_len_q, const int hor_ctu_edge)
 {
     FUNC(vvc_loop_filter_luma)(pix, sizeof(pixel), stride, beta, tc,
         no_p, no_q, max_len_p, max_len_q, hor_ctu_edge);

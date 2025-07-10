@@ -3,21 +3,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- *
+ * 
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- *
+ * 
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -141,12 +141,16 @@ static int get_max_parallelism(const encoder_control_t *const encoder)
 static int8_t* derive_chroma_QP_mapping_table(const uvg_config* const cfg, int i)
 {
   const int MAX_QP = 63;
+  const int qpBdOffsetC = (cfg->input_bitdepth - 8) * 6;
 
   int8_t qpInVal[16], qpOutVal[16];
-  int8_t* table = calloc(MAX_QP + 1, sizeof(int8_t));
+  int8_t* table = calloc(MAX_QP + 1+qpBdOffsetC, sizeof(int8_t));
+  if (table == NULL) {
+    fprintf(stderr, "Failed to allocate memory for chroma QP mapping table.\n");
+    return NULL;
+  }
+  table += qpBdOffsetC;
 
-
-  const int qpBdOffsetC = (cfg->input_bitdepth - 8) * 6;
   const int numPtsInCQPTableMinus1 = cfg->qp_table_length_minus1[i];
 
   qpInVal[0] = cfg->qp_table_start_minus26[i] + 26;
@@ -222,8 +226,8 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
         uvg_config_process_lp_gop(&encoder->cfg);
       }
     }
-  }
-
+  } 
+  
   if( encoder->cfg.intra_qp_offset_auto ) {
     // Limit offset to -3 since HM/VTM seems to use it even for 32 frame gop
     encoder->cfg.intra_qp_offset = encoder->cfg.gop_len > 1 ? MAX(-(int8_t)uvg_math_ceil_log2( encoder->cfg.gop_len ) + 1, -3) : 0;
@@ -239,6 +243,8 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
 
   encoder->max_inter_ref_lcu.right = 1;
   encoder->max_inter_ref_lcu.down  = 1;
+
+  if (encoder->cfg.ref_wraparound) encoder->max_inter_ref_lcu.right = (encoder->cfg.width+LCU_LUMA_SIZE-1)>>LOG2_LCU_WIDTH;
 
   int max_threads = encoder->cfg.threads;
   if (max_threads < 0) {
@@ -292,7 +298,7 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
     goto init_failed;
   }
 
-  encoder->bitdepth = (int8_t)encoder->cfg.input_bitdepth;
+  encoder->bitdepth = UVG_BIT_DEPTH;
 
   encoder->chroma_format = UVG_FORMAT2CSP(encoder->cfg.input_format);
 
@@ -318,6 +324,13 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
     // Enable scaling lists if default lists are used
     encoder->scaling_list.enable = 1;
     encoder->scaling_list.use_default_list = 1;
+  }
+
+  if(cfg->dep_quant) {
+    if(!uvg_init_nb_info(encoder)) {
+      fprintf(stderr, "Could not initialize nb info.\n");
+      goto init_failed;      
+    }
   }
 
   // ROI / delta QP
@@ -378,11 +391,7 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
   {
     goto init_failed;
   }
-
-  // NOTE: When tr_depth_inter is equal to 0, the transform is still split
-  // for SMP and AMP partition units.
-  encoder->tr_depth_inter = 0;
-
+  
   //Tiles
   encoder->tiles_enable = encoder->cfg.tiles_width_count > 1 ||
                           encoder->cfg.tiles_height_count > 1;
@@ -649,7 +658,7 @@ encoder_control_t* uvg_encoder_control_init(const uvg_config *const cfg)
   } else {
     encoder->cfg.vps_period = -1;
   }
-
+  
   for (int i = 0; i < cfg->num_used_table; i++) {
     encoder->qp_map[i] = derive_chroma_QP_mapping_table(cfg, i);
   }
@@ -667,6 +676,7 @@ init_failed:
 void uvg_encoder_control_free(encoder_control_t *const encoder)
 {
   if (!encoder) return;
+  const int qpBdOffsetC = (encoder->cfg.input_bitdepth - 8) * 6;
 
   //Slices
   FREE_POINTER(encoder->slice_addresses_in_ts);
@@ -692,13 +702,18 @@ void uvg_encoder_control_free(encoder_control_t *const encoder)
   uvg_threadqueue_free(encoder->threadqueue);
   encoder->threadqueue = NULL;
   for (int i = 0; i < encoder->cfg.num_used_table; i++) {
-    if (encoder->qp_map[i]) FREE_POINTER(encoder->qp_map[i]);
+    int8_t *temp = encoder->qp_map[i] - qpBdOffsetC;
+    if (encoder->qp_map[i] - qpBdOffsetC) FREE_POINTER(temp);
   }
 
   uvg_close_rdcost_outfiles();
 
   if (encoder->roi_file) {
     fclose(encoder->roi_file);
+  }
+
+  if (encoder->cfg.dep_quant) {
+    uvg_dealloc_nb_info(encoder);
   }
 
   if(encoder->cabac_debug_file) {
@@ -843,8 +858,8 @@ static int encoder_control_init_gop_layer_weights(encoder_control_t * const enco
         encoder->gop_layer_weights[1] = 7.3654107392 * pow(encoder->target_avg_bpp, -0.0854329266);
         encoder->gop_layer_weights[2] = 3.6563990701 * pow(encoder->target_avg_bpp, -0.0576990493);
         encoder->gop_layer_weights[3] = 2.1486937288 * pow(encoder->target_avg_bpp, -0.0155389471);
-        encoder->gop_layer_weights[4] = 1;
-      }
+        encoder->gop_layer_weights[4] = 1;        
+      } 
       else {
         fprintf(stderr, "Unsupported amount of layers (%d) for lowdelay GOP\n", num_layers);
         return 0;
@@ -852,7 +867,7 @@ static int encoder_control_init_gop_layer_weights(encoder_control_t * const enco
       break;
     default:
       if (!encoder->cfg.gop_lowdelay && encoder->cfg.gop_len == 16) {
-        fprintf(stdout,
+        fprintf(stdout, 
                 "Rate control: Using experimental weights for GOP layers (%d)\n",
                 num_layers);
         for (int i = 0; i < MAX_GOP_LAYERS; ++i) {

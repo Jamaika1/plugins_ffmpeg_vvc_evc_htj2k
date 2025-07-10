@@ -161,6 +161,20 @@ pango_cairo_font_get_scaled_font (PangoCairoFont *cfont)
   return _pango_cairo_font_private_get_scaled_font (cf_priv);
 }
 
+void
+pango_cairo_font_get_font_options (PangoCairoFont       *cfont,
+                                   cairo_font_options_t *options)
+{
+  PangoCairoFontPrivate *cf_priv;
+
+  if (G_UNLIKELY (!cfont))
+    return;
+
+  cf_priv = PANGO_CAIRO_FONT_PRIVATE (cfont);
+
+  pango_cairo_font_private_get_font_options (cf_priv, options);
+}
+
 /**
  * _pango_cairo_font_install:
  * @font: a `PangoCairoFont`
@@ -450,13 +464,7 @@ _pango_cairo_font_private_get_hex_box_info (PangoCairoFontPrivate *cf_priv)
     mini_size = size / 2.2;
     if (is_hinted)
       {
-	mini_size = HINT_Y (mini_size);
-
-	if (mini_size < 6.0)
-	  {
-	    rows = 1;
-	    mini_size = MIN (MAX (size - 1, 0), 6.0);
-	  }
+        mini_size = HINT_Y (mini_size);
       }
 
     pango_font_description_set_absolute_size (desc, pango_units_from_double (mini_size));
@@ -476,7 +484,6 @@ _pango_cairo_font_private_get_hex_box_info (PangoCairoFontPrivate *cf_priv)
 
   pango_font_description_free (desc);
   cairo_font_options_destroy (font_options);
-
 
   scaled_mini_font = pango_cairo_font_get_scaled_font ((PangoCairoFont *) mini_font);
   if (G_UNLIKELY (scaled_mini_font == NULL || cairo_scaled_font_status (scaled_mini_font) != CAIRO_STATUS_SUCCESS))
@@ -642,6 +649,15 @@ _pango_cairo_font_private_is_metrics_hinted (PangoCairoFontPrivate *cf_priv)
   return cf_priv->is_hinted;
 }
 
+void
+pango_cairo_font_private_get_font_options (PangoCairoFontPrivate *cf_priv,
+                                           cairo_font_options_t  *options)
+{
+  if (cf_priv->scaled_font)
+    cairo_scaled_font_get_font_options (cf_priv->scaled_font, options);
+  else if (cf_priv->data)
+    cairo_font_options_merge (options, cf_priv->data->options);
+}
 
 static void
 get_space_extents (PangoCairoFontPrivate *cf_priv,
@@ -708,7 +724,7 @@ _pango_cairo_font_private_get_glyph_extents_missing (PangoCairoFontPrivate *cf_p
     {
       ink_rect->x = PANGO_SCALE * hbi->pad_x;
       ink_rect->y = PANGO_SCALE * (hbi->box_descent - hbi->box_height);
-      ink_rect->width = PANGO_SCALE * (3 * hbi->pad_x + cols * (hbi->digit_width + hbi->pad_x));
+      ink_rect->width = PANGO_SCALE * (4 * hbi->pad_x + cols * (hbi->digit_width + hbi->pad_x));
       ink_rect->height = PANGO_SCALE * hbi->box_height;
     }
 

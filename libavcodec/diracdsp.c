@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
-#include "diracdsp.h"
+#include "libavcodec/diracdsp.h"
 
 #define FILTER(src, stride)                                     \
     ((21*((src)[ 0*stride] + (src)[1*stride])                   \

@@ -83,7 +83,7 @@
 
 static const s8 shuffle_2Tap[16] = { 0, 1, 2, 3, 2, 3, 4, 5, 4, 5, 6, 7, 6, 7, 8, 9 };
 
-void mc_filter_bilin_horz_sse(s16 const *ref,
+static void mc_filter_bilin_horz_sse(s16 const *ref,
     int src_stride,
     s16 *pred,
     int dst_stride,
@@ -392,7 +392,7 @@ void mc_filter_bilin_horz_sse(s16 const *ref,
     }
 }
 
-void mc_filter_bilin_vert_sse(s16 const *ref,
+static void mc_filter_bilin_vert_sse(s16 const *ref,
     int src_stride,
     s16 *pred,
     int dst_stride,

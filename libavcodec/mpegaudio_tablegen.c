@@ -24,8 +24,8 @@
 #define CONFIG_HARDCODED_TABLES 0
 #define BUILD_TABLES
 #include "libavutil/tablegen.h"
-#include "mpegaudio_tablegen.h"
-#include "tableprint.h"
+#include "libavcodec/mpegaudio_tablegen.h"
+#include "libavcodec/tableprint.h"
 
 int main(void)
 {

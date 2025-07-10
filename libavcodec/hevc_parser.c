@@ -21,14 +21,15 @@
  */
 
 #include "libavutil/common.h"
+#include "libavutil/mem.h"
 
-#include "golomb.h"
-#include "hevc.h"
-#include "hevc_parse.h"
-#include "hevc_ps.h"
-#include "hevc_sei.h"
-#include "h2645_parse.h"
-#include "parser.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/hevc.h"
+#include "libavcodec/hevc_parse.h"
+#include "libavcodec/hevc_ps.h"
+#include "libavcodec/hevc_sei.h"
+#include "libavcodec/h2645_parse.h"
+#include "libavcodec/parser.h"
 
 #define START_CODE 0x000001 ///< start_code_prefix_one_3bytes
 
@@ -57,6 +58,8 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
     HEVCParamSets *ps = &ctx->ps;
     HEVCSEI *sei = &ctx->sei;
     GetBitContext *gb = &nal->gb;
+    const HEVCPPS *pps;
+    const HEVCSPS *sps;
     const HEVCWindow *ow;
     int i, num = 0, den = 0;
 
@@ -77,35 +80,28 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
         av_log(avctx, AV_LOG_ERROR, "PPS id out of range: %d\n", pps_id);
         return AVERROR_INVALIDDATA;
     }
-    ps->pps = (HEVCPPS*)ps->pps_list[pps_id]->data;
+    pps = ps->pps_list[pps_id];
+    sps = pps->sps;
 
-    if (ps->pps->sps_id >= HEVC_MAX_SPS_COUNT || !ps->sps_list[ps->pps->sps_id]) {
-        av_log(avctx, AV_LOG_ERROR, "SPS id out of range: %d\n", ps->pps->sps_id);
-        return AVERROR_INVALIDDATA;
-    }
-    if (ps->sps != (HEVCSPS*)ps->sps_list[ps->pps->sps_id]->data) {
-        ps->sps = (HEVCSPS*)ps->sps_list[ps->pps->sps_id]->data;
-        ps->vps = (HEVCVPS*)ps->vps_list[ps->sps->vps_id]->data;
-    }
-    ow  = &ps->sps->output_window;
+    ow  = &sps->output_window;
 
-    s->coded_width  = ps->sps->width;
-    s->coded_height = ps->sps->height;
-    s->width        = ps->sps->width  - ow->left_offset - ow->right_offset;
-    s->height       = ps->sps->height - ow->top_offset  - ow->bottom_offset;
-    s->format       = ps->sps->pix_fmt;
-    avctx->profile  = ps->sps->ptl.general_ptl.profile_idc;
-    avctx->level    = ps->sps->ptl.general_ptl.level_idc;
+    s->coded_width  = sps->width;
+    s->coded_height = sps->height;
+    s->width        = sps->width  - ow->left_offset - ow->right_offset;
+    s->height       = sps->height - ow->top_offset  - ow->bottom_offset;
+    s->format       = sps->pix_fmt;
+    avctx->profile  = sps->ptl.general_ptl.profile_idc;
+    avctx->level    = sps->ptl.general_ptl.level_idc;
 
-    if (ps->vps->vps_timing_info_present_flag) {
-        num = ps->vps->vps_num_units_in_tick;
-        den = ps->vps->vps_time_scale;
-    } else if (ps->sps->vui.vui_timing_info_present_flag) {
-        num = ps->sps->vui.vui_num_units_in_tick;
-        den = ps->sps->vui.vui_time_scale;
+    if (sps->vps->vps_timing_info_present_flag) {
+        num = sps->vps->vps_num_units_in_tick;
+        den = sps->vps->vps_time_scale;
+    } else if (sps->vui.vui_timing_info_present_flag) {
+        num = sps->vui.vui_num_units_in_tick;
+        den = sps->vui.vui_time_scale;
     }
 
-    if (num != 0 && den != 0)
+    if (num > 0 && den > 0)
         av_reduce(&avctx->framerate.den, &avctx->framerate.num,
                   num, den, 1 << 30);
 
@@ -113,15 +109,15 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
         unsigned int slice_segment_addr;
         int slice_address_length;
 
-        if (ps->pps->dependent_slice_segments_enabled_flag)
+        if (pps->dependent_slice_segments_enabled_flag)
             dependent_slice_segment_flag = get_bits1(gb);
         else
             dependent_slice_segment_flag = 0;
 
-        slice_address_length = av_ceil_log2_c(ps->sps->ctb_width *
-                                              ps->sps->ctb_height);
+        slice_address_length = av_ceil_log2_c(sps->ctb_width *
+                                              sps->ctb_height);
         slice_segment_addr = get_bitsz(gb, slice_address_length);
-        if (slice_segment_addr >= ps->sps->ctb_width * ps->sps->ctb_height) {
+        if (slice_segment_addr >= sps->ctb_width * sps->ctb_height) {
             av_log(avctx, AV_LOG_ERROR, "Invalid slice segment address: %u.\n",
                    slice_segment_addr);
             return AVERROR_INVALIDDATA;
@@ -132,7 +128,7 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
     if (dependent_slice_segment_flag)
         return 0; /* break; */
 
-    for (i = 0; i < ps->pps->num_extra_slice_header_bits; i++)
+    for (i = 0; i < pps->num_extra_slice_header_bits; i++)
         skip_bits(gb, 1); // slice_reserved_undetermined_flag[]
 
     slice_type = get_ue_golomb_31(gb);
@@ -146,16 +142,16 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
                    slice_type == HEVC_SLICE_P ? AV_PICTURE_TYPE_P :
                                                 AV_PICTURE_TYPE_I;
 
-    if (ps->pps->output_flag_present_flag)
+    if (pps->output_flag_present_flag)
         skip_bits1(gb); // pic_output_flag
 
-    if (ps->sps->separate_colour_plane_flag)
+    if (sps->separate_colour_plane)
         skip_bits(gb, 2);   // colour_plane_id
 
     if (!IS_IDR_NAL(nal)) {
-        int pic_order_cnt_lsb = get_bits(gb, ps->sps->log2_max_poc_lsb);
+        int pic_order_cnt_lsb = get_bits(gb, sps->log2_max_poc_lsb);
         s->output_picture_number = ctx->poc =
-            ff_hevc_compute_poc(ps->sps, ctx->pocTid0, pic_order_cnt_lsb, nal->type);
+            ff_hevc_compute_poc(sps, ctx->pocTid0, pic_order_cnt_lsb, nal->type);
     } else
         s->output_picture_number = ctx->poc = 0;
 
@@ -186,6 +182,7 @@ static int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
     HEVCParserContext *ctx = s->priv_data;
     HEVCParamSets *ps = &ctx->ps;
     HEVCSEI *sei = &ctx->sei;
+    int flags = (H2645_FLAG_IS_NALFF * !!ctx->is_avc) | H2645_FLAG_SMALL_PADDING;
     int ret, i;
 
     /* set some sane default values */
@@ -195,8 +192,8 @@ static int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
 
     ff_hevc_reset_sei(sei);
 
-    ret = ff_h2645_packet_split(&ctx->pkt, buf, buf_size, avctx, ctx->is_avc,
-                                ctx->nal_length_size, AV_CODEC_ID_HEVC, 1, 0);
+    ret = ff_h2645_packet_split(&ctx->pkt, buf, buf_size, avctx,
+                                ctx->nal_length_size, AV_CODEC_ID_HEVC, flags);
     if (ret < 0)
         return ret;
 
@@ -212,7 +209,7 @@ static int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
             ff_hevc_decode_nal_vps(gb, avctx, ps);
             break;
         case HEVC_NAL_SPS:
-            ff_hevc_decode_nal_sps(gb, avctx, ps, 1);
+            ff_hevc_decode_nal_sps(gb, avctx, ps, nal->nuh_layer_id, 1);
             break;
         case HEVC_NAL_PPS:
             ff_hevc_decode_nal_pps(gb, avctx, ps);
@@ -265,7 +262,7 @@ static int hevc_find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
     int i;
 
     for (i = 0; i < buf_size; i++) {
-        int nut;
+        int nut, layer_id;
 
         pc->state64 = (pc->state64 << 8) | buf[i];
 
@@ -273,11 +270,18 @@ static int hevc_find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
             continue;
 
         nut = (pc->state64 >> 2 * 8 + 1) & 0x3F;
+
+        layer_id = (pc->state64 >> 11) & 0x3F;
+        if (layer_id > 0)
+            continue;
+
         // Beginning of access unit
         if ((nut >= HEVC_NAL_VPS && nut <= HEVC_NAL_EOB_NUT) || nut == HEVC_NAL_SEI_PREFIX ||
             (nut >= 41 && nut <= 44) || (nut >= 48 && nut <= 55)) {
             if (pc->frame_start_found) {
                 pc->frame_start_found = 0;
+                if (!((pc->state64 >> 6 * 8) & 0xFF))
+                    return i - 6;
                 return i - 5;
             }
         } else if (nut <= HEVC_NAL_RASL_R ||
@@ -288,6 +292,8 @@ static int hevc_find_frame_end(AVCodecParserContext *s, const uint8_t *buf,
                     pc->frame_start_found = 1;
                 } else { // First slice of next frame found
                     pc->frame_start_found = 0;
+                    if (!((pc->state64 >> 6 * 8) & 0xFF))
+                        return i - 6;
                     return i - 5;
                 }
             }

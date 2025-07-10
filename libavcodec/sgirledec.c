@@ -28,9 +28,9 @@
 
 #include "libavutil/common.h"
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 static av_cold int sgirle_decode_init(AVCodecContext *avctx)
 {
@@ -115,6 +115,9 @@ static int sgirle_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 {
     int ret;
 
+    if (avpkt->size * 192ll / 2 < avctx->width * avctx->height)
+        return AVERROR_INVALIDDATA;
+
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
 
@@ -122,9 +125,6 @@ static int sgirle_decode_frame(AVCodecContext *avctx, AVFrame *frame,
                          avctx->width, avctx->height, frame->linesize[0]);
     if (ret < 0)
         return ret;
-
-    frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->flags |= AV_FRAME_FLAG_KEY;
 
     *got_frame = 1;
 

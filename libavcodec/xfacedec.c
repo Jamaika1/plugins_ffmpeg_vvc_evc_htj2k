@@ -24,10 +24,10 @@
  * X-Face decoder, based on libcompface, by James Ashton.
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "xface.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/xface.h"
 
 static int pop_integer(BigInt *b, const ProbRange *pranges)
 {
@@ -182,5 +182,4 @@ const FFCodec ff_xface_decoder = {
     .priv_data_size = sizeof(XFaceContext),
     .init           = xface_decode_init,
     FF_CODEC_DECODE_CB(xface_decode_frame),
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_MONOWHITE, AV_PIX_FMT_NONE },
 };

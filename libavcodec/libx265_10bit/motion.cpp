@@ -770,6 +770,7 @@ int MotionEstimate::motionEstimate(ReferencePlanes *ref,
                                    int              merange,
                                    MV &             outQMv,
                                    uint32_t         maxSlices,
+                                    bool            m_vertRestriction,
                                    pixel *          srcReferencePlane)
 {
     ALIGN_VAR_16(int, costs[16]);
@@ -794,6 +795,13 @@ int MotionEstimate::motionEstimate(ReferencePlanes *ref,
 
     // measure SAD cost at clipped QPEL MVP
     MV pmv = qmvp.clipped(qmvmin, qmvmax);
+    if (m_vertRestriction)
+    {
+        if (pmv.y > mvmax.y << 2)
+        {
+            pmv.y = (mvmax.y << 2);
+        }
+    }
     MV bestpre = pmv;
     int bprecost;
 
@@ -1587,6 +1595,14 @@ me_hex2:
 
     // check mv range for slice bound
     X265_CHECK(((bmv.y >= qmvmin.y) & (bmv.y <= qmvmax.y)), "mv beyond range!");
+
+    // Get a chance to ZeroMv
+    if (bmv.notZero())
+    {
+      int cost = subpelCompare(ref, MV(0, 0), satd) + mvcost(MV(0, 0));
+      if (cost <= bcost)
+        bmv = MV(0, 0);
+    }
 
     x265_emms();
     outQMv = bmv;

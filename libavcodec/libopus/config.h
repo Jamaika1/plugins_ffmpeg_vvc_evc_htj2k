@@ -36,6 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define CUSTOM_MODES          1
 
 #define OPUS_BUILD            1
+#define ENABLE_RES24          1
 
 #if defined(_M_IX86) || defined(_M_X64) || defined(__x86_64__)
 // Can always compile SSE intrinsics (no special compiler flags necessary)
@@ -64,6 +65,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #endif
 
-#define PACKAGE_VERSION "1.5.2-2554a89"
+#define PACKAGE_VERSION "1.5.3-fccfe85"
 
 #endif /* CONFIG_H */

@@ -350,7 +350,7 @@ pango_read_line (FILE *stream, GString *str)
 
 /**
  * pango_skip_space:
- * @pos: (inout): in/out string position
+ * @pos: (inout) (transfer none): in/out string position
  *
  * Skips 0 or more characters of white space.
  *
@@ -374,7 +374,7 @@ pango_skip_space (const char **pos)
 
 /**
  * pango_scan_word:
- * @pos: (inout): in/out string position
+ * @pos: (inout) (transfer none): in/out string position
  * @out: a `GString` into which to write the result
  *
  * Scans a word into a `GString` buffer.
@@ -419,7 +419,7 @@ pango_scan_word (const char **pos, GString *out)
 
 /**
  * pango_scan_string:
- * @pos: (inout): in/out string position
+ * @pos: (inout) (transfer none): in/out string position
  * @out: a `GString` into which to write the result
  *
  * Scans a string into a `GString` buffer.
@@ -512,7 +512,7 @@ pango_scan_string (const char **pos, GString *out)
 
 /**
  * pango_scan_int:
- * @pos: (inout): in/out string position
+ * @pos: (inout) (transfer none): in/out string position
  * @out: (out): an int into which to write the result
  *
  * Scans an integer.
@@ -1023,8 +1023,8 @@ pango_units_to_double (int i)
 
 /**
  * pango_extents_to_pixels:
- * @inclusive: (nullable): rectangle to round to pixels inclusively
- * @nearest: (nullable): rectangle to round to nearest pixels
+ * @inclusive: (inout) (optional): rectangle to round to pixels inclusively
+ * @nearest: (inout) (optional): rectangle to round to nearest pixels
  *
  * Converts extents from Pango units to device units.
  *
@@ -1155,10 +1155,10 @@ _pango_shape_get_extents (gint              n_chars,
  * pango_find_paragraph_boundary:
  * @text: UTF-8 text
  * @length: length of @text in bytes, or -1 if nul-terminated
- * @paragraph_delimiter_index: (out): return location for index of
- *   delimiter
- * @next_paragraph_start: (out): return location for start of next
- *   paragraph
+ * @paragraph_delimiter_index: (out) (optional): return location
+ *  for index of delimiter
+ * @next_paragraph_start: (out) (optional): return location for
+ *  start of next paragraph
  *
  * Locates a paragraph boundary in @text.
  *

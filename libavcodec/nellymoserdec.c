@@ -34,16 +34,17 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/lfg.h"
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/tx.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "nellymoser.h"
-#include "sinewin.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/nellymoser.h"
+#include "libavcodec/sinewin.h"
 
 
 typedef struct NellyMoserDecodeContext {
@@ -201,6 +202,5 @@ const FFCodec ff_nellymoser_decoder = {
     .close          = decode_end,
     FF_CODEC_DECODE_CB(decode_tag),
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_PARAM_CHANGE | AV_CODEC_CAP_CHANNEL_CONF,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLT,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLT),
 };

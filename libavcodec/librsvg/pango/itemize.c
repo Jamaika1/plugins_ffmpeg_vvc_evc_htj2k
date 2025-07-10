@@ -178,7 +178,7 @@ width_iter_is_upright (gunichar ch)
   };
   static const int max = sizeof(upright) / sizeof(upright[0]);
   int st = 0;
-  int ed = max;
+  int ed = max - 1;
 
   if (ch < upright[0][0])
     return FALSE;
@@ -1088,6 +1088,7 @@ collect_font_scale (PangoContext  *context,
                   break;
                 case PANGO_FONT_SCALE_SUPERSCRIPT:
                   if (prev &&
+                      prev->analysis.font &&
                       hb_ot_metrics_get_position (pango_font_get_hb_font (prev->analysis.font),
                                                   HB_OT_METRICS_TAG_SUPERSCRIPT_EM_Y_SIZE,
                                                   &y_size))
@@ -1102,6 +1103,7 @@ collect_font_scale (PangoContext  *context,
                   break;
                 case PANGO_FONT_SCALE_SUBSCRIPT:
                   if (prev &&
+                      prev->analysis.font &&
                       hb_ot_metrics_get_position (pango_font_get_hb_font (prev->analysis.font),
                                                   HB_OT_METRICS_TAG_SUBSCRIPT_EM_Y_SIZE,
                                                   &y_size))
@@ -1115,7 +1117,8 @@ collect_font_scale (PangoContext  *context,
                     }
                   break;
                 case PANGO_FONT_SCALE_SMALL_CAPS:
-                  if (hb_ot_metrics_get_position (pango_font_get_hb_font (item->analysis.font),
+                  if (item->analysis.font &&
+                      hb_ot_metrics_get_position (pango_font_get_hb_font (item->analysis.font),
                                                   HB_OT_METRICS_TAG_CAP_HEIGHT,
                                                   &cap_height) &&
                       hb_ot_metrics_get_position (pango_font_get_hb_font (item->analysis.font),
@@ -1334,7 +1337,7 @@ find_text_transform (const PangoAnalysis *analysis)
  * add font scale and text transform attributes to make
  * them be appear according to variant. The log_attrs are
  * needed for taking text transforms into account when
- * determining the case of characters int he run.
+ * determining the case of characters in the run.
  */
 static void
 split_item_for_variant (const char   *text,

@@ -24,6 +24,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/pixdesc.h"
 
@@ -142,9 +143,10 @@ static int dnxhd_init_vlc(DNXHDContext *ctx, uint32_t cid, int bitdepth)
                  ctx->cid_table->dc_bits, 1, 1,
                  ctx->cid_table->dc_codes, 1, 1, 0)) < 0)
             goto out;
-        if ((ret = vlc_init(&ctx->run_vlc, DNXHD_VLC_BITS, 62,
+        if ((ret = ff_vlc_init_sparse(&ctx->run_vlc, DNXHD_VLC_BITS, 62,
                  ctx->cid_table->run_bits, 1, 1,
-                 ctx->cid_table->run_codes, 2, 2, 0)) < 0)
+                 ctx->cid_table->run_codes, 2, 2,
+                 ctx->cid_table->run, 1, 1, 0)) < 0)
             goto out;
 
         ctx->cid = cid;
@@ -358,7 +360,7 @@ static av_always_inline int dnxhd_decode_dct_block(const DNXHDContext *ctx,
                                                    int level_shift,
                                                    int dc_shift)
 {
-    int i, j, index1, index2, len, flags;
+    int i, j, index1, len, flags;
     int level, component, sign;
     const int *scale;
     const uint8_t *weight_matrix;
@@ -425,10 +427,11 @@ static av_always_inline int dnxhd_decode_dct_block(const DNXHDContext *ctx,
         }
 
         if (flags & 2) {
+            int run;
             UPDATE_CACHE(bs, &row->gb);
-            GET_VLC(index2, bs, &row->gb, ctx->run_vlc.table,
+            GET_VLC(run, bs, &row->gb, ctx->run_vlc.table,
                     DNXHD_VLC_BITS, 2);
-            i += ctx->cid_table->run[index2];
+            i += run;
         }
 
         if (++i > 63) {
@@ -652,8 +655,6 @@ decode_coding_unit:
     if (first_field) {
         if ((ret = ff_thread_get_buffer(avctx, picture, 0)) < 0)
             return ret;
-        picture->pict_type = AV_PICTURE_TYPE_I;
-        picture->flags |= AV_FRAME_FLAG_KEY;
     }
 
     ctx->buf_size = buf_size - ctx->data_offset;

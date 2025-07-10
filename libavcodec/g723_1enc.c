@@ -32,14 +32,14 @@
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "celp_math.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "g723_1.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/celp_math.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/g723_1.h"
 
 #define BITSTREAM_WRITER_LE
-#include "put_bits.h"
+#include "libavcodec/put_bits.h"
 
 /**
  * Hamming window coefficients scaled by 2^15
@@ -1246,10 +1246,6 @@ const FFCodec ff_g723_1_encoder = {
     .init           = g723_1_encode_init,
     FF_CODEC_ENCODE_CB(g723_1_encode_frame),
     .defaults       = defaults,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) {
-        AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_NONE
-    },
-    .p.ch_layouts   = (const AVChannelLayout[]){
-        AV_CHANNEL_LAYOUT_MONO, { 0 }
-    },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16),
+    CODEC_CH_LAYOUTS(AV_CHANNEL_LAYOUT_MONO),
 };

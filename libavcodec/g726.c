@@ -22,18 +22,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include <limits.h>
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "encode.h"
-#include "get_bits.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/put_bits.h"
 
 /**
  * G.726 11-bit float.
@@ -302,7 +302,7 @@ static int16_t g726_encode(G726Context* c, int16_t sig)
 {
     uint8_t i;
 
-    i = av_mod_uintp2(quant(c, sig/4 - c->se), c->code_size);
+    i = av_zero_extend(quant(c, sig/4 - c->se), c->code_size);
     g726_decode(c, i);
     return i;
 }
@@ -410,8 +410,7 @@ const FFCodec ff_adpcm_g726_encoder = {
     .priv_data_size = sizeof(G726Context),
     .init           = g726_encode_init,
     FF_CODEC_ENCODE_CB(g726_encode_frame),
-    .p.sample_fmts  = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16),
     .p.priv_class   = &g726_class,
     .defaults       = defaults,
 };
@@ -428,8 +427,7 @@ const FFCodec ff_adpcm_g726le_encoder = {
     .priv_data_size = sizeof(G726Context),
     .init           = g726_encode_init,
     FF_CODEC_ENCODE_CB(g726_encode_frame),
-    .p.sample_fmts  = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16),
     .p.priv_class   = &g726_class,
     .defaults       = defaults,
 };

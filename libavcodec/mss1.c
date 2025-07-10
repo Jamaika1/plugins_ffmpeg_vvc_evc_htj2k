@@ -24,10 +24,10 @@
  * Microsoft Screen 1 (aka Windows Media Video V7 Screen) decoder
  */
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "mss12.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mss12.h"
 
 typedef struct MSS1Context {
     MSS12Context   ctx;
@@ -178,7 +178,11 @@ static int mss1_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
     if (c->corrupted)
         return AVERROR_INVALIDDATA;
     memcpy(ctx->pic->data[1], c->pal, AVPALETTE_SIZE);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
     ctx->pic->palette_has_changed = pal_changed;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
     if ((ret = av_frame_ref(rframe, ctx->pic)) < 0)
         return ret;
@@ -202,7 +206,7 @@ static av_cold int mss1_decode_init(AVCodecContext *avctx)
 
     ret = ff_mss12_decode_init(&c->ctx, 0, &c->sc, NULL);
     if (ret < 0)
-        av_frame_free(&c->pic);
+        return ret;
 
     avctx->pix_fmt = AV_PIX_FMT_PAL8;
 
@@ -229,4 +233,5 @@ const FFCodec ff_mss1_decoder = {
     .close          = mss1_decode_end,
     FF_CODEC_DECODE_CB(mss1_decode_frame),
     .p.capabilities = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

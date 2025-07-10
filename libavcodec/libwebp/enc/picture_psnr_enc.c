@@ -18,6 +18,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "../webp/types.h"
 #include "../dsp/dsp.h"
 #include "../enc/vp8i_enc.h"
 #include "../utils/utils.h"

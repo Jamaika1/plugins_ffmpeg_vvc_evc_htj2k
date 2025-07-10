@@ -9,12 +9,13 @@
 //
 // Gamma correction utilities.
 
-#include "./sharpyuv_gamma.h"
+#include "sharpyuv_gamma.h"
 
 #include <assert.h>
 #include <float.h>
 #include <math.h>
 
+#include "sharpyuv.h"
 #include "../webp/types.h"
 
 // Gamma correction compensates loss of resolution during chroma subsampling.

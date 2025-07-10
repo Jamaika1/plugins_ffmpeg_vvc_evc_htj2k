@@ -3,18 +3,18 @@
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
-   
+
    - Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
-   
+
    - Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
-   
+
    - Neither the name of the copyright owner, nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include "xeve_thread_pool.h"
 #if defined(WIN32) || defined(WIN64)
-#include <Windows.h>
+#include <windows.h>
 #include <process.h>
 #else
 #include <pthread.h>
@@ -40,7 +40,7 @@
 
 #define WINDOWS_MUTEX_SYNC 0
 
-#if !defined(WIN32) && !defined(WIN64) 
+#if !defined(WIN32) && !defined(WIN64)
 
 typedef struct _THREAD_CTX
 {
@@ -51,7 +51,7 @@ typedef struct _THREAD_CTX
     pthread_cond_t r_event; //wait event for main thread
     pthread_mutex_t c_section; //for synchronization
 
-    //member field to run  a task                   
+    //member field to run  a task
     THREAD_ENTRY task;
     void * t_arg;
     THREAD_STATUS t_status;
@@ -69,7 +69,7 @@ void * xeve_run_worker_thread(void * arg)
     /********************* main routine for thread pool worker thread *************************
     ********************** worker thread can remain in suspended or running state *************
     ********************* control the synchronization with help of thread context members *****/
-    
+
     //member Initialization section
     THREAD_CTX * t_context = (THREAD_CTX *)arg;
     if (!t_context)
@@ -89,7 +89,7 @@ void * xeve_run_worker_thread(void * arg)
             //wait for the event
             pthread_cond_wait(&t_context->w_event, &t_context->c_section);
         }
-        
+
         if (t_context->t_status == THREAD_TERMINATED)
         {
             t_context->task_result = THREAD_SUCCESS;
@@ -119,7 +119,7 @@ POOL_THREAD  xeve_create_worker_thread(THREAD_CONTROLLER * tc, int thread_id)
 {
     if (!tc)
     {
-        return NULL; //error management 
+        return NULL; //error management
     }
 
     THREAD_CTX * thread_context = NULL;
@@ -169,7 +169,7 @@ POOL_THREAD  xeve_create_worker_thread(THREAD_CONTROLLER * tc, int thread_id)
     thread_context->t_status = THREAD_SUSPENDED;
     thread_context->task_result = THREAD_INVALID_STATE;
     thread_context->thread_id = thread_id;
-    
+
     //create the worker thread
     result = pthread_create(&thread_context->t_handle, &thread_context->tAttribute, xeve_run_worker_thread, (void*)(thread_context));
     if (result)
@@ -269,7 +269,7 @@ THREAD_RESULT xeve_terminate_worker_thread(POOL_THREAD * thread_id)
     {
         pthread_cond_wait(&t_context->r_event, &t_context->c_section);
     }
-    
+
     t_context->t_status = THREAD_TERMINATED;
     pthread_cond_signal(&t_context->w_event);
 
@@ -282,7 +282,7 @@ THREAD_RESULT xeve_terminate_worker_thread(POOL_THREAD * thread_id)
     pthread_mutex_destroy(&t_context->c_section);
     pthread_cond_destroy(&t_context->w_event);
     pthread_cond_destroy(&t_context->r_event);
-    
+
     //delete the thread context memory
     free(t_context);
     (*thread_id) = NULL;
@@ -349,7 +349,7 @@ typedef struct _THREAD_CTX
     HANDLE w_event; //worker thread waiting event handle
     HANDLE r_event; //signalling thread read event handle
     CRITICAL_SECTION c_section; //critical section for fast synchronization
-    
+
     //member field to run  a task
     THREAD_ENTRY task;
     void * t_arg;
@@ -374,7 +374,7 @@ unsigned int __stdcall xeve_run_worker_thread(void * arg)
     /********************* main routine for thread pool worker thread *************************
     ********************** worker thread can remain in suspended or running state *************
     ********************* control the synchronization with help of thread context members *****/
-    
+
     //member Initialization section
     THREAD_CTX * t_context = (THREAD_CTX *)arg;
     if (!t_context)
@@ -419,7 +419,7 @@ POOL_THREAD  xeve_create_worker_thread(THREAD_CONTROLLER * tc, int thread_id)
 {
     if (!tc)
     {
-        return NULL; //error management 
+        return NULL; //error management
     }
 
     THREAD_CTX * thread_context = NULL;
@@ -446,7 +446,7 @@ POOL_THREAD  xeve_create_worker_thread(THREAD_CONTROLLER * tc, int thread_id)
     }
 
     InitializeCriticalSection(&(thread_context->c_section)); //This section for fast data retrieval
-    
+
     //intialize the state variables for the thread context object
     thread_context->task = NULL;
     thread_context->t_arg = NULL;
@@ -464,7 +464,7 @@ POOL_THREAD  xeve_create_worker_thread(THREAD_CONTROLLER * tc, int thread_id)
     //return the created thread_context;
     return (POOL_THREAD)thread_context;
 
-TERROR:    
+TERROR:
     if (thread_context->w_event)
     {
         CloseHandle(thread_context->w_event);
@@ -529,7 +529,7 @@ THREAD_RESULT  xeve_retrieve_thread_result(POOL_THREAD thread_id, int * res)
     EnterCriticalSection(&t_context->c_section);
     result = t_context->task_result;
     LeaveCriticalSection(&t_context->c_section);
-    
+
     *res = result;
     return result;
 }

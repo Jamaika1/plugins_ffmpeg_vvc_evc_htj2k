@@ -23,18 +23,18 @@
 
 #include <math.h>
 
-#include "sipr.h"
+#include "libavcodec/sipr.h"
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 #include "libavutil/float_dsp.h"
 #include "libavutil/mathematics.h"
-#include "lsp.h"
-#include "acelp_vectors.h"
-#include "acelp_pitch_delay.h"
-#include "acelp_filters.h"
-#include "celp_filters.h"
+#include "libavcodec/lsp.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/acelp_pitch_delay.h"
+#include "libavcodec/acelp_filters.h"
+#include "libavcodec/celp_filters.h"
 
-#include "sipr16kdata.h"
+#include "libavcodec/sipr16kdata.h"
 
 /**
  * Convert an lsf vector into an lsp vector.
@@ -163,11 +163,11 @@ static float acelp_decode_gain_codef(float gain_corr_factor, const float *fc_v,
                                      const float *ma_prediction_coeff,
                                      int subframe_size, int ma_pred_order)
 {
-    mr_energy += avpriv_scalarproduct_float_c(quant_energy, ma_prediction_coeff,
-                                              ma_pred_order);
+    mr_energy += ff_scalarproduct_float_c(quant_energy, ma_prediction_coeff,
+                                          ma_pred_order);
 
     mr_energy = gain_corr_factor * exp(M_LN10 / 20. * mr_energy) /
-        sqrt((0.01 + avpriv_scalarproduct_float_c(fc_v, fc_v, subframe_size)));
+        sqrt((0.01 + ff_scalarproduct_float_c(fc_v, fc_v, subframe_size)));
     return mr_energy;
 }
 

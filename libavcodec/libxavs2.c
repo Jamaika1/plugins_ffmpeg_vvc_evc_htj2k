@@ -89,6 +89,7 @@ static av_cold int xavs2_init(AVCodecContext *avctx)
     xavs2_opt_set2("SampleBitDepth",  "%d", bit_depth);
     xavs2_opt_set2("Log",       "%d", cae->log_level);
     xavs2_opt_set2("Preset",    "%d", cae->preset_level);
+    xavs2_opt_set2("ProfileID",    "%d", ((avctx->pix_fmt == AV_PIX_FMT_YUV420P10) ? 34 : 32));
     xavs2_opt_set2("ChromaFormat", "%d", ((avctx->pix_fmt == AV_PIX_FMT_GRAY8 || avctx->pix_fmt == AV_PIX_FMT_GRAY10) ? 0 :
                                          ((avctx->pix_fmt == AV_PIX_FMT_YUV420P || avctx->pix_fmt == AV_PIX_FMT_YUV420P10) ? 1 :
                                          ((avctx->pix_fmt == AV_PIX_FMT_YUV422P || avctx->pix_fmt == AV_PIX_FMT_YUV422P10) ? 2 : 1))));
@@ -147,7 +148,7 @@ static void xavs2_copy_frame_with_shift8(xavs2_picture_t *pic, const AVFrame *fr
                 p_plane[wIdx] = p_buffer[wIdx] << shift_in;
             }
             p_plane += pic->img.i_stride[plane];
-            p_buffer += frame->linesize[plane];
+            p_buffer += frame->linesize[plane] * pic->img.enc_sample_size;
         }
     }
 }
@@ -169,7 +170,7 @@ static void xavs2_copy_frame_with_shift10(xavs2_picture_t *pic, const AVFrame *f
                 p_plane[wIdx] = p_buffer[wIdx] << shift_in;
             }
             p_plane += pic->img.i_stride[plane];
-            p_buffer += frame->linesize[plane];
+            p_buffer += frame->linesize[plane] * pic->img.enc_sample_size;
         }
     }
 }
@@ -185,11 +186,11 @@ static void xavs2_copy_frame8(xavs2_picture_t *pic, const AVFrame *frame)
     for (plane = 0; plane < 3; plane++) {
         p_plane = pic->img.img8_planes[plane];
         p_buffer = frame->data[plane];
-        stride = pic->img.i_width[plane] * pic->img.in_sample_size;
+        stride = pic->img.i_width[plane] * pic->img.in_sample_size * pic->img.enc_sample_size;
         for (hIdx = 0; hIdx < pic->img.i_lines[plane]; hIdx++) {
             memcpy(p_plane, p_buffer, stride);
             p_plane += pic->img.i_stride[plane];
-            p_buffer += frame->linesize[plane];
+            p_buffer += frame->linesize[plane] * pic->img.enc_sample_size;
         }
     }
 }
@@ -205,11 +206,11 @@ static void xavs2_copy_frame10(xavs2_picture_t *pic, const AVFrame *frame)
     for (plane = 0; plane < 3; plane++) {
         p_plane = pic->img.img10_planes[plane];
         p_buffer = (uint16_t*)frame->data[plane];
-        stride = pic->img.i_width[plane] * pic->img.in_sample_size;
+        stride = pic->img.i_width[plane] * pic->img.in_sample_size * pic->img.enc_sample_size;
         for (hIdx = 0; hIdx < pic->img.i_lines[plane]; hIdx++) {
             memcpy(p_plane, p_buffer, stride);
             p_plane += pic->img.i_stride[plane];
-            p_buffer += frame->linesize[plane];
+            p_buffer += frame->linesize[plane] * pic->img.enc_sample_size;
         }
     }
 }
@@ -239,10 +240,10 @@ static int xavs2_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             break;
         case AV_PIX_FMT_YUV420P10:
             if (pic.img.in_sample_size == pic.img.enc_sample_size) {
-                xavs2_copy_frame8(&pic, frame);
+                xavs2_copy_frame10(&pic, frame);
             } else {
                 const int shift_in = atoi(cae->api->opt_get(cae->param, "SampleShift"));
-                xavs2_copy_frame_with_shift8(&pic, frame, shift_in);
+                xavs2_copy_frame_with_shift10(&pic, frame, shift_in);
             }
             break;
         default:
@@ -281,7 +282,11 @@ static int xavs2_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             pkt->flags |= AV_PKT_FLAG_KEY;
         }
 
-        memcpy(pkt->data, cae->packet.stream, cae->packet.len);
+        //if (av_pix_fmt_desc_get(avctx->pix_fmt)->comp[0].depth == 8) {
+            memcpy(pkt->data, cae->packet.stream, cae->packet.len);
+        /*} else {
+            memcpy(pkt->data, cae->packet.stream16, cae->packet.len);
+        }*/
 
         cae->api->encoder_packet_unref(cae->encoder, &cae->packet);
 
@@ -347,14 +352,15 @@ const FFCodec ff_libxavs2_encoder = {
     .init           = xavs2_init,
     FF_CODEC_ENCODE_CB(xavs2_encode_frame),
     .close          = xavs2_close,
-    .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE,
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV422P10,
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP | FF_CODEC_CAP_NOT_INIT_THREADSAFE,
+    CODEC_PIXFMTS(                                   AV_PIX_FMT_YUV422P10,
                                                      AV_PIX_FMT_YUV420P10,
                                                      AV_PIX_FMT_GRAY10,
                                                      AV_PIX_FMT_YUV422P,
                                                      AV_PIX_FMT_YUV420P,
                                                      AV_PIX_FMT_GRAY8,
-                                                     AV_PIX_FMT_NONE },
+                                                     AV_PIX_FMT_NONE),
+    .color_ranges   = AVCOL_RANGE_MPEG,
     .p.priv_class   = &libxavs2,
     .defaults       = xavs2_defaults,
     .p.wrapper_name = "libxavs2",

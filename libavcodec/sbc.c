@@ -30,7 +30,7 @@
  * SBC common functions for the encoder and decoder
  */
 
-#include "sbc.h"
+#include "libavcodec/sbc.h"
 
 /* A2DP specification: Appendix B, page 69 */
 static const int sbc_offset4[4][4] = {

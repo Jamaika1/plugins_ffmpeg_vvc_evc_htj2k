@@ -11,7 +11,7 @@
  ********************************************************************/
 
 #define HEAD_ALIGN 32
-#include "../libpthread_win32/pthread.h"
+#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

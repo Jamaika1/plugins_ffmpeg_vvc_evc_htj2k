@@ -167,7 +167,7 @@ struct _GStaticRecMutex
 #ifndef __GI_SCANNER__
   /* ABI compat only */
   union {
-# if !defined(G_OS_WIN32) && defined(G_ATOMIC_LOCK_FREE)
+# if !(defined(G_OS_WIN32) && !defined(G_ATOMIC_LOCK_FREE))
     void *owner;
 # else
     pthread_t owner;

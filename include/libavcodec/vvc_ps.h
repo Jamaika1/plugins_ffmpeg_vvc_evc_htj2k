@@ -23,6 +23,7 @@
 #ifndef AVCODEC_VVC_PS_H
 #define AVCODEC_VVC_PS_H
 
+#include "cbs_h266.h"
 #include "vvc.h"
 
 #define IS_IDR(s)  ((s)->vcl_unit_type == VVC_IDR_W_RADL || (s)->vcl_unit_type == VVC_IDR_N_LP)
@@ -55,12 +56,9 @@ enum {
 };
 
 typedef struct VVCSPS {
-    AVBufferRef *rref;
-    const H266RawSPS *r;
+    const H266RawSPS *r;                                            ///< RefStruct reference
 
     //derived values
-    uint16_t    width;
-    uint16_t    height;
     uint8_t     hshift[VVC_MAX_SAMPLE_ARRAYS];
     uint8_t     vshift[VVC_MAX_SAMPLE_ARRAYS];
     uint32_t    max_pic_order_cnt_lsb;                             ///< MaxPicOrderCntLsb
@@ -71,7 +69,7 @@ typedef struct VVCSPS {
     uint8_t     bit_depth;                                          ///< BitDepth
     uint8_t     qp_bd_offset;                                       ///< QpBdOffset
     uint8_t     ctb_log2_size_y;                                    ///< CtbLog2SizeY
-    uint8_t     ctb_size_y;                                         ///< CtbSizeY
+    uint16_t    ctb_size_y;                                         ///< CtbSizeY
     uint8_t     min_cb_log2_size_y;                                 ///< MinCbLog2SizeY
     uint8_t     min_cb_size_y;                                      ///< MinCbSizeY
     uint8_t     max_tb_size_y;                                      ///< MaxTbSizeY
@@ -92,12 +90,11 @@ typedef struct DBParams {
 } DBParams;
 
 typedef struct VVCPPS {
-    AVBufferRef *rref;
-    const H266RawPPS *r;
+    const H266RawPPS *r;                                            ///< RefStruct reference
 
     //derived value;
-    int8_t   chroma_qp_offset[3];                       ///< pps_cb_qp_offset, pps_cr_qp_offset, pps_joint_cbcr_qp_offset_value
-    int8_t   chroma_qp_offset_list[6][3];               ///< pps_cb_qp_offset_list, pps_cr_qp_offset_list, pps_joint_cbcr_qp_offset_list
+    int8_t   chroma_qp_offset[3];                                   ///< pps_cb_qp_offset, pps_cr_qp_offset, pps_joint_cbcr_qp_offset_value
+    int8_t   chroma_qp_offset_list[6][3];                           ///< pps_cb_qp_offset_list, pps_cr_qp_offset_list, pps_joint_cbcr_qp_offset_list
 
     uint16_t width;
     uint16_t height;
@@ -118,10 +115,10 @@ typedef struct VVCPPS {
     uint16_t min_tu_height;
 
     uint32_t *ctb_addr_in_slice;            ///< CtbAddrInCurrSlice for entire picture
-    uint16_t *col_bd;
-    uint16_t *row_bd;
-    uint16_t *ctb_to_col_bd;
-    uint16_t *ctb_to_row_bd;
+    uint16_t *col_bd;                       ///< TileColBdVal
+    uint16_t *row_bd;                       ///< TileRowBdVal
+    uint16_t *ctb_to_col_bd;                ///< CtbToTileColBd
+    uint16_t *ctb_to_row_bd;                ///< CtbToTileRowBd
 
     uint16_t width32;                       ///< width  in 32 pixels
     uint16_t height32;                      ///< height in 32 pixels
@@ -130,6 +127,10 @@ typedef struct VVCPPS {
 
     uint16_t ref_wraparound_offset;         ///< PpsRefWraparoundOffset
 
+    uint16_t subpic_x[VVC_MAX_SLICES];      ///< SubpicLeftBoundaryPos
+    uint16_t subpic_y[VVC_MAX_SLICES];      ///< SubpicTopBoundaryPos
+    uint16_t subpic_width[VVC_MAX_SLICES];
+    uint16_t subpic_height[VVC_MAX_SLICES];
 } VVCPPS;
 
 #define MAX_WEIGHTS 15
@@ -144,39 +145,31 @@ typedef struct PredWeightTable {
 } PredWeightTable;
 
 typedef struct VVCPH {
-    AVBufferRef *rref;
     const H266RawPictureHeader *r;
+    void *rref;                                     ///< RefStruct reference, backing ph above
 
     //derived values
     uint32_t max_num_subblock_merge_cand;           ///< MaxNumSubblockMergeCand
     int32_t  poc;                                   ///< PicOrderCntVal
+
+    uint8_t  num_ver_vbs;                           ///< NumVerVirtualBoundaries
+    uint16_t vb_pos_x[VVC_MAX_VBS];                 ///< VirtualBoundaryPosX
+    uint8_t  num_hor_vbs;                           ///< NumHorVirtualBoundaries
+    uint16_t vb_pos_y[VVC_MAX_VBS];                 ///< VirtualBoundaryPosY
+
     PredWeightTable pwt;
 } VVCPH;
 
-#define VVC_MAX_ALF_COUNT        8
-#define VVC_MAX_LMCS_COUNT       4
-#define VVC_MAX_SL_COUNT         8
-
-typedef struct VVCParamSets {
-    AVBufferRef *vps_list[VVC_MAX_VPS_COUNT];
-    AVBufferRef *sps_list[VVC_MAX_SPS_COUNT];
-    AVBufferRef *pps_list[VVC_MAX_PPS_COUNT];
-    AVBufferRef *alf_list[VVC_MAX_ALF_COUNT];
-    AVBufferRef *lmcs_list[VVC_MAX_LMCS_COUNT];
-    AVBufferRef *scaling_list[VVC_MAX_SL_COUNT];
-} VVCParamSets;
-
 #define ALF_NUM_FILTERS_LUMA    25
 #define ALF_NUM_FILTERS_CHROMA   8
-#define ALF_NUM_FILTERS_CC       5
+#define ALF_NUM_FILTERS_CC       4
 
 #define ALF_NUM_COEFF_LUMA      12
 #define ALF_NUM_COEFF_CHROMA     6
 #define ALF_NUM_COEFF_CC         7
 
 typedef struct VVCALF {
-    AVBufferRef *rref;
-
+    const H266RawAPS *r;
     int16_t luma_coeff     [ALF_NUM_FILTERS_LUMA][ALF_NUM_COEFF_LUMA];
     uint8_t luma_clip_idx  [ALF_NUM_FILTERS_LUMA][ALF_NUM_COEFF_LUMA];
 
@@ -201,8 +194,6 @@ enum {
 #define SL_MAX_MATRIX_SIZE 8
 
 typedef struct VVCScalingList {
-    AVBufferRef *rref;
-
     uint8_t scaling_matrix_rec[SL_MAX_ID][SL_MAX_MATRIX_SIZE * SL_MAX_MATRIX_SIZE];  ///< ScalingMatrixRec
     uint8_t scaling_matrix_dc_rec[SL_MAX_ID - SL_START_16x16];                       ///< ScalingMatrixDcRec[refId − 14]
 } VVCScalingList;
@@ -211,30 +202,41 @@ typedef struct VVCLMCS {
     uint8_t  min_bin_idx;
     uint8_t  max_bin_idx;
 
-    //*2 for high depth
-    uint8_t  fwd_lut[LMCS_MAX_LUT_SIZE * 2];
-    uint8_t  inv_lut[LMCS_MAX_LUT_SIZE * 2];
+    union {
+        uint8_t  u8[LMCS_MAX_LUT_SIZE];
+        uint16_t u16[LMCS_MAX_LUT_SIZE]; ///< for high bit-depth
+    } fwd_lut, inv_lut;
 
     uint16_t pivot[LMCS_MAX_BIN_SIZE + 1];
     uint16_t chroma_scale_coeff[LMCS_MAX_BIN_SIZE];
 } VVCLMCS;
 
-typedef struct VVCFrameParamSets {
-    AVBufferRef            *sps_buf;
-    AVBufferRef            *pps_buf;
-    AVBufferRef            *alf_list[VVC_MAX_ALF_COUNT];
-    AVBufferRef            *sl_buf;
+#define VVC_MAX_ALF_COUNT        8
+#define VVC_MAX_LMCS_COUNT       4
+#define VVC_MAX_SL_COUNT         8
 
-    const VVCSPS           *sps;
-    const VVCPPS           *pps;
+typedef struct VVCParamSets {
+    const VVCSPS            *sps_list[VVC_MAX_SPS_COUNT];       ///< RefStruct reference
+    const VVCPPS            *pps_list[VVC_MAX_PPS_COUNT];       ///< RefStruct reference
+    const VVCALF            *alf_list[VVC_MAX_ALF_COUNT];       ///< RefStruct reference
+    const H266RawAPS        *lmcs_list[VVC_MAX_LMCS_COUNT];     ///< RefStruct reference
+    const VVCScalingList    *scaling_list[VVC_MAX_SL_COUNT];    ///< RefStruct reference
+
+    // Bit field of SPS IDs used in the current CVS
+    uint16_t                 sps_id_used;
+} VVCParamSets;
+
+typedef struct VVCFrameParamSets {
+    const VVCSPS           *sps;                                ///< RefStruct reference
+    const VVCPPS           *pps;                                ///< RefStruct reference
     VVCPH                   ph;
+    const VVCALF           *alf_list[VVC_MAX_ALF_COUNT];        ///< RefStruct reference
     VVCLMCS                 lmcs;
-    const VVCScalingList   *sl;
+    const VVCScalingList   *sl;                                 ///< RefStruct reference
 } VVCFrameParamSets;
 
 typedef struct VVCSH {
-    AVBufferRef *rref;
-    const H266RawSliceHeader *r;
+    const H266RawSliceHeader *r;                            ///< RefStruct reference
 
     // derived values
     // ctu address

@@ -48,16 +48,17 @@
 #include <inttypes.h>
 
 #include "libavutil/channel_layout.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/bytestream.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/thread.h"
-#include "libavcodec/unary.h"
-#include "libavcodec/mathops.h"
-#include "libavcodec/alac_data.h"
-#include "libavcodec/alacdsp.h"
+#include "avcodec.h"
+#include "get_bits.h"
+#include "bytestream.h"
+#include "codec_internal.h"
+#include "thread.h"
+#include "unary.h"
+#include "mathops.h"
+#include "alac_data.h"
+#include "alacdsp.h"
 
 #define ALAC_EXTRADATA_SIZE 36
 

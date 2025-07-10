@@ -126,7 +126,7 @@ int xevd_get_dc(const int numerator, const int w, const int h)
     const int log2_w = xevd_tbl_log2[w];
     const int log2_h = xevd_tbl_log2[h];
     const int shift_w = 12;
-
+    
     int basic_shift = log2_w, log2_asp_ratio = 0;
 
     if (log2_w > log2_h)
@@ -387,10 +387,10 @@ static __inline pel ipred_ang_val(pel * src_up, pel * src_le, pel * src_ri, u16 
     const int * mt = xevd_tbl_ipred_dxdy[ipm];
     pel * src_ch = NULL;
     int num_selections = 0;
-    int use_x;
+    int use_x = 0;
     int p, pn, pn_n1, pn_p2;
     pel temp_pel = 0;
-    int refpos = 0;
+    int refpos = 0; 
 
     x = INT_MAX;
     y = INT_MAX;

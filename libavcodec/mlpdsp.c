@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "mlpdsp.h"
-#include "mlp.h"
+#include "libavcodec/mlpdsp.h"
+#include "libavcodec/mlp.h"
 
 static void mlp_filter_channel(int32_t *state, const int32_t *coeff,
                                int firorder, int iirorder,
@@ -130,7 +130,6 @@ av_cold void ff_mlpdsp_init(MLPDSPContext *c)
     c->mlp_filter_channel = mlp_filter_channel;
     c->mlp_rematrix_channel = ff_mlp_rematrix_channel;
     c->mlp_select_pack_output = mlp_select_pack_output;
-    c->mlp_pack_output = ff_mlp_pack_output;
 #if ARCH_ARM
     ff_mlpdsp_init_arm(c);
 #elif ARCH_X86

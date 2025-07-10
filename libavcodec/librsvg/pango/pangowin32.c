@@ -33,15 +33,15 @@
 #include "../harfbuzz/hb-gdi.h"
 #endif
 
+#include "../harfbuzz/hb-ot.h"
+
 #include "pango-impl-utils.h"
 #include "pangowin32.h"
 #include "pangowin32-private.h"
-
-#define MAX_FREED_FONTS 256
+#include "pango-coverage-private.h"
 
 gboolean _pango_win32_debug = FALSE;
 
-static void pango_win32_font_dispose    (GObject             *object);
 static void pango_win32_font_finalize   (GObject             *object);
 
 static PangoFontDescription *pango_win32_font_describe          (PangoFont        *font);
@@ -213,6 +213,14 @@ pango_win32_get_debug_flag (void)
   return _pango_win32_debug;
 }
 
+static PangoFontFace *
+pango_win32_font_get_face (PangoFont *font)
+{
+  PangoWin32Font *win32font = (PangoWin32Font *)font;
+
+  return PANGO_FONT_FACE (win32font->win32face);
+}
+
 static void
 _pango_win32_font_class_init (PangoWin32FontClass *class)
 {
@@ -221,7 +229,6 @@ _pango_win32_font_class_init (PangoWin32FontClass *class)
   PangoFontClassPrivate *pclass;
 
   object_class->finalize = pango_win32_font_finalize;
-  object_class->dispose = pango_win32_font_dispose;
 
   font_class->describe = pango_win32_font_describe;
   font_class->describe_absolute = pango_win32_font_describe_absolute;
@@ -237,6 +244,7 @@ _pango_win32_font_class_init (PangoWin32FontClass *class)
 
   pclass = g_type_class_get_private ((GTypeClass *) class, PANGO_TYPE_FONT);
   pclass->is_hinted = pango_win32_font_is_hinted;
+  pclass->get_face = pango_win32_font_get_face;
 
   _pango_win32_get_display_dc ();
 }
@@ -813,38 +821,6 @@ pango_win32_font_get_metrics_factor (PangoFont *font)
 }
 
 static void
-pango_win32_fontmap_cache_add (PangoFontMap   *fontmap,
-			       PangoWin32Font *win32font)
-{
-  PangoWin32FontMap *win32fontmap = PANGO_WIN32_FONT_MAP (fontmap);
-
-  if (win32fontmap->freed_fonts->length == MAX_FREED_FONTS)
-    {
-      PangoWin32Font *old_font = g_queue_pop_tail (win32fontmap->freed_fonts);
-      g_object_unref (old_font);
-    }
-
-  g_object_ref (win32font);
-  g_queue_push_head (win32fontmap->freed_fonts, win32font);
-  win32font->in_cache = TRUE;
-}
-
-static void
-pango_win32_font_dispose (GObject *object)
-{
-  PangoWin32Font *win32font = PANGO_WIN32_FONT (object);
-
-  /* If the font is not already in the freed-fonts cache, add it,
-   * if it is already there, do nothing and the font will be
-   * freed.
-   */
-  if (!win32font->in_cache && win32font->fontmap)
-    pango_win32_fontmap_cache_add (win32font->fontmap, win32font);
-
-  G_OBJECT_CLASS (_pango_win32_font_parent_class)->dispose (object);
-}
-
-static void
 free_metrics_info (PangoWin32MetricsInfo *info)
 {
   pango_font_metrics_unref (info->metrics);
@@ -863,7 +839,6 @@ pango_win32_font_finalize (GObject *object)
 {
   PangoWin32Font *win32font = (PangoWin32Font *)object;
   PangoWin32FontCache *cache = pango_win32_font_map_get_font_cache (win32font->fontmap);
-  PangoWin32Font *fontmap;
 
   if (cache != NULL && win32font->hfont != NULL)
     pango_win32_font_cache_unload (cache, win32font->hfont);
@@ -871,17 +846,15 @@ pango_win32_font_finalize (GObject *object)
   g_slist_foreach (win32font->metrics_by_lang, (GFunc)free_metrics_info, NULL);
   g_slist_free (win32font->metrics_by_lang);
 
-  if (win32font->win32face)
-    pango_win32_font_entry_remove (win32font->win32face, PANGO_FONT (win32font));
+  pango_win32_font_entry_remove (win32font->win32face, PANGO_FONT (win32font));
+  g_object_unref (win32font->win32face);
 
   g_hash_table_destroy (win32font->glyph_info);
 
-  fontmap = g_weak_ref_get ((GWeakRef *) &win32font->fontmap);
-  if (fontmap)
-  {
-    g_object_remove_weak_pointer (G_OBJECT (win32font->fontmap), (gpointer *) (gpointer) &win32font->fontmap);
-    g_object_unref (fontmap);
-  }
+  if (win32font->fontmap)
+    g_object_remove_weak_pointer (G_OBJECT (win32font->fontmap), (gpointer *) &win32font->fontmap);
+
+  g_free (win32font->variations);
 
   G_OBJECT_CLASS (_pango_win32_font_parent_class)->finalize (object);
 }
@@ -891,9 +864,14 @@ pango_win32_font_describe (PangoFont *font)
 {
   PangoFontDescription *desc;
   PangoWin32Font *win32font = PANGO_WIN32_FONT (font);
+  int size;
 
   desc = pango_font_description_copy (win32font->win32face->description);
-  pango_font_description_set_size (desc, win32font->size / (PANGO_SCALE / PANGO_WIN32_FONT_MAP (win32font->fontmap)->resolution));
+  size = (int) (0.5 + win32font->size * 72.0 / PANGO_WIN32_FONT_MAP (win32font->fontmap)->dpi);
+  pango_font_description_set_size (desc, size);
+
+  if (win32font->variations)
+    pango_font_description_set_variations (desc, win32font->variations);
 
   return desc;
 }
@@ -907,12 +885,15 @@ pango_win32_font_describe_absolute (PangoFont *font)
   desc = pango_font_description_copy (win32font->win32face->description);
   pango_font_description_set_absolute_size (desc, win32font->size);
 
+  if (win32font->variations)
+    pango_font_description_set_variations (desc, win32font->variations);
+
   return desc;
 }
 
 static PangoCoverage *
 pango_win32_font_get_coverage (PangoFont     *font,
-			       PangoLanguage *lang G_GNUC_UNUSED)
+                               PangoLanguage *lang G_GNUC_UNUSED)
 {
   PangoWin32Face *win32face = ((PangoWin32Font *)font)->win32face;
 
@@ -922,13 +903,11 @@ pango_win32_font_get_coverage (PangoFont     *font,
       hb_font_t *hb_font = pango_font_get_hb_font (font);
       hb_face_t *hb_face = hb_font_get_face (hb_font);
       hb_set_t *chars = hb_set_create ();
-      hb_codepoint_t ch = HB_SET_VALUE_INVALID;
 
       hb_face_collect_unicodes (hb_face, chars);
-      while (hb_set_next(chars, &ch))
-        pango_coverage_set (coverage, ch, PANGO_COVERAGE_EXACT);
 
-      win32face->coverage = g_object_ref (coverage);
+      coverage->chars = chars;
+      win32face->coverage = coverage;
     }
 
   return g_object_ref (win32face->coverage);
@@ -1098,6 +1077,8 @@ pango_win32_render_layout_line (HDC              hdc,
 	case PANGO_UNDERLINE_ERROR_LINE:
           g_warning ("Underline value %d not implemented", uline);
           break;
+        default:
+          g_assert_not_reached ();
 	}
 
       if (uline != PANGO_UNDERLINE_NONE)
@@ -1180,7 +1161,7 @@ pango_win32_get_item_properties (PangoItem      *item,
     {
       PangoAttribute *attr = tmp_list->data;
 
-      switch (attr->klass->type)
+      switch ((int) attr->klass->type)
 	{
 	case PANGO_ATTR_UNDERLINE:
 	  if (uline)
@@ -1307,90 +1288,52 @@ static hb_font_t *
 pango_win32_font_create_hb_font (PangoFont *font)
 {
   PangoWin32Font *win32font = (PangoWin32Font *)font;
-  HFONT hfont;
   hb_face_t *face = NULL;
   hb_font_t *hb_font = NULL;
-  static hb_user_data_key_t key;
 
   g_return_val_if_fail (font != NULL, NULL);
 
 #ifdef USE_HB_DWRITE
   face = pango_win32_font_create_hb_face_dwrite (win32font);
 #else
+  HFONT hfont;
+
   hfont = _pango_win32_font_get_hfont (font);
 
-  /* We are *not* allowed to destroy the HFONT here ! */
 #ifdef USE_HB_GDI
   face = hb_gdi_face_create (hfont);
-
-  hb_face_set_user_data (face, &key, hfont, g_free, TRUE);
 #else
   face = hb_face_create_for_tables (hfont_reference_table, (void *)hfont, NULL);
 #endif
+
 #endif
 
   hb_font = hb_font_create (face);
   hb_font_set_scale (hb_font, win32font->size, win32font->size);
+
+  if (win32font->variations)
+    {
+      unsigned int n_axes;
+
+      n_axes = hb_ot_var_get_axis_infos (face, 0, NULL, NULL);
+      if (n_axes > 0)
+        {
+          hb_ot_var_axis_info_t *axes;
+          float *coords;
+
+          axes = g_newa (hb_ot_var_axis_info_t, n_axes);
+          coords = g_newa (float, n_axes);
+
+          hb_ot_var_get_axis_infos (face, 0, &n_axes, axes);
+          for (unsigned int i = 0; i < n_axes; i++)
+            coords[axes[i].axis_index] = axes[i].default_value;
+
+          pango_parse_variations (win32font->variations, axes, n_axes, coords);
+
+          hb_font_set_var_coords_design (hb_font, coords, n_axes);
+        }
+    }
   hb_face_destroy (face);
 
   return hb_font;
-}
-
-gpointer
-_pango_win32_copy_cmap (gpointer cmap, guint16 cmap_format)
-{
-  if (!cmap)
-    return NULL;
-
-  if (cmap_format == 12)
-    {
-      struct format_12_cmap *new_table;
-      struct format_12_cmap *old_table;
-      guint32 *tbl, *tbl_end;
-
-      old_table = (struct format_12_cmap *) cmap;
-
-      new_table = g_malloc (old_table->length);
-      memcpy (old_table, new_table, sizeof (struct format_12_cmap));
-
-      tbl_end = (guint32 *) ((char *) new_table + new_table->length);
-      tbl = new_table->groups;
-
-      while (tbl < tbl_end)
-        {
-          *tbl = GUINT32_FROM_BE (*tbl);
-          tbl++;
-        }
-
-      return new_table;
-    }
-  else if (cmap_format == 4)
-    {
-      struct format_4_cmap *new_table;
-      struct format_4_cmap *old_table;
-      guint16 *tbl, *tbl_end;
-
-      old_table = (struct format_4_cmap *) cmap;
-
-      new_table = g_malloc (old_table->length);
-      memcpy (old_table, new_table, sizeof (struct format_4_cmap));
-
-      tbl_end = (guint16 *)((char *) new_table + new_table->length);
-      tbl = &new_table->reserved;
-
-      while (tbl < tbl_end)
-        {
-          *tbl = GUINT16_FROM_BE (*tbl);
-          tbl++;
-        }
-
-      return new_table;
-    }
-  else
-    {
-      /* got non-null cmap but unknown format, it shouldn't happen */
-      g_assert_not_reached ();
-    }
-
-  return NULL;
 }

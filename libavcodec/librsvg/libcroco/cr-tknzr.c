@@ -936,6 +936,7 @@ cr_tknzr_parse_ident (CRTknzr * a_this, CRString ** a_str)
         CRInputPos init_pos;
         enum CRStatus status = CR_OK;
         gboolean location_is_set = FALSE ;
+        gboolean skip_nmstart = FALSE;
 
         g_return_val_if_fail (a_this && PRIVATE (a_this)
                               && PRIVATE (a_this)->input
@@ -954,18 +955,25 @@ cr_tknzr_parse_ident (CRTknzr * a_this, CRString ** a_str)
                 location_is_set = TRUE ;
                 g_string_append_unichar (stringue->stryng, 
                                          tmp_char) ;
+                // CSS3 <ident-token> may start with "--"
+                PEEK_NEXT_CHAR (a_this, &tmp_char);
+                if (tmp_char == '-') {
+                        skip_nmstart = TRUE;
+                }
         }
-        status = cr_tknzr_parse_nmstart (a_this, &tmp_char, NULL);
-        if (status != CR_OK) {
-                status = CR_PARSING_ERROR;
-                goto end ;
+        if (!skip_nmstart) {
+                status = cr_tknzr_parse_nmstart (a_this, &tmp_char, NULL);
+                if (status != CR_OK) {
+                        status = CR_PARSING_ERROR;
+                        goto end ;
+                }
+                if (location_is_set == FALSE) {
+                        cr_tknzr_get_parsing_location 
+                                (a_this, &stringue->location) ;
+                        location_is_set = TRUE ;
+                }
+                g_string_append_unichar (stringue->stryng, tmp_char);
         }
-        if (location_is_set == FALSE) {
-                cr_tknzr_get_parsing_location 
-                        (a_this, &stringue->location) ;
-                location_is_set = TRUE ;
-        }
-        g_string_append_unichar (stringue->stryng, tmp_char);
         for (;;) {
                 status = cr_tknzr_parse_nmchar (a_this, 
                                                 &tmp_char, 

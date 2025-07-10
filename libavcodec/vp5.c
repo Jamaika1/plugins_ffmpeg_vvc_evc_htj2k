@@ -25,14 +25,14 @@
 
 #include <string.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
-#include "vp56.h"
-#include "vp56data.h"
-#include "vp5data.h"
-#include "vpx_rac.h"
+#include "libavcodec/vp56.h"
+#include "libavcodec/vp56data.h"
+#include "libavcodec/vp5data.h"
+#include "libavcodec/vpx_rac.h"
 
 
 static int vp5_parse_header(VP56Context *s, const uint8_t *buf, int buf_size)
@@ -58,10 +58,7 @@ static int vp5_parse_header(VP56Context *s, const uint8_t *buf, int buf_size)
         if(vp56_rac_gets(c, 5) > 5)
             return AVERROR_INVALIDDATA;
         vp56_rac_gets(c, 2);
-        if (vpx_rac_get(c)) {
-            avpriv_report_missing_feature(s->avctx, "Interlacing");
-            return AVERROR_PATCHWELCOME;
-        }
+        s->interlaced = vp56_rac_gets(c, 1);
         rows = vp56_rac_gets(c, 8);  /* number of stored macroblock rows */
         cols = vp56_rac_gets(c, 8);  /* number of stored macroblock cols */
         if (!rows || !cols) {

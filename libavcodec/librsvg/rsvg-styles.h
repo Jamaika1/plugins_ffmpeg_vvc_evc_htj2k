@@ -31,7 +31,11 @@
 #include "rsvg.h"
 #include "rsvg-paint-server.h"
 
+#if LIBXML_VERSION >= 21400
+#include "libxml2/parser.h"
+#else
 #include "libxml2/SAX.h"
+#endif
 #include "pango/pango.h"
 
 G_BEGIN_DECLS

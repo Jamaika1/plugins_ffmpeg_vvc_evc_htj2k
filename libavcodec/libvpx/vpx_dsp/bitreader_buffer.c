@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "vpx_config.h"
+#include "./vpx_config.h"
 #include "vpx_dsp/bitreader_buffer.h"
 
 size_t vpx_rb_bytes_read(struct vpx_read_bit_buffer *rb) {

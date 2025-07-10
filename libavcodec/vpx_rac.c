@@ -21,8 +21,8 @@
 
 #include <stdint.h>
 #include "libavutil/error.h"
-#include "bytestream.h"
-#include "vpx_rac.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/vpx_rac.h"
 
 const uint8_t ff_vpx_norm_shift[256]= {
  8,7,6,6,5,5,5,5,4,4,4,4,4,4,4,4,

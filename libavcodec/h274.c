@@ -26,9 +26,13 @@
  */
 
 #include "libavutil/avassert.h"
+#include "libavutil/bswap.h"
+#include "libavutil/crc.h"
 #include "libavutil/imgutils.h"
+#include "libavutil/md5.h"
+#include "libavutil/mem.h"
 
-#include "h274.h"
+#include "libavcodec/h274.h"
 
 static const int8_t Gaussian_LUT[2048+4];
 static const uint32_t Seed_LUT[256];
@@ -38,7 +42,7 @@ static void prng_shift(uint32_t *state)
 {
     // Primitive polynomial x^31 + x^3 + 1 (modulo 2)
     uint32_t x = *state;
-    uint8_t feedback = (x >> 2) ^ (x >> 30);
+    uint8_t feedback = 1u ^ (x >> 2) ^ (x >> 30);
     *state = (x << 1) | (feedback & 1u);
 }
 
@@ -59,13 +63,13 @@ static void init_slice_c(int8_t out[64][64], uint8_t h, uint8_t v,
     //
     // Note: To make the subsequent matrix multiplication cache friendlier, we
     // store each *column* of the starting image in a *row* of `out`
-    for (int y = 0; y <= freq_v; y++) {
-        for (int x = 0; x <= freq_h; x += 4) {
+    for (int l = 0; l <= freq_v; l++) {
+        for (int k = 0; k <= freq_h; k += 4) {
             uint16_t offset = seed % 2048;
-            out[x + 0][y] = Gaussian_LUT[offset + 0];
-            out[x + 1][y] = Gaussian_LUT[offset + 1];
-            out[x + 2][y] = Gaussian_LUT[offset + 2];
-            out[x + 3][y] = Gaussian_LUT[offset + 3];
+            out[l][k + 0] = Gaussian_LUT[offset + 0];
+            out[l][k + 1] = Gaussian_LUT[offset + 1];
+            out[l][k + 2] = Gaussian_LUT[offset + 2];
+            out[l][k + 3] = Gaussian_LUT[offset + 3];
             prng_shift(&seed);
         }
     }
@@ -74,9 +78,9 @@ static void init_slice_c(int8_t out[64][64], uint8_t h, uint8_t v,
 
     // 64x64 inverse integer transform
     for (int y = 0; y < 64; y++) {
-        for (int x = 0; x <= freq_h; x++) {
+        for (int x = 0; x <= freq_v; x++) {
             int32_t sum = 0;
-            for (int p = 0; p <= freq_v; p++)
+            for (int p = 0; p <= freq_h; p++)
                 sum += R64T[y][p] * out[x][p];
             tmp[y][x] = (sum + 128) >> 8;
         }
@@ -85,8 +89,8 @@ static void init_slice_c(int8_t out[64][64], uint8_t h, uint8_t v,
     for (int y = 0; y < 64; y++) {
         for (int x = 0; x < 64; x++) {
             int32_t sum = 0;
-            for (int p = 0; p <= freq_h; p++)
-                sum += tmp[y][p] * R64T[x][p]; // R64T^T = R64
+            for (int p = 0; p <= freq_v; p++)
+                sum += tmp[x][p] * R64T[y][p]; // R64T^T = R64
             // Renormalize and clip to [-127, 127]
             out[y][x] = av_clip((sum + 128) >> 8, -127, 127);
         }
@@ -110,7 +114,7 @@ static void init_slice(H274FilmGrainDatabase *database, uint8_t h, uint8_t v)
     init_slice_c(database->db[h][v], h, v, database->slice_tmp);
 }
 
-// Computes the average of an 8x8 block, right-shifted by 6
+// Computes the average of an 8x8 block
 static uint16_t avg_8x8_c(const uint8_t *in, int in_stride)
 {
     uint16_t avg[8] = {0}; // summing over an array vectorizes better
@@ -259,11 +263,11 @@ int ff_h274_apply_film_grain(AVFrame *out_frame, const AVFrame *in_frame,
         // only advanced in 16x16 blocks, so use a nested loop
         for (int y = 0; y < height; y += 16) {
             for (int x = 0; x < width; x += 16) {
-                uint16_t y_offset = (seed >> 16) % 52;
-                uint16_t x_offset = (seed & 0xFFFF) % 56;
+                uint16_t x_offset = (seed >> 16) % 52;
+                uint16_t y_offset = (seed & 0xFFFF) % 56;
                 const int invert = (seed & 0x1);
-                y_offset &= 0xFFFC;
-                x_offset &= 0xFFF8;
+                x_offset &= 0xFFFC;
+                y_offset &= 0xFFF8;
                 prng_shift(&seed);
 
                 for (int yy = 0; yy < 16 && y+yy < height; yy += 8) {
@@ -790,3 +794,154 @@ static const int8_t R64T[64][64] = {
          17, -16,  15, -14,  13, -12,  11, -10,   9,  -8,   7,  -6,   4,  -3,   2,  -1,
     }
 };
+
+static int verify_plane_md5(struct AVMD5 *ctx,
+    const uint8_t *src, const int w, const int h, const int stride,
+    const uint8_t *expected)
+{
+#define MD5_SIZE 16
+    uint8_t md5[MD5_SIZE];
+    av_md5_init(ctx);
+    for (int j = 0; j < h; j++) {
+        av_md5_update(ctx, src, w);
+        src += stride;
+    }
+    av_md5_final(ctx, md5);
+
+    if (memcmp(md5, expected, MD5_SIZE))
+        return AVERROR_INVALIDDATA;
+
+    return 0;
+}
+
+static int verify_plane_crc(const uint8_t *src, const int w, const int h, const int stride,
+    uint16_t expected)
+{
+    uint32_t crc = 0x0F1D;     // CRC-16-CCITT-AUG
+    const AVCRC *ctx = av_crc_get_table(AV_CRC_16_CCITT);
+
+    expected = av_le2ne32(expected);
+    for (int j = 0; j < h; j++) {
+        crc = av_crc(ctx, crc, src, w);
+        src += stride;
+    }
+    crc = av_bswap16(crc);
+
+    if (crc != expected)
+        return AVERROR_INVALIDDATA;
+
+    return 0;
+}
+
+#define CAL_CHECKSUM(pixel) ((pixel) ^ xor_mask)
+static int verify_plane_checksum(const uint8_t *src, const int w, const int h, const int stride, const int ps,
+    uint32_t expected)
+{
+    uint32_t checksum = 0;
+    expected = av_le2ne32(expected);
+
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            const int xor_mask = (x & 0xFF) ^ (y & 0xFF) ^ (x >> 8) ^ (y >> 8);
+            checksum += CAL_CHECKSUM(src[x << ps]);
+            if (ps)
+                checksum += CAL_CHECKSUM(src[(x << ps) + 1]);
+        }
+        src += stride;
+    }
+
+    if (checksum != expected)
+        return AVERROR_INVALIDDATA;
+
+    return 0;
+}
+
+enum {
+    HASH_MD5SUM,
+    HASH_CRC,
+    HASH_CHECKSUM,
+    HASH_LAST = HASH_CHECKSUM,
+};
+
+struct H274HashContext {
+    int type;
+    struct AVMD5 *ctx;
+};
+
+void ff_h274_hash_freep(H274HashContext **ctx)
+{
+    if (*ctx) {
+        H274HashContext *c = *ctx;
+        if (c->ctx)
+            av_free(c->ctx);
+        av_freep(ctx);
+    }
+}
+
+int ff_h274_hash_init(H274HashContext **ctx, const int type)
+{
+    H274HashContext *c;
+
+    if (type > HASH_LAST || !ctx)
+        return AVERROR(EINVAL);
+
+    c = *ctx;
+    if (c) {
+        if (c->type != type) {
+            if (c->type == HASH_MD5SUM)
+                av_freep(&c->ctx);
+            c->type = type;
+        }
+    } else {
+        c = av_mallocz(sizeof(H274HashContext));
+        if (!c)
+            return AVERROR(ENOMEM);
+        c->type = type;
+        *ctx = c;
+    }
+
+    if (type == HASH_MD5SUM && !c->ctx) {
+        c->ctx = av_md5_alloc();
+        if (!c->ctx)
+            return AVERROR(ENOMEM);
+    }
+
+    return 0;
+}
+
+int ff_h274_hash_verify(H274HashContext *c, const H274SEIPictureHash *hash,
+    const AVFrame *frame, const int coded_width, const int coded_height)
+{
+    const AVPixFmtDescriptor *desc;
+    int err = 0;
+
+    if (!c || !hash || !frame)
+        return AVERROR(EINVAL);
+
+    if (c->type != hash->hash_type)
+        return AVERROR(EINVAL);
+
+    desc = av_pix_fmt_desc_get(frame->format);
+    if (!desc)
+        return AVERROR(EINVAL);
+
+    for (int i = 0; i < desc->nb_components; i++) {
+        const int w        = i ? (coded_width  >> desc->log2_chroma_w) : coded_width;
+        const int h        = i ? (coded_height >> desc->log2_chroma_h) : coded_height;
+        const int ps       = desc->comp[i].step - 1;
+        const uint8_t *src = frame->data[i];
+        const int stride   = frame->linesize[i];
+
+        if (c->type == HASH_MD5SUM)
+            err = verify_plane_md5(c->ctx, src, w << ps, h, stride, hash->md5[i]);
+        else if (c->type == HASH_CRC)
+            err = verify_plane_crc(src, w << ps, h, stride, hash->crc[i]);
+        else if (c->type == HASH_CHECKSUM)
+            err = verify_plane_checksum(src, w, h, stride, ps, hash->checksum[i]);
+        if (err < 0)
+            goto fail;
+    }
+
+fail:
+    return err;
+}

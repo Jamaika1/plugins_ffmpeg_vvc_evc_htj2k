@@ -32,7 +32,7 @@
 
 #include "strategies-ipol.h"
 #if defined(__AVX2__)
-#include "avx2/ipol-avx2.h"
+//#include "avx2/ipol-avx2.h"
 #endif
 #include "ipol-generic.h"
 #include "strategyselector.h"
@@ -44,6 +44,7 @@ ipol_blocks_func * uvg_filter_hpel_blocks_diag_luma;
 ipol_blocks_func * uvg_filter_qpel_blocks_hor_ver_luma;
 ipol_blocks_func * uvg_filter_qpel_blocks_diag_luma;
 epol_func *uvg_get_extended_block;
+epol_func *uvg_get_extended_block_wraparound;
 uvg_sample_quarterpel_luma_func * uvg_sample_quarterpel_luma;
 uvg_sample_octpel_chroma_func * uvg_sample_octpel_chroma;
 uvg_sample_quarterpel_luma_hi_func * uvg_sample_quarterpel_luma_hi;
@@ -56,10 +57,9 @@ int uvg_strategy_register_ipol(void* opaque, uint8_t bitdepth) {
   success &= uvg_strategy_register_ipol_generic(opaque, bitdepth);
 
 #if defined(__AVX2__)
-  if (uvg_g_hardware_flags.intel_flags.avx2) {
-    success &= uvg_strategy_register_ipol_avx2(opaque, bitdepth);
-  }
+  //if (uvg_g_hardware_flags.intel_flags.avx2) {
+    //success &= uvg_strategy_register_ipol_avx2(opaque, bitdepth);
+  //}
 #endif
-
   return success;
 }

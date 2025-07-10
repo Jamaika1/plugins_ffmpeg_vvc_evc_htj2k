@@ -25,7 +25,7 @@
 #include "libavutil/crc.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/thread.h"
-#include "mlp.h"
+#include "libavcodec/mlp.h"
 
 const uint8_t ff_mlp_huffman_tables[3][18][2] = {
     {    /* Huffman table 0, -7 - +10 */
@@ -56,15 +56,6 @@ const ChannelInformation ff_mlp_ch_info[21] = {
     { 0x1F, 0x04, 0x01, 0x01 }, { 0x1F, 0x04, 0x01, 0x18 },
     { 0x3F, 0x04, 0x02, 0x00 },
 };
-
-#if FF_API_OLD_CHANNEL_LAYOUT
-const uint64_t ff_mlp_channel_layouts[12] = {
-    AV_CH_LAYOUT_MONO, AV_CH_LAYOUT_STEREO, AV_CH_LAYOUT_2_1,
-    AV_CH_LAYOUT_QUAD, AV_CH_LAYOUT_2POINT1, AV_CH_LAYOUT_SURROUND,
-    AV_CH_LAYOUT_4POINT0, AV_CH_LAYOUT_5POINT0_BACK, AV_CH_LAYOUT_3POINT1,
-    AV_CH_LAYOUT_4POINT1, AV_CH_LAYOUT_5POINT1_BACK, 0,
-};
-#endif
 
 const AVChannelLayout ff_mlp_ch_layouts[12] = {
     AV_CHANNEL_LAYOUT_MONO, AV_CHANNEL_LAYOUT_STEREO, AV_CHANNEL_LAYOUT_2_1,

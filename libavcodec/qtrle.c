@@ -33,10 +33,10 @@
 
 #include <string.h>
 
-#include "avcodec.h"
-#include "decode.h"
-#include "bytestream.h"
-#include "codec_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
 
 typedef struct QtrleContext {
     AVCodecContext *avctx;
@@ -537,7 +537,14 @@ static int qtrle_decode_frame(AVCodecContext *avctx, AVFrame *rframe,
     }
 
     if(has_palette) {
-        s->frame->palette_has_changed = ff_copy_palette(s->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
+        s->frame->palette_has_changed =
+#endif
+        ff_copy_palette(s->pal, avpkt, avctx);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
 
         /* make the palette available on the way out */
         memcpy(s->frame->data[1], s->pal, AVPALETTE_SIZE);

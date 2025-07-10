@@ -26,9 +26,9 @@
 
 #include "libavutil/qsort.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "scpr.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/scpr.h"
 
 static void renew_table3(uint32_t nsym, uint32_t *cntsum,
                          uint16_t *freqs, uint16_t *freqs1,
@@ -465,6 +465,8 @@ static int decode_adaptive6(PixelModel3 *m, uint32_t code, uint32_t *value,
             return 0;
         grow_dec(m);
         c = add_dec(m, q, g, f);
+        if (c < 0)
+            return AVERROR_INVALIDDATA;
     }
 
     incr_cntdec(m, c);
@@ -868,11 +870,11 @@ static int decode_unit3(SCPRContext *s, PixelModel3 *m, uint32_t code, uint32_t 
         sync_code3(gb, rc);
         break;
     case 6:
-        if (!decode_adaptive6(m, code, value, &a, &b)) {
+        ret = decode_adaptive6(m, code, value, &a, &b);
+        if (!ret)
             ret = update_model6_to_7(m);
-            if (ret < 0)
-                return AVERROR_INVALIDDATA;
-        }
+        if (ret < 0)
+            return ret;
         decode3(gb, rc, a, b);
         sync_code3(gb, rc);
         break;

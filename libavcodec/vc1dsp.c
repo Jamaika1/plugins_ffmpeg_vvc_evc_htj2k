@@ -24,17 +24,17 @@
  * VC-1 and WMV3 decoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
-#include "h264chroma.h"
-#include "qpeldsp.h"
-#include "rnd_avg.h"
-#include "vc1dsp.h"
-#include "startcode.h"
-#include "vc1_common.h"
+#include "libavcodec/h264chroma.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/rnd_avg.h"
+#include "libavcodec/vc1dsp.h"
+#include "libavcodec/startcode.h"
+#include "libavcodec/vc1_common.h"
 
 /* Apply overlap transform to horizontal edge */
 static void vc1_v_overlap_c(uint8_t *src, ptrdiff_t stride)
@@ -1039,6 +1039,8 @@ av_cold void ff_vc1dsp_init(VC1DSPContext *dsp)
     ff_vc1dsp_init_arm(dsp);
 #elif ARCH_PPC
     ff_vc1dsp_init_ppc(dsp);
+#elif ARCH_RISCV
+    ff_vc1dsp_init_riscv(dsp);
 #elif ARCH_X86
     ff_vc1dsp_init_x86(dsp);
 #elif ARCH_MIPS

@@ -28,9 +28,9 @@
 
 #include <string.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/internal.h"
 #include "libavutil/xga_font_data.h"
 
@@ -56,11 +56,13 @@ static int tmv_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         return AVERROR_INVALIDDATA;
     }
 
-    frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->flags |= AV_FRAME_FLAG_KEY;
     dst              = frame->data[0];
 
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
     frame->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     memcpy(frame->data[1], ff_cga_palette, 16 * 4);
     memset(frame->data[1] + 16 * 4, 0, AVPALETTE_SIZE - 16 * 4);
 

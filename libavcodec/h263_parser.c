@@ -24,7 +24,7 @@
  * H.263 parser
  */
 
-#include "parser.h"
+#include "libavcodec/parser.h"
 
 static int h263_find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size)
 {

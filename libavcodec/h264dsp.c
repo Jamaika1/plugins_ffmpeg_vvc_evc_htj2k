@@ -30,9 +30,9 @@
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 
-#include "h264dsp.h"
-#include "h264idct.h"
-#include "startcode.h"
+#include "libavcodec/h264dsp.h"
+#include "libavcodec/h264idct.h"
+#include "libavcodec/startcode.h"
 #include "libavutil/common.h"
 
 #define BIT_DEPTH 8
@@ -158,6 +158,8 @@ av_cold void ff_h264dsp_init(H264DSPContext *c, const int bit_depth,
     ff_h264dsp_init_arm(c, bit_depth, chroma_format_idc);
 #elif ARCH_PPC
     ff_h264dsp_init_ppc(c, bit_depth, chroma_format_idc);
+#elif ARCH_RISCV
+    ff_h264dsp_init_riscv(c, bit_depth, chroma_format_idc);
 #elif ARCH_X86
     ff_h264dsp_init_x86(c, bit_depth, chroma_format_idc);
 #elif ARCH_MIPS

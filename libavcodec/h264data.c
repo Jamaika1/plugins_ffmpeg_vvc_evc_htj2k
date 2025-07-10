@@ -30,9 +30,9 @@
 
 #include "libavutil/avutil.h"
 
-#include "h264_parse.h"
-#include "h264data.h"
-#include "mpegutils.h"
+#include "libavcodec/h264_parse.h"
+#include "libavcodec/h264data.h"
+#include "libavcodec/mpegutils.h"
 
 const uint8_t ff_h264_golomb_to_pict_type[5] = {
     AV_PICTURE_TYPE_P, AV_PICTURE_TYPE_B, AV_PICTURE_TYPE_I,

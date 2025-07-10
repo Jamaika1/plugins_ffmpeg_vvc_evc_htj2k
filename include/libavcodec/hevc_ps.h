@@ -23,14 +23,16 @@
 
 #include <stdint.h>
 
-#include "libavutil/buffer.h"
 #include "libavutil/pixfmt.h"
 #include "libavutil/rational.h"
 
 #include "avcodec.h"
 #include "get_bits.h"
 #include "h2645_vui.h"
+
 #include "hevc.h"
+
+#define HEVC_VPS_MAX_LAYERS 2
 
 typedef struct HEVCSublayerHdrParams {
     uint32_t bit_rate_value_minus1[HEVC_MAX_CPB_CNT];
@@ -40,18 +42,19 @@ typedef struct HEVCSublayerHdrParams {
     uint32_t cbr_flag;
 } HEVCSublayerHdrParams;
 
+// flags in bitmask form
 typedef struct HEVCHdrFlagParams {
-    uint32_t nal_hrd_parameters_present_flag;
-    uint32_t vcl_hrd_parameters_present_flag;
-    uint32_t sub_pic_hrd_params_present_flag;
-    uint32_t sub_pic_cpb_params_in_pic_timing_sei_flag;
-    uint32_t fixed_pic_rate_general_flag;
-    uint32_t fixed_pic_rate_within_cvs_flag;
-    uint32_t low_delay_hrd_flag;
+    uint8_t fixed_pic_rate_general_flag;
+    uint8_t fixed_pic_rate_within_cvs_flag;
+    uint8_t low_delay_hrd_flag;
 } HEVCHdrFlagParams;
 
 typedef struct HEVCHdrParams {
     HEVCHdrFlagParams flags;
+    uint8_t nal_hrd_parameters_present_flag;
+    uint8_t vcl_hrd_parameters_present_flag;
+    uint8_t sub_pic_hrd_params_present_flag;
+    uint8_t sub_pic_cpb_params_in_pic_timing_sei_flag;
 
     uint8_t tick_divisor_minus2;
     uint8_t du_cpb_removal_delay_increment_length_minus1;
@@ -70,18 +73,19 @@ typedef struct HEVCHdrParams {
 } HEVCHdrParams;
 
 typedef struct ShortTermRPS {
-    uint8_t rps_predict;
-    unsigned int delta_idx;
-    uint8_t use_delta_flag;
-    uint8_t delta_rps_sign;
-    unsigned int abs_delta_rps;
-    unsigned int num_negative_pics;
-    int num_delta_pocs;
-    int rps_idx_num_delta_pocs;
-    int32_t delta_poc_s0[32];
-    int32_t delta_poc_s1[32];
     int32_t delta_poc[32];
-    uint8_t used[32];
+    uint32_t used;
+
+    uint8_t delta_idx;
+    uint8_t num_negative_pics;
+    uint8_t num_delta_pocs;
+    uint8_t rps_idx_num_delta_pocs;
+
+    uint16_t abs_delta_rps;
+    unsigned delta_rps_sign:1;
+
+    unsigned rps_predict:1;
+    unsigned use_delta:1;
 } ShortTermRPS;
 
 typedef struct HEVCWindow {
@@ -151,9 +155,21 @@ typedef struct PTL {
     uint8_t sub_layer_level_present_flag[HEVC_MAX_SUB_LAYERS];
 } PTL;
 
+typedef struct RepFormat {
+    uint16_t pic_width_in_luma_samples;
+    uint16_t pic_height_in_luma_samples;
+    uint8_t  chroma_format_idc;
+    uint8_t  separate_colour_plane_flag;
+    uint8_t  bit_depth_luma;    ///< bit_depth_vps_luma_minus8 + 8
+    uint8_t  bit_depth_chroma;  ///< bit_depth_vps_chroma_minus8 + 8
+    uint16_t conf_win_left_offset;
+    uint16_t conf_win_right_offset;
+    uint16_t conf_win_top_offset;
+    uint16_t conf_win_bottom_offset;
+} RepFormat;
+
 typedef struct HEVCVPS {
     unsigned int vps_id;
-    HEVCHdrParams hdr[HEVC_MAX_LAYER_SETS];
 
     uint8_t vps_temporal_id_nesting_flag;
     int vps_max_layers;
@@ -173,7 +189,59 @@ typedef struct HEVCVPS {
     int vps_num_ticks_poc_diff_one; ///< vps_num_ticks_poc_diff_one_minus1 + 1
     int vps_num_hrd_parameters;
 
-    uint8_t data[4096];
+    HEVCHdrParams *hdr;
+
+    /* VPS extension */
+
+    /* Number of layers this VPS was parsed for, between 1 and
+     * min(HEVC_VPS_MAX_LAYERS, vps_max_layers).
+     *
+     * Note that vps_max_layers contains the layer count declared in the
+     * bitstream, while nb_layers contains the number of layers exported to
+     * users of this API (which may be smaller as we only support a subset of
+     * multilayer extensions).
+     *
+     * Arrays below documented as [layer_idx] have nb_layers valid entries.
+     */
+    int nb_layers;
+
+    uint16_t scalability_mask_flag;
+
+    // LayerIdxInVps[nuh_layer_id], i.e. a mapping of nuh_layer_id to VPS layer
+    // indices. Valid values are between 0 and HEVC_VPS_MAX_LAYERS. Entries for
+    // unmapped values of nuh_layer_id are set to -1.
+    int8_t layer_idx[HEVC_MAX_NUH_LAYER_ID + 1];
+
+    uint8_t layer_id_in_nuh[HEVC_VPS_MAX_LAYERS];
+
+    uint8_t default_ref_layers_active;
+    uint8_t max_one_active_ref_layer;
+    uint8_t poc_lsb_aligned;
+    // bitmask of poc_lsb_not_present[layer_idx]
+    uint8_t poc_lsb_not_present;
+
+    struct {
+        unsigned max_dec_pic_buffering; // max_vps_dec_pic_buffering_minus1 + 1
+        unsigned max_num_reorder_pics;  // max_vps_num_reorder_pics
+        unsigned max_latency_increase;  // max_vps_latency_increase_plus1 - 1
+    } dpb_size;
+
+    // ViewId[layer_idx]
+    uint16_t view_id[HEVC_VPS_MAX_LAYERS];
+
+    // NumOutputLayerSets
+    uint8_t num_output_layer_sets;
+    // Bitmasks specifying output layer sets. i-th bit set means layer with VPS
+    // index i is present in the layer set.
+    uint64_t ols[HEVC_VPS_MAX_LAYERS];
+
+    // NumDirectRefLayers[layer_idx]
+    uint8_t num_direct_ref_layers[HEVC_VPS_MAX_LAYERS];
+    uint8_t num_add_layer_sets;
+
+    RepFormat rep_format;
+
+    uint8_t *data;
     int data_size;
 } HEVCVPS;
 
@@ -187,11 +255,9 @@ typedef struct ScalingList {
 typedef struct HEVCSPS {
     unsigned vps_id;
     int chroma_format_idc;
-    uint8_t separate_colour_plane_flag;
 
     HEVCWindow output_window;
 
-    uint8_t conformance_window_flag;
     HEVCWindow pic_conf_win;
 
     HEVCHdrParams hdr;
@@ -202,34 +268,25 @@ typedef struct HEVCSPS {
     enum AVPixelFormat pix_fmt;
 
     unsigned int log2_max_poc_lsb;
-    int pcm_enabled_flag;
 
-    uint8_t sublayer_ordering_info_flag;
     int max_sub_layers;
     struct {
         int max_dec_pic_buffering;
         int num_reorder_pics;
         int max_latency_increase;
     } temporal_layer[HEVC_MAX_SUB_LAYERS];
-    uint8_t temporal_id_nesting_flag;
 
     int vui_present;
     VUI vui;
     PTL ptl;
 
-    uint8_t sps_extension_present_flag;
-    uint8_t scaling_list_enable_flag;
     ScalingList scaling_list;
 
     unsigned int nb_st_rps;
     ShortTermRPS st_rps[HEVC_MAX_SHORT_TERM_REF_PIC_SETS];
 
-    uint8_t amp_enabled_flag;
-    uint8_t sao_enabled;
-
-    uint8_t long_term_ref_pics_present_flag;
     uint16_t lt_ref_pic_poc_lsb_sps[HEVC_MAX_LONG_TERM_REF_PICS];
-    uint8_t used_by_curr_pic_lt_sps_flag[HEVC_MAX_LONG_TERM_REF_PICS];
+    uint32_t used_by_curr_pic_lt;
     uint8_t num_long_term_ref_pics_sps;
 
     struct {
@@ -237,10 +294,7 @@ typedef struct HEVCSPS {
         uint8_t bit_depth_chroma;
         unsigned int log2_min_pcm_cb_size;
         unsigned int log2_max_pcm_cb_size;
-        uint8_t loop_filter_disable_flag;
     } pcm;
-    uint8_t sps_temporal_mvp_enabled_flag;
-    uint8_t sps_strong_intra_smoothing_enable_flag;
 
     unsigned int log2_min_cb_size;
     unsigned int log2_diff_max_min_coding_block_size;
@@ -253,32 +307,46 @@ typedef struct HEVCSPS {
     int max_transform_hierarchy_depth_inter;
     int max_transform_hierarchy_depth_intra;
 
-    int sps_range_extension_flag;
-    int transform_skip_rotation_enabled_flag;
-    int transform_skip_context_enabled_flag;
-    int implicit_rdpcm_enabled_flag;
-    int explicit_rdpcm_enabled_flag;
-    int extended_precision_processing_flag;
-    int intra_smoothing_disabled_flag;
-    int high_precision_offsets_enabled_flag;
-    int persistent_rice_adaptation_enabled_flag;
-    int cabac_bypass_alignment_enabled_flag;
+    uint8_t separate_colour_plane;
+    uint8_t conformance_window;
+    uint8_t pcm_enabled;
+    uint8_t pcm_loop_filter_disabled;
+    uint8_t sublayer_ordering_info;
+    uint8_t temporal_id_nesting;
+    uint8_t extension_present;
+    uint8_t scaling_list_enabled;
+    uint8_t amp_enabled;
+    uint8_t sao_enabled;
+    uint8_t long_term_ref_pics_present;
+    uint8_t temporal_mvp_enabled;
+    uint8_t strong_intra_smoothing_enabled;
+    uint8_t range_extension;
+    uint8_t transform_skip_rotation_enabled;
+    uint8_t transform_skip_context_enabled;
+    uint8_t implicit_rdpcm_enabled;
+    uint8_t explicit_rdpcm_enabled;
+    uint8_t extended_precision_processing;
+    uint8_t intra_smoothing_disabled;
+    uint8_t high_precision_offsets_enabled;
+    uint8_t persistent_rice_adaptation_enabled;
+    uint8_t cabac_bypass_alignment_enabled;
 
-    int sps_multilayer_extension_flag;
-    int sps_3d_extension_flag;
+    uint8_t multilayer_extension;
+    uint8_t sps_3d_extension;
 
-    int sps_scc_extension_flag;
-    int sps_curr_pic_ref_enabled_flag;
-    int palette_mode_enabled_flag;
+    uint8_t scc_extension;
+    uint8_t curr_pic_ref_enabled;
+    uint8_t palette_mode_enabled;
+    uint8_t palette_predictor_initializers_present;
+    uint8_t intra_boundary_filtering_disabled;
+
     int palette_max_size;
     int delta_palette_max_predictor_size;
-    int sps_palette_predictor_initializers_present_flag;
     int sps_num_palette_predictor_initializers;
     int sps_palette_predictor_initializer[3][HEVC_MAX_PALETTE_PREDICTOR_SIZE];
     int motion_vector_resolution_control_idc;
-    int intra_boundary_filtering_disabled_flag;
 
-    ///< coded frame dimension in various units
+    /// coded frame dimension in various units
     int width;
     int height;
     int ctb_width;
@@ -297,8 +365,10 @@ typedef struct HEVCSPS {
 
     int qp_bd_offset;
 
-    uint8_t data[4096];
+    uint8_t *data;
     int data_size;
+
+    const HEVCVPS *vps; ///< RefStruct reference
 } HEVCSPS;
 
 typedef struct HEVCPPS {
@@ -432,19 +502,16 @@ typedef struct HEVCPPS {
     int *min_tb_addr_zs;    ///< MinTbAddrZS
     int *min_tb_addr_zs_tab;///< MinTbAddrZS
 
-    uint8_t data[4096];
+    uint8_t *data;
     int data_size;
+
+    const HEVCSPS *sps;     ///< RefStruct reference
 } HEVCPPS;
 
 typedef struct HEVCParamSets {
-    AVBufferRef *vps_list[HEVC_MAX_VPS_COUNT];
-    AVBufferRef *sps_list[HEVC_MAX_SPS_COUNT];
-    AVBufferRef *pps_list[HEVC_MAX_PPS_COUNT];
-
-    /* currently active parameter sets */
-    const HEVCVPS *vps;
-    const HEVCSPS *sps;
-    const HEVCPPS *pps;
+    const HEVCVPS *vps_list[HEVC_MAX_VPS_COUNT]; ///< RefStruct references
+    const HEVCSPS *sps_list[HEVC_MAX_SPS_COUNT]; ///< RefStruct references
+    const HEVCPPS *pps_list[HEVC_MAX_PPS_COUNT]; ///< RefStruct references
 } HEVCParamSets;
 
 /**
@@ -457,12 +524,14 @@ typedef struct HEVCParamSets {
  *                 to an existing VPS
  */
 int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
-                      int apply_defdispwin, AVBufferRef **vps_list, AVCodecContext *avctx);
+                      unsigned nuh_layer_id, int apply_defdispwin,
+                      const HEVCVPS * const *vps_list, AVCodecContext *avctx);
 
 int ff_hevc_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
                            HEVCParamSets *ps);
 int ff_hevc_decode_nal_sps(GetBitContext *gb, AVCodecContext *avctx,
-                           HEVCParamSets *ps, int apply_defdispwin);
+                           HEVCParamSets *ps, unsigned nuh_layer_id,
+                           int apply_defdispwin);
 int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
                            HEVCParamSets *ps);
 

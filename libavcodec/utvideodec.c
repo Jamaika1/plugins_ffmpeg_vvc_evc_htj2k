@@ -31,14 +31,42 @@
 #define UNCHECKED_BITSTREAM_READER 1
 
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavutil/pixdesc.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/bswapdsp.h"
 #include "libavcodec/bytestream.h"
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/get_bits.h"
+#include "libavcodec/lossless_videodsp.h"
 #include "libavcodec/thread.h"
 #include "libavcodec/utvideo.h"
+#include "libavcodec/utvideodsp.h"
+
+typedef struct UtvideoContext {
+    AVCodecContext *avctx;
+    UTVideoDSPContext utdsp;
+    BswapDSPContext bdsp;
+    LLVidDSPContext llviddsp;
+
+    uint32_t frame_info_size, flags, frame_info, offset;
+    int      planes;
+    int      slices;
+    int      compression;
+    int      interlaced;
+    int      frame_pred;
+    int      pro;
+    int      pack;
+
+    uint8_t *slice_bits;
+    int      slice_bits_size;
+    void    *buffer;
+
+    const uint8_t *packed_stream[4][256];
+    size_t packed_stream_size[4][256];
+    const uint8_t *control_stream[4][256];
+    size_t control_stream_size[4][256];
+} UtvideoContext;
 
 typedef struct HuffEntry {
     uint8_t len;
@@ -93,7 +121,7 @@ static int build_huff(UtvideoContext *c, const uint8_t *src, VLC *vlc,
     i = 0; \
     for (; CACHED_BITSTREAM_READER && i < width-end && get_bits_left(&gb) > 0;) {\
         ret = get_vlc_multi(&gb, (uint8_t *)buf + i * b, multi.table, \
-                            vlc.table, VLC_BITS, 3); \
+                            vlc.table, VLC_BITS, 3, b); \
         if (ret > 0) \
             i += ret; \
         if (ret <= 0) \
@@ -862,8 +890,6 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
         break;
     }
 
-    frame->flags |= AV_FRAME_FLAG_KEY;
-    frame->pict_type = AV_PICTURE_TYPE_I;
     if (c->interlaced)
         frame->flags |= AV_FRAME_FLAG_INTERLACED;
 
@@ -985,10 +1011,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
         return AVERROR_INVALIDDATA;
     }
 
-    c->buffer = av_calloc(avctx->width + 8, c->pro?2:1);
-    if (!c->buffer)
-        return AVERROR(ENOMEM);
-
     av_pix_fmt_get_chroma_sub_sample(avctx->pix_fmt, &h_shift, &v_shift);
     if ((avctx->width  & ((1<<h_shift)-1)) ||
         (avctx->height & ((1<<v_shift)-1))) {
@@ -1035,6 +1057,10 @@ static av_cold int decode_init(AVCodecContext *avctx)
                avctx->extradata_size);
         return AVERROR_INVALIDDATA;
     }
+
+    c->buffer = av_calloc(avctx->width + 8, c->pro?2:1);
+    if (!c->buffer)
+        return AVERROR(ENOMEM);
 
     return 0;
 }

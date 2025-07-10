@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: 0BSD */
+
 /**
  * \file        lzma/base.h
  * \brief       Data types and functions used in many places in liblzma API
@@ -6,9 +8,6 @@
 
 /*
  * Author: Lasse Collin
- *
- * This file has been put into the public domain.
- * You can do whatever you want with this file.
  */
 
 #ifndef LZMA_H_INTERNAL
@@ -258,7 +257,7 @@ typedef enum {
 		 */
 
 	/*
-	 * These eumerations may be used internally by liblzma
+	 * These enumerations may be used internally by liblzma
 	 * but they will never be returned to applications.
 	 */
 	LZMA_RET_INTERNAL1      = 101,
@@ -562,7 +561,7 @@ typedef struct {
 	 * \brief       New seek input position for LZMA_SEEK_NEEDED
 	 *
 	 * When lzma_code() returns LZMA_SEEK_NEEDED, the new input position
-	 * needed by liblzma will be available seek_pos. The value is
+	 * needed by liblzma will be available in seek_pos. The value is
 	 * guaranteed to not exceed the file size that was specified when
 	 * this lzma_stream was initialized.
 	 *

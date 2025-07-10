@@ -2,9 +2,9 @@
  *
  * ftsystem.c
  *
- *   Windows-specific FreeType low-level system interface (body).
+ *   ANSI-specific FreeType low-level system interface (body).
  *
- * Copyright (C) 2021-2024 by
+ * Copyright (C) 1996-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -15,19 +15,23 @@
  *
  */
 
+  /**************************************************************************
+   *
+   * This file contains the default interface used by FreeType to access
+   * low-level, i.e. memory management, i/o access as well as thread
+   * synchronisation.  It can be replaced by user-specific routines if
+   * necessary.
+   *
+   */
+
 
 #include <ft2build.h>
-  /* we use our special ftconfig.h file, not the standard one */
 #include FT_CONFIG_CONFIG_H
 #include <freetype/internal/ftdebug.h>
+#include <freetype/internal/ftstream.h>
 #include <freetype/ftsystem.h>
 #include <freetype/fterrors.h>
 #include <freetype/fttypes.h>
-#include <freetype/internal/ftstream.h>
-
-  /* memory mapping and allocation includes and definitions */
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 
   /**************************************************************************
@@ -35,7 +39,6 @@
    *                      MEMORY MANAGEMENT INTERFACE
    *
    */
-
 
   /**************************************************************************
    *
@@ -68,7 +71,9 @@
   ft_alloc( FT_Memory  memory,
             long       size )
   {
-    return HeapAlloc( memory->user, 0, size );
+    FT_UNUSED( memory );
+
+    return ft_smalloc( (size_t)size );
   }
 
 
@@ -102,9 +107,10 @@
               long       new_size,
               void*      block )
   {
+    FT_UNUSED( memory );
     FT_UNUSED( cur_size );
 
-    return HeapReAlloc( memory->user, 0, block, new_size );
+    return ft_srealloc( block, (size_t)new_size );
   }
 
 
@@ -127,7 +133,9 @@
   ft_free( FT_Memory  memory,
            void*      block )
   {
-    HeapFree( memory->user, 0, block );
+    FT_UNUSED( memory );
+
+    ft_sfree( block );
   }
 
 
@@ -137,6 +145,7 @@
    *
    */
 
+#ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
 
   /**************************************************************************
    *
@@ -149,24 +158,25 @@
 
   /* We use the macro STREAM_FILE for convenience to extract the       */
   /* system-specific stream handle from a given FreeType stream object */
-#define STREAM_FILE( stream )  ( (FILE*)stream->descriptor.pointer )
+#define STREAM_FILE( stream )  ( (FT_FILE*)stream->descriptor.pointer )
 
 
   /**************************************************************************
    *
    * @Function:
-   *   ft_close_stream_by_munmap
+   *   ft_ansi_stream_close
    *
    * @Description:
-   *   The function to close a stream which is opened by mmap.
+   *   The function to close a stream.
    *
    * @Input:
-   *   stream :: A pointer to the stream object.
+   *   stream ::
+   *     A pointer to the stream object.
    */
   FT_CALLBACK_DEF( void )
-  ft_close_stream_by_munmap( FT_Stream  stream )
+  ft_ansi_stream_close( FT_Stream  stream )
   {
-    UnmapViewOfFile( (LPCVOID)stream->descriptor.pointer );
+    ft_fclose( STREAM_FILE( stream ) );
 
     stream->descriptor.pointer = NULL;
     stream->size               = 0;
@@ -177,274 +187,106 @@
   /**************************************************************************
    *
    * @Function:
-   *   ft_close_stream_by_free
+   *   ft_ansi_stream_io
    *
    * @Description:
-   *   The function to close a stream which is created by ft_alloc.
+   *   The function to open a stream.
    *
    * @Input:
-   *   stream :: A pointer to the stream object.
+   *   stream ::
+   *     A pointer to the stream object.
+   *
+   *   offset ::
+   *     The position in the data stream to start reading.
+   *
+   *   buffer ::
+   *     The address of buffer to store the read data.
+   *
+   *   count ::
+   *     The number of bytes to read from the stream.
+   *
+   * @Return:
+   *   The number of bytes actually read.  If `count' is zero (that is,
+   *   the function is used for seeking), a non-zero return value
+   *   indicates an error.
    */
-  FT_CALLBACK_DEF( void )
-  ft_close_stream_by_free( FT_Stream  stream )
+  FT_CALLBACK_DEF( unsigned long )
+  ft_ansi_stream_io( FT_Stream       stream,
+                     unsigned long   offset,
+                     unsigned char*  buffer,
+                     unsigned long   count )
   {
-    ft_free( stream->memory, stream->descriptor.pointer );
+    FT_FILE*  file;
 
-    stream->descriptor.pointer = NULL;
-    stream->size               = 0;
-    stream->base               = NULL;
+
+    if ( offset > stream->size && !count )
+      return 1;
+
+    file = STREAM_FILE( stream );
+
+    if ( stream->pos != offset )
+      ft_fseek( file, (long)offset, SEEK_SET );
+
+    /* Avoid calling `fread` with `buffer=NULL` and `count=0`, */
+    /* which is undefined behaviour.                           */
+    if ( !count )
+      return 0;
+
+    return (unsigned long)ft_fread( buffer, 1, count, file );
   }
 
 
-  /* support for Universal Windows Platform UWP, formerly WinRT */
-#ifdef _WINRT_DLL
-
-#define PACK_DWORD64( hi, lo )  ( ( (DWORD64)(hi) << 32 ) | (DWORD)(lo) )
-
-#define CreateFileMapping( a, b, c, d, e, f )                          \
-          CreateFileMappingFromApp( a, b, c, PACK_DWORD64( d, e ), f )
-#define MapViewOfFile( a, b, c, d, e )                                 \
-          MapViewOfFileFromApp( a, b, PACK_DWORD64( c, d ), e )
-
-  FT_LOCAL_DEF( HANDLE )
-  CreateFileA( LPCSTR                 lpFileName,
-               DWORD                  dwDesiredAccess,
-               DWORD                  dwShareMode,
-               LPSECURITY_ATTRIBUTES  lpSecurityAttributes,
-               DWORD                  dwCreationDisposition,
-               DWORD                  dwFlagsAndAttributes,
-               HANDLE                 hTemplateFile )
-  {
-    int     len;
-    LPWSTR  lpFileNameW;
-
-    CREATEFILE2_EXTENDED_PARAMETERS  createExParams = {
-      sizeof ( CREATEFILE2_EXTENDED_PARAMETERS ),
-      dwFlagsAndAttributes & 0x0000FFFF,
-      dwFlagsAndAttributes & 0xFFF00000,
-      dwFlagsAndAttributes & 0x000F0000,
-      lpSecurityAttributes,
-      hTemplateFile };
-
-
-    /* allocate memory space for converted path name */
-    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                               lpFileName, -1, NULL, 0 );
-
-    lpFileNameW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
-
-    if ( !len || !lpFileNameW )
-    {
-      FT_ERROR(( "FT_Stream_Open: cannot convert file name to LPWSTR\n" ));
-      return INVALID_HANDLE_VALUE;
-    }
-
-    /* now it is safe to do the translation */
-    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                         lpFileName, -1, lpFileNameW, len );
-
-    /* open the file */
-    return CreateFile2( lpFileNameW, dwDesiredAccess, dwShareMode,
-                        dwCreationDisposition, &createExParams );
-  }
-
-#endif  /* _WINRT_DLL */
-
-
-  /* support for Windows CE */
-#ifdef _WIN32_WCE
-
-  /* malloc.h provides implementation of alloca()/_alloca() */
-  #include <malloc.h>
-
-  FT_LOCAL_DEF( HANDLE )
-  CreateFileA( LPCSTR                 lpFileName,
-               DWORD                  dwDesiredAccess,
-               DWORD                  dwShareMode,
-               LPSECURITY_ATTRIBUTES  lpSecurityAttributes,
-               DWORD                  dwCreationDisposition,
-               DWORD                  dwFlagsAndAttributes,
-               HANDLE                 hTemplateFile )
-  {
-    int     len;
-    LPWSTR  lpFileNameW;
-
-
-    /* allocate memory space for converted path name */
-    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                               lpFileName, -1, NULL, 0 );
-
-    lpFileNameW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
-
-    if ( !len || !lpFileNameW )
-    {
-      FT_ERROR(( "FT_Stream_Open: cannot convert file name to LPWSTR\n" ));
-      return INVALID_HANDLE_VALUE;
-    }
-
-    /* now it is safe to do the translation */
-    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                         lpFileName, -1, lpFileNameW, len );
-
-    /* open the file */
-    return CreateFileW( lpFileNameW, dwDesiredAccess, dwShareMode,
-                        lpSecurityAttributes, dwCreationDisposition,
-                        dwFlagsAndAttributes, hTemplateFile );
-  }
-
-#endif  /* _WIN32_WCE */
-
-  /* support for really old Windows */
-#if defined( _WIN32_WCE ) || defined ( _WIN32_WINDOWS ) || \
-    !defined( _WIN32_WINNT ) || _WIN32_WINNT <= 0x0400
-
-  FT_LOCAL_DEF( BOOL )
-  GetFileSizeEx( HANDLE          hFile,
-                 PLARGE_INTEGER  lpFileSize )
-  {
-    lpFileSize->u.LowPart = GetFileSize( hFile,
-                                         (DWORD *)&lpFileSize->u.HighPart );
-
-    if ( lpFileSize->u.LowPart == INVALID_FILE_SIZE &&
-         GetLastError() != NO_ERROR                 )
-      return FALSE;
-    else
-      return TRUE;
-  }
-
-#endif  /* _WIN32_WCE || _WIN32_WINDOWS || _WIN32_WINNT <= 0x0400 */
-
-
-  /* documentation is in ftobjs.h */
+  /* documentation is in ftstream.h */
 
   FT_BASE_DEF( FT_Error )
   FT_Stream_Open( FT_Stream    stream,
                   const char*  filepathname )
   {
-    HANDLE         file;
-    HANDLE         fm;
-    LARGE_INTEGER  size;
+    FT_FILE*  file;
 
 
     if ( !stream )
       return FT_THROW( Invalid_Stream_Handle );
 
-    /* open the file */
-    file = CreateFileA( (LPCSTR)filepathname, GENERIC_READ, FILE_SHARE_READ,
-                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
-    if ( file == INVALID_HANDLE_VALUE )
+    stream->descriptor.pointer = NULL;
+    stream->pathname.pointer   = (char*)filepathname;
+    stream->base               = NULL;
+    stream->pos                = 0;
+    stream->read               = NULL;
+    stream->close              = NULL;
+
+    file = ft_fopen( filepathname, "rb" );
+    if ( !file )
     {
-      FT_ERROR(( "FT_Stream_Open:" ));
-      FT_ERROR(( " could not open `%s'\n", filepathname ));
+      FT_ERROR(( "FT_Stream_Open:"
+                 " could not open `%s'\n", filepathname ));
+
       return FT_THROW( Cannot_Open_Resource );
     }
 
-    if ( GetFileSizeEx( file, &size ) == FALSE )
+    ft_fseek( file, 0, SEEK_END );
+    stream->size = (unsigned long)ft_ftell( file );
+    if ( !stream->size )
     {
       FT_ERROR(( "FT_Stream_Open:" ));
-      FT_ERROR(( " could not retrieve size of file `%s'\n", filepathname ));
-      goto Fail_Open;
+      FT_ERROR(( " opened `%s' but zero-sized\n", filepathname ));
+      ft_fclose( file );
+      return FT_THROW( Cannot_Open_Stream );
     }
+    ft_fseek( file, 0, SEEK_SET );
 
-    /* `stream->size' is typedef'd to unsigned long (in `ftsystem.h'); */
-    /* So avoid overflow caused by fonts in huge files larger than     */
-    /* 2GB, do a test.                                                 */
-    if ( size.QuadPart > LONG_MAX )
-    {
-      FT_ERROR(( "FT_Stream_Open: file is too big\n" ));
-      goto Fail_Open;
-    }
-    else if ( size.QuadPart == 0 )
-    {
-      FT_ERROR(( "FT_Stream_Open: zero-length file\n" ));
-      goto Fail_Open;
-    }
-
-    fm = CreateFileMapping( file, NULL, PAGE_READONLY, 0, 0, NULL );
-    if ( fm == NULL )
-    {
-      FT_ERROR(( "FT_Stream_Open: can not map file\n" ));
-      goto Fail_Open;
-    }
-
-    /* Store only the low part of this 64 bits integer because long is */
-    /* a 32 bits type. Anyway, a check has been done above to forbid   */
-    /* a size greater than LONG_MAX                                    */
-    stream->size = size.LowPart;
-    stream->pos  = 0;
-    stream->base = (unsigned char *)
-                     MapViewOfFile( fm, FILE_MAP_READ, 0, 0, 0 );
-
-    CloseHandle( fm );
-
-    if ( stream->base != NULL )
-      stream->close = ft_close_stream_by_munmap;
-    else
-    {
-      DWORD  total_read_count;
-
-
-      FT_ERROR(( "FT_Stream_Open:" ));
-      FT_ERROR(( " could not `mmap' file `%s'\n", filepathname ));
-
-      stream->base = (unsigned char*)ft_alloc( stream->memory, stream->size );
-
-      if ( !stream->base )
-      {
-        FT_ERROR(( "FT_Stream_Open:" ));
-        FT_ERROR(( " could not `alloc' memory\n" ));
-        goto Fail_Open;
-      }
-
-      total_read_count = 0;
-      do
-      {
-        DWORD  read_count;
-
-
-        if ( ReadFile( file,
-                       stream->base + total_read_count,
-                       stream->size - total_read_count,
-                       &read_count, NULL ) == FALSE )
-        {
-          FT_ERROR(( "FT_Stream_Open:" ));
-          FT_ERROR(( " error while `read'ing file `%s'\n", filepathname ));
-          goto Fail_Read;
-        }
-
-        total_read_count += read_count;
-
-      } while ( total_read_count != stream->size );
-
-      stream->close = ft_close_stream_by_free;
-    }
-
-    CloseHandle( file );
-
-    stream->descriptor.pointer = stream->base;
-    stream->pathname.pointer   = (char*)filepathname;
-
-    stream->read = NULL;
+    stream->descriptor.pointer = file;
+    stream->read  = ft_ansi_stream_io;
+    stream->close = ft_ansi_stream_close;
 
     FT_TRACE1(( "FT_Stream_Open:" ));
-    FT_TRACE1(( " opened `%s' (%ld bytes) successfully\n",
+    FT_TRACE1(( " opened `%s' (%lu bytes) successfully\n",
                 filepathname, stream->size ));
 
     return FT_Err_Ok;
-
-  Fail_Read:
-    ft_free( stream->memory, stream->base );
-
-  Fail_Open:
-    CloseHandle( file );
-
-    stream->base = NULL;
-    stream->size = 0;
-    stream->pos  = 0;
-
-    return FT_THROW( Cannot_Open_Stream );
   }
 
+#endif /* !FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
 
 #ifdef FT_DEBUG_MEMORY
 
@@ -462,17 +304,13 @@
   FT_BASE_DEF( FT_Memory )
   FT_New_Memory( void )
   {
-    HANDLE     heap;
     FT_Memory  memory;
 
 
-    heap   = GetProcessHeap();
-    memory = heap ? (FT_Memory)HeapAlloc( heap, 0, sizeof ( *memory ) )
-                  : NULL;
-
+    memory = (FT_Memory)ft_smalloc( sizeof ( *memory ) );
     if ( memory )
     {
-      memory->user    = heap;
+      memory->user    = NULL;
       memory->alloc   = ft_alloc;
       memory->realloc = ft_realloc;
       memory->free    = ft_free;
@@ -493,7 +331,7 @@
 #ifdef FT_DEBUG_MEMORY
     ft_mem_debug_done( memory );
 #endif
-    memory->free( memory, memory );
+    ft_sfree( memory );
   }
 
 

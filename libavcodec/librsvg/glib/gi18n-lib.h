@@ -22,7 +22,7 @@
 
 #include "glib.h"
 
-#include "../libintl/libgnuintl.h"
+#include <libintl.h>
 #include <string.h>
 
 #ifndef GETTEXT_PACKAGE

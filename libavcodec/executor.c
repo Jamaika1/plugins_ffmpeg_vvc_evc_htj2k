@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Nuo Mi
+ * Copyright (C) 2024 Nuo Mi
  *
  * This file is part of FFmpeg.
  *
@@ -17,72 +17,92 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "libavutil/internal.h"
+
+#include "libavutil/config.h"
+
+#include <stdbool.h>
+
 #include "libavutil/mem.h"
 #include "libavutil/thread.h"
 
 #include "libavcodec/executor.h"
 
 #if !HAVE_THREADS
-#define pthread_create(t, a, s, ar)     0
-#define pthread_join(t, r)              do {} while(0)
 
-#define pthread_cond_init(c, a)         0
-#define pthread_cond_broadcast(c)       do {} while(0)
-#define pthread_cond_signal(c)          do {} while(0)
-#define pthread_cond_wait(c, m)         do {} while(0)
-#define pthread_cond_destroy(c)         do {} while(0)
+#define ExecutorThread  char
 
-#define pthread_mutex_init(m, a)        0
-#define pthread_mutex_lock(l)           do {} while(0)
-#define pthread_mutex_unlock(l)         do {} while(0)
-#define pthread_mutex_destroy(l)        do {} while(0)
-#endif
+#define executor_thread_create(t, a, s, ar)      0
+#define executor_thread_join(t, r)               do {} while(0)
+
+#else
+
+#define ExecutorThread  pthread_t
+
+#define executor_thread_create(t, a, s, ar)      pthread_create(t, a, s, ar)
+#define executor_thread_join(t, r)               pthread_join(t, r)
+
+#endif //!HAVE_THREADS
 
 typedef struct ThreadInfo {
-    AVExecutor *e;
-    pthread_t thread;
+    FFExecutor *e;
+    ExecutorThread thread;
 } ThreadInfo;
 
-struct AVExecutor {
-    AVTaskCallbacks cb;
+typedef struct Queue {
+    FFTask *head;
+    FFTask *tail;
+} Queue;
+
+struct FFExecutor {
+    FFTaskCallbacks cb;
     int thread_count;
+    bool recursive;
 
     ThreadInfo *threads;
     uint8_t *local_contexts;
 
-    pthread_mutex_t lock;
-    pthread_cond_t cond;
+    AVMutex lock;
+    AVCond cond;
     int die;
 
-    AVTask *tasks;
+    Queue *q;
 };
 
-static AVTask* remove_task(AVTask **prev, AVTask *t)
+static FFTask* remove_task(Queue *q)
 {
-    *prev  = t->next;
-    t->next = NULL;
+    FFTask *t = q->head;
+    if (t) {
+        q->head = t->next;
+        t->next = NULL;
+        if (!q->head)
+            q->tail = NULL;
+    }
     return t;
 }
 
-static void add_task(AVTask **prev, AVTask *t)
+static void add_task(Queue *q, FFTask *t)
 {
-    t->next = *prev;
-    *prev   = t;
+    t->next = NULL;
+    if (!q->head)
+        q->tail = q->head = t;
+    else
+        q->tail = q->tail->next = t;
 }
 
-static int run_one_task(AVExecutor *e, void *lc)
+static int run_one_task(FFExecutor *e, void *lc)
 {
-    AVTaskCallbacks *cb = &e->cb;
-    AVTask **prev;
+    FFTaskCallbacks *cb = &e->cb;
+    FFTask *t = NULL;
 
-    for (prev = &e->tasks; *prev && !cb->ready(*prev, cb->user_data); prev = &(*prev)->next)
-        /* nothing */;
-    if (*prev) {
-        AVTask *t = remove_task(prev, *prev);
-        pthread_mutex_unlock(&e->lock);
+    for (int i = 0; i < e->cb.priorities && !t; i++)
+        t = remove_task(e->q + i);
+
+    if (t) {
+        if (e->thread_count > 0)
+            ff_mutex_unlock(&e->lock);
         cb->run(t, lc, cb->user_data);
-        pthread_mutex_lock(&e->lock);
+        if (e->thread_count > 0)
+            ff_mutex_lock(&e->lock);
         return 1;
     }
     return 0;
@@ -92,68 +112,76 @@ static int run_one_task(AVExecutor *e, void *lc)
 static void *executor_worker_task(void *data)
 {
     ThreadInfo *ti = (ThreadInfo*)data;
-    AVExecutor *e  = ti->e;
+    FFExecutor *e  = ti->e;
     void *lc       = e->local_contexts + (ti - e->threads) * e->cb.local_context_size;
 
-    pthread_mutex_lock(&e->lock);
+    ff_mutex_lock(&e->lock);
     while (1) {
         if (e->die) break;
 
         if (!run_one_task(e, lc)) {
             //no task in one loop
-            pthread_cond_wait(&e->cond, &e->lock);
+            ff_cond_wait(&e->cond, &e->lock);
         }
     }
-    pthread_mutex_unlock(&e->lock);
+    ff_mutex_unlock(&e->lock);
     return NULL;
 }
 #endif
 
-static void executor_free(AVExecutor *e, const int has_lock, const int has_cond)
+static void executor_free(FFExecutor *e, const int has_lock, const int has_cond)
 {
     if (e->thread_count) {
         //signal die
-        pthread_mutex_lock(&e->lock);
+        ff_mutex_lock(&e->lock);
         e->die = 1;
-        pthread_cond_broadcast(&e->cond);
-        pthread_mutex_unlock(&e->lock);
+        ff_cond_broadcast(&e->cond);
+        ff_mutex_unlock(&e->lock);
 
         for (int i = 0; i < e->thread_count; i++)
-            pthread_join(e->threads[i].thread, NULL);
+            executor_thread_join(e->threads[i].thread, NULL);
     }
     if (has_cond)
-        pthread_cond_destroy(&e->cond);
+        ff_cond_destroy(&e->cond);
     if (has_lock)
-        pthread_mutex_destroy(&e->lock);
+        ff_mutex_destroy(&e->lock);
 
     av_free(e->threads);
+    av_free(e->q);
     av_free(e->local_contexts);
 
     av_free(e);
 }
 
-AVExecutor* avpriv_executor_alloc(const AVTaskCallbacks *cb, int thread_count)
+FFExecutor* ff_executor_alloc(const FFTaskCallbacks *cb, int thread_count)
 {
-    AVExecutor *e;
+    FFExecutor *e;
     int has_lock = 0, has_cond = 0;
-    if (!cb || !cb->user_data || !cb->ready || !cb->run || !cb->priority_higher)
+    if (!cb || !cb->user_data || !cb->run || !cb->priorities)
         return NULL;
 
-    e = av_calloc(1, sizeof(*e));
+    e = av_mallocz(sizeof(*e));
     if (!e)
         return NULL;
     e->cb = *cb;
 
-    e->local_contexts = av_calloc(thread_count, e->cb.local_context_size);
+    e->local_contexts = av_calloc(FFMAX(thread_count, 1), e->cb.local_context_size);
     if (!e->local_contexts)
         goto free_executor;
 
-    e->threads = av_calloc(thread_count, sizeof(*e->threads));
+    e->q = av_calloc(e->cb.priorities, sizeof(Queue));
+    if (!e->q)
+        goto free_executor;
+
+    e->threads = av_calloc(FFMAX(thread_count, 1), sizeof(*e->threads));
     if (!e->threads)
         goto free_executor;
 
-    has_lock = !pthread_mutex_init(&e->lock, NULL);
-    has_cond = !pthread_cond_init(&e->cond, NULL);
+    if (!thread_count)
+        return e;
+
+    has_lock = !ff_mutex_init(&e->lock, NULL);
+    has_cond = !ff_cond_init(&e->cond, NULL);
 
     if (!has_lock || !has_cond)
         goto free_executor;
@@ -161,7 +189,7 @@ AVExecutor* avpriv_executor_alloc(const AVTaskCallbacks *cb, int thread_count)
     for (/* nothing */; e->thread_count < thread_count; e->thread_count++) {
         ThreadInfo *ti = e->threads + e->thread_count;
         ti->e = e;
-        if (pthread_create(&ti->thread, NULL, executor_worker_task, ti))
+        if (executor_thread_create(&ti->thread, NULL, executor_worker_task, ti))
             goto free_executor;
     }
     return e;
@@ -171,31 +199,35 @@ free_executor:
     return NULL;
 }
 
-void avpriv_executor_free(AVExecutor **executor)
+void ff_executor_free(FFExecutor **executor)
 {
+    int thread_count;
+
     if (!executor || !*executor)
         return;
-    executor_free(*executor, 1, 1);
+    thread_count = (*executor)->thread_count;
+    executor_free(*executor, thread_count, thread_count);
     *executor = NULL;
 }
 
-void avpriv_executor_execute(AVExecutor *e, AVTask *t)
+void ff_executor_execute(FFExecutor *e, FFTask *t)
 {
-    AVTaskCallbacks *cb = &e->cb;
-    AVTask **prev;
-
-    pthread_mutex_lock(&e->lock);
-    if (t) {
-        for (prev = &e->tasks; *prev && cb->priority_higher(*prev, t); prev = &(*prev)->next)
-            /* nothing */;
-        add_task(prev, t);
+    if (e->thread_count)
+        ff_mutex_lock(&e->lock);
+    if (t)
+        add_task(e->q + t->priority % e->cb.priorities, t);
+    if (e->thread_count) {
+        ff_cond_signal(&e->cond);
+        ff_mutex_unlock(&e->lock);
     }
-    pthread_cond_signal(&e->cond);
-    pthread_mutex_unlock(&e->lock);
 
-#if !HAVE_THREADS
-    // We are running in a single-threaded environment, so we must handle all tasks ourselves
-    while (run_one_task(e, e->local_contexts))
-        /* nothing */;
-#endif
+    if (!e->thread_count || !HAVE_THREADS) {
+        if (e->recursive)
+            return;
+        e->recursive = true;
+        // We are running in a single-threaded environment, so we must handle all tasks ourselves
+        while (run_one_task(e, e->local_contexts))
+            /* nothing */;
+        e->recursive = false;
+    }
 }

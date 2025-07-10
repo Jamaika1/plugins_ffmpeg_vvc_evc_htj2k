@@ -27,11 +27,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "libavutil/attributes.h"
-#include "h264chroma.h"
-#include "h264qpel.h"
-#include "mathops.h"
-#include "qpeldsp.h"
-#include "rv34dsp.h"
+#include "libavcodec/h264chroma.h"
+#include "libavcodec/h264qpel.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/qpeldsp.h"
+#include "libavcodec/rv34dsp.h"
 
 #define RV30_LOWPASS(OPNAME, OP) \
 static void OPNAME ## rv30_tpel8_h_lowpass(uint8_t *dst, const uint8_t *src, int dstStride, int srcStride, const int C1, const int C2){\

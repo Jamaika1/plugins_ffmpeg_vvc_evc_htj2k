@@ -14,9 +14,12 @@
 #include "../dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
-
+#include <emmintrin.h>
 #include <smmintrin.h>
+
+#include "../webp/types.h"
 #include "../dec/vp8i_dec.h"
+#include "../dsp/cpu.h"
 #include "../utils/utils.h"
 
 static void HE16_SSE41(uint8_t* dst) {     // horizontal

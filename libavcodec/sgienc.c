@@ -19,14 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "sgi.h"
-#include "rle.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/sgi.h"
+#include "libavcodec/rle.h"
 
 #define SGI_SINGLE_CHAN 2
 #define SGI_MULTI_CHAN 3
@@ -280,11 +281,8 @@ const FFCodec ff_sgi_encoder = {
     .p.priv_class = &sgi_class,
     .init      = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
-    .p.pix_fmts = (const enum AVPixelFormat[]) {
-        AV_PIX_FMT_RGB24, AV_PIX_FMT_RGBA,
-        AV_PIX_FMT_RGB48LE, AV_PIX_FMT_RGB48BE,
-        AV_PIX_FMT_RGBA64LE, AV_PIX_FMT_RGBA64BE,
-        AV_PIX_FMT_GRAY16LE, AV_PIX_FMT_GRAY16BE, AV_PIX_FMT_GRAY8,
-        AV_PIX_FMT_NONE
-    },
+    CODEC_PIXFMTS(AV_PIX_FMT_RGB24,    AV_PIX_FMT_RGBA,
+                  AV_PIX_FMT_RGB48LE,  AV_PIX_FMT_RGB48BE,
+                  AV_PIX_FMT_RGBA64LE, AV_PIX_FMT_RGBA64BE,
+                  AV_PIX_FMT_GRAY16LE, AV_PIX_FMT_GRAY16BE, AV_PIX_FMT_GRAY8),
 };

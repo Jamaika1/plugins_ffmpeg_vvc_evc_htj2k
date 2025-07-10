@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "idctdsp.h"
-#include "mpegvideo.h"
-#include "msmpeg4_vc1_data.h"
-#include "wmv2.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/idctdsp.h"
+#include "libavcodec/mpegvideo.h"
+#include "libavcodec/msmpeg4_vc1_data.h"
+#include "libavcodec/wmv2.h"
 
 
 av_cold void ff_wmv2_common_init(MpegEncContext *s)
@@ -49,7 +49,8 @@ av_cold void ff_wmv2_common_init(MpegEncContext *s)
 
 void ff_mspel_motion(MpegEncContext *s, uint8_t *dest_y,
                      uint8_t *dest_cb, uint8_t *dest_cr,
-                     uint8_t *const *ref_picture, op_pixels_func (*pix_op)[4],
+                     uint8_t *const *ref_picture,
+                     const op_pixels_func (*pix_op)[4],
                      int motion_x, int motion_y, int h)
 {
     WMV2Context *const w = s->private_ctx;

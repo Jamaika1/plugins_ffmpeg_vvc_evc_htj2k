@@ -33,15 +33,16 @@
 #include "cabac.h"
 #include "dovi_rpu.h"
 #include "get_bits.h"
-#include "hevcpred.h"
 #include "h2645_parse.h"
+#include "h274.h"
+#include "progressframe.h"
+#include "videodsp.h"
+
+#include "hevcdsp.h"
 #include "hevc.h"
+#include "hevcpred.h"
 #include "hevc_ps.h"
 #include "hevc_sei.h"
-#include "hevcdsp.h"
-#include "h274.h"
-#include "threadframe.h"
-#include "videodsp.h"
 
 #define SHIFT_CTB_WPP 2
 
@@ -77,65 +78,19 @@
                    (s)->nal_unit_type == HEVC_NAL_BLA_N_LP)
 #define IS_IRAP(s) ((s)->nal_unit_type >= HEVC_NAL_BLA_W_LP && (s)->nal_unit_type <= HEVC_NAL_RSV_IRAP_VCL23)
 
+#define HEVC_RECOVERY_UNSPECIFIED INT_MAX
+#define HEVC_RECOVERY_END INT_MIN
+#define HEVC_IS_RECOVERING(s) ((s)->recovery_poc != HEVC_RECOVERY_UNSPECIFIED && (s)->recovery_poc != HEVC_RECOVERY_END)
+
 enum RPSType {
     ST_CURR_BEF = 0,
     ST_CURR_AFT,
     ST_FOLL,
     LT_CURR,
     LT_FOLL,
+    INTER_LAYER0,
+    INTER_LAYER1,
     NB_RPS_TYPE,
-};
-
-enum SyntaxElement {
-    SAO_MERGE_FLAG = 0,
-    SAO_TYPE_IDX,
-    SAO_EO_CLASS,
-    SAO_BAND_POSITION,
-    SAO_OFFSET_ABS,
-    SAO_OFFSET_SIGN,
-    END_OF_SLICE_FLAG,
-    SPLIT_CODING_UNIT_FLAG,
-    CU_TRANSQUANT_BYPASS_FLAG,
-    SKIP_FLAG,
-    CU_QP_DELTA,
-    PRED_MODE_FLAG,
-    PART_MODE,
-    PCM_FLAG,
-    PREV_INTRA_LUMA_PRED_FLAG,
-    MPM_IDX,
-    REM_INTRA_LUMA_PRED_MODE,
-    INTRA_CHROMA_PRED_MODE,
-    MERGE_FLAG,
-    MERGE_IDX,
-    INTER_PRED_IDC,
-    REF_IDX_L0,
-    REF_IDX_L1,
-    ABS_MVD_GREATER0_FLAG,
-    ABS_MVD_GREATER1_FLAG,
-    ABS_MVD_MINUS2,
-    MVD_SIGN_FLAG,
-    MVP_LX_FLAG,
-    NO_RESIDUAL_DATA_FLAG,
-    SPLIT_TRANSFORM_FLAG,
-    CBF_LUMA,
-    CBF_CB_CR,
-    TRANSFORM_SKIP_FLAG,
-    EXPLICIT_RDPCM_FLAG,
-    EXPLICIT_RDPCM_DIR_FLAG,
-    LAST_SIGNIFICANT_COEFF_X_PREFIX,
-    LAST_SIGNIFICANT_COEFF_Y_PREFIX,
-    LAST_SIGNIFICANT_COEFF_X_SUFFIX,
-    LAST_SIGNIFICANT_COEFF_Y_SUFFIX,
-    SIGNIFICANT_COEFF_GROUP_FLAG,
-    SIGNIFICANT_COEFF_FLAG,
-    COEFF_ABS_LEVEL_GREATER1_FLAG,
-    COEFF_ABS_LEVEL_GREATER2_FLAG,
-    COEFF_ABS_LEVEL_REMAINING,
-    COEFF_SIGN_FLAG,
-    LOG2_RES_SCALE_ABS,
-    RES_SCALE_SIGN_FLAG,
-    CU_CHROMA_QP_OFFSET_FLAG,
-    CU_CHROMA_QP_OFFSET_IDX,
 };
 
 enum PartMode {
@@ -252,21 +207,23 @@ typedef struct RefPicListTab {
 typedef struct SliceHeader {
     unsigned int pps_id;
 
-    ///< address (in raster order) of the first block in the current slice segment
+    /// address (in raster order) of the first block in the current slice segment
     unsigned int   slice_segment_addr;
-    ///< address (in raster order) of the first block in the current slice
+    /// address (in raster order) of the first block in the current slice
     unsigned int   slice_addr;
 
     enum HEVCSliceType slice_type;
 
     int pic_order_cnt_lsb;
+    int poc;
 
     uint8_t first_slice_in_pic_flag;
     uint8_t dependent_slice_segment_flag;
     uint8_t pic_output_flag;
     uint8_t colour_plane_id;
+    uint8_t inter_layer_pred;
 
-    ///< RPS coded in the slice header itself is stored here
+    /// RPS coded in the slice header itself is stored here
     int short_term_ref_pic_set_sps_flag;
     int short_term_ref_pic_set_size;
     ShortTermRPS slice_rps;
@@ -329,6 +286,7 @@ typedef struct SliceHeader {
     int16_t chroma_offset_l1[16][2];
 
     int slice_ctb_addr_rs;
+    unsigned data_offset;
 } SliceHeader;
 
 typedef struct CodingUnit {
@@ -398,35 +356,33 @@ typedef struct DBParams {
 #define HEVC_FRAME_FLAG_OUTPUT    (1 << 0)
 #define HEVC_FRAME_FLAG_SHORT_REF (1 << 1)
 #define HEVC_FRAME_FLAG_LONG_REF  (1 << 2)
-#define HEVC_FRAME_FLAG_BUMPING   (1 << 3)
-
-#define HEVC_SEQUENCE_COUNTER_MASK 0xff
-#define HEVC_SEQUENCE_COUNTER_INVALID (HEVC_SEQUENCE_COUNTER_MASK + 1)
+#define HEVC_FRAME_FLAG_UNAVAILABLE (1 << 3)
+#define HEVC_FRAME_FLAG_CORRUPT (1 << 4)
 
 typedef struct HEVCFrame {
-    AVFrame *frame;
+    union {
+        struct {
+            AVFrame *f;
+        };
+        ProgressFrame tf;
+    };
     AVFrame *frame_grain;
-    ThreadFrame tf;
     int needs_fg; /* 1 if grain needs to be applied by the decoder */
-    MvField *tab_mvf;
+    MvField *tab_mvf;              ///< RefStruct reference
     RefPicList *refPicList;
-    RefPicListTab **rpl_tab;
+    RefPicListTab **rpl_tab;       ///< RefStruct reference
     int ctb_count;
     int poc;
-    struct HEVCFrame *collocated_ref;
 
-    AVBufferRef *tab_mvf_buf;
-    AVBufferRef *rpl_tab_buf;
-    AVBufferRef *rpl_buf;
+    const HEVCPPS *pps;            ///< RefStruct reference
+    RefPicListTab *rpl;            ///< RefStruct reference
+    int nb_rpl_elems;
 
-    AVBufferRef *hwaccel_priv_buf;
-    void *hwaccel_picture_private;
+    void *hwaccel_picture_private; ///< RefStruct reference
 
-    /**
-     * A sequence counter, so that old frames are output first
-     * after a POC reset
-     */
-    uint16_t sequence;
+    // for secondary-layer frames, this is the DPB index of the base-layer frame
+    // from the same AU, if it exists, otherwise -1
+    int base_layer_frame;
 
     /**
      * A combination of HEVC_FRAME_FLAG_*
@@ -444,7 +400,6 @@ typedef struct HEVCLocalContext {
     void *logctx;
     const struct HEVCContext *parent;
 
-    GetBitContext gb;
     CABACContext cc;
 
     /**
@@ -490,57 +445,92 @@ typedef struct HEVCLocalContext {
     /* properties of the boundary of the current CTB for the purposes
      * of the deblocking filter */
     int boundary_flags;
+
+    // an array of these structs is used for per-thread state - pad its size
+    // to avoid false sharing
+    char padding[128];
 } HEVCLocalContext;
+
+typedef struct HEVCLayerContext {
+    HEVCFrame               DPB[32];
+    HEVCFrame              *cur_frame;
+
+    const HEVCSPS          *sps; // RefStruct reference
+
+    int                     bs_width;
+    int                     bs_height;
+
+    SAOParams              *sao;
+    DBParams               *deblock;
+
+    //  CU
+    uint8_t                *skip_flag;
+    uint8_t                *tab_ct_depth;
+
+    // PU
+    uint8_t                *cbf_luma; // cbf_luma of colocated TU
+    uint8_t                *tab_ipm;
+    uint8_t                *is_pcm;
+
+    // CTB-level flags affecting loop filter operation
+    uint8_t                *filter_slice_edges;
+
+    int32_t                *tab_slice_address;
+
+    int8_t                 *qp_y_tab;
+
+    uint8_t                *horizontal_bs;
+    uint8_t                *vertical_bs;
+
+    uint8_t                *sao_pixel_buffer_h[3];
+    uint8_t                *sao_pixel_buffer_v[3];
+
+    struct AVRefStructPool *tab_mvf_pool;
+    struct AVRefStructPool *rpl_tab_pool;
+} HEVCLayerContext;
 
 typedef struct HEVCContext {
     const AVClass *c;  // needed by private avoptions
     AVCodecContext *avctx;
 
-    HEVCLocalContext    **HEVClcList;
-    HEVCLocalContext    *HEVClc;
+    HEVCLocalContext     *local_ctx;
+    unsigned           nb_local_ctx;
 
-    uint8_t             threads_type;
-    uint8_t             threads_number;
-
-    int                 width;
-    int                 height;
+    // per-layer decoding state, addressed by VPS layer indices
+    HEVCLayerContext      layers[HEVC_VPS_MAX_LAYERS];
+    // VPS index of the layer currently being decoded
+    unsigned              cur_layer;
+    // bitmask of layer indices that are active for decoding/output
+    unsigned              layers_active_decode;
+    unsigned              layers_active_output;
 
     /** 1 if the independent slice segment header was successfully parsed */
     uint8_t slice_initialized;
 
-    AVFrame *frame;
-    AVFrame *output_frame;
-    uint8_t *sao_pixel_buffer_h[3];
-    uint8_t *sao_pixel_buffer_v[3];
+    struct AVContainerFifo *output_fifo;
 
     HEVCParamSets ps;
     HEVCSEI sei;
     struct AVMD5 *md5_ctx;
 
-    AVBufferPool *tab_mvf_pool;
-    AVBufferPool *rpl_tab_pool;
+    /// candidate references for the current frame
+    RefPicList rps[NB_RPS_TYPE];
 
-    ///< candidate references for the current frame
-    RefPicList rps[5];
-
+    const HEVCVPS *vps; ///< RefStruct reference
+    const HEVCPPS *pps; ///< RefStruct reference
     SliceHeader sh;
-    SAOParams *sao;
-    DBParams *deblock;
     enum HEVCNALUnitType nal_unit_type;
     int temporal_id;  ///< temporal_id_plus1 - 1
-    HEVCFrame *ref;
-    HEVCFrame DPB[32];
+    HEVCFrame *cur_frame;
+    HEVCFrame *collocated_ref;
     int poc;
-    int pocTid0;
+    int poc_tid0;
     int slice_idx; ///< number of the slice being currently decoded
     int eos;       ///< current packet contains an EOS/EOB NAL
     int last_eos;  ///< last packet contains an EOS/EOB NAL
-    int max_ra;
-    int bs_width;
-    int bs_height;
-    int overlap;
+    int recovery_poc;
 
-    int is_decoded;
+    // NoRaslOutputFlag associated with the last IRAP frame
     int no_rasl_output_flag;
 
     HEVCPredContext hpc;
@@ -548,39 +538,17 @@ typedef struct HEVCContext {
     VideoDSPContext vdsp;
     BswapDSPContext bdsp;
     H274FilmGrainDatabase h274db;
-    int8_t *qp_y_tab;
-    uint8_t *horizontal_bs;
-    uint8_t *vertical_bs;
-
-    int32_t *tab_slice_address;
-
-    //  CU
-    uint8_t *skip_flag;
-    uint8_t *tab_ct_depth;
-    // PU
-    uint8_t *tab_ipm;
-
-    uint8_t *cbf_luma; // cbf_luma of colocated TU
-    uint8_t *is_pcm;
-
-    // CTB-level flags affecting loop filter operation
-    uint8_t *filter_slice_edges;
 
     /** used on BE to byteswap the lines for checksumming */
     uint8_t *checksum_buf;
     int      checksum_buf_size;
 
-    /**
-     * Sequence counters for decoded and output frames, so that old
-     * frames are output first after a POC reset
-     */
-    uint16_t seq_decode;
-    uint16_t seq_output;
-
     /** The target for the common_cabac_state of the local contexts. */
     HEVCCABACState cabac;
 
-    int enable_parallel_tiles;
+    struct ThreadProgress *wpp_progress;
+    unsigned            nb_wpp_progress;
+
     atomic_int wpp_err;
 
     const uint8_t *data;
@@ -588,13 +556,31 @@ typedef struct HEVCContext {
     H2645Packet pkt;
     // type of the first VCL NAL of the current frame
     enum HEVCNALUnitType first_nal_type;
+    // index in pkt.nals of the NAL unit after which we can call
+    // ff_thread_finish_setup()
+    unsigned finish_setup_nal_idx;
 
     int is_nalff;           ///< this flag is != 0 if bitstream is encapsulated
                             ///< as a format defined in 14496-15
     int apply_defdispwin;
 
+    // multi-layer AVOptions
+    int         *view_ids;
+    unsigned  nb_view_ids;
+
+    unsigned    *view_ids_available;
+    unsigned  nb_view_ids_available;
+
+    unsigned    *view_pos_available;
+    unsigned  nb_view_pos_available;
+
     int nal_length_size;    ///< Number of bytes used for nal length (1, 2 or 4)
     int nuh_layer_id;
+
+    int film_grain_warning_shown;
+
+    // dts of the packet currently being decoded
+    int64_t pkt_dts;
 
     AVBufferRef *rpu_buf;       ///< 0 or 1 Dolby Vision RPUs.
     DOVIContext dovi_ctx;       ///< Dolby Vision decoding context
@@ -603,42 +589,45 @@ typedef struct HEVCContext {
 /**
  * Mark all frames in DPB as unused for reference.
  */
-void ff_hevc_clear_refs(HEVCContext *s);
+void ff_hevc_clear_refs(HEVCLayerContext *l);
 
 /**
  * Drop all frames currently in DPB.
  */
 void ff_hevc_flush_dpb(HEVCContext *s);
 
-const RefPicList *ff_hevc_get_ref_list(const HEVCContext *s, const HEVCFrame *frame,
-                                       int x0, int y0);
+const RefPicList *ff_hevc_get_ref_list(const HEVCFrame *frame, int x0, int y0);
 
 /**
  * Construct the reference picture sets for the current frame.
  */
-int ff_hevc_frame_rps(HEVCContext *s);
+int ff_hevc_frame_rps(HEVCContext *s, HEVCLayerContext *l);
 
 /**
  * Construct the reference picture list(s) for the current slice.
  */
 int ff_hevc_slice_rpl(HEVCContext *s);
 
-void ff_hevc_save_states(HEVCLocalContext *lc, int ctb_addr_ts);
-int ff_hevc_cabac_init(HEVCLocalContext *lc, int ctb_addr_ts);
+void ff_hevc_save_states(HEVCLocalContext *lc, const HEVCPPS *pps,
+                         int ctb_addr_ts);
+int ff_hevc_cabac_init(HEVCLocalContext *lc, const HEVCPPS *pps,
+                       int ctb_addr_ts, const uint8_t *data, size_t size,
+                       int is_wpp);
 int ff_hevc_sao_merge_flag_decode(HEVCLocalContext *lc);
 int ff_hevc_sao_type_idx_decode(HEVCLocalContext *lc);
 int ff_hevc_sao_band_position_decode(HEVCLocalContext *lc);
-int ff_hevc_sao_offset_abs_decode(HEVCLocalContext *lc);
+int ff_hevc_sao_offset_abs_decode(HEVCLocalContext *lc, int bit_depth);
 int ff_hevc_sao_offset_sign_decode(HEVCLocalContext *lc);
 int ff_hevc_sao_eo_class_decode(HEVCLocalContext *lc);
 int ff_hevc_end_of_slice_flag_decode(HEVCLocalContext *lc);
 int ff_hevc_cu_transquant_bypass_flag_decode(HEVCLocalContext *lc);
-int ff_hevc_skip_flag_decode(HEVCLocalContext *lc, int x0, int y0,
-                             int x_cb, int y_cb);
+int ff_hevc_skip_flag_decode(HEVCLocalContext *lc, uint8_t *skip_flag,
+                             int x0, int y0, int x_cb, int y_cb, int min_cb_width);
 int ff_hevc_pred_mode_decode(HEVCLocalContext *lc);
-int ff_hevc_split_coding_unit_flag_decode(HEVCLocalContext *lc, int ct_depth,
-                                          int x0, int y0);
-int ff_hevc_part_mode_decode(HEVCLocalContext *lc, int log2_cb_size);
+int ff_hevc_split_coding_unit_flag_decode(HEVCLocalContext *lc, uint8_t *tab_ct_depth,
+                                          const HEVCSPS *sps,
+                                          int ct_depth, int x0, int y0);
+int ff_hevc_part_mode_decode(HEVCLocalContext *lc, const HEVCSPS *sps, int log2_cb_size);
 int ff_hevc_pcm_flag_decode(HEVCLocalContext *lc);
 int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCLocalContext *lc);
 int ff_hevc_mpm_idx_decode(HEVCLocalContext *lc);
@@ -659,9 +648,10 @@ int ff_hevc_res_scale_sign_flag(HEVCLocalContext *lc, int idx);
 /**
  * Get the number of candidate references for the current frame.
  */
-int ff_hevc_frame_nb_refs(const HEVCContext *s);
+int ff_hevc_frame_nb_refs(const SliceHeader *sh, const HEVCPPS *pps,
+                          unsigned layer_idx);
 
-int ff_hevc_set_new_ref(HEVCContext *s, AVFrame **frame, int poc);
+int ff_hevc_set_new_ref(HEVCContext *s, HEVCLayerContext *l, int poc);
 
 static av_always_inline int ff_hevc_nal_is_nonref(enum HEVCNALUnitType type)
 {
@@ -681,39 +671,56 @@ static av_always_inline int ff_hevc_nal_is_nonref(enum HEVCNALUnitType type)
 }
 
 /**
- * Find next frame in output order and put a reference to it in frame.
- * @return 1 if a frame was output, 0 otherwise
+ * Find frames in the DPB that are ready for output and either write them to the
+ * output FIFO or drop their output flag, depending on the value of discard.
+ *
+ * @param max_output maximum number of AUs with an output-pending frame in at
+ *                   least one layer that can be present in the DPB before output
+ *                   is triggered
+ * @param max_dpb maximum number of any frames that can be present in the DPB
+ *                for any layer before output is triggered
  */
-int ff_hevc_output_frame(HEVCContext *s, AVFrame *frame, int flush);
+int ff_hevc_output_frames(HEVCContext *s,
+                          unsigned layers_active_decode, unsigned layers_active_output,
+                          unsigned max_output, unsigned max_dpb, int discard);
 
-void ff_hevc_bump_frame(HEVCContext *s);
-
-void ff_hevc_unref_frame(HEVCContext *s, HEVCFrame *frame, int flags);
+void ff_hevc_unref_frame(HEVCFrame *frame, int flags);
 
 void ff_hevc_set_neighbour_available(HEVCLocalContext *lc, int x0, int y0,
-                                     int nPbW, int nPbH);
-void ff_hevc_luma_mv_merge_mode(HEVCLocalContext *lc, int x0, int y0,
+                                     int nPbW, int nPbH, int log2_ctb_size);
+void ff_hevc_luma_mv_merge_mode(HEVCLocalContext *lc, const HEVCPPS *pps,
+                                int x0, int y0,
                                 int nPbW, int nPbH, int log2_cb_size,
                                 int part_idx, int merge_idx, MvField *mv);
-void ff_hevc_luma_mv_mvp_mode(HEVCLocalContext *lc, int x0, int y0,
+void ff_hevc_luma_mv_mvp_mode(HEVCLocalContext *lc, const HEVCPPS *pps,
+                              int x0, int y0,
                               int nPbW, int nPbH, int log2_cb_size,
                               int part_idx, int merge_idx,
                               MvField *mv, int mvp_lx_flag, int LX);
-void ff_hevc_hls_filter(HEVCLocalContext *lc, int x, int y, int ctb_size);
-void ff_hevc_hls_filters(HEVCLocalContext *lc, int x_ctb, int y_ctb, int ctb_size);
-void ff_hevc_set_qPy(HEVCLocalContext *lc, int xBase, int yBase,
-                     int log2_cb_size);
-void ff_hevc_deblocking_boundary_strengths(HEVCLocalContext *lc, int x0, int y0,
-                                           int log2_trafo_size);
+void ff_hevc_hls_filter(HEVCLocalContext *lc, const HEVCLayerContext *l,
+                        const HEVCPPS *pps,
+                        int x, int y, int ctb_size);
+void ff_hevc_hls_filters(HEVCLocalContext *lc, const HEVCLayerContext *l,
+                         const HEVCPPS *pps,
+                         int x_ctb, int y_ctb, int ctb_size);
+void ff_hevc_set_qPy(HEVCLocalContext *lc,
+                     const HEVCLayerContext *l, const HEVCPPS *pps,
+                     int xBase, int yBase, int log2_cb_size);
+void ff_hevc_deblocking_boundary_strengths(HEVCLocalContext *lc, const HEVCLayerContext *l,
+                                           const HEVCPPS *pps,
+                                           int x0, int y0, int log2_trafo_size);
 int ff_hevc_cu_qp_delta_sign_flag(HEVCLocalContext *lc);
 int ff_hevc_cu_qp_delta_abs(HEVCLocalContext *lc);
 int ff_hevc_cu_chroma_qp_offset_flag(HEVCLocalContext *lc);
-int ff_hevc_cu_chroma_qp_offset_idx(HEVCLocalContext *lc);
-void ff_hevc_hls_residual_coding(HEVCLocalContext *lc, int x0, int y0,
+int ff_hevc_cu_chroma_qp_offset_idx(HEVCLocalContext *lc, int chroma_qp_offset_list_len_minus1);
+void ff_hevc_hls_residual_coding(HEVCLocalContext *lc, const HEVCPPS *pps,
+                                 int x0, int y0,
                                  int log2_trafo_size, enum ScanType scan_idx,
                                  int c_idx);
 
 void ff_hevc_hls_mvd_coding(HEVCLocalContext *lc, int x0, int y0, int log2_cb_size);
+
+int ff_hevc_is_alpha_video(const HEVCContext *s);
 
 extern const uint8_t ff_hevc_qpel_extra_before[4];
 extern const uint8_t ff_hevc_qpel_extra_after[4];

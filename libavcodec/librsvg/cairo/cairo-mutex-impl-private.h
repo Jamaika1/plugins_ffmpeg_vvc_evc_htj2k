@@ -177,9 +177,9 @@
 # define CAIRO_RECURSIVE_MUTEX_IMPL_INIT(mutex)
 # define CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER 0
 
-/*#elif defined(_WIN32)*/ /******************************************************/
+#elif defined(_WIN32) /******************************************************/
 
-/*# include <windows.h>
+# include <windows.h>
 
   typedef CRITICAL_SECTION cairo_mutex_impl_t;
 
@@ -189,7 +189,7 @@
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
 # define CAIRO_MUTEX_IMPL_INIT(mutex) InitializeCriticalSection (&(mutex))
 # define CAIRO_MUTEX_IMPL_FINI(mutex) DeleteCriticalSection (&(mutex))
-# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }*/
+# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
 
 #elif CAIRO_HAS_PTHREAD /* and finally if there are no native mutexes ********/
 

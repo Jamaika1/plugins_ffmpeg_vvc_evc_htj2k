@@ -21,7 +21,7 @@
 #ifndef __GTK_JSON_PRINTER_H__
 #define __GTK_JSON_PRINTER_H__
 
-#include <glib.h>
+#include "../../glib/glib.h"
 
 G_BEGIN_DECLS
 
@@ -35,7 +35,7 @@ typedef enum {
 typedef void            (* GtkJsonPrinterWriteFunc)             (GtkJsonPrinter         *printer,
                                                                  const char             *s,
                                                                  gpointer                user_data);
-             
+
 
 GtkJsonPrinter *        gtk_json_printer_new                    (GtkJsonPrinterWriteFunc write_func,
                                                                  gpointer                data,

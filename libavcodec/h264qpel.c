@@ -20,7 +20,7 @@
  */
 
 #include "libavutil/attributes.h"
-#include "h264qpel.h"
+#include "libavcodec/h264qpel.h"
 
 #define pixeltmp int16_t
 #define BIT_DEPTH 8
@@ -102,6 +102,8 @@ av_cold void ff_h264qpel_init(H264QpelContext *c, int bit_depth)
     ff_h264qpel_init_arm(c, bit_depth);
 #elif ARCH_PPC
     ff_h264qpel_init_ppc(c, bit_depth);
+#elif ARCH_RISCV
+    ff_h264qpel_init_riscv(c, bit_depth);
 #elif ARCH_X86
     ff_h264qpel_init_x86(c, bit_depth);
 #elif ARCH_MIPS

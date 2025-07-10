@@ -25,10 +25,10 @@
  */
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
 
 
 typedef struct SeqVideoContext {
@@ -182,7 +182,11 @@ static int seqvideo_decode(SeqVideoContext *seq, const unsigned char *data, int 
                 c[j] = (*data << 2) | (*data >> 4);
             palette[i] = 0xFFU << 24 | AV_RB24(c);
         }
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
         seq->frame->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
     }
 
     if (flags & 2) {

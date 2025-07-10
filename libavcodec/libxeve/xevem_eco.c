@@ -642,13 +642,13 @@ int xevem_eco_sh(XEVE_BSW * bs, XEVE_SPS * sps, XEVE_PPS * pps, XEVE_SH * sh, in
 
     if(sh->deblocking_filter_on && sps->tool_addb)
     {
-        xeve_bsw_write_se(bs, (u32)sh->sh_deblock_alpha_offset);
-        xeve_bsw_write_se(bs, (u32)sh->sh_deblock_beta_offset);
+        xeve_bsw_write_se(bs, sh->sh_deblock_alpha_offset);
+        xeve_bsw_write_se(bs, sh->sh_deblock_beta_offset);
     }
 
     xeve_bsw_write(bs, sh->qp, 6);
-    xeve_bsw_write_se(bs, (u32)sh->qp_u_offset);
-    xeve_bsw_write_se(bs, (u32)sh->qp_v_offset);
+    xeve_bsw_write_se(bs, sh->qp_u_offset);
+    xeve_bsw_write_se(bs, sh->qp_v_offset);
 
     if (!sh->single_tile_in_slice_flag)
     {
@@ -2314,7 +2314,7 @@ int xevem_eco_unit(XEVE_CTX * ctx, XEVE_CORE * core, int x, int y, int cup, int 
         XEVE_TRACE_STR("mode status ");
         XEVE_TRACE_INT(core->tree_cons.mode_cons);
     }
-#endif
+#endif  
     XEVE_TRACE_STR("\n");
 
     xeve_get_ctx_some_flags(core->x_scu, core->y_scu, cuw, cuh, ctx->w_scu, ctx->map_scu, ctx->map_cu_mode, core->ctx_flags

@@ -36,7 +36,7 @@
 
 #include "ipol-avx2.h"
 
-#if COMPILE_INTEL_AVX2 && defined X86_64
+#if COMPILE_INTEL_AVX2 && defined(X86_64)
 #include <immintrin.h>
 #include <stdio.h>
 #include <string.h>
@@ -1243,12 +1243,12 @@ static void kvz_sample_octpel_chroma_hi_avx2(const encoder_control_t *const enco
   kvz_ipol_4tap_ver_im_hi_avx2(ver_fir, width, height, hor_intermediate, hor_stride, dst, dst_stride);
 }
 
-#endif //COMPILE_INTEL_AVX2 && defined X86_64
+#endif //COMPILE_INTEL_AVX2 && defined(X86_64)
 
 int kvz_strategy_register_ipol_avx2(void* opaque, uint8_t bitdepth)
 {
   bool success = true;
-#if COMPILE_INTEL_AVX2 && defined X86_64
+#if COMPILE_INTEL_AVX2 && defined(X86_64)
   if (bitdepth == 8){
     success &= kvz_strategyselector_register(opaque, "filter_hpel_blocks_hor_ver_luma", "avx2", 40, &kvz_filter_hpel_blocks_hor_ver_luma_avx2);
     success &= kvz_strategyselector_register(opaque, "filter_hpel_blocks_diag_luma", "avx2", 40, &kvz_filter_hpel_blocks_diag_luma_avx2);
@@ -1259,6 +1259,6 @@ int kvz_strategy_register_ipol_avx2(void* opaque, uint8_t bitdepth)
     success &= kvz_strategyselector_register(opaque, "sample_quarterpel_luma_hi", "avx2", 40, &kvz_sample_quarterpel_luma_hi_avx2);
     success &= kvz_strategyselector_register(opaque, "sample_octpel_chroma_hi", "avx2", 40, &kvz_sample_octpel_chroma_hi_avx2);
   }
-#endif //COMPILE_INTEL_AVX2 && defined X86_64
+#endif //COMPILE_INTEL_AVX2 && defined(X86_64)
   return success;
 }

@@ -32,7 +32,7 @@
 
 #include "strategies-sao.h"
 #if defined(__AVX2__)
-#include "avx2/sao-avx2.h"
+//#include "avx2/sao-avx2.h"
 #endif
 #include "sao-generic.h"
 #include "strategyselector.h"
@@ -51,9 +51,9 @@ int uvg_strategy_register_sao(void* opaque, uint8_t bitdepth) {
   success &= uvg_strategy_register_sao_generic(opaque, bitdepth);
 
 #if defined(__AVX2__)
-  if (uvg_g_hardware_flags.intel_flags.avx2) {
-    success &= uvg_strategy_register_sao_avx2(opaque, bitdepth);
-  }
+  //if (uvg_g_hardware_flags.intel_flags.avx2) {
+    //success &= uvg_strategy_register_sao_avx2(opaque, bitdepth);
+  //}
 #endif
 
   return success;

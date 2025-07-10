@@ -1,7 +1,7 @@
 #ifndef __CR_NODE_IFACE_H__
 #define __CR_NODE_IFACE_H__
 
-#include "../config.h"
+#include "../glib/config_win32.h"
 #include "../glib/glib.h"
 
 G_BEGIN_DECLS

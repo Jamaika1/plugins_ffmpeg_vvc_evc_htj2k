@@ -27,8 +27,8 @@
 #ifndef X264_OPENCL_H
 #define X264_OPENCL_H
 
-#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
-#include "extras/cl.h"
+//#define CL_USE_DEPRECATED_OPENCL_1_1_APIS
+#include <CL/cl.h>
 
 #define OCL_API(ret, attr, name) typedef ret (attr *name##_func)
 

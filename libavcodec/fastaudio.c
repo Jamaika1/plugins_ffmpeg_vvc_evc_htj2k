@@ -21,10 +21,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavutil/intfloat.h"
+#include "libavutil/mem.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 typedef struct ChannelItems {
     float f[8];
@@ -194,6 +196,5 @@ const FFCodec ff_fastaudio_decoder = {
     FF_CODEC_DECODE_CB(fastaudio_decode),
     .close          = fastaudio_close,
     .p.capabilities = AV_CODEC_CAP_DR1,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLTP,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLTP),
 };

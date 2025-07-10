@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavutil/common.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "libavutil/mem.h"
 
 #if CONFIG_ZLIB
 #include <zlib.h>

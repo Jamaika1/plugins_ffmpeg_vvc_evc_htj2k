@@ -33,15 +33,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/internal.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 
-#include "truemotion1data.h"
+#include "libavcodec/truemotion1data.h"
 
 typedef struct TrueMotion1Context {
     AVCodecContext *avctx;
@@ -405,6 +405,11 @@ static int truemotion1_decode_header(TrueMotion1Context *s)
     s->w >>= width_shift;
     if (s->w & 1) {
         avpriv_request_sample(s->avctx, "Frame with odd width");
+        return AVERROR_PATCHWELCOME;
+    }
+
+    if (s->h & 3) {
+        avpriv_request_sample(s->avctx, "Frame with height not being a multiple of 4");
         return AVERROR_PATCHWELCOME;
     }
 

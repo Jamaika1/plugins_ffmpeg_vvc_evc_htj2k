@@ -25,10 +25,11 @@
  * MxPEG decoder
  */
 
-#include "codec_internal.h"
-#include "decode.h"
-#include "mjpeg.h"
-#include "mjpegdec.h"
+#include "libavutil/mem.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/mjpeg.h"
+#include "libavcodec/mjpegdec.h"
 
 typedef struct MXpegDecodeContext {
     MJpegDecodeContext jpg;
@@ -46,10 +47,8 @@ typedef struct MXpegDecodeContext {
 static av_cold int mxpeg_decode_end(AVCodecContext *avctx)
 {
     MXpegDecodeContext *s = avctx->priv_data;
-    MJpegDecodeContext *jpg = &s->jpg;
     int i;
 
-    jpg->picture_ptr = NULL;
     ff_mjpeg_decode_end(avctx);
 
     for (i = 0; i < 2; ++i)

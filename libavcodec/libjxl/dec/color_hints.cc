@@ -5,11 +5,15 @@
 
 #include "lib/jxl/extras/dec/color_hints.h"
 
-#include <jxl/encode.h>
+#include <jxl/color_encoding.h>
 
+#include <cstdint>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/extras/dec/color_description.h"
+#include "lib/jxl/extras/packed_image.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {
@@ -43,20 +47,21 @@ Status ApplyColorHints(const ColorHints& color_hints,
         } else if (key == "icc") {
           const uint8_t* data = reinterpret_cast<const uint8_t*>(value.data());
           std::vector<uint8_t> icc(data, data + value.size());
-          ppf->icc.swap(icc);
+          ppf->icc = std::move(icc);
+          ppf->primary_color_representation = PackedPixelFile::kIccIsPrimary;
           got_color_space = true;
         } else if (key == "exif") {
           const uint8_t* data = reinterpret_cast<const uint8_t*>(value.data());
           std::vector<uint8_t> blob(data, data + value.size());
-          ppf->metadata.exif.swap(blob);
+          ppf->metadata.exif = std::move(blob);
         } else if (key == "xmp") {
           const uint8_t* data = reinterpret_cast<const uint8_t*>(value.data());
           std::vector<uint8_t> blob(data, data + value.size());
-          ppf->metadata.xmp.swap(blob);
+          ppf->metadata.xmp = std::move(blob);
         } else if (key == "jumbf") {
           const uint8_t* data = reinterpret_cast<const uint8_t*>(value.data());
           std::vector<uint8_t> blob(data, data + value.size());
-          ppf->metadata.jumbf.swap(blob);
+          ppf->metadata.jumbf = std::move(blob);
         } else {
           JXL_WARNING("Ignoring %s hint", key.c_str());
         }

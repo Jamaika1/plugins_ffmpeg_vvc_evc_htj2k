@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "diractab.h"
+#include "libavcodec/diractab.h"
 
 const uint8_t ff_dirac_default_qmat[7][4][4] = {
     { { 5,  3,  3,  0}, { 0,  4,  4,  1}, { 0,  5,  5,  2}, { 0,  6,  6,  3} },

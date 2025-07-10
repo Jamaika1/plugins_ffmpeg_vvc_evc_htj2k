@@ -37,6 +37,8 @@
 #include <string.h>
 #include <stddef.h>
 
+// clang-format off
+
 #define PARAMS_END_KEY                      (0)
 #define PARAM_STR_MAX_LEN                   (256)
 
@@ -65,7 +67,8 @@ static const XEVE_PARAM_METADATA xeve_params_metadata[] = {
     SET_XEVE_PARAM_METADATA( threads,                                   DT_INTEGER ),
     SET_XEVE_PARAM_METADATA( w,                                         DT_INTEGER ),
     SET_XEVE_PARAM_METADATA( h,                                         DT_INTEGER ),
-    SET_XEVE_PARAM_METADATA( fps,                                       DT_INTEGER ),
+    SET_XEVE_PARAM_METADATA( fps.num,                                   DT_INTEGER ),
+    SET_XEVE_PARAM_METADATA( fps.den,                                   DT_INTEGER),
     SET_XEVE_PARAM_METADATA( keyint,                                    DT_INTEGER ),
     SET_XEVE_PARAM_METADATA( cs,                                        DT_INTEGER ),
     SET_XEVE_PARAM_METADATA( rc_type,                                   DT_INTEGER ),
@@ -251,6 +254,8 @@ static const XEVE_PARAM_METADATA xeve_params_metadata[] = {
     /* termination */
     { .name = PARAMS_END_KEY }
 };
+
+// clang-format on
 
 static int xeve_param_search_name(const char * name)
 {

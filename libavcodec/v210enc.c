@@ -21,13 +21,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "internal.h"
-#include "v210enc.h"
-#include "v210enc_init.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/v210enc.h"
+#include "libavcodec/v210enc_init.h"
 
 #define TYPE uint8_t
 #define DEPTH 8
@@ -117,5 +117,5 @@ const FFCodec ff_v210_encoder = {
     .priv_data_size = sizeof(V210EncContext),
     .init           = encode_init,
     FF_CODEC_ENCODE_CB(encode_frame),
-    .p.pix_fmts     = (const enum AVPixelFormat[]){ AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV422P, AV_PIX_FMT_NONE },
+    CODEC_PIXFMTS(AV_PIX_FMT_YUV422P10, AV_PIX_FMT_YUV422P),
 };

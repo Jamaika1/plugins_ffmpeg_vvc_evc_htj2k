@@ -100,7 +100,6 @@ struct _PangoAnalysis
  * @offset: byte offset of the start of this item in text.
  * @length: length of this item in bytes.
  * @num_chars: number of Unicode characters in the item.
- * @char_offset: character offset of the start of this item in text. Since 1.50
  * @analysis: analysis results for the item.
  *
  * The `PangoItem` structure stores information about a segment of text.
@@ -127,6 +126,10 @@ PANGO_AVAILABLE_IN_ALL
 PangoItem *             pango_item_copy              (PangoItem         *item);
 PANGO_AVAILABLE_IN_ALL
 void                    pango_item_free              (PangoItem         *item);
+
+
+PANGO_AVAILABLE_IN_1_54
+int                     pango_item_get_char_offset   (PangoItem         *item);
 
 PANGO_AVAILABLE_IN_ALL
 PangoItem *             pango_item_split             (PangoItem         *orig,
@@ -158,7 +161,6 @@ GList *                 pango_itemize_with_base_dir  (PangoContext      *context
                                                       int                length,
                                                       PangoAttrList     *attrs,
                                                       PangoAttrIterator *cached_iter);
-
 
 G_END_DECLS
 

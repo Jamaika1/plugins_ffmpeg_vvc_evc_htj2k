@@ -20,9 +20,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "lossless_audiodsp.h"
+#include "libavcodec/lossless_audiodsp.h"
 
 static int32_t scalarproduct_and_madd_int16_c(int16_t *v1, const int16_t *v2,
                                               const int16_t *v3,
@@ -63,6 +63,8 @@ av_cold void ff_llauddsp_init(LLAudDSPContext *c)
     ff_llauddsp_init_arm(c);
 #elif ARCH_PPC
     ff_llauddsp_init_ppc(c);
+#elif ARCH_RISCV
+    ff_llauddsp_init_riscv(c);
 #elif ARCH_X86
     ff_llauddsp_init_x86(c);
 #endif

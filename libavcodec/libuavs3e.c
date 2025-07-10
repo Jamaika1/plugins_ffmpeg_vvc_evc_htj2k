@@ -2,14 +2,14 @@
 
 #include "libuavs3e/uavs3e.h"
 
-#include "internal.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-
 #include "libavutil/common.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
-#include "encode.h"
+#include "libavcodec/internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
 
 #define MAX_BUMP_FRM_CNT           (8 <<1)
 #define MAX_BS_BUF                 (32*1024*1024)
@@ -101,8 +101,8 @@ static int uavs3e_init(AVCodecContext *avctx)
 
     ec->avs3_cfg.horizontal_size    = avctx->coded_width;
     ec->avs3_cfg.vertical_size      = avctx->coded_height;
-    ec->avs3_cfg.fps_num            = avctx->time_base.den;
-    ec->avs3_cfg.fps_den            = avctx->time_base.num;
+    ec->avs3_cfg.fps_num            = avctx->framerate.num;
+    ec->avs3_cfg.fps_den            = avctx->framerate.den;
     ec->avs3_cfg.wpp_threads        = ec->threads_wpp;
     ec->avs3_cfg.frm_threads        = ec->threads_frm;
     ec->avs3_cfg.qp                 = ec->baseQP;
@@ -285,14 +285,12 @@ const FFCodec ff_libuavs3e_encoder = {
     .init           = uavs3e_init,
     FF_CODEC_ENCODE_CB(uavs3e_encode_frame),
     .close          = uavs3e_close,
-    .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_DELAY |
+    .p.capabilities = AV_CODEC_CAP_DELAY |
                       AV_CODEC_CAP_OTHER_THREADS,
-    .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE |
-                      FF_CODEC_CAP_INIT_CLEANUP |
+    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP | FF_CODEC_CAP_NOT_INIT_THREADSAFE |
                       FF_CODEC_CAP_AUTO_THREADS,
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_YUV420P,
-                                                     //AV_PIX_FMT_YUV420P10LE,
-                                                     AV_PIX_FMT_NONE },
+    CODEC_PIXFMTS(AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE),
+    .color_ranges   = AVCOL_RANGE_MPEG,
     .p.priv_class   = &uavs3e_class,
     .defaults       = uavs3e_defaults,
     .p.wrapper_name = "libuavs3",

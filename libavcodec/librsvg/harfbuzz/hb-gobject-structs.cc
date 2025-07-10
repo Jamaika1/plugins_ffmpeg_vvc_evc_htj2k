@@ -40,7 +40,7 @@
  *
  * The types and functions listed here are solely a linkage between
  * HarfBuzz's public data types and the GTypes used by the GObject framework.
- * HarfBuzz uses GObject introspection to generate its Python bindings 
+ * HarfBuzz uses GObject introspection to generate its Python bindings
  * (and potentially other language bindings); client programs should never need
  * to access the GObject-integration mechanics.
  *
@@ -50,13 +50,7 @@
 
 
 /* g++ didn't like older gtype.h gcc-only code path. */
-#include <glib.h>
-#if !GLIB_CHECK_VERSION(2,29,16)
-#undef __GNUC__
-#undef __GNUC_MINOR__
-#define __GNUC__ 2
-#define __GNUC_MINOR__ 6
-#endif
+#include "../glib/glib.h"
 
 #include "hb-gobject.h"
 

@@ -16,7 +16,6 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include "lzw.h"
 
 /* Maximum number of codes */
@@ -209,7 +208,7 @@ lzw_decoder_feed (LZWDecoder *self,
                                 /* Invalid code received - just stop here */
                                 if (self->code >= self->code_table_size) {
                                         self->last_code = self->eoi_code;
-                                        return output_length;
+                                        return n_written;
                                 }
 
                                 /* Convert codeword into indexes */

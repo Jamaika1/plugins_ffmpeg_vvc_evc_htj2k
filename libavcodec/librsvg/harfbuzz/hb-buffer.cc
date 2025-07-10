@@ -271,6 +271,7 @@ hb_buffer_t::similar (const hb_buffer_t &src)
   replacement = src.replacement;
   invisible = src.invisible;
   not_found = src.not_found;
+  not_found_variation_selector = src.not_found_variation_selector;
 }
 
 void
@@ -283,6 +284,7 @@ hb_buffer_t::reset ()
   replacement = HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT;
   invisible = 0;
   not_found = 0;
+  not_found_variation_selector = HB_CODEPOINT_INVALID;
 
   clear ();
 }
@@ -365,6 +367,18 @@ hb_buffer_t::add_info (const hb_glyph_info_t &glyph_info)
   if (unlikely (!ensure (len + 1))) return;
 
   info[len] = glyph_info;
+
+  len++;
+}
+void
+hb_buffer_t::add_info_and_pos (const hb_glyph_info_t &glyph_info,
+			       const hb_glyph_position_t &glyph_pos)
+{
+  if (unlikely (!ensure (len + 1))) return;
+
+  info[len] = glyph_info;
+  assert (have_positions);
+  pos[len] = glyph_pos;
 
   len++;
 }
@@ -516,7 +530,7 @@ void
 hb_buffer_t::merge_clusters_impl (unsigned int start,
 				  unsigned int end)
 {
-  if (cluster_level == HB_BUFFER_CLUSTER_LEVEL_CHARACTERS)
+  if (!HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE (cluster_level))
   {
     unsafe_to_break (start, end);
     return;
@@ -549,7 +563,7 @@ void
 hb_buffer_t::merge_out_clusters (unsigned int start,
 				 unsigned int end)
 {
-  if (cluster_level == HB_BUFFER_CLUSTER_LEVEL_CHARACTERS)
+  if (!HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE (cluster_level))
     return;
 
   if (unlikely (end - start < 2))
@@ -705,6 +719,7 @@ DEFINE_NULL_INSTANCE (hb_buffer_t) =
   HB_BUFFER_REPLACEMENT_CODEPOINT_DEFAULT,
   0, /* invisible */
   0, /* not_found */
+  HB_CODEPOINT_INVALID, /* not_found_variation_selector */
 
 
   HB_BUFFER_CONTENT_TYPE_INVALID,
@@ -1361,6 +1376,46 @@ hb_buffer_get_not_found_glyph (const hb_buffer_t *buffer)
 }
 
 /**
+ * hb_buffer_set_not_found_variation_selector_glyph:
+ * @buffer: An #hb_buffer_t
+ * @not_found_variation_selector: the not-found-variation-selector #hb_codepoint_t
+ *
+ * Sets the #hb_codepoint_t that replaces variation-selector characters not resolved
+ * in the font during shaping.
+ *
+ * The not-found-variation-selector glyph defaults to #HB_CODEPOINT_INVALID,
+ * in which case an unresolved variation-selector will be removed from the glyph
+ * string during shaping. This API allows for changing that and retaining a glyph,
+ * such that the situation can be detected by the client and handled accordingly
+ * (e.g. by using a different font).
+ *
+ * Since: 10.0.0
+ **/
+void
+hb_buffer_set_not_found_variation_selector_glyph (hb_buffer_t    *buffer,
+						  hb_codepoint_t  not_found_variation_selector)
+{
+  buffer->not_found_variation_selector = not_found_variation_selector;
+}
+
+/**
+ * hb_buffer_get_not_found_variation_selector_glyph:
+ * @buffer: An #hb_buffer_t
+ *
+ * See hb_buffer_set_not_found_variation_selector_glyph().
+ *
+ * Return value:
+ * The @buffer not-found-variation-selector #hb_codepoint_t
+ *
+ * Since: 10.0.0
+ **/
+hb_codepoint_t
+hb_buffer_get_not_found_variation_selector_glyph (const hb_buffer_t *buffer)
+{
+  return buffer->not_found_variation_selector;
+}
+
+/**
  * hb_buffer_set_random_state:
  * @buffer: An #hb_buffer_t
  * @state: the new random state
@@ -1940,7 +1995,7 @@ hb_buffer_add_codepoints (hb_buffer_t          *buffer,
  * @buffer: An #hb_buffer_t
  * @source: source #hb_buffer_t
  * @start: start index into source buffer to copy.  Use 0 to copy from start of buffer.
- * @end: end index into source buffer to copy.  Use @HB_FEATURE_GLOBAL_END to copy to end of buffer.
+ * @end: end index into source buffer to copy.  Use @UINT_MAX (or ((unsigned int) -1)) to copy to end of buffer.
  *
  * Append (part of) contents of another buffer to this buffer.
  *
@@ -2256,7 +2311,7 @@ hb_buffer_t::message_impl (hb_font_t *font, const char *fmt, va_list ap)
   message_depth++;
 
   char buf[100];
-  vsnprintf_s (buf, sizeof (buf), fmt, ap);
+  vsnprintf (buf, sizeof (buf), fmt, ap);
   bool ret = (bool) this->message_func (this, font, buf, this->message_data);
 
   message_depth--;

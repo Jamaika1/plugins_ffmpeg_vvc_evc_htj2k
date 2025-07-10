@@ -6,9 +6,12 @@
 #include "lib/jxl/enc_huffman_tree.h"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <vector>
 
+#include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {
@@ -24,9 +27,12 @@ void SetDepth(const HuffmanTree& p, HuffmanTree* pool, uint8_t* depth,
   }
 }
 
-// Sort the root nodes, least popular first.
+// Compare the root nodes, least popular first; indices are in decreasing order
+// before sorting is applied.
 static JXL_INLINE bool Compare(const HuffmanTree& v0, const HuffmanTree& v1) {
-  return v0.total_count < v1.total_count;
+  return v0.total_count != v1.total_count
+             ? v0.total_count < v1.total_count
+             : v0.index_right_or_value > v1.index_right_or_value;
 }
 
 // This function will create a Huffman tree.
@@ -69,7 +75,7 @@ void CreateHuffmanTree(const uint32_t* data, const size_t length,
       break;
     }
 
-    std::stable_sort(tree.begin(), tree.end(), Compare);
+    std::sort(tree.begin(), tree.end(), Compare);
 
     // The nodes are:
     // [0, n): the sorted leaf nodes that we start with.
@@ -85,7 +91,8 @@ void CreateHuffmanTree(const uint32_t* data, const size_t length,
     size_t i = 0;      // Points to the next leaf node.
     size_t j = n + 1;  // Points to the next non-leaf node.
     for (size_t k = n - 1; k != 0; --k) {
-      size_t left, right;
+      size_t left;
+      size_t right;
       if (tree[i].total_count <= tree[j].total_count) {
         left = i;
         ++i;
@@ -112,7 +119,7 @@ void CreateHuffmanTree(const uint32_t* data, const size_t length,
       tree.push_back(sentinel);
     }
     JXL_DASSERT(tree.size() == 2 * n + 1);
-    SetDepth(tree[2 * n - 1], &tree[0], depth, 0);
+    SetDepth(tree[2 * n - 1], tree.data(), depth, 0);
 
     // We need to pack the Huffman tree in tree_limit bits.
     // If this was not successful, add fake entities to the lowest values

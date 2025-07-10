@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "parser.h"
-#include "mpegaudiodecheader.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/mpegaudiodecheader.h"
 #include "libavutil/common.h"
 #include "libavformat/apetag.h" // for APE tag.
 #include "libavformat/id3v1.h" // for ID3v1_TAG_SIZE

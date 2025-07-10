@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "vp9.h"
-#include "vp9dec.h"
+#include "libavcodec/vp9.h"
+#include "libavcodec/vp9dec.h"
 
 static av_always_inline void adapt_prob(uint8_t *p, unsigned ct0, unsigned ct1,
                                         int max_count, int update_factor)

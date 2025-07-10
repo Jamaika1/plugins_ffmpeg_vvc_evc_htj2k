@@ -22,10 +22,10 @@
 
 #define USE_FIXED 0
 
-#include "aac.h"
+#include "libavcodec/aac.h"
 #include "libavutil/attributes.h"
 #include "libavutil/intfloat.h"
-#include "sbrdsp.h"
+#include "libavcodec/sbrdsp.h"
 
 static float sbr_sum_square_c(float (*x)[2], int n)
 {

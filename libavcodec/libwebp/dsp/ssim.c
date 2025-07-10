@@ -14,7 +14,9 @@
 #include <assert.h>
 #include <stdlib.h>  // for abs()
 
+#include "../dsp/cpu.h"
 #include "../dsp/dsp.h"
+#include "../webp/types.h"
 
 #if !defined(WEBP_REDUCE_SIZE)
 

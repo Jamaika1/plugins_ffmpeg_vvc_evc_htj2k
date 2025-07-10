@@ -22,11 +22,11 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/reverse.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "mathops.h"
-#include "put_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/put_bits.h"
 
 #define AES3_HEADER_LEN 4
 
@@ -181,8 +181,6 @@ const FFCodec ff_s302m_encoder = {
     .priv_data_size        = sizeof(S302MEncContext),
     .init                  = s302m_encode_init,
     FF_CODEC_ENCODE_CB(s302m_encode2_frame),
-    .p.sample_fmts         = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S32,
-                                                            AV_SAMPLE_FMT_S16,
-                                                            AV_SAMPLE_FMT_NONE },
-    .p.supported_samplerates = (const int[]) { 48000, 0 },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S32, AV_SAMPLE_FMT_S16),
+    CODEC_SAMPLERATES(48000),
 };

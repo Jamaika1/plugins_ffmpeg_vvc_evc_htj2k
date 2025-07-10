@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/parseutils.h"
-#include "avcodec.h"
-#include "ass.h"
-#include "codec_internal.h"
-#include "htmlsubtitles.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/htmlsubtitles.h"
 
 static int srt_to_ass(AVCodecContext *avctx, AVBPrint *dst,
                        const char *in, int x1, int y1, int x2, int y2)

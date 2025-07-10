@@ -56,7 +56,7 @@ int ff_av1_extract_obu(AV1OBU *obu, const uint8_t *buf, int length, void *logctx
 int ff_av1_packet_split(AV1Packet *pkt, const uint8_t *buf, int length, void *logctx)
 {
     GetByteContext bc;
-    int ret, consumed;
+    int consumed;
 
     bytestream2_init(&bc, buf, length);
     pkt->nb_obus = 0;
@@ -88,16 +88,14 @@ int ff_av1_packet_split(AV1Packet *pkt, const uint8_t *buf, int length, void *lo
 
         obu->size_bits = get_obu_bit_length(obu->data, obu->size, obu->type);
 
-        if (obu->size_bits < 0 || (!obu->size_bits && obu->type != AV1_OBU_TEMPORAL_DELIMITER)) {
+        if (obu->size_bits < 0 ||
+            (obu->size_bits == 0 && (obu->type != AV1_OBU_TEMPORAL_DELIMITER &&
+                                     obu->type != AV1_OBU_PADDING))) {
             av_log(logctx, AV_LOG_ERROR, "Invalid OBU of type %d, skipping.\n", obu->type);
             continue;
         }
 
         pkt->nb_obus++;
-
-        ret = init_get_bits(&obu->gb, obu->data, obu->size_bits);
-        if (ret < 0)
-            return ret;
     }
 
     return 0;

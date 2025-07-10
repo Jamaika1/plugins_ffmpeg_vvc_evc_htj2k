@@ -25,8 +25,8 @@
  * Splits packets into individual blocks.
  */
 
-#include "parser.h"
-#include "g729.h"
+#include "libavcodec/parser.h"
+#include "libavcodec/g729.h"
 
 typedef struct G729ParseContext {
     ParseContext pc;

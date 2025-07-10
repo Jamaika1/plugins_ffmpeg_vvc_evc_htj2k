@@ -28,12 +28,12 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/reverse.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "avcodec.h"
-#include "golomb.h"
-#include "dsd.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/dsd.h"
 
 #define DST_MAX_CHANNELS 6
 #define DST_MAX_ELEMENTS (2 * DST_MAX_CHANNELS)
@@ -392,6 +392,5 @@ const FFCodec ff_dst_decoder = {
     .init           = decode_init,
     FF_CODEC_DECODE_CB(decode_frame),
     .p.capabilities = AV_CODEC_CAP_DR1,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLT,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLT),
 };

@@ -23,11 +23,11 @@
 #include <stdint.h>
 
 #include "libavutil/channel_layout.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
-#include "twinvq.h"
-#include "twinvq_data.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/twinvq.h"
+#include "libavcodec/twinvq_data.h"
 
 static const TwinVQModeTab mode_08_08 = {
     {
@@ -423,7 +423,6 @@ const FFCodec ff_twinvq_decoder = {
     .close          = ff_twinvq_decode_close,
     FF_CODEC_DECODE_CB(ff_twinvq_decode_frame),
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLTP,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLTP),
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

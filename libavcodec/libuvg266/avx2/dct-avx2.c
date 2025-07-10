@@ -54,7 +54,6 @@ extern const int16_t uvg_g_dct_32_t[32][32];
 
 #if COMPILE_INTEL_AVX2
 #include "../uvg266.h"
-#if UVG_BIT_DEPTH == 8
 #include <immintrin.h>
 #include "dct_avx2_tables.h"
 #define MAX_LOG2_TR_DYNAMIC_RANGE 15
@@ -1739,22 +1738,7 @@ static void mts_dct_16x16_avx2(const int16_t* input, int16_t* output, tr_type_t 
 
   const int skip_line = lfnst_idx ? 8 : 0;
   const int skip_line2 = lfnst_idx ? 8 : 0;
-  if (skip_line)
-  {
-    const int reduced_line = 8, cutoff = 8;
-    int16_t* dst2 = output + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst2, 0, sizeof(int16_t) * skip_line);
-      dst2 += 16;
-    }
-  }
 
-  if (skip_line2)
-  {
-    int16_t* dst2 = output + 16 * 8;
-    memset(dst2, 0, sizeof(int16_t) * 16 * skip_line2);
-  }
 }
 
 /**********/
@@ -1942,21 +1926,7 @@ static void mul_clip_matrix_32x32_mts_avx2(const int16_t* left,
     _mm256_store_si256(dst_v + dst_base + 1, h23);
   }
 
-  if (skip_line)
-  {
-    int16_t* dst2 = dst + reduced_line;
-    for (j = 0; j < cutoff; j++)
-    {
-      memset(dst2, 0, sizeof(int16_t) * skip_line);
-      dst2 += 32;
-    }
-  }
 
-  if (skip_line2)
-  {
-    int16_t* dst2 = dst + 32 * cutoff;
-    memset(dst2, 0, sizeof(int16_t) * 32 * skip_line2);
-  }
 }
 
 static void mts_dct_32x32_avx2(const int16_t* input, int16_t* output, tr_type_t type_hor, tr_type_t type_ver, uint8_t bitdepth, uint8_t lfnst_idx)
@@ -3230,7 +3200,7 @@ static void fast_forward_tr_4x32_avx2(const int16_t* src, int16_t* dst, tr_type_
     ver_coeff = ff_dct8_4x32_coeff_ver;
   }
 
-  int16_t v_hor_pass_out[4*32];
+  ALIGNED(32) int16_t v_hor_pass_out[4*32];
   fast_forward_tr_4xN_avx2_hor(src, (__m256i*)v_hor_pass_out, hor_coeff, shift_1st, height, 0, skip_width);
 
 
@@ -3283,19 +3253,7 @@ static void fast_forward_tr_4x32_avx2(const int16_t* src, int16_t* dst, tr_type_
   }
   transpose_avx2(temp_out, (__m256i*) dst, 32, 4);
 
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
 
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -4448,19 +4406,7 @@ static void fast_forward_tr_8x32_avx2(const int16_t* src, int16_t* dst, tr_type_
   transpose_avx2(temp_out, (__m256i*) dst, 32, 8);
 #undef NUM_PARTS
 #undef PART_DIMENSION
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
 
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -5690,7 +5636,7 @@ static void fast_forward_tr_16x32_avx2(const int16_t* src, int16_t* dst, tr_type
     ver_coeff = ff_dct8_16x32_coeff_ver;
   }
 
-  int16_t v_hor_pass_out[32*16];
+  ALIGNED(32) int16_t v_hor_pass_out[32*16];
   fast_forward_DCT2_B16_avx2_hor(src, (__m256i*)v_hor_pass_out, hor_coeff, shift_1st, height, 0, skip_width);
 
 
@@ -5850,19 +5796,6 @@ static void fast_forward_tr_16x32_avx2(const int16_t* src, int16_t* dst, tr_type
 #undef PART_DIMENSION
 #endif
 
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
-
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -6015,7 +5948,7 @@ static void fast_forward_DCT2_B32_avx2_hor(const int16_t* src, __m256i* dst, con
     v_trunc_0 = _mm256_packs_epi32(v_trunc_0, v_trunc_1);
     v_trunc_1 = _mm256_packs_epi32(v_trunc_2, v_trunc_3);
 
-    if(line == 32) {
+    if(line == 32 || line == 1) {
       v_trunc_0 = _mm256_permute4x64_epi64(v_trunc_0, _MM_SHUFFLE(3, 1, 2, 0));
       v_trunc_1 = _mm256_permute4x64_epi64(v_trunc_1, _MM_SHUFFLE(3, 1, 2, 0));
     }
@@ -6273,15 +6206,6 @@ static void fast_forward_DCT2_32x8_avx2_ver(const __m256i* src, int16_t* dst, in
     dst += 16;
   }
 
-  if (skip_line)
-  {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < 8; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_line);
-      dst += line;
-    }
-  }
 }
 
 
@@ -6565,19 +6489,6 @@ static void fast_forward_tr_32x4_avx2(const int16_t* src, int16_t* dst, tr_type_
     dst += 32;
   }
 
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
-
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -7034,19 +6945,7 @@ static void fast_forward_tr_32x8_avx2(const int16_t* src, int16_t* dst, tr_type_
   }
 #undef NUM_PARTS
 #undef PART_DIMENSION
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
 
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -7366,19 +7265,6 @@ static void fast_forward_tr_32x16_avx2(const int16_t* src, int16_t* dst, tr_type
   }
 #undef NUM_PARTS
 #undef PART_DIMENSION
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
-
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -7838,19 +7724,6 @@ static void fast_forward_tr_32x32_avx2(const int16_t* src, int16_t* dst, tr_type
 #undef PART_DIMENSION
 #endif
 
-  if (skip_width) {
-    dst = p_dst + reduced_line;
-    for (int j = 0; j < cutoff; j++)
-    {
-      memset(dst, 0, sizeof(int16_t) * skip_width);
-      dst += width;
-    }
-  }
-
-  if (skip_height) {
-    dst = p_dst + width * cutoff;
-    memset(dst, 0, sizeof(int16_t) * width * skip_height);
-  }
 }
 
 
@@ -8165,34 +8038,28 @@ static void mts_idct_avx2(
   }
 }
 
-#endif // UVG_BIT_DEPTH == 8
 #endif //COMPILE_INTEL_AVX2
 
 int uvg_strategy_register_dct_avx2(void* opaque, uint8_t bitdepth)
 {
   bool success = true;
 #if COMPILE_INTEL_AVX2
-#if UVG_BIT_DEPTH == 8
-  if (bitdepth == 8){
-    //success &= uvg_strategyselector_register(opaque, "fast_forward_dst_4x4", "avx2", 40, &matrix_dst_4x4_avx2);
 
-    success &= uvg_strategyselector_register(opaque, "dct_4x4", "avx2", 40, &matrix_dct_4x4_avx2);
-    success &= uvg_strategyselector_register(opaque, "dct_8x8", "avx2", 40, &matrix_dct_8x8_avx2);
-    success &= uvg_strategyselector_register(opaque, "dct_16x16", "avx2", 40, &matrix_dct_16x16_avx2);
-    success &= uvg_strategyselector_register(opaque, "dct_32x32", "avx2", 40, &matrix_dct_32x32_avx2);
+  success &= uvg_strategyselector_register(opaque, "dct_4x4", "avx2", 40, &matrix_dct_4x4_avx2);
+  success &= uvg_strategyselector_register(opaque, "dct_8x8", "avx2", 40, &matrix_dct_8x8_avx2);
+  success &= uvg_strategyselector_register(opaque, "dct_16x16", "avx2", 40, &matrix_dct_16x16_avx2);
+  success &= uvg_strategyselector_register(opaque, "dct_32x32", "avx2", 40, &matrix_dct_32x32_avx2);
 
-    // success &= uvg_strategyselector_register(opaque, "fast_inverse_dst_4x4", "avx2", 40, &matrix_idst_4x4_avx2);
 
-    success &= uvg_strategyselector_register(opaque, "idct_4x4", "avx2", 40, &matrix_idct_4x4_avx2);
-    success &= uvg_strategyselector_register(opaque, "idct_8x8", "avx2", 40, &matrix_idct_8x8_avx2);
-    success &= uvg_strategyselector_register(opaque, "idct_16x16", "avx2", 40, &matrix_idct_16x16_avx2);
-    success &= uvg_strategyselector_register(opaque, "idct_32x32", "avx2", 40, &matrix_idct_32x32_avx2);
+  success &= uvg_strategyselector_register(opaque, "idct_4x4", "avx2", 40, &matrix_idct_4x4_avx2);
+  success &= uvg_strategyselector_register(opaque, "idct_8x8", "avx2", 40, &matrix_idct_8x8_avx2);
+  success &= uvg_strategyselector_register(opaque, "idct_16x16", "avx2", 40, &matrix_idct_16x16_avx2);
+  success &= uvg_strategyselector_register(opaque, "idct_32x32", "avx2", 40, &matrix_idct_32x32_avx2);
 
-    success &= uvg_strategyselector_register(opaque, "mts_dct", "avx2", 40, &mts_dct_avx2);
-    success &= uvg_strategyselector_register(opaque, "mts_idct", "avx2", 40, &mts_idct_avx2);
+  success &= uvg_strategyselector_register(opaque, "mts_dct", "avx2", 40, &mts_dct_avx2);
+  success &= uvg_strategyselector_register(opaque, "mts_idct", "avx2", 40, &mts_idct_avx2);
 
-  }
-#endif // UVG_BIT_DEPTH == 8
+
 #endif //COMPILE_INTEL_AVX2
   return success;
 }

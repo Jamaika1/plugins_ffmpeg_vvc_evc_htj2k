@@ -20,10 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* $Id$ */
+/* $Id: takehiro.c,v 1.80 2017/09/06 15:07:30 robert Exp $ */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+# include "config.h"
 #endif
 
 #include <float.h>
@@ -846,7 +846,7 @@ disable_FPE(void)
 
 
 
-#if defined(__FreeBSD__) && !defined(__alpha__)
+#if defined(__FreeBSD__) && defined(FP_X_INV) && defined(FP_X_DZ)
     {
         /* seet floating point mask to the Linux default */
         fp_except_t mask;

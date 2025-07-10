@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "get_bits.h"
-#include "put_bits.h"
-#include "dolby_e.h"
+#include "libavutil/avassert.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/put_bits.h"
+#include "libavcodec/dolby_e.h"
 
 static const uint8_t nb_programs_tab[MAX_PROG_CONF + 1] = {
     2, 3, 2, 3, 4, 5, 4, 5, 6, 7, 8, 1, 2, 3, 3, 4, 5, 6, 1, 2, 3, 4, 1, 1
@@ -88,7 +89,7 @@ int ff_dolby_e_convert_input(DBEContext *s, int nb_words, int key)
             AV_WB24(dst, AV_RB24(src) ^ key);
         break;
     default:
-        av_assert0(0);
+        av_unreachable("ff_dolby_e_parse_header() only sets 16, 20, 24 and errors out otherwise");
     }
 
     return init_get_bits(&s->gb, s->buffer, nb_words * s->word_bits);

@@ -2139,7 +2139,7 @@ static void parse_chroma_qp_mapping_table(XEVE_CHROMA_TABLE* chroma_qp_table, XE
                     break;
                 chroma_qp_table->delta_qp_in_val_minus1[0][j++] = atoi(val);
             } while (1);
-            if (chroma_qp_table->num_points_in_qp_table_minus1[0] + 1 == j);
+            // if (chroma_qp_table->num_points_in_qp_table_minus1[0] + 1 == j);
 
             chroma_qp_table->delta_qp_in_val_minus1[1][0] = atoi(strtok(param->chroma_qp_delta_in_val_cr, " "));
             j = 1;
@@ -2394,6 +2394,7 @@ int xeve_param_init(XEVE_PARAM* param)
 
     param->max_dec_pic_buffering      = 21;
     param->num_reorder_pics           = 21;
+    param->level_idc                  = 40;
     return XEVE_OK;
 }
 
@@ -2618,7 +2619,7 @@ void xeve_param2string(XEVE_PARAM * param, char * sei_buf, int padx, int pady)
     sei_buf += snprintf(sei_buf, max_n, "profile=%d", param->profile);
     sei_buf += snprintf(sei_buf, max_n, " threads=%d", param->threads);
     sei_buf += snprintf(sei_buf, max_n, " input-res=%dx%d", param->w - padx, param->h - pady);
-    sei_buf += snprintf(sei_buf, max_n, " fps=%u", param->fps);
+    sei_buf += snprintf(sei_buf, max_n, " fps=%.3f", (float)param->fps.num/ param->fps.den);
     sei_buf += snprintf(sei_buf, max_n, " keyint=%d", param->keyint);
     sei_buf += snprintf(sei_buf, max_n, " color-space=%d", param->cs);
     sei_buf += snprintf(sei_buf, max_n, " rc-type=%s", (param->rc_type == XEVE_RC_ABR) ? "ABR" : (param->rc_type == XEVE_RC_CRF) ? "CRF" : "CQP");

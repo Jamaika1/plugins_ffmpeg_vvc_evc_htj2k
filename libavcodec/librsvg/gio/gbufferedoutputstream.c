@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- *
+ * 
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Christian Kellner <gicmo@gnome.org>
+ * Author: Christian Kellner <gicmo@gnome.org> 
  */
 
 #include "config.h"
@@ -50,7 +50,7 @@
 #define DEFAULT_BUFFER_SIZE 4096
 
 struct _GBufferedOutputStreamPrivate {
-  guint8 *buffer;
+  guint8 *buffer; 
   gsize   len;
   goffset pos;
   gboolean auto_grow;
@@ -175,10 +175,10 @@ g_buffered_output_stream_class_init (GBufferedOutputStreamClass *klass)
 
 /**
  * g_buffered_output_stream_get_buffer_size:
- * @stream: a #GBufferedOutputStream.
- *
+ * @stream: a [class@Gio.BufferedOutputStream].
+ * 
  * Gets the size of the buffer in the @stream.
- *
+ * 
  * Returns: the current size of the buffer.
  **/
 gsize
@@ -191,22 +191,22 @@ g_buffered_output_stream_get_buffer_size (GBufferedOutputStream *stream)
 
 /**
  * g_buffered_output_stream_set_buffer_size:
- * @stream: a #GBufferedOutputStream.
+ * @stream: a [class@Gio.BufferedOutputStream].
  * @size: a #gsize.
  *
  * Sets the size of the internal buffer to @size.
- **/
+ **/    
 void
 g_buffered_output_stream_set_buffer_size (GBufferedOutputStream *stream,
                                           gsize                  size)
 {
   GBufferedOutputStreamPrivate *priv;
   guint8 *buffer;
-
+  
   g_return_if_fail (G_IS_BUFFERED_OUTPUT_STREAM (stream));
 
   priv = stream->priv;
-
+  
   if (size == priv->len)
     return;
 
@@ -233,13 +233,13 @@ g_buffered_output_stream_set_buffer_size (GBufferedOutputStream *stream,
 
 /**
  * g_buffered_output_stream_get_auto_grow:
- * @stream: a #GBufferedOutputStream.
- *
+ * @stream: a [class@Gio.BufferedOutputStream].
+ * 
  * Checks if the buffer automatically grows as data is added.
- *
- * Returns: %TRUE if the @stream's buffer automatically grows,
- * %FALSE otherwise.
- **/
+ * 
+ * Returns: `TRUE` if the @stream's buffer automatically grows,
+ * `FALSE` otherwise.
+ **/  
 gboolean
 g_buffered_output_stream_get_auto_grow (GBufferedOutputStream *stream)
 {
@@ -250,7 +250,7 @@ g_buffered_output_stream_get_auto_grow (GBufferedOutputStream *stream)
 
 /**
  * g_buffered_output_stream_set_auto_grow:
- * @stream: a #GBufferedOutputStream.
+ * @stream: a [class@Gio.BufferedOutputStream].
  * @auto_grow: a #gboolean.
  *
  * Sets whether or not the @stream's buffer should automatically grow.
@@ -283,11 +283,11 @@ g_buffered_output_stream_set_property (GObject      *object,
 
   stream = G_BUFFERED_OUTPUT_STREAM (object);
 
-  switch (prop_id)
+  switch (prop_id) 
     {
     case PROP_BUFSIZE:
       g_buffered_output_stream_set_buffer_size (stream, g_value_get_uint (value));
-      break;
+      break;    
 
     case PROP_AUTO_GROW:
       g_buffered_output_stream_set_auto_grow (stream, g_value_get_boolean (value));
@@ -361,12 +361,12 @@ g_buffered_output_stream_seekable_iface_init (GSeekableIface *iface)
 
 /**
  * g_buffered_output_stream_new:
- * @base_stream: a #GOutputStream.
- *
+ * @base_stream: a [class@Gio.OutputStream].
+ * 
  * Creates a new buffered output stream for a base stream.
- *
- * Returns: a #GOutputStream for the given @base_stream.
- **/
+ * 
+ * Returns: a [class@Gio.OutputStream] for the given @base_stream.
+ **/  
 GOutputStream *
 g_buffered_output_stream_new (GOutputStream *base_stream)
 {
@@ -383,13 +383,13 @@ g_buffered_output_stream_new (GOutputStream *base_stream)
 
 /**
  * g_buffered_output_stream_new_sized:
- * @base_stream: a #GOutputStream.
+ * @base_stream: a [class@Gio.OutputStream].
  * @size: a #gsize.
- *
+ * 
  * Creates a new buffered output stream with a given buffer size.
- *
- * Returns: a #GOutputStream with an internal buffer set to @size.
- **/
+ * 
+ * Returns: a [class@Gio.OutputStream] with an internal buffer set to @size.
+ **/  
 GOutputStream *
 g_buffered_output_stream_new_sized (GOutputStream *base_stream,
                                     gsize          size)
@@ -434,7 +434,7 @@ flush_buffer (GBufferedOutputStream  *stream,
 
   if (count > 0)
     memmove (priv->buffer, priv->buffer + bytes_written, count);
-
+  
   priv->pos -= bytes_written;
 
   return res;
@@ -466,13 +466,13 @@ g_buffered_output_stream_write  (GOutputStream *stream,
   else if (n == 0)
     {
       res = flush_buffer (bstream, cancellable, error);
-
+      
       if (res == FALSE)
 	return -1;
     }
 
   n = priv->len - priv->pos;
-
+  
   count = MIN (count, n);
   memcpy (priv->buffer + priv->pos, buffer, count);
   priv->pos += count;
@@ -535,7 +535,7 @@ g_buffered_output_stream_tell (GSeekable *seekable)
   GOutputStream *base_stream;
   GSeekable    *base_stream_seekable;
   goffset base_offset;
-
+  
   bstream = G_BUFFERED_OUTPUT_STREAM (seekable);
   priv = bstream->priv;
 
@@ -544,7 +544,7 @@ g_buffered_output_stream_tell (GSeekable *seekable)
     return 0;
 
   base_stream_seekable = G_SEEKABLE (base_stream);
-
+  
   base_offset = g_seekable_tell (base_stream_seekable);
   return base_offset + priv->pos;
 }
@@ -553,7 +553,7 @@ static gboolean
 g_buffered_output_stream_can_seek (GSeekable *seekable)
 {
   GOutputStream *base_stream;
-
+  
   base_stream = G_FILTER_OUTPUT_STREAM (seekable)->base_stream;
   return G_IS_SEEKABLE (base_stream) && g_seekable_can_seek (G_SEEKABLE (base_stream));
 }
@@ -592,7 +592,7 @@ static gboolean
 g_buffered_output_stream_can_truncate (GSeekable *seekable)
 {
   GOutputStream *base_stream;
-
+  
   base_stream = G_FILTER_OUTPUT_STREAM (seekable)->base_stream;
   return G_IS_SEEKABLE (base_stream) && g_seekable_can_truncate (G_SEEKABLE (base_stream));
 }
@@ -644,7 +644,7 @@ free_flush_data (gpointer data)
   g_slice_free (FlushData, data);
 }
 
-/* This function is used by all three (i.e.
+/* This function is used by all three (i.e. 
  * _write, _flush, _close) functions since
  * all of them will need to flush the buffer
  * and so closing and writing is just a special
@@ -672,17 +672,17 @@ flush_buffer_thread (GTask        *task,
   if (res && fdata->flush_stream)
     res = g_output_stream_flush (base_stream, cancellable, &error);
 
-  if (fdata->close_stream)
+  if (fdata->close_stream) 
     {
-
-      /* if flushing the buffer or the stream returned
-       * an error report that first error but still try
+     
+      /* if flushing the buffer or the stream returned 
+       * an error report that first error but still try 
        * close the stream */
       if (g_filter_output_stream_get_close_base_stream (G_FILTER_OUTPUT_STREAM (stream)))
         {
           if (res == FALSE)
             g_output_stream_close (base_stream, cancellable, NULL);
-          else
+          else 
             res = g_output_stream_close (base_stream, cancellable, &error);
         }
     }

@@ -30,6 +30,7 @@
 #include "libavutil/frame.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 #include "libavcodec/avcodec.h"
@@ -125,7 +126,7 @@ static const uint8_t dequant_table[64] = {
     20, 35, 34, 32, 31, 22, 15,  8,
 };
 
-static VLC block_type_vlc[2][4];
+static VLCElem block_type_vlc[2][4][32];
 
 
 typedef struct CFrameBuffer {
@@ -250,17 +251,15 @@ static void idct(int16_t block[64])
 
 static av_cold void init_vlcs(void)
 {
-    static VLCElem table[2][4][32];
     int i, j;
 
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 4; j++) {
-            block_type_vlc[i][j].table           = table[i][j];
-            block_type_vlc[i][j].table_allocated = 32;
-            vlc_init(&block_type_vlc[i][j], BLOCK_TYPE_VLC_BITS, 7,
-                     &block_type_tab[i][j][0][1], 2, 1,
-                     &block_type_tab[i][j][0][0], 2, 1,
-                     VLC_INIT_USE_STATIC);
+            ff_vlc_init_table_sparse(block_type_vlc[i][j], FF_ARRAY_ELEMS(block_type_vlc[i][j]),
+                                     BLOCK_TYPE_VLC_BITS, 7,
+                                     &block_type_tab[i][j][0][1], 2, 1,
+                                     &block_type_tab[i][j][0][0], 2, 1,
+                                     NULL, 0, 0, 0);
         }
     }
 }
@@ -338,7 +337,8 @@ static inline void mcdc(uint16_t *dst, const uint16_t *src, int log2w,
         }
         break;
     default:
-        av_assert0(0);
+        av_unreachable("log2w starts at 3 and gets only decremented during "
+                       "recursive calls to decode_p_block");
     }
 }
 
@@ -357,7 +357,7 @@ static int decode_p_block(FourXContext *f, uint16_t *dst, const uint16_t *src,
     if (get_bits_left(&f->gb) < 1)
         return AVERROR_INVALIDDATA;
     h     = 1 << log2h;
-    code  = get_vlc2(&f->gb, block_type_vlc[1 - (f->version > 1)][index].table,
+    code  = get_vlc2(&f->gb, block_type_vlc[1 - (f->version > 1)][index],
                      BLOCK_TYPE_VLC_BITS, 1);
     av_assert0(code >= 0 && code <= 6);
 
@@ -887,6 +887,8 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *picture,
         }
 
         if (i >= CFRAME_BUFFER_COUNT) {
+            if (free_index < 0)
+                return AVERROR_INVALIDDATA;
             i             = free_index;
             f->cfrm[i].id = id;
         }
@@ -926,8 +928,11 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *picture,
         frame_size = buf_size - 12;
     }
 
-    if ((ret = ff_get_buffer(avctx, picture, 0)) < 0)
-        return ret;
+    if (   frame_4cc == AV_RL32("ifr2") || frame_4cc == AV_RL32("ifrm")
+        || frame_4cc == AV_RL32("pfrm") || frame_4cc == AV_RL32("pfr2")) {
+        if ((ret = ff_get_buffer(avctx, picture, 0)) < 0)
+            return ret;
+    }
 
     if (frame_4cc == AV_RL32("ifr2")) {
         picture->pict_type = AV_PICTURE_TYPE_I;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2021, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -10,18 +10,18 @@
  */
 
 #include <assert.h>
-#include "jxl/butteraugli.h"
+#include <jxl/butteraugli.h>
 
 #include "aom_dsp/butteraugli.h"
 #include "aom_mem/aom_mem.h"
-#include "libyuv/convert_argb.h"
+#include "third_party/libyuv/include/libyuv/convert_argb.h"
 
 int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
                          const YV12_BUFFER_CONFIG *distorted, int bit_depth,
                          aom_matrix_coefficients_t matrix_coefficients,
                          aom_color_range_t color_range, float *dist_map) {
   (void)bit_depth;
-  //assert(bit_depth == 8);
+  assert(bit_depth == 8);
   const int width = source->y_crop_width;
   const int height = source->y_crop_height;
   const int ss_x = source->subsampling_x;
@@ -40,35 +40,13 @@ int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
   const size_t buffer_size = (size_t)height * stride_argb;
   uint8_t *src_argb = (uint8_t *)aom_malloc(buffer_size);
   uint8_t *distorted_argb = (uint8_t *)aom_malloc(buffer_size);
-
   if (!src_argb || !distorted_argb) {
     aom_free(src_argb);
     aom_free(distorted_argb);
     return 0;
   }
 
-#if LIBYUV_VERSION >= 1813
-    enum FilterMode filter = kFilterBilinear;
-#endif
-
-  if (ss_x == 1 && ss_y == 1 && bit_depth == 8) {
-#if LIBYUV_VERSION >= 1813
-    I420ToARGBMatrixFilter(source->y_buffer, source->y_stride, source->u_buffer,
-                     source->uv_stride, source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height, filter);
-    I420ToARGBMatrixFilter(distorted->y_buffer, distorted->y_stride,
-                     distorted->u_buffer, distorted->uv_stride,
-                     distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height, filter);
-  } else if (ss_x == 1 && ss_y == 0 && bit_depth == 8) {
-    I422ToARGBMatrixFilter(source->y_buffer, source->y_stride, source->u_buffer,
-                     source->uv_stride, source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height, filter);
-    I422ToARGBMatrixFilter(distorted->y_buffer, distorted->y_stride,
-                     distorted->u_buffer, distorted->uv_stride,
-                     distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height, filter);
-#else
+  if (ss_x == 1 && ss_y == 1) {
     I420ToARGBMatrix(source->y_buffer, source->y_stride, source->u_buffer,
                      source->uv_stride, source->v_buffer, source->uv_stride,
                      src_argb, stride_argb, yuv_constants, width, height);
@@ -76,7 +54,7 @@ int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
                      distorted->u_buffer, distorted->uv_stride,
                      distorted->v_buffer, distorted->uv_stride, distorted_argb,
                      stride_argb, yuv_constants, width, height);
-  } else if (ss_x == 1 && ss_y == 0 && bit_depth == 8) {
+  } else if (ss_x == 1 && ss_y == 0) {
     I422ToARGBMatrix(source->y_buffer, source->y_stride, source->u_buffer,
                      source->uv_stride, source->v_buffer, source->uv_stride,
                      src_argb, stride_argb, yuv_constants, width, height);
@@ -84,8 +62,7 @@ int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
                      distorted->u_buffer, distorted->uv_stride,
                      distorted->v_buffer, distorted->uv_stride, distorted_argb,
                      stride_argb, yuv_constants, width, height);
-#endif
-  } else if (ss_x == 0 && ss_y == 0 && bit_depth == 8) {
+  } else if (ss_x == 0 && ss_y == 0) {
     I444ToARGBMatrix(source->y_buffer, source->y_stride, source->u_buffer,
                      source->uv_stride, source->v_buffer, source->uv_stride,
                      src_argb, stride_argb, yuv_constants, width, height);
@@ -93,73 +70,7 @@ int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
                      distorted->u_buffer, distorted->uv_stride,
                      distorted->v_buffer, distorted->uv_stride, distorted_argb,
                      stride_argb, yuv_constants, width, height);
-  } else if (ss_x == 1 && ss_y == 1 && bit_depth == 10) {
-#if LIBYUV_VERSION >= 1813
-    I010ToARGBMatrixFilter((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height, filter);
-    I010ToARGBMatrixFilter((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height, filter);
-  } else if (ss_x == 1 && ss_y == 0 && bit_depth == 10) {
-    I210ToARGBMatrixFilter((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height, filter);
-    I210ToARGBMatrixFilter((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height, filter);
-#else
-    I010ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I010ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-  } else if (ss_x == 1 && ss_y == 0 && bit_depth == 10) {
-    I210ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I210ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-#endif
-  } else if (ss_x == 0 && ss_y == 0 && bit_depth == 10) {
-    I410ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I410ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-  } else if (ss_x == 1 && ss_y == 1 && bit_depth == 12) {
-    I012ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I012ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-  } /*else if (ss_x == 1 && ss_y == 0 && bit_depth == 12) {
-    I212ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I212ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-  } else if (ss_x == 0 && ss_y == 0 && bit_depth == 12) {
-    I412ToARGBMatrix((uint16_t*)source->y_buffer, source->y_stride, (uint16_t*)source->u_buffer,
-                     source->uv_stride, (uint16_t*)source->v_buffer, source->uv_stride,
-                     src_argb, stride_argb, yuv_constants, width, height);
-    I412ToARGBMatrix((uint16_t*)distorted->y_buffer, distorted->y_stride,
-                     (uint16_t*)distorted->u_buffer, distorted->uv_stride,
-                     (uint16_t*)distorted->v_buffer, distorted->uv_stride, distorted_argb,
-                     stride_argb, yuv_constants, width, height);
-  }*/ else {
+  } else {
     aom_free(src_argb);
     aom_free(distorted_argb);
     return 0;
@@ -196,4 +107,3 @@ int aom_calc_butteraugli(const YV12_BUFFER_CONFIG *source,
   aom_free(distorted_argb);
   return 1;
 }
-

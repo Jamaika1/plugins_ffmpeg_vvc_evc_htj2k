@@ -36,6 +36,8 @@
 #ifndef __ADAPTIVELOOPFILTER__
 #define __ADAPTIVELOOPFILTER__
 
+// clang-format off
+
 #include "xevem_type.h"
 #include <float.h>
 #include <math.h>
@@ -179,7 +181,7 @@ static const int pattern_to_large_filter7[13] =
   10,11,12,13
 };
 
-typedef struct _ALF_FILTER_SHAPE
+struct _ALF_FILTER_SHAPE
 {
     int filter_type;
     int filterLength;
@@ -190,7 +192,7 @@ typedef struct _ALF_FILTER_SHAPE
     int golombIdx[14];
     int pattern_to_large_filter[13];
 
-} ALF_FILTER_SHAPE;
+};
 
 struct _ALF_SLICE_PARAM
 {
@@ -388,4 +390,7 @@ void       xeve_alf_gns_transpose_back_substitution(double U[MAX_NUM_ALF_COEFF][
 void       xeve_alf_gns_back_substitution(double R[MAX_NUM_ALF_COEFF][MAX_NUM_ALF_COEFF], double* z, int size, double* A);
 int        xeve_alf_gns_solve_chol(double **LHS, double *rhs, double *x, int num_eq);
 void       tile_boundary_check(int* avail_left, int* avail_right, int* avail_top, int* avail_bottom, const int width, const int height, int x_pos, int y_pos, int x_l, int x_r, int y_l, int y_r);
+
+// clang-format on
+
 #endif

@@ -24,16 +24,13 @@
 #ifndef AVCODEC_VVCDEC_H
 #define AVCODEC_VVCDEC_H
 
-#include "cbs.h"
-#include "cbs_h266.h"
-#include "h2645_parse.h"
-#include "threadframe.h"
 #include "videodsp.h"
 #include "vvc.h"
-#include "libavutil/executor.h"
+#include "h274.h"
 
 #include "vvc_ps.h"
 #include "vvcdsp.h"
+#include "vvc_sei.h"
 
 #define LUMA                    0
 #define CHROMA                  1
@@ -41,95 +38,24 @@
 #define CR                      2
 #define JCBCR                   3
 
-#define MAX_CTU_SIZE            128
-
-#define MAX_CU_SIZE             MAX_CTU_SIZE
-#define MIN_CU_SIZE             4
-#define MIN_CU_LOG2             2
-#define MAX_CU_DEPTH            7
-
-#define MIN_PU_SIZE             4
-#define MIN_PU_LOG2             2
-
-#define MAX_TB_SIZE             64
 #define MIN_TU_LOG2             2                       ///< MinTbLog2SizeY
-#define MIN_TU_SIZE             4
-#define MAX_TUS_IN_CU           64
-
-#define MAX_PARTS_IN_CTU        ((MAX_CTU_SIZE >> MIN_CU_LOG2) * (MAX_CTU_SIZE >> MIN_CU_LOG2))
-
-#define MAX_CONTROL_POINTS      3
-
-#define MRG_MAX_NUM_CANDS       6
-#define MAX_NUM_HMVP_CANDS      5
+#define MIN_PU_LOG2             2
 
 #define L0                      0
 #define L1                      1
 
-#define CHROMA_EXTRA_BEFORE     1
-#define CHROMA_EXTRA_AFTER      2
-#define CHROMA_EXTRA            3
-#define LUMA_EXTRA_BEFORE       3
-#define LUMA_EXTRA_AFTER        4
-#define LUMA_EXTRA              7
-#define BILINEAR_EXTRA_BEFORE   0
-#define BILINEAR_EXTRA_AFTER    1
-#define BILINEAR_EXTRA          1
+typedef struct VVCRefPic {
+    struct VVCFrame *ref;
+    int poc;
+    int is_lt;                  // is long term reference
 
-#define MAX_QP                  63
-#define DEFAULT_INTRA_TC_OFFSET 2
-
-#define SAO_PADDING_SIZE        1
-
-#define ALF_PADDING_SIZE        8
-#define ALF_BLOCK_SIZE          4
-
-#define ALF_BORDER_LUMA         3
-#define ALF_BORDER_CHROMA       2
-
-#define ALF_VB_POS_ABOVE_LUMA   4
-#define ALF_VB_POS_ABOVE_CHROMA 2
-
-#define ALF_GRADIENT_STEP       2
-#define ALF_GRADIENT_BORDER     2
-#define ALF_GRADIENT_SIZE       ((MAX_CU_SIZE + ALF_GRADIENT_BORDER * 2) / ALF_GRADIENT_STEP)
-#define ALF_NUM_DIR             4
-
-#define MAX_PB_SIZE             128
-#define EDGE_EMU_BUFFER_STRIDE  (MAX_PB_SIZE + 32)
-
-#define AFFINE_MIN_BLOCK_SIZE   4
-#define PROF_BORDER_EXT         1
-#define PROF_BLOCK_SIZE         (AFFINE_MIN_BLOCK_SIZE + PROF_BORDER_EXT * 2)
-#define BDOF_BORDER_EXT         1
-
-#define BDOF_PADDED_SIZE        (16 + BDOF_BORDER_EXT * 2)
-#define BDOF_BLOCK_SIZE         4
-#define BDOF_GRADIENT_SIZE      (BDOF_BLOCK_SIZE + BDOF_BORDER_EXT * 2)
-
-/**
- * Value of the luma sample at position (x, y) in the 2D array tab.
- */
-#define SAMPLE(tab, x, y) ((tab)[(y) * s->sps->width + (x)])
-#define SAMPLE_CTB(tab, x, y) ((tab)[(y) * min_cb_width + (x)])
-#define CTB(tab, x, y) ((tab)[(y) * fc->ps.pps->ctb_width + (x)])
-
-typedef struct VVCLocalContext VVCLocalContext;
-typedef struct SliceContext SliceContext;
-typedef struct VVCFrameContext  VVCFrameContext;
-typedef struct VVCFrameThread VVCFrameThread;
-typedef struct EntryPoint EntryPoint;
-typedef struct VVCTask VVCTask;
-typedef struct Mv Mv;
-typedef struct MvField MvField;
-typedef struct CTU CTU;
-typedef struct SAOParams SAOParams;
-typedef struct ALFParams ALFParams;
+    // for RPR
+    int is_scaled;              ///< RprConstraintsActiveFlag
+    int scale[2];               ///< RefPicScale[]
+} VVCRefPic;
 
 typedef struct RefPicList {
-    struct VVCFrame *ref[VVC_MAX_REF_ENTRIES];
-    int list[VVC_MAX_REF_ENTRIES];
-    int isLongTerm[VVC_MAX_REF_ENTRIES];
+    VVCRefPic refs[VVC_MAX_REF_ENTRIES];
     int nb_refs;
 } RefPicList;
 
@@ -137,23 +63,39 @@ typedef struct RefPicListTab {
     RefPicList refPicList[2];
 } RefPicListTab;
 
-typedef struct VVCFrame {
-    AVFrame *frame;
-    ThreadFrame tf;
+typedef struct VVCWindow {
+    int16_t left_offset;
+    int16_t right_offset;
+    int16_t top_offset;
+    int16_t bottom_offset;
+} VVCWindow;
 
-    MvField  *tab_dmvr_mvf;
-    RefPicListTab **rpl_tab;
+typedef struct VVCFrame {
+    struct AVFrame *frame;
+    struct AVFrame *frame_grain;
+    const VVCSPS *sps;                          ///< RefStruct reference
+    const VVCPPS *pps;                          ///< RefStruct reference
+    struct MvField *tab_dmvr_mvf;               ///< RefStruct reference
+    RefPicListTab **rpl_tab;                    ///< RefStruct reference
+    RefPicListTab  *rpl;                        ///< RefStruct reference
+
+    int needs_fg;                               ///< 1 if grain needs to be applied by the decoder
+
+    int nb_rpl_elems;
 
     int ctb_count;
 
     int poc;
 
+    //for RPR
+    VVCWindow scaling_win;                      ///< pps_scaling_win_left_offset * SubWithC,  pps_scaling_win_right_offset  * SubWithC,
+                                                ///< pps_scaling_win_top_offset  * SubHeigtC, pps_scaling_win_bottom_offset * SubHiehgtC
+    int ref_width;                              ///< CurrPicScalWinWidthL
+    int ref_height;                             ///< CurrPicScalWinHeightL
+
     struct VVCFrame *collocated_ref;
 
-    AVBufferRef *tab_dmvr_mvf_buf;
-    AVBufferRef *rpl_tab_buf;
-    AVBufferRef *rpl_buf;
-    AVBufferRef *progress_buf;
+    struct FrameProgress *progress;             ///< RefStruct reference
 
     /**
      * A sequence counter, so that old frames are output first
@@ -164,25 +106,30 @@ typedef struct VVCFrame {
      * A combination of VVC_FRAME_FLAG_*
      */
     uint8_t flags;
+
+    void *hwaccel_picture_private; ///< hardware accelerator private data
 } VVCFrame;
 
-struct SliceContext {
+typedef struct SliceContext {
     int slice_idx;
     VVCSH sh;
-    EntryPoint *eps;
+    struct EntryPoint *eps;
     int nb_eps;
     RefPicList *rpl;
-};
+    void *ref;                      ///< RefStruct reference, backing slice data
+} SliceContext;
 
-struct VVCFrameContext {
-    AVCodecContext *avctx;
+typedef struct VVCFrameContext {
+    void *log_ctx;
 
     // +1 for the current frame
     VVCFrame DPB[VVC_MAX_DPB_SIZE + 1];
 
-    AVFrame *frame;
-    AVFrame *output_frame;
+    struct AVFrame *frame;
+    struct AVFrame *output_frame;
+
     VVCFrameParamSets ps;
+    VVCSEI sei;
 
     SliceContext  **slices;
     int nb_slices;
@@ -193,22 +140,22 @@ struct VVCFrameContext {
     VVCDSPContext vvcdsp;
     VideoDSPContext vdsp;
 
-    VVCFrameThread *frame_thread;
+    struct VVCFrameThread *ft;
 
     uint64_t decode_order;
 
-    AVBufferPool *tab_dmvr_mvf_pool;
-    AVBufferPool *rpl_tab_pool;
+    struct AVRefStructPool *tab_dmvr_mvf_pool;
+    struct AVRefStructPool *rpl_tab_pool;
 
-    AVBufferPool *cu_pool;
-    AVBufferPool *tu_pool;
+    struct AVRefStructPool *cu_pool;
+    struct AVRefStructPool *tu_pool;
 
     struct {
         int16_t *slice_idx;
 
         DBParams  *deblock;
-        SAOParams *sao;
-        ALFParams *alf;
+        struct SAOParams *sao;
+        struct ALFParams *alf;
 
         int     *cb_pos_x[2];                           ///< CbPosX[][][]
         int     *cb_pos_y[2];                           ///< CbPosY[][][]
@@ -220,65 +167,62 @@ struct VVCFrameContext {
         uint8_t *skip;                                  ///< CuSkipFlag[][]
         uint8_t *ispmf;                                 ///< intra_sub_partitions_mode_flag
         uint8_t *msm[2];                                ///< MttSplitMode[][][] in 32 pixels
-        uint8_t *imf;                                   ///< IntraMipFlag[][]
-        uint8_t *imtf;                                  ///< intra_mip_transposed_flag[][]
-        uint8_t *imm;                                   ///< intra_mip_mode[][]
+        uint8_t *imf;                                   ///< IntraMipFlag[][], intra_mip_transposed_flag[][], intra_mip_mode[][]
         uint8_t *ipm;                                   ///< IntraPredModeY[][]
         uint8_t *cpm[2];                                ///< CuPredMode[][][]
         uint8_t *msf;                                   ///< MergeSubblockFlag[][]
         uint8_t *iaf;                                   ///< InterAffineFlag[][]
         uint8_t *mmi;                                   ///< MotionModelIdc[][]
-        Mv      *cp_mv[2];                              ///< CpMvLX[][][][MAX_CONTROL_POINTS];
-        MvField *mvf;                                   ///< MvDmvrL0, MvDmvrL1
+        struct Mv      *cp_mv[2];                       ///< CpMvLX[][][][MAX_CONTROL_POINTS];
+        struct MvField *mvf;                            ///< MvDmvrL0, MvDmvrL1
 
         uint8_t *tu_coded_flag[VVC_MAX_SAMPLE_ARRAYS];  ///< tu_y_coded_flag[][],  tu_cb_coded_flag[][],  tu_cr_coded_flag[][]
         uint8_t *tu_joint_cbcr_residual_flag;           ///< tu_joint_cbcr_residual_flag[][]
-        int     *tb_pos_x0[2];
-        int     *tb_pos_y0[2];
         uint8_t *tb_width[2];
         uint8_t *tb_height[2];
         uint8_t *pcmf[2];
 
-        uint8_t *horizontal_bs[VVC_MAX_SAMPLE_ARRAYS];
-        uint8_t *vertical_bs[VVC_MAX_SAMPLE_ARRAYS];
-        uint8_t *horizontal_p;                          ///< horizontal maxFilterLengthPs for luma
-        uint8_t *horizontal_q;                          ///< horizontal maxFilterLengthPs for luma
-        uint8_t *vertical_p;                            ///< vertical   maxFilterLengthQs for luma
-        uint8_t *vertical_q;                            ///< vertical   maxFilterLengthQs for luma
+        uint8_t *bs[2][VVC_MAX_SAMPLE_ARRAYS];          ///< horizontal, vertical boundary filtering strength
+        uint8_t *max_len_p[2];                          ///< horizontal, vertical maxFilterLengthPs for luma
+        uint8_t *max_len_q[2];                          ///< horizontal, vertical maxFilterLengthQs for luma
 
         uint8_t *sao_pixel_buffer_h[VVC_MAX_SAMPLE_ARRAYS];
         uint8_t *sao_pixel_buffer_v[VVC_MAX_SAMPLE_ARRAYS];
         uint8_t *alf_pixel_buffer_h[VVC_MAX_SAMPLE_ARRAYS][2];
         uint8_t *alf_pixel_buffer_v[VVC_MAX_SAMPLE_ARRAYS][2];
 
-        int     *coeffs;
-        CTU     *ctus;
+        int                 *coeffs;
+        struct CTU          *ctus;
+        struct CodingUnit  **cus;
+
+        uint8_t *ibc_vir_buf[VVC_MAX_SAMPLE_ARRAYS];    ///< IbcVirBuf[]
 
         //used in arrays_init only
-        int ctu_count;
-        int ctu_size;
-        int pic_size_in_min_cb;
-        int pic_size_in_min_pu;
-        int pic_size_in_min_tu;
-        int ctu_width;
-        int ctu_height;
-        int width;
-        int height;
-        int chroma_format_idc;
-        int pixel_shift;
-        int bs_width;
-        int bs_height;
+        struct {
+            int ctu_count;
+            int ctu_size;
+            int pic_size_in_min_cb;
+            int pic_size_in_min_pu;
+            int pic_size_in_min_tu;
+            int ctu_width;
+            int ctu_height;
+            int width;
+            int height;
+            int chroma_format_idc;
+            int pixel_shift;
+            int ibc_buffer_width;       ///< IbcBufWidth
+        } sz;
     } tab;
-} ;
+} VVCFrameContext;
 
 typedef struct VVCContext {
-    const AVClass *c;       // needed by private avoptions
-    AVCodecContext *avctx;
+    struct AVCodecContext *avctx;
 
     CodedBitstreamContext *cbc;
     CodedBitstreamFragment current_frame;
 
     VVCParamSets ps;
+    H274FilmGrainDatabase h274db;
 
     int temporal_id;        ///< temporal_id_plus1 - 1
     int poc_tid0;
@@ -286,10 +230,10 @@ typedef struct VVCContext {
     int eos;                ///< current packet contains an EOS/EOB NAL
     int last_eos;           ///< last packet contains an EOS/EOB NAL
 
-
     enum VVCNALUnitType vcl_unit_type;
     int no_output_before_recovery_flag; ///< NoOutputBeforeRecoveryFlag
     int gdr_recovery_point_poc;         ///< recoveryPointPocVal
+    int film_grain_warning_shown;
 
     /**
      * Sequence counters for decoded and output frames, so that old
@@ -298,19 +242,15 @@ typedef struct VVCContext {
     uint16_t seq_decode;
     uint16_t seq_output;
 
-    int is_nalff;           ///< this flag is != 0 if bitstream is encapsulated
-                            ///< as a format defined in 14496-15
-
-    int apply_defdispwin;
-    int nal_length_size;    ///< Number of bytes used for nal length (1, 2 or 4)
-
-    AVExecutor *executor;
+    struct FFExecutor *executor;
 
     VVCFrameContext *fcs;
     int nb_fcs;
 
     uint64_t nb_frames;     ///< processed frames
     int nb_delayed;         ///< delayed frames
+
+    H274HashContext *hash_ctx;
 }  VVCContext ;
 
 #endif /* AVCODEC_VVCDEC_H */

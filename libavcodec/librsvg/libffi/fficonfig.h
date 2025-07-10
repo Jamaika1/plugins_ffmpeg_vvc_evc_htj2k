@@ -99,25 +99,25 @@
 /* #undef HAVE_RO_EH_FRAME */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#define HAVE_STDINT_H 1
+//#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <stdlib.h> header file. */
-#define HAVE_STDLIB_H 1
+//#define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the <strings.h> header file. */
 /* #undef HAVE_STRINGS_H */
 
 /* Define to 1 if you have the <string.h> header file. */
-#define HAVE_STRING_H 1
+//#define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
 //#define HAVE_SYS_MMAN_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#define HAVE_SYS_STAT_H 1
+//#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#define HAVE_SYS_TYPES_H 1
+//#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
 /* #undef HAVE_UNISTD_H */
@@ -142,7 +142,7 @@
 #define PACKAGE_NAME "libffi"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libffi 3.4.4"
+#define PACKAGE_STRING "libffi 3.5.1-a18d4e9"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libffi"
@@ -151,19 +151,19 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.4.6-3d0ce1e"
+#define PACKAGE_VERSION "3.5.1-a18d4e9"
 
 /* The size of `double', as computed by sizeof. */
-#define SIZEOF_DOUBLE (sizeof(double))
+#define SIZEOF_DOUBLE 8
 
 /* The size of `long double', as computed by sizeof. */
-#define SIZEOF_LONG_DOUBLE (sizeof(long double))
+#define SIZEOF_LONG_DOUBLE 16
 
 /* The size of `size_t', as computed by sizeof. */
-#define SIZEOF_SIZE_T (sizeof(size_t))
+#define SIZEOF_SIZE_T 4
 
-#define HAVE_MORECORE 0
-#define USE_LOCKS 1
+//#define HAVE_MORECORE 0
+//#define USE_LOCKS 1
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
@@ -184,7 +184,7 @@
 /* #undef USING_PURIFY */
 
 /* Version number of package */
-#define VERSION "3.4.6-3d0ce1e"
+#define VERSION "3.5.1-a18d4e9"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

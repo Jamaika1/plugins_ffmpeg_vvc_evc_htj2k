@@ -26,7 +26,7 @@
 #define JSON_H
 #include <string>
 #include <iostream>
-#include "json11/json11.h"
+#include "../json11.h"
 
 using std::string;
 using namespace json11;

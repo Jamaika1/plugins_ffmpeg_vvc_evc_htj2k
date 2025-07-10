@@ -24,9 +24,9 @@
  * @see http://service.real.com/help/library/guides/ProductionGuide/prodguide/htmfiles/realtext.htm
  */
 
-#include "avcodec.h"
-#include "ass.h"
-#include "codec_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
+#include "libavcodec/codec_internal.h"
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 

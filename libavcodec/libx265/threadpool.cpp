@@ -36,13 +36,13 @@
 
 #ifdef __GNUC__
 
-#define SLEEPBITMAP_CTZ(id, x)     id = (unsigned long)__builtin_ctzll(x)
+#define SLEEPBITMAP_BSF(id, x)     (id) = ((unsigned long)__builtin_ctzll(x))
 #define SLEEPBITMAP_OR(ptr, mask)  __sync_fetch_and_or(ptr, mask)
 #define SLEEPBITMAP_AND(ptr, mask) __sync_fetch_and_and(ptr, mask)
 
 #elif defined(_MSC_VER)
 
-#define SLEEPBITMAP_CTZ(id, x)     _BitScanForward64(&id, x)
+#define SLEEPBITMAP_BSF(id, x)     _BitScanForward64(&id, x)
 #define SLEEPBITMAP_OR(ptr, mask)  InterlockedOr64((volatile LONG64*)ptr, (LONG)mask)
 #define SLEEPBITMAP_AND(ptr, mask) InterlockedAnd64((volatile LONG64*)ptr, (LONG)mask)
 
@@ -51,7 +51,7 @@
 #else
 
 /* use 32-bit primitives defined in threading.h */
-#define SLEEPBITMAP_CTZ CTZ
+#define SLEEPBITMAP_BSF BSF
 #define SLEEPBITMAP_OR  ATOMIC_OR
 #define SLEEPBITMAP_AND ATOMIC_AND
 
@@ -206,7 +206,7 @@ int ThreadPool::tryAcquireSleepingThread(sleepbitmap_t firstTryBitmap, sleepbitm
     sleepbitmap_t masked = m_sleepBitmap & firstTryBitmap;
     while (masked)
     {
-        SLEEPBITMAP_CTZ(id, masked);
+        SLEEPBITMAP_BSF(id, masked);
 
         sleepbitmap_t bit = (sleepbitmap_t)1 << id;
         if (SLEEPBITMAP_AND(&m_sleepBitmap, ~bit) & bit)
@@ -218,7 +218,7 @@ int ThreadPool::tryAcquireSleepingThread(sleepbitmap_t firstTryBitmap, sleepbitm
     masked = m_sleepBitmap & secondTryBitmap;
     while (masked)
     {
-        SLEEPBITMAP_CTZ(id, masked);
+        SLEEPBITMAP_BSF(id, masked);
 
         sleepbitmap_t bit = (sleepbitmap_t)1 << id;
         if (SLEEPBITMAP_AND(&m_sleepBitmap, ~bit) & bit)
@@ -302,22 +302,22 @@ ThreadPool* ThreadPool::allocThreadPools(x265_param* p, int& numPools, bool isTh
      * For windows because threads can't be allocated to live across sockets
      * changing the default behavior to be per-socket pools -- FIXME */
 #if defined(_WIN32_WINNT) && _WIN32_WINNT >= _WIN32_WINNT_WIN7 || HAVE_LIBNUMA
-    if (!p->numaPools || (strcmp(p->numaPools, "NULL") == 0 || strcmp(p->numaPools, "*") == 0 || strcmp(p->numaPools, "") == 0))
+    if (!strlen(p->numaPools) || (strcmp(p->numaPools, "NULL") == 0 || strcmp(p->numaPools, "*") == 0 || strcmp(p->numaPools, "") == 0))
     {
          char poolString[50] = "";
          for (int i = 0; i < numNumaNodes; i++)
          {
              char nextCount[10] = "";
              if (i)
-                 sprintf(nextCount, ",%d", cpusPerNode[i]);
+                 snprintf(nextCount, sizeof(nextCount), ",%d", cpusPerNode[i]);
              else
-                   sprintf(nextCount, "%d", cpusPerNode[i]);
+                   snprintf(nextCount, sizeof(nextCount), "%d", cpusPerNode[i]);
              strcat(poolString, nextCount);
          }
          x265_param_parse(p, "pools", poolString);
      }
 #endif
-    if (p->numaPools && *p->numaPools)
+    if (strlen(p->numaPools))
     {
         const char *nodeStr = p->numaPools;
         for (int i = 0; i < numNumaNodes; i++)
@@ -452,7 +452,7 @@ ThreadPool* ThreadPool::allocThreadPools(x265_param* p, int& numPools, bool isTh
                 int len = 0;
                 for (int j = 0; j < 64; j++)
                     if ((nodeMaskPerPool[node] >> j) & 1)
-                        len += sprintf(nodesstr + len, ",%d", j);
+                        len += snprintf(nodesstr + len, sizeof(nodesstr) - len, ",%d", j);
                 x265_log(p, X265_LOG_INFO, "Thread pool %d using %d threads on numa nodes %s\n", i, numThreads, nodesstr + 1);
                 delete[] nodesstr;
             }
@@ -669,7 +669,11 @@ void ThreadPool::getFrameThreadsCount(x265_param* p, int cpuCount)
     else if (cpuCount >= 16)
         p->frameNumThreads = 4; 
     else if (cpuCount >= 8)
+#if _WIN32 && X265_ARCH_ARM64
+        p->frameNumThreads = cpuCount;
+#else
         p->frameNumThreads = 3;
+#endif
     else if (cpuCount >= 4)
         p->frameNumThreads = 2;
     else

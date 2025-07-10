@@ -18,9 +18,9 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "utvideodsp.h"
+#include "libavcodec/utvideodsp.h"
 
 static void restore_rgb_planes_c(uint8_t *src_r,
                                  uint8_t *src_g,
@@ -77,7 +77,9 @@ av_cold void ff_utvideodsp_init(UTVideoDSPContext *c)
     c->restore_rgb_planes   = restore_rgb_planes_c;
     c->restore_rgb_planes10 = restore_rgb_planes10_c;
 
-#if ARCH_X86
+#if ARCH_RISCV
+    ff_utvideodsp_init_riscv(c);
+#elif ARCH_X86
     ff_utvideodsp_init_x86(c);
 #endif
 }

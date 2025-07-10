@@ -39,14 +39,15 @@
 
 #include "libavutil/channel_layout.h"
 #include "libavutil/float_dsp.h"
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/atrac.h"
-#include "libavcodec/atrac3plus.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "get_bits.h"
+#include "atrac.h"
+#include "atrac3plus.h"
 
 static const uint8_t channel_map[8][8] = {
     { 0, },

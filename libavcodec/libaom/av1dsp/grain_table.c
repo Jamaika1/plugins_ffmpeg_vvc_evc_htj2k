@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2016, Alliance for Open Media. All rights reserved.
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -36,7 +36,7 @@
 #include "aom_dsp/grain_table.h"
 #include "aom_mem/aom_mem.h"
 
-static const char kFileMagic[8] = "filmgrn1";
+static const char kFileMagic[8] = { 'f', 'i', 'l', 'm', 'g', 'r', 'n', '1' };
 
 static void grain_table_entry_read(FILE *file,
                                    struct aom_internal_error_info *error_info,

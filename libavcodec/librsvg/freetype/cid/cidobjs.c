@@ -4,7 +4,7 @@
  *
  *   CID objects manager (body).
  *
- * Copyright (C) 1996-2023 by
+ * Copyright (C) 1996-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -267,7 +267,8 @@
    *
    * @Input:
    *   stream ::
-   *     The source font stream.
+   *     Dummy argument for compatibility with the `FT_Face_InitFunc` API.
+   *     Ignored.  The stream should be passed through `face->root.stream`.
    *
    *   face_index ::
    *     The index of the font face in the resource.

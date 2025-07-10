@@ -40,6 +40,7 @@ public:
     int                m_lastIDR;
     int                m_pocCRA;
     int                m_bOpenGOP;
+	int                m_craNal;
     int                m_bhasLeadingPicture;
     bool               m_bRefreshPending;
     bool               m_bTemporalSublayer;
@@ -66,6 +67,7 @@ public:
         m_bRefreshPending = false;
         m_frameDataFreeList = NULL;
         m_bOpenGOP = param->bOpenGOP;
+		m_craNal = param->craNal;
         m_bTemporalSublayer = (param->bEnableTemporalSubLayers > 2);
     }
 
@@ -77,13 +79,13 @@ public:
 
 protected:
 
-    void computeRPS(int curPoc,int tempId, bool isRAP, RPS * rps, unsigned int maxDecPicBuffer);
+    void computeRPS(int curPoc,int tempId, bool isRAP, RPS * rps, unsigned int maxDecPicBuffer, int sLayerId);
 
-    void applyReferencePictureSet(RPS *rps, int curPoc, int tempId, bool isTSAPicture);
-    bool getTemporalLayerNonReferenceFlag();
-    void decodingRefreshMarking(int pocCurr, NalUnitType nalUnitType);
-    bool isTemporalLayerSwitchingPoint(int curPoc, int tempId);
-    bool isStepwiseTemporalLayerSwitchingPoint(RPS *rps, int curPoc, int tempId);
+    void applyReferencePictureSet(RPS *rps, int curPoc, int tempId, bool isTSAPicture, int sLayerId);
+    bool getTemporalLayerNonReferenceFlag(int sLayerId);
+    void decodingRefreshMarking(int pocCurr, NalUnitType nalUnitType, int sLayerId);
+    bool isTemporalLayerSwitchingPoint(int curPoc, int tempId, int sLayerId);
+    bool isStepwiseTemporalLayerSwitchingPoint(RPS *rps, int curPoc, int tempId, int sLayerId);
 
     NalUnitType getNalUnitType(int curPoc, bool bIsKeyFrame);
 };

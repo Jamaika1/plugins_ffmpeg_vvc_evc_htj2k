@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "libavutil/config.h"
 #include "libavutil/attributes.h"
-#include "vorbisdsp.h"
+#include "libavcodec/vorbisdsp.h"
 
 static void vorbis_inverse_coupling_c(float *mag, float *ang, ptrdiff_t blocksize)
 {

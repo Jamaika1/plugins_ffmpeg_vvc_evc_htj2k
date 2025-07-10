@@ -22,6 +22,7 @@
 #include "encoder_dict.h"
 #include "fast_log.h"
 #include "find_match_length.h"
+#include "matching_tag_mask.h"
 #include "memory.h"
 #include "quality.h"
 #include "static_dict.h"
@@ -38,7 +39,7 @@ typedef struct {
   void* extra[4];
 
   /**
-   * False before the fisrt invocation of HasherSetup (where "extra" memory)
+   * False before the first invocation of HasherSetup (where "extra" memory)
    * is allocated.
    */
   BROTLI_BOOL is_setup_;
@@ -297,6 +298,16 @@ static BROTLI_INLINE size_t BackwardMatchLengthCode(const BackwardMatch* self) {
 #include "hash_longest_match64_inc.h"  /* NOLINT(build/include) */
 #undef HASHER
 
+#if defined(BROTLI_MAX_SIMD_QUALITY)
+#define HASHER() H58
+#include "hash_longest_match_simd_inc.h" /* NOLINT(build/include) */
+#undef HASHER
+
+#define HASHER() H68
+#include "hash_longest_match64_simd_inc.h" /* NOLINT(build/include) */
+#undef HASHER
+#endif
+
 #define BUCKET_BITS 15
 
 #define NUM_LAST_DISTANCES_TO_CHECK 4
@@ -388,7 +399,13 @@ static BROTLI_INLINE size_t BackwardMatchLengthCode(const BackwardMatch* self) {
 #undef CAT
 #undef EXPAND_CAT
 
-#define FOR_SIMPLE_HASHERS(H) H(2) H(3) H(4) H(5) H(6) H(40) H(41) H(42) H(54)
+#if defined(BROTLI_MAX_SIMD_QUALITY)
+#define FOR_SIMPLE_HASHERS(H) \
+  H(2) H(3) H(4) H(5) H(6) H(40) H(41) H(42) H(54) H(58) H(68)
+#else
+#define FOR_SIMPLE_HASHERS(H) \
+  H(2) H(3) H(4) H(5) H(6) H(40) H(41) H(42) H(54)
+#endif
 #define FOR_COMPOSITE_HASHERS(H) H(35) H(55) H(65)
 #define FOR_GENERIC_HASHERS(H) FOR_SIMPLE_HASHERS(H) FOR_COMPOSITE_HASHERS(H)
 #define FOR_ALL_HASHERS(H) FOR_GENERIC_HASHERS(H) H(10)
@@ -523,8 +540,8 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
   const uint64_t hash_mask = (~((uint64_t)0U)) >> (64 - hash_bits);
 
   const uint32_t* slot_offsets = (uint32_t*)(&self[1]);
-  const uint16_t* heads = (uint16_t*)(&slot_offsets[1u << slot_bits]);
-  const uint32_t* items = (uint32_t*)(&heads[1u << bucket_bits]);
+  const uint16_t* heads = (uint16_t*)(&slot_offsets[(size_t)1u << slot_bits]);
+  const uint32_t* items = (uint32_t*)(&heads[(size_t)1u << bucket_bits]);
   const uint8_t* source = NULL;
 
   const size_t cur_ix_masked = cur_ix & ring_buffer_mask;
@@ -547,6 +564,8 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
     /* kLeanPreparedDictionaryMagic */
     source = (const uint8_t*)BROTLI_UNALIGNED_LOAD_PTR((const uint8_t**)tail);
   }
+
+  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask);
 
   for (i = 0; i < 4; ++i) {
     const size_t distance = (size_t)distance_cache[i];
@@ -574,6 +593,11 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
       }
     }
   }
+  /* we require matches of len >4, so increase best_len to 3, so we can compare
+   * 4 bytes all the time. */
+  if (best_len < 3) {
+    best_len = 3;
+  }
   while (item == 0) {
     size_t offset;
     size_t distance;
@@ -586,9 +610,10 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
     limit = source_size - offset;
     limit = (limit > max_length) ? max_length : limit;
     if (distance > max_distance) continue;
-    if (cur_ix_masked + best_len > ring_buffer_mask ||
-        best_len >= limit ||
-        data[cur_ix_masked + best_len] != source[offset + best_len]) {
+    if (cur_ix_masked + best_len > ring_buffer_mask || best_len >= limit ||
+        /* compare 4 bytes ending at best_len + 1 */
+        BrotliUnalignedRead32(&data[cur_ix_masked + best_len - 3]) !=
+            BrotliUnalignedRead32(&source[offset + best_len - 3])) {
       continue;
     }
     {
@@ -627,8 +652,8 @@ static BROTLI_INLINE size_t FindAllCompoundDictionaryMatches(
   const uint64_t hash_mask = (~((uint64_t)0U)) >> (64 - hash_bits);
 
   const uint32_t* slot_offsets = (uint32_t*)(&self[1]);
-  const uint16_t* heads = (uint16_t*)(&slot_offsets[1u << slot_bits]);
-  const uint32_t* items = (uint32_t*)(&heads[1u << bucket_bits]);
+  const uint16_t* heads = (uint16_t*)(&slot_offsets[(size_t)1u << slot_bits]);
+  const uint32_t* items = (uint32_t*)(&heads[(size_t)1u << bucket_bits]);
   const uint8_t* source = NULL;
 
   const size_t cur_ix_masked = cur_ix & ring_buffer_mask;
@@ -650,6 +675,8 @@ static BROTLI_INLINE size_t FindAllCompoundDictionaryMatches(
     /* kLeanPreparedDictionaryMagic */
     source = (const uint8_t*)BROTLI_UNALIGNED_LOAD_PTR((const uint8_t**)tail);
   }
+
+  BROTLI_DCHECK(cur_ix_masked + max_length <= ring_buffer_mask);
 
   while (item == 0) {
     size_t offset;

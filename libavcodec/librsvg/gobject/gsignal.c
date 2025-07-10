@@ -1056,7 +1056,7 @@ signal_parse_name (const gchar *name,
   else if (colon[1] == ':')
     {
       gchar buffer[32];
-      guint l = colon - name;
+      size_t l = (size_t) (colon - name);
 
       if (colon[2] == '\0')
         return 0;
@@ -2300,8 +2300,13 @@ g_signal_get_invocation_hint (gpointer instance)
  * If @closure is a floating reference (see g_closure_sink()), this function
  * takes ownership of @closure.
  *
- * This function cannot fail. If the given signal doesn’t exist, a critical
- * warning is emitted.
+ * This function cannot fail. If the given signal name doesn’t exist,
+ * a critical warning is emitted. No validation is performed on the
+ * ‘detail’ string when specified in @detailed_signal, other than a
+ * non-empty check.
+ *
+ * Refer to the [signals documentation](signals.html) for more
+ * details.
  *
  * Returns: the handler ID (always greater than 0)
  */
@@ -2368,8 +2373,13 @@ g_signal_connect_closure_by_id (gpointer  instance,
  * If @closure is a floating reference (see g_closure_sink()), this function
  * takes ownership of @closure.
  *
- * This function cannot fail. If the given signal doesn’t exist, a critical
- * warning is emitted.
+ * This function cannot fail. If the given signal name doesn’t exist,
+ * a critical warning is emitted. No validation is performed on the
+ * ‘detail’ string when specified in @detailed_signal, other than a
+ * non-empty check.
+ *
+ * Refer to the [signals documentation](signals.html) for more
+ * details.
  *
  * Returns: the handler ID (always greater than 0)
  */
@@ -2467,8 +2477,13 @@ node_check_deprecated (const SignalNode *node)
  * used. Specify @connect_flags if you need `..._after()` or
  * `..._swapped()` variants of this function.
  *
- * This function cannot fail. If the given signal doesn’t exist, a critical
- * warning is emitted.
+ * This function cannot fail. If the given signal name doesn’t exist,
+ * a critical warning is emitted. No validation is performed on the
+ * ‘detail’ string when specified in @detailed_signal, other than a
+ * non-empty check.
+ *
+ * Refer to the [signals documentation](signals.html) for more
+ * details.
  *
  * Returns: the handler ID (always greater than 0)
  */
@@ -2793,7 +2808,7 @@ g_signal_handler_find (gpointer         instance,
   gulong handler_seq_no = 0;
 
   g_return_val_if_fail (G_TYPE_CHECK_INSTANCE (instance), 0);
-  g_return_val_if_fail ((mask & ~G_SIGNAL_MATCH_MASK) == 0, 0);
+  g_return_val_if_fail ((mask & (unsigned) ~G_SIGNAL_MATCH_MASK) == 0, 0);
 
   if (mask & G_SIGNAL_MATCH_MASK)
     {
@@ -2879,7 +2894,7 @@ g_signal_handlers_block_matched (gpointer         instance,
   guint n_handlers = 0;
 
   g_return_val_if_fail (G_TYPE_CHECK_INSTANCE (instance), 0);
-  g_return_val_if_fail ((mask & ~G_SIGNAL_MATCH_MASK) == 0, 0);
+  g_return_val_if_fail ((mask & (unsigned) ~G_SIGNAL_MATCH_MASK) == 0, 0);
 
   if (mask & (G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_CLOSURE | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA))
     {
@@ -2935,7 +2950,7 @@ g_signal_handlers_unblock_matched (gpointer         instance,
   guint n_handlers = 0;
 
   g_return_val_if_fail (G_TYPE_CHECK_INSTANCE (instance), 0);
-  g_return_val_if_fail ((mask & ~G_SIGNAL_MATCH_MASK) == 0, 0);
+  g_return_val_if_fail ((mask & (unsigned) ~G_SIGNAL_MATCH_MASK) == 0, 0);
 
   if (mask & (G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_CLOSURE | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA))
     {
@@ -2990,7 +3005,7 @@ g_signal_handlers_disconnect_matched (gpointer         instance,
   guint n_handlers = 0;
 
   g_return_val_if_fail (G_TYPE_CHECK_INSTANCE (instance), 0);
-  g_return_val_if_fail ((mask & ~G_SIGNAL_MATCH_MASK) == 0, 0);
+  g_return_val_if_fail ((mask & (unsigned) ~G_SIGNAL_MATCH_MASK) == 0, 0);
 
   if (mask & (G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_CLOSURE | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA))
     {
@@ -3225,7 +3240,7 @@ accumulate (GSignalInvocationHint *ihint,
   continue_emission = accumulator->func (ihint, return_accu, handler_return, accumulator->data);
   g_value_reset (handler_return);
 
-  ihint->run_type &= ~G_SIGNAL_ACCUMULATOR_FIRST_RUN;
+  ihint->run_type &= (unsigned) ~G_SIGNAL_ACCUMULATOR_FIRST_RUN;
 
   return continue_emission;
 }
@@ -3838,9 +3853,9 @@ signal_emit_unlocked_R (SignalNode   *node,
 
                 if (!(old_flags & G_HOOK_FLAG_IN_CALL))
                   {
-                    g_atomic_int_compare_and_exchange (&hook->flags,
-                                                       old_flags | G_HOOK_FLAG_IN_CALL,
-                                                       old_flags);
+                    g_atomic_int_compare_and_exchange ((gint *) &hook->flags,
+                                                       (gint) old_flags | G_HOOK_FLAG_IN_CALL,
+                                                       (gint) old_flags);
                   }
 
                 hook_returns[i] = !!need_destroy;
@@ -3914,7 +3929,7 @@ signal_emit_unlocked_R (SignalNode   *node,
 	goto EMIT_RESTART;
     }
 
-  emission.ihint.run_type &= ~G_SIGNAL_RUN_FIRST;
+  emission.ihint.run_type &= (unsigned) ~G_SIGNAL_RUN_FIRST;
   emission.ihint.run_type |= G_SIGNAL_RUN_LAST;
 
   if ((node->flags & G_SIGNAL_RUN_LAST) && class_closure)
@@ -3988,7 +4003,7 @@ signal_emit_unlocked_R (SignalNode   *node,
 
  EMIT_CLEANUP:
 
-  emission.ihint.run_type &= ~G_SIGNAL_RUN_LAST;
+  emission.ihint.run_type &= (unsigned) ~G_SIGNAL_RUN_LAST;
   emission.ihint.run_type |= G_SIGNAL_RUN_CLEANUP;
 
   if ((node->flags & G_SIGNAL_RUN_CLEANUP) && class_closure)

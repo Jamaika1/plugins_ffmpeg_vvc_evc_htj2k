@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: 0BSD */
+
 /**
  * \file        lzma/version.h
  * \brief       Version number
@@ -6,9 +8,6 @@
 
 /*
  * Author: Lasse Collin
- *
- * This file has been put into the public domain.
- * You can do whatever you want with this file.
  */
 
 #ifndef LZMA_H_INTERNAL
@@ -20,10 +19,10 @@
 #define LZMA_VERSION_MAJOR 5
 
 /** \brief Minor version number of the liblzma release. */
-#define LZMA_VERSION_MINOR 5
+#define LZMA_VERSION_MINOR 8
 
 /** \brief Patch version number of the liblzma release. */
-#define LZMA_VERSION_PATCH 0
+#define LZMA_VERSION_PATCH 1
 
 /**
  * \brief Version stability marker
@@ -33,7 +32,7 @@
  *   - LZMA_VERSION_STABILITY_BETA
  *   - LZMA_VERSION_STABILITY_STABLE
  */
-#define LZMA_VERSION_STABILITY LZMA_VERSION_STABILITY_ALPHA
+#define LZMA_VERSION_STABILITY LZMA_VERSION_STABILITY_STABLE
 
 /** \brief Commit version number of the liblzma release */
 #ifndef LZMA_VERSION_COMMIT
@@ -75,11 +74,11 @@
  * Macros to construct the compile-time version string
  */
 #if LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_ALPHA
-#	define LZMA_VERSION_STABILITY_STRING "-6b05f82"
+#	define LZMA_VERSION_STABILITY_STRING "alpha"
 #elif LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_BETA
 #	define LZMA_VERSION_STABILITY_STRING "beta"
 #elif LZMA_VERSION_STABILITY == LZMA_VERSION_STABILITY_STABLE
-#	define LZMA_VERSION_STABILITY_STRING ""
+#	define LZMA_VERSION_STABILITY_STRING "-dd4a1b2"
 #else
 #	error Incorrect LZMA_VERSION_STABILITY
 #endif

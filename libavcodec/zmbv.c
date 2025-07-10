@@ -29,10 +29,11 @@
 #include "libavutil/common.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/intreadwrite.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/zlib_wrapper.h"
+#include "libavutil/mem.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "zlib_wrapper.h"
 
 #include <zlib.h>
 

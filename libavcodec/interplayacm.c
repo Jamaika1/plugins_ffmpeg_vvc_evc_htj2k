@@ -19,13 +19,14 @@
  */
 
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavutil/thread.h"
 
 #define BITSTREAM_READER_LE
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "get_bits.h"
 
 static const int8_t map_1bit[]      = { -1, +1 };
 static const int8_t map_2bit_near[] = { -2, -1, +1, +2 };

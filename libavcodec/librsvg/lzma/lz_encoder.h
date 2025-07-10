@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: 0BSD
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 /// \file       lz_encoder.h
@@ -5,9 +7,6 @@
 ///
 //  Authors:    Igor Pavlov
 //              Lasse Collin
-//
-//  This file has been put into the public domain.
-//  You can do whatever you want with this file.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +21,7 @@
 // changing this check.
 #define IS_ENC_DICT_SIZE_VALID(size) \
 	((size) >= LZMA_DICT_SIZE_MIN \
-			&&  (size) <= (UINT32_C(1) << 30) + (UINT32_C(1) << 29))
+		&& (size) <= (UINT32_C(1) << 30) + (UINT32_C(1) << 29))
 
 
 /// A table of these is used by the LZ-based encoder to hold

@@ -26,11 +26,11 @@
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
-#include "h264qpel.h"
-#include "mathops.h"
-#include "pixels.h"
-#include "rnd_avg.h"
-#include "rv34dsp.h"
+#include "libavcodec/h264qpel.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/pixels.h"
+#include "libavcodec/rnd_avg.h"
+#include "libavcodec/rv34dsp.h"
 #include "libavutil/avassert.h"
 
 #define RV40_LOWPASS(OPNAME, OP) \
@@ -709,6 +709,8 @@ av_cold void ff_rv40dsp_init(RV34DSPContext *c)
     ff_rv40dsp_init_aarch64(c);
 #elif ARCH_ARM
     ff_rv40dsp_init_arm(c);
+#elif ARCH_RISCV
+    ff_rv40dsp_init_riscv(c);
 #elif ARCH_X86
     ff_rv40dsp_init_x86(c);
 #endif

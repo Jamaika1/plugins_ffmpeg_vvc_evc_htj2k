@@ -50,6 +50,28 @@ static const uint8_t  INIT_QT_SPLIT_FLAG[4][6] = {
   {   0,   8,   8,  12,  12,   8, },
 };
 
+
+static const uint8_t INIT_VERTICAL_SPLIT_FLAG[4][5] = {
+  {  43,  42,  37,  42,  44, },
+  {  43,  35,  37,  34,  52, },
+  {  43,  42,  29,  27,  44, },
+  {   9,   8,   9,   8,   5, },
+};
+
+static const uint8_t INIT_BINARY_SPLIT_FLAG[4][4] = {
+  {  28,  29,  28,  29, },
+  {  43,  37,  21,  22, },
+  {  36,  45,  36,  45, },
+  {  12,  13,  12,  13, },
+};
+
+static const uint8_t INIT_NON_INTER_FLAG[4][2] = {
+  {  25,  20, },
+  {  25,  12, },
+  { CNU, CNU, },
+  {   1,   0, },
+};
+
 static const uint8_t INIT_SKIP_FLAG[4][3] = {
   {  57,  60,  46, },
   {  57,  59,  45, },
@@ -423,6 +445,13 @@ static const uint8_t INIT_CCLM_MODEL[4] = {
      9, 
 };
 
+static const uint8_t INIT_IBC_FLAG[4][3] = {
+  {   0,  43,  45, },
+  {   0,  57,  44, },
+  {  17,  42,  36, },
+  {   1,   5,   8, },
+};
+
 /*
 static const uint16_t g_inistateToCount[128] = {
   614,   647,   681,   718,   756,   797,   839,   884,   932,   982,   1034,  1089,  1148,  1209,  1274,  1342,
@@ -514,6 +543,7 @@ void uvg_init_contexts(encoder_state_t *state, int8_t QP, int8_t slice)
     uvg_ctx_init(&cabac->ctx.lfnst_idx_model[i], QP, INIT_LFNST_IDX[slice][i], INIT_LFNST_IDX[3][i]);
     uvg_ctx_init(&cabac->ctx.transform_skip_sig_coeff_group[i], QP, INIT_TRANSFORM_SKIP_SIG_COEFF_GROUP[slice][i], INIT_TRANSFORM_SKIP_SIG_COEFF_GROUP[3][i]);
     uvg_ctx_init(&cabac->ctx.transform_skip_sig[i], QP, INIT_TRANSFORM_SKIP_SIG[slice][i], INIT_TRANSFORM_SKIP_SIG[3][i]);
+    uvg_ctx_init(&cabac->ctx.ibc_flag[i], QP, INIT_IBC_FLAG[slice][i], INIT_IBC_FLAG[3][i]);
   }
 
   for (i = 0; i < 4; i++) {
@@ -542,6 +572,8 @@ void uvg_init_contexts(encoder_state_t *state, int8_t QP, int8_t slice)
   //TODO: ignore P/B contexts on intra frame
   uvg_ctx_init(&cabac->ctx.cu_pred_mode_model[0], QP, INIT_PRED_MODE[slice][0], INIT_PRED_MODE[3][0]);
   uvg_ctx_init(&cabac->ctx.cu_pred_mode_model[1], QP, INIT_PRED_MODE[slice][1], INIT_PRED_MODE[3][1]);
+  uvg_ctx_init(&cabac->ctx.non_inter_flag_model[0], QP, INIT_NON_INTER_FLAG[slice][0], INIT_NON_INTER_FLAG[3][0]);
+  uvg_ctx_init(&cabac->ctx.non_inter_flag_model[1], QP, INIT_NON_INTER_FLAG[slice][1], INIT_NON_INTER_FLAG[3][1]);
 
   uvg_ctx_init(&cabac->ctx.cu_qt_root_cbf_model, QP, INIT_QT_ROOT_CBF[slice][0], INIT_QT_ROOT_CBF[3][0]);
   uvg_ctx_init(&cabac->ctx.mvp_idx_model, QP, INIT_MVP_IDX[slice][0], INIT_MVP_IDX[3][0]);
@@ -566,6 +598,11 @@ void uvg_init_contexts(encoder_state_t *state, int8_t QP, int8_t slice)
     uvg_ctx_init(&cabac->ctx.part_size_model[i], QP, INIT_PART_SIZE[slice][i], INIT_PART_SIZE[3][i]);
     uvg_ctx_init(&cabac->ctx.bdpcm_mode[i], QP, BDPCM_MODE_INIT[slice][i], BDPCM_MODE_INIT[3][i]);
     uvg_ctx_init(&cabac->ctx.qt_cbf_model_luma[i], QP, INIT_QT_CBF[slice][i], INIT_QT_CBF[3][i]);
+    uvg_ctx_init(&cabac->ctx.mtt_binary_model[i], QP, INIT_BINARY_SPLIT_FLAG[slice][i], INIT_BINARY_SPLIT_FLAG[3][i]);
+  }
+
+  for (i = 0; i < 5; i++) {
+    uvg_ctx_init(&cabac->ctx.mtt_vertical_model[i], QP, INIT_VERTICAL_SPLIT_FLAG[slice][i], INIT_VERTICAL_SPLIT_FLAG[3][i]);
   }
 
   for (i = 0; i < 6; i++) {  
@@ -610,13 +647,14 @@ void uvg_context_copy(encoder_state_t * const target_state, const encoder_state_
 uint32_t uvg_context_get_sig_coeff_group( uint32_t *sig_coeff_group_flag,
                                       uint32_t pos_x,
                                       uint32_t pos_y,
-                                      int32_t width)
+                                      int32_t width,
+                                      int32_t height)
 {
   uint32_t uiRight = 0;
   uint32_t uiLower = 0;
   uint32_t position = pos_y * width + pos_x;
   if (pos_x + 1 < (uint32_t)width) uiRight = sig_coeff_group_flag[position + 1];
-  if (pos_y + 1 < (uint32_t)width) uiLower = sig_coeff_group_flag[position + width];
+  if (pos_y + 1 < (uint32_t)height) uiLower = sig_coeff_group_flag[position + width];
 
   return uiRight || uiLower;
 }
@@ -648,7 +686,7 @@ uint32_t uvg_context_get_sig_coeff_group_ts(uint32_t* sig_coeff_group_flag,
 * \returns context index for current scan position
 */
 uint32_t uvg_context_get_sig_ctx_idx_abs(const coeff_t* coeff, uint32_t pos_x, uint32_t pos_y,
-                                         uint32_t height, uint32_t width, int8_t type,
+                                         uint32_t width, uint32_t height, int8_t color,
                                          int32_t* temp_diag, int32_t* temp_sum)
 {
   const coeff_t* data = coeff + pos_x + pos_y * width;
@@ -678,7 +716,7 @@ uint32_t uvg_context_get_sig_ctx_idx_abs(const coeff_t* coeff, uint32_t pos_x, u
   }
 #undef UPDATE
   int ctx_ofs = MIN((sum_abs+1)>>1, 3) + (diag < 2 ? 4 : 0);
-  if (type == 0 /* Luma */)
+  if (color == COLOR_Y)
   {
     ctx_ofs += diag < 5 ? 4 : 0;
   }
@@ -806,7 +844,7 @@ unsigned uvg_lrg1_ctx_id_abs_ts(const coeff_t* coeff, int32_t pos_x, int32_t pos
 * \returns context go rice parameter
 */
 uint32_t uvg_abs_sum(const coeff_t* coeff, uint32_t pos_x, uint32_t pos_y,
-                             uint32_t height, uint32_t width, uint32_t baselevel)
+                             uint32_t width, uint32_t height, uint32_t baselevel)
 {
 #define UPDATE(x) sum+=abs(x)/*-(x?1:0)*/
 
@@ -848,8 +886,8 @@ uint32_t uvg_abs_sum(const coeff_t* coeff, uint32_t pos_x, uint32_t pos_y,
 * \returns context go rice parameter
 */
 uint32_t uvg_go_rice_par_abs(const coeff_t* coeff, uint32_t pos_x, uint32_t pos_y,
-  uint32_t height, uint32_t width, uint32_t baselevel)
+  uint32_t width, uint32_t height, uint32_t baselevel)
 {
-  uint32_t check = uvg_abs_sum(coeff, pos_x, pos_y, height, width, baselevel);
+  uint32_t check = uvg_abs_sum(coeff, pos_x, pos_y, width, height, baselevel);
   return  g_go_rice_pars[check];  
 }

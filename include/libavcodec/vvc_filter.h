@@ -34,20 +34,31 @@
 void ff_vvc_lmcs_filter(const VVCLocalContext *lc, const int x0, const int y0);
 
 /**
+ * derive boundary strength for the CTU
+ * @param lc local context for CTU
+ * @param rx raster x position for the CTU
+ * @param ry raster y position for the CTU
+ * @param rs raster position for the CTU
+ */
+void ff_vvc_deblock_bs(VVCLocalContext *lc, const int rx, const int ry, const int rs);
+
+/**
  * vertical deblock filter for the CTU
  * @param lc local context for CTU
  * @param x0 x position for the CTU
  * @param y0 y position for the CTU
+ * @param rs raster position for the CTU
  */
-void ff_vvc_deblock_vertical(const VVCLocalContext *lc, int x0, int y0);
+void ff_vvc_deblock_vertical(const VVCLocalContext *lc, int x0, int y0, int rs);
 
 /**
  * horizontal deblock filter for the CTU
  * @param lc local context for CTU
  * @param x0 x position for the CTU
  * @param y0 y position for the CTU
+ * @param rs raster position for the CTU
  */
-void ff_vvc_deblock_horizontal(const VVCLocalContext *lc, int x0, int y0);
+void ff_vvc_deblock_horizontal(const VVCLocalContext *lc, int x0, int y0, int rs);
 
 /**
  * sao filter for the CTU
@@ -57,6 +68,7 @@ void ff_vvc_deblock_horizontal(const VVCLocalContext *lc, int x0, int y0);
  */
 void ff_vvc_sao_filter(VVCLocalContext *lc, const int x0, const int y0);
 
+void ff_vvc_sao_copy_ctb_to_hv(VVCLocalContext* lc, int rx, int ry, int last_row);
 void ff_vvc_alf_copy_ctu_to_hv(VVCLocalContext* lc, int x0, int y0);
 
 /**

@@ -57,7 +57,7 @@
  * GModule:
  *
  * The #GModule struct is an opaque data structure to represent a
- * [dynamically-loaded module][glib-Dynamic-Loading-of-Modules].
+ * [dynamically-loaded module](modules.html#dynamic-loading-of-modules).
  * It should only be accessed via the following functions.
  */
 
@@ -481,7 +481,7 @@ g_module_open_full (const gchar   *file_name,
     _g_module_debug_init ();
 
   if (module_debug_flags & G_MODULE_DEBUG_BIND_NOW_MODULES)
-    flags &= ~G_MODULE_BIND_LAZY;
+    flags &= (unsigned) ~G_MODULE_BIND_LAZY;
 
   if (!file_name)
     {

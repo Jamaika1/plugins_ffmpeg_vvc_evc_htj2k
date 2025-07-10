@@ -29,6 +29,17 @@
 /* Incremented each time public API is changed, X265_BUILD is used as
  * the shared library SONAME on platforms which support it. It also
  * prevents linking against a different version of the static lib */
-#define X265_BUILD 208
+#define X265_BUILD 215
+#define X265_VERSION 4.1+188-cd4f0d6
+
+#define ENABLE_HDR10_PLUS 1
+#define ENABLE_ASSEMBLY 1
+#define ENABLE_LIBVMAF 0
+#define ENABLE_ALPHA 1
+#define ENABLE_MULTIVIEW 1
+#define ENABLE_SCC_EXT 1
+#define HAVE_STRTOK_R
+
+#define _DEBUG 1
 
 #endif

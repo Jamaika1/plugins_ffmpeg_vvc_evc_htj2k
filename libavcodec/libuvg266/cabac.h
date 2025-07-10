@@ -5,21 +5,21 @@
  *
  * Copyright (c) 2021, Tampere University, ITU/ISO/IEC, project contributors
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
- *
+ * 
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- *
+ * 
  * * Redistributions in binary form must reproduce the above copyright notice, this
  *   list of conditions and the following disclaimer in the documentation and/or
  *   other materials provided with the distribution.
- *
+ * 
  * * Neither the name of the Tampere University or ITU/ISO/IEC nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -77,6 +77,9 @@ typedef struct
     cabac_ctx_t mts_idx_model[4];
     cabac_ctx_t split_flag_model[9]; //!< \brief split flag context models
     cabac_ctx_t qt_split_flag_model[6]; //!< \brief qt split flag context models
+    cabac_ctx_t mtt_vertical_model[5]; 
+    cabac_ctx_t mtt_binary_model[4];
+    cabac_ctx_t non_inter_flag_model[2];
     cabac_ctx_t intra_luma_mpm_flag_model;    //!< \brief intra mode context models
     cabac_ctx_t intra_subpart_model[2];    //!< \brief intra sub part context models
     cabac_ctx_t chroma_pred_model;
@@ -122,6 +125,7 @@ typedef struct
     cabac_ctx_t transform_skip_gt2[5];
     cabac_ctx_t cclm_flag;
     cabac_ctx_t cclm_model;
+    cabac_ctx_t ibc_flag[3];
 
   } ctx;
 } cabac_data_t;
@@ -132,24 +136,22 @@ extern const uint8_t uvg_g_auc_renorm_table[32];
 
 
 // Functions
-void uvg_cabac_start(cabac_data_t *data);
-void uvg_cabac_encode_bin(cabac_data_t *data, uint32_t bin_value);
-void uvg_cabac_encode_bin_ep(cabac_data_t *data, uint32_t bin_value);
-void uvg_cabac_encode_trunc_bin(cabac_data_t *data, uint32_t bin_value, uint32_t max_value, double* bits_out);
-void uvg_cabac_encode_bins_ep(cabac_data_t *data, uint32_t bin_values, int num_bins);
-void uvg_cabac_encode_bin_trm(cabac_data_t *data, uint8_t bin_value);
-void uvg_cabac_write(cabac_data_t *data);
-void uvg_cabac_finish(cabac_data_t *data);
-int uvg_cabac_write_coeff_remain(cabac_data_t *cabac, uint32_t symbol,
-                              uint32_t r_param, const unsigned int cutoff);
-//int uvg_cabac_write_coeff_remain_encry(struct encoder_state_t * const state, cabac_data_t *cabac, uint32_t symbol,
-//                              uint32_t r_param, const unsigned int cutoff, int16_t base_level);
-uint32_t uvg_cabac_write_ep_ex_golomb(struct encoder_state_t * const state, cabac_data_t *data,
+void uvg_cabac_start(cabac_data_t *const data);
+void uvg_cabac_encode_bin(cabac_data_t *const data, const uint32_t bin_value);
+void uvg_cabac_encode_bin_ep(cabac_data_t *const data, const uint32_t bin_value);
+void uvg_cabac_encode_trunc_bin(cabac_data_t *const data, const uint32_t bin_value, const uint32_t max_value, double* bits_out);
+void uvg_cabac_encode_bins_ep(cabac_data_t *const data, uint32_t bin_values, int num_bins);
+void uvg_cabac_encode_bin_trm(cabac_data_t *const data, const uint8_t bin_value);
+void uvg_cabac_write(cabac_data_t *const data);
+void uvg_cabac_finish(cabac_data_t *const data);
+int uvg_cabac_write_coeff_remain(cabac_data_t *const cabac, const uint32_t symbol,
+                              const uint32_t r_param, const unsigned int cutoff);
+uint32_t uvg_cabac_write_ep_ex_golomb(struct encoder_state_t * const state, cabac_data_t *const data,
                 uint32_t symbol, uint32_t count);
-void uvg_cabac_write_unary_max_symbol(cabac_data_t *data, cabac_ctx_t *ctx,
-                                      uint32_t symbol, int32_t offset,
-                                      uint32_t max_symbol, double* bits_out);
-void uvg_cabac_write_unary_max_symbol_ep(cabac_data_t *data, unsigned int symbol, unsigned int max_symbol);
+void uvg_cabac_write_unary_max_symbol(cabac_data_t *const data, cabac_ctx_t *const ctx,
+                                      uint32_t symbol, const int32_t offset,
+                                      const uint32_t max_symbol, double* bits_out);
+void uvg_cabac_write_unary_max_symbol_ep(cabac_data_t *const data, unsigned int symbol, const unsigned int max_symbol);
 
 #define CTX_PROB_BITS 15
 #define CTX_PROB_BITS_0 10
@@ -205,7 +207,7 @@ extern bool uvg_cabac_bins_verbose;
            uvg_cabac_bins_count++, (data)->range, (data)->range-CTX_LPS((data)->cur_ctx,(data)->range), CTX_LPS((data)->cur_ctx,(data)->range), (name), (uint32_t)(value), (data)->range, CTX_LPS((data)->cur_ctx,(data)->range), prev_state); }\
     uvg_cabac_encode_bin((data), (value)); \
     if(uvg_cabac_bins_verbose && !(data)->only_count) printf("%u\n", CTX_STATE((data)->cur_ctx)); }
-
+    
 
   #define CABAC_BINS_EP(data, value, bins, name) { \
     uint32_t prev_state = (!(data)->only_count) ? CTX_STATE(data->cur_ctx) : 0; \

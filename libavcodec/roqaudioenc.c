@@ -21,11 +21,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "mathops.h"
+#include "libavutil/mem.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/mathops.h"
 
 #define ROQ_FRAME_SIZE           735
 #define ROQ_HEADER_SIZE   8
@@ -197,6 +198,5 @@ const FFCodec ff_roq_dpcm_encoder = {
     .init           = roq_dpcm_encode_init,
     FF_CODEC_ENCODE_CB(roq_dpcm_encode_frame),
     .close          = roq_dpcm_encode_close,
-    .p.sample_fmts  = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_S16),
 };

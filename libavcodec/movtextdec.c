@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "ass.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
 #include "libavutil/opt.h"
 #include "libavutil/avstring.h"
 #include "libavutil/common.h"
 #include "libavutil/bprint.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
-#include "bytestream.h"
-#include "codec_internal.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
 
 #define STYLE_FLAG_BOLD         (1<<0)
 #define STYLE_FLAG_ITALIC       (1<<1)
@@ -443,7 +443,7 @@ static int text_to_ass(AVBPrint *buf, const char *text, const char *text_end,
     return 0;
 }
 
-static int mov_text_init(AVCodecContext *avctx) {
+static av_cold int mov_text_init(AVCodecContext *avctx) {
     /*
      * TODO: Handle the default text style.
      * NB: Most players ignore styles completely, with the result that
@@ -561,7 +561,7 @@ static int mov_text_decode_frame(AVCodecContext *avctx, AVSubtitle *sub,
     return avpkt->size;
 }
 
-static int mov_text_decode_close(AVCodecContext *avctx)
+static av_cold int mov_text_decode_close(AVCodecContext *avctx)
 {
     MovTextContext *m = avctx->priv_data;
     mov_text_cleanup_ftab(m);
@@ -569,7 +569,7 @@ static int mov_text_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-static void mov_text_flush(AVCodecContext *avctx)
+static av_cold void mov_text_flush(AVCodecContext *avctx)
 {
     MovTextContext *m = avctx->priv_data;
     if (!(avctx->flags2 & AV_CODEC_FLAG2_RO_FLUSH_NOOP))

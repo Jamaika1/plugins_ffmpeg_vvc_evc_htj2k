@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "targa.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/targa.h"
 
 typedef struct TargaContext {
     GetByteContext gb;
@@ -249,7 +249,11 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *p,
                 }
                 break;
             }
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
             p->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
         }
     }
 

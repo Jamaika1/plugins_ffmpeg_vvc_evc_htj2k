@@ -31,7 +31,11 @@
 #include "rsvg-css.h"
 #include "rsvg-styles.h"
 #include "rsvg-shapes.h"
+#if LIBXML_VERSION >= 21400
+#include "libxml2/parser.h"
+#else
 #include "libxml2/SAX.h"
+#endif
 
 G_BEGIN_DECLS
 

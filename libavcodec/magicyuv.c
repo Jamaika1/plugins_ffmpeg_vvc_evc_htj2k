@@ -24,6 +24,7 @@
 
 #define CACHED_BITSTREAM_READER !ARCH_X86_32
 
+#include "libavutil/mem.h"
 #include "libavutil/pixdesc.h"
 
 #include "libavcodec/avcodec.h"
@@ -73,12 +74,16 @@ typedef struct MagicYUVContext {
     int (*magy_decode_slice)(AVCodecContext *avctx, void *tdata,
                              int j, int threadnr);
     LLVidDSPContext   llviddsp;
+    HuffEntry         he[1 << 14];
+    uint8_t           len[1 << 14];
 } MagicYUVContext;
 
-static int huff_build(const uint8_t len[], uint16_t codes_pos[33],
+static int huff_build(AVCodecContext *avctx,
+                      const uint8_t len[], uint16_t codes_pos[33],
                       VLC *vlc, VLC_MULTI *multi, int nb_elems, void *logctx)
 {
-    HuffEntry he[4096];
+    MagicYUVContext *s = avctx->priv_data;
+    HuffEntry *he = s->he;
 
     for (int i = 31; i > 0; i--)
         codes_pos[i] += codes_pos[i + 1];
@@ -120,11 +125,10 @@ static void magicyuv_median_pred16(uint16_t *dst, const uint16_t *src1,
     x = 0; \
     for (; CACHED_BITSTREAM_READER && x < width-c && get_bits_left(&gb) > 0;) {\
         ret = get_vlc_multi(&gb, (uint8_t *)dst + x * b, multi, \
-                            vlc, vlc_bits, 3); \
-        if (ret > 0) \
-            x += ret; \
+                            vlc, vlc_bits, 3, b); \
         if (ret <= 0) \
             return AVERROR_INVALIDDATA; \
+        x += ret; \
     } \
     for (; x < width && get_bits_left(&gb) > 0; x++) \
         dst[x] = get_vlc2(&gb, vlc, vlc_bits, 3); \
@@ -295,7 +299,7 @@ static int magy_decode_slice(AVCodecContext *avctx, void *tdata,
                 return ret;
 
             for (k = 0; k < height; k++)
-                READ_PLANE(dst, i, 1, 5)
+                READ_PLANE(dst, i, 1, 7)
         }
 
         switch (pred) {
@@ -381,7 +385,7 @@ static int build_huffman(AVCodecContext *avctx, const uint8_t *table,
 {
     MagicYUVContext *s = avctx->priv_data;
     GetByteContext gb;
-    uint8_t len[4096];
+    uint8_t *len = s->len;
     uint16_t length_count[33] = { 0 };
     int i = 0, j = 0, k;
 
@@ -409,7 +413,7 @@ static int build_huffman(AVCodecContext *avctx, const uint8_t *table,
 
         if (j == max) {
             j = 0;
-            if (huff_build(len, length_count, &s->vlc[i], &s->multi[i], max, avctx)) {
+            if (huff_build(avctx, len, length_count, &s->vlc[i], &s->multi[i], max, avctx)) {
                 av_log(avctx, AV_LOG_ERROR, "Cannot build Huffman codes\n");
                 return AVERROR_INVALIDDATA;
             }
@@ -458,37 +462,22 @@ static int magy_decode_frame(AVCodecContext *avctx, AVFrame *p,
         return AVERROR_PATCHWELCOME;
     }
 
-    s->hshift[1] =
-    s->vshift[1] =
-    s->hshift[2] =
-    s->vshift[2] = 0;
-    s->decorrelate = 0;
-    s->bps = 8;
-
     format = bytestream2_get_byteu(&gb);
     switch (format) {
     case 0x65:
         avctx->pix_fmt = AV_PIX_FMT_GBRP;
-        s->decorrelate = 1;
         break;
     case 0x66:
         avctx->pix_fmt = AV_PIX_FMT_GBRAP;
-        s->decorrelate = 1;
         break;
     case 0x67:
         avctx->pix_fmt = AV_PIX_FMT_YUV444P;
         break;
     case 0x68:
         avctx->pix_fmt = AV_PIX_FMT_YUV422P;
-        s->hshift[1] =
-        s->hshift[2] = 1;
         break;
     case 0x69:
         avctx->pix_fmt = AV_PIX_FMT_YUV420P;
-        s->hshift[1] =
-        s->vshift[1] =
-        s->hshift[2] =
-        s->vshift[2] = 1;
         break;
     case 0x6a:
         avctx->pix_fmt = AV_PIX_FMT_YUVA444P;
@@ -498,50 +487,44 @@ static int magy_decode_frame(AVCodecContext *avctx, AVFrame *p,
         break;
     case 0x6c:
         avctx->pix_fmt = AV_PIX_FMT_YUV422P10;
-        s->hshift[1] =
-        s->hshift[2] = 1;
-        s->bps = 10;
         break;
     case 0x76:
         avctx->pix_fmt = AV_PIX_FMT_YUV444P10;
-        s->bps = 10;
         break;
     case 0x6d:
         avctx->pix_fmt = AV_PIX_FMT_GBRP10;
-        s->decorrelate = 1;
-        s->bps = 10;
         break;
     case 0x6e:
         avctx->pix_fmt = AV_PIX_FMT_GBRAP10;
-        s->decorrelate = 1;
-        s->bps = 10;
         break;
     case 0x6f:
         avctx->pix_fmt = AV_PIX_FMT_GBRP12;
-        s->decorrelate = 1;
-        s->bps = 12;
         break;
     case 0x70:
         avctx->pix_fmt = AV_PIX_FMT_GBRAP12;
-        s->decorrelate = 1;
-        s->bps = 12;
+        break;
+    case 0x71:
+        avctx->pix_fmt = AV_PIX_FMT_GBRP14;
+        break;
+    case 0x72:
+        avctx->pix_fmt = AV_PIX_FMT_GBRAP14;
         break;
     case 0x73:
         avctx->pix_fmt = AV_PIX_FMT_GRAY10;
-        s->bps = 10;
         break;
     case 0x7b:
         avctx->pix_fmt = AV_PIX_FMT_YUV420P10;
-        s->hshift[1] =
-        s->vshift[1] =
-        s->hshift[2] =
-        s->vshift[2] = 1;
-        s->bps = 10;
         break;
     default:
         avpriv_request_sample(avctx, "Format 0x%X", format);
         return AVERROR_PATCHWELCOME;
     }
+    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(avctx->pix_fmt);
+    av_assert1(desc);
+    int is_rgb = s->decorrelate = !!(desc->flags & AV_PIX_FMT_FLAG_RGB);
+    s->hshift[1] = s->hshift[2] = desc->log2_chroma_w;
+    s->vshift[1] = s->vshift[2] = desc->log2_chroma_h;
+    s->bps = desc->comp[0].depth;
     s->max = 1 << s->bps;
     s->magy_decode_slice = s->bps == 8 ? magy_decode_slice : magy_decode_slice10;
     s->planes = av_pix_fmt_count_planes(avctx->pix_fmt);
@@ -638,9 +621,6 @@ static int magy_decode_frame(AVCodecContext *avctx, AVFrame *p,
     if (ret < 0)
         return ret;
 
-    p->pict_type = AV_PICTURE_TYPE_I;
-    p->flags |= AV_FRAME_FLAG_KEY;
-
     if ((ret = ff_thread_get_buffer(avctx, p, 0)) < 0)
         return ret;
 
@@ -648,12 +628,7 @@ static int magy_decode_frame(AVCodecContext *avctx, AVFrame *p,
     s->p = p;
     avctx->execute2(avctx, s->magy_decode_slice, NULL, NULL, s->nb_slices);
 
-    if (avctx->pix_fmt == AV_PIX_FMT_GBRP   ||
-        avctx->pix_fmt == AV_PIX_FMT_GBRAP  ||
-        avctx->pix_fmt == AV_PIX_FMT_GBRP10 ||
-        avctx->pix_fmt == AV_PIX_FMT_GBRAP10||
-        avctx->pix_fmt == AV_PIX_FMT_GBRAP12||
-        avctx->pix_fmt == AV_PIX_FMT_GBRP12) {
+    if (is_rgb) {
         FFSWAP(uint8_t*, p->data[0], p->data[1]);
         FFSWAP(int, p->linesize[0], p->linesize[1]);
     } else {

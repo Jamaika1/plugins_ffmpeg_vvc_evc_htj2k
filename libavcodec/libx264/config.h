@@ -22,9 +22,9 @@
 #define HAVE_GPL 1
 #define HAVE_INTERLACED 1
 //#if (BIT_DEPTH==8) && (!defined(WINAPI_FAMILY) || (WINAPI_FAMILY!=WINAPI_FAMILY_PC_APP && WINAPI_FAMILY!=WINAPI_FAMILY_PHONE_APP))
-//#   define HAVE_OPENCL 1
+#define HAVE_OPENCL 1
 //#else
-#   define HAVE_OPENCL 0
+//#   define HAVE_OPENCL 0
 //#endif
 #define HAVE_MALLOC_H 0
 #define HAVE_ALTIVEC 0

@@ -3,18 +3,18 @@
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
-   
+
    - Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
-   
+
    - Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
-   
+
    - Neither the name of the copyright owner, nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
-   
+
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -387,7 +387,7 @@ const XEVE_TXB xeve_tbl_txb[MAX_TR_LOG2] =
 };
 
 static void xeve_trans(s16 * coef, int log2_cuw, int log2_cuh, int bit_depth)
-{    
+{
     int shift1 = xeve_get_transform_shift(log2_cuw, 0, bit_depth);
     int shift2 = xeve_get_transform_shift(log2_cuh, 1, bit_depth);
 
@@ -517,7 +517,7 @@ int xeve_rdoq_run_length_cc(u8 qp, double d_lambda, u8 is_intra, s16 *src_coef, 
     s64 d64_best_cost = 0;
     s64 d64_base_cost = 0;
     s64 d64_coded_cost = 0;
-    s64 d64_uncoded_cost = 0;       
+    s64 d64_uncoded_cost = 0;
     s64 d64_block_uncoded_cost = 0;
     s64 err;
 
@@ -551,7 +551,7 @@ int xeve_rdoq_run_length_cc(u8 qp, double d_lambda, u8 is_intra, s16 *src_coef, 
     xeve_mset(dst_tmp, 0, sizeof(s16)*max_num_coef);
 
     if (sum_all == 0)
-    {       
+    {
         return nnz;
     }
 
@@ -576,7 +576,7 @@ int xeve_rdoq_run_length_cc(u8 qp, double d_lambda, u8 is_intra, s16 *src_coef, 
         {
             d64_best_cost = d64_block_uncoded_cost + GET_I_COST(core->rdoq_est_cbf_cr[0], lambda);
             d64_base_cost = d64_block_uncoded_cost + GET_I_COST(core->rdoq_est_cbf_cr[1], lambda);
-        }     
+        }
     }
 
     run = 0;
@@ -590,7 +590,7 @@ int xeve_rdoq_run_length_cc(u8 qp, double d_lambda, u8 is_intra, s16 *src_coef, 
         int ctx_level = ctx_run;
 
         level = get_coded_level_rl(&d64_uncoded_cost, &d64_coded_cost, tmp_level_double[blk_pos], XEVE_ABS(tmp_coef[blk_pos]), run, ctx_run, ctx_level, q_bits, err_scale, lambda,  core);
-        tmp_dst_coef[blk_pos] = tmp_coef[blk_pos] < 0 ? -(s32)(level) : level;
+        tmp_dst_coef[blk_pos] = tmp_coef[blk_pos] < 0 ? (s16)(-(level)) : (s16)level;
         d64_base_cost -= d64_uncoded_cost;
         d64_base_cost += d64_coded_cost;
 

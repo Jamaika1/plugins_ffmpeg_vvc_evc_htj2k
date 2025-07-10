@@ -53,6 +53,7 @@
 #include "threadqueue.h"
 #include "videoframe.h"
 #include "reshape.h"
+#include "rate_control.h"
 
 #define JVET_S0266_VUI_length 1
 #define LUMA_ADAPTIVE_DEBLOCKING_FILTER_QP_OFFSET 1
@@ -154,9 +155,8 @@ static void encoder_state_write_bitstream_PTL(bitstream_t *stream,
   // end Profile Tier
 
   //uint8_t level = state->encoder_control->cfg.level;
-  // ToDo: level hardcoded to 5.2
-  WRITE_U(stream, 86, 8, "general_level_idc");
-
+  // ToDo: level hardcoded to 6.3
+  WRITE_U(stream, 105, 8, "general_level_idc");
 
   WRITE_U(stream, 0, 1, "ptl_frame_only_constraint_flag");
   WRITE_U(stream, 0, 1, "ptl_multilayer_enabled_flag");
@@ -529,48 +529,31 @@ static void encoder_state_write_bitstream_seq_parameter_set(bitstream_t* stream,
   WRITE_UE(stream, MIN_SIZE-2, "log2_min_luma_coding_block_size_minus2"); // Min size 2^3 = 8x8
   // if(!no_partition_constraints_override_constraint_flag)
     WRITE_U(stream, 0, 1, "partition_constraints_override_enabled_flag");
-  WRITE_UE(stream, 0, "sps_log2_diff_min_qt_min_cb_intra_slice_luma");
-  WRITE_UE(stream, 0, "sps_max_mtt_hierarchy_depth_intra_slice_luma");  
-
+  WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.min_qt_size[0]] - MIN_SIZE, "sps_log2_diff_min_qt_min_cb_intra_slice_luma");
+  WRITE_UE(stream, encoder->cfg.max_btt_depth[0], "sps_max_mtt_hierarchy_depth_intra_slice_luma");
+  if (encoder->cfg.max_btt_depth[0]) {
+    WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_bt_size[0]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[0]], "sps_log2_diff_max_bt_min_qt_intra_slice_luma");
+    WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_tt_size[0]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[0]], "sps_log2_diff_max_tt_min_qt_intra_slice_luma");
+  }
+  
   if (encoder->chroma_format != UVG_CSP_400)
   {
     WRITE_U(stream, encoder->cfg.dual_tree, 1, "qtbtt_dual_tree_intra_flag");
   }
   if (encoder->cfg.dual_tree) {
-    WRITE_UE(stream, 0, "sps_log2_diff_min_qt_min_cb_intra_slice_chroma");
-    WRITE_UE(stream, 0, "sps_max_mtt_hierarchy_depth_intra_slice_chroma");
-    if (0 /*sps_max_mtt_hierarchy_depth_intra_slice_chroma != 0*/) {
-      WRITE_UE(stream, 0, "sps_log2_diff_max_bt_min_qt_intra_slice_chroma");
-      WRITE_UE(stream, 0, "sps_log2_diff_max_tt_min_qt_intra_slice_chroma");
+    WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.min_qt_size[2]] - MIN_SIZE, "sps_log2_diff_min_qt_min_cb_intra_slice_chroma");
+    WRITE_UE(stream, encoder->cfg.max_btt_depth[2], "sps_max_mtt_hierarchy_depth_intra_slice_chroma");
+    if (encoder->cfg.max_btt_depth[2]) {
+      WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_bt_size[2]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[2]], "sps_log2_diff_max_bt_min_qt_intra_slice_chroma");
+      WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_tt_size[2]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[2]], "sps_log2_diff_max_tt_min_qt_intra_slice_chroma");
     }
   }
-  WRITE_UE(stream, 0, "sps_log2_diff_min_qt_min_cb_inter_slice");
-  WRITE_UE(stream, 0, "sps_max_mtt_hierarchy_depth_inter_slice");  
-
-
-#if 0 // mtt depth intra
-  if (max_mtt_depth_intra != 0) {
-    WRITE_UE(stream, 0, "sps_log2_diff_max_bt_min_qt_intra_tile_group_luma");
-    WRITE_UE(stream, 0, "sps_log2_diff_max_tt_min_qt_intra_tile_group_luma");
+  WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.min_qt_size[1]] - MIN_SIZE, "sps_log2_diff_min_qt_min_cb_inter_slice");
+  WRITE_UE(stream, encoder->cfg.max_btt_depth[1], "sps_max_mtt_hierarchy_depth_inter_slice");
+  if (encoder->cfg.max_btt_depth[1] != 0) {
+    WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_bt_size[1]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[1]], "sps_log2_diff_max_bt_min_qt_inter_tile_group");
+    WRITE_UE(stream, uvg_g_convert_to_log2[encoder->cfg.max_tt_size[1]] - uvg_g_convert_to_log2[encoder->cfg.min_qt_size[1]], "sps_log2_diff_max_tt_min_qt_inter_tile_group");
   }
-#endif
-#if 0 // mtt depth inter
-  if (max_mtt_depth_inter != 0) {
-    WRITE_UE(stream, 0, "sps_log2_diff_max_bt_min_qt_inter_tile_group");
-    WRITE_UE(stream, 0, "sps_log2_diff_max_tt_min_qt_inter_tile_group");
-  }
-#endif
-#if 0 // Dual Tree
-  if (encoder->cfg.dual_i_tree) {
-    WRITE_UE(stream, 0, "sps_log2_diff_min_qt_min_cb_intra_tile_group_chroma");
-    WRITE_UE(stream, 0, "sps_max_mtt_hierarchy_depth_intra_tile_group_chroma");
-
-    if (max_mtt_depth_intra != 0) {
-      WRITE_UE(stream, 0, "sps_log2_diff_max_bt_min_qt_intra_tile_group_chroma");
-      WRITE_UE(stream, 0, "sps_log2_diff_max_tt_min_qt_intra_tile_group_chroma");
-    }
-  }
-#endif
 
   if (LCU_WIDTH > 32)
     WRITE_U(stream, (TR_MAX_LOG2_SIZE - 5) ? 1 : 0, 1, "sps_max_luma_transform_size_64_flag");
@@ -629,7 +612,7 @@ static void encoder_state_write_bitstream_seq_parameter_set(bitstream_t* stream,
     WRITE_UE(stream, 0, "num_ref_pic_lists_in_sps[0]");
     WRITE_UE(stream, 0, "num_ref_pic_lists_in_sps[0]");
 
-    WRITE_U(stream, 0, 1, "sps_ref_wraparound_enabled_flag");
+    WRITE_U(stream, encoder->cfg.ref_wraparound, 1, "sps_ref_wraparound_enabled_flag");
 
 
 
@@ -666,7 +649,7 @@ static void encoder_state_write_bitstream_seq_parameter_set(bitstream_t* stream,
 
   WRITE_UE(stream, encoder->cfg.log2_parallel_merge_level-2, "log2_parallel_merge_level_minus2");
 
-  WRITE_U(stream, 0, 1, "sps_isp_enabled_flag");
+  WRITE_U(stream, encoder->cfg.isp, 1, "sps_isp_enabled_flag");
   
   if (state->encoder_control->cfg.mrl) {
     WRITE_U(stream, 1, 1, "sps_mrl_enabled_flag");
@@ -694,7 +677,11 @@ static void encoder_state_write_bitstream_seq_parameter_set(bitstream_t* stream,
     WRITE_UE(stream, 0, "sps_internal_bit_depth_minus_input_bit_depth");
   }
 
-  WRITE_U(stream, 0, 1, "sps_ibc_enabled_flag");
+  WRITE_U(stream, encoder->cfg.ibc > 0 ? 1 : 0, 1, "sps_ibc_enabled_flag");
+  
+  if (encoder->cfg.ibc) {
+    WRITE_UE(stream,6 - IBC_MRG_MAX_NUM_CANDS, "sps_six_minus_max_num_ibc_merge_cand");
+  }
 
 #if LUMA_ADAPTIVE_DEBLOCKING_FILTER_QP_OFFSET
   // if(!no_ladf_constraint_flag)
@@ -703,7 +690,7 @@ static void encoder_state_write_bitstream_seq_parameter_set(bitstream_t* stream,
 
   WRITE_U(stream, 0, 1, "scaling_list_enabled_flag");
 
-  WRITE_U(stream, 0, 1, "pic_dep_quant_enabled_flag");
+  WRITE_U(stream, encoder->cfg.dep_quant, 1, "pic_dep_quant_enabled_flag");
 
   WRITE_U(stream, encoder->cfg.signhide_enable, 1, "pic_sign_data_hiding_enabled_flag");
 
@@ -814,7 +801,12 @@ static void encoder_state_write_bitstream_pic_parameter_set(bitstream_t* stream,
 
   WRITE_U(stream, 0, 1, "pps_weighted_pred_flag");   // Use of Weighting Prediction (P_SLICE)
   WRITE_U(stream, 0, 1, "pps_weighted_bipred_flag");  // Use of Weighting Bi-Prediction (B_SLICE)
-  WRITE_U(stream, 0, 1, "pps_ref_wraparound_enabled_flag");
+  WRITE_U(stream, encoder->cfg.ref_wraparound, 1, "pps_ref_wraparound_enabled_flag");
+
+  if (encoder->cfg.ref_wraparound) {
+    // ToDo: Add wraparound offset
+    WRITE_UE(stream, 0, "pps_pic_width_minus_wraparound_offset");
+  }
 
   WRITE_SE(stream, ((int8_t)encoder->cfg.qp) - 26, "pps_init_qp_minus26");
   WRITE_U(stream, state->frame->max_qp_delta_depth >= 0 ? 1:0, 1, "pps_cu_qp_delta_enabled_flag");
@@ -1139,7 +1131,7 @@ static void uvg_encoder_state_write_bitstream_picture_header(
     WRITE_U(stream, 0, 1, "ph_mvd_l1_zero_flag");
   }
 
-  if (encoder->cfg.jccr) {
+  if (encoder->cfg.jccr && encoder->chroma_format != UVG_CSP_400) {
     WRITE_U(stream, state->frame->jccr_sign, 1, "ph_joint_cbcr_sign_flag");
   }
   // END PICTURE HEADER
@@ -1372,11 +1364,14 @@ void uvg_encoder_state_write_bitstream_slice_header(
   }
 
   // ToDo: depquant
+  if (encoder->cfg.dep_quant) {
+    WRITE_U(stream, 1, 1, "sh_dep_quant_used_flag");
+  }
 
-  if (state->encoder_control->cfg.signhide_enable) {
+  if (state->encoder_control->cfg.signhide_enable && !encoder->cfg.dep_quant) {
     WRITE_U(stream, 1, 1, "sh_sign_data_hiding_used_flag");
   }
-  if (state->encoder_control->cfg.trskip_enable && !state->encoder_control->cfg.signhide_enable /* && !cfg.dep_quant*/)
+  if (state->encoder_control->cfg.trskip_enable && !state->encoder_control->cfg.signhide_enable  && !encoder->cfg.dep_quant)
   {
     // TODO: find out what this is actually about and parametrize it
     WRITE_U(stream, 0, 1, "sh_ts_residual_coding_disabled_flag"); 
@@ -1585,6 +1580,9 @@ static void encoder_state_write_bitstream_main(encoder_state_t * const state)
     state->frame->total_bits_coded = state->previous_encoder_state->frame->total_bits_coded;
   }
   state->frame->total_bits_coded += newpos - curpos;
+  if(state->encoder_control->cfg.stats_file_prefix) {
+    uvg_update_after_picture(state);
+  }
 
     state->frame->cur_gop_bits_coded = state->previous_encoder_state->frame->cur_gop_bits_coded;
   state->frame->cur_gop_bits_coded += newpos - curpos;

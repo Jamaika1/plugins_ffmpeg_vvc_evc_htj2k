@@ -28,6 +28,8 @@
    POSSIBILITY OF SUCH DAMAGE.
 */
 
+// clang-format off
+
 #ifndef _XEVE_DEF_H_
 #define _XEVE_DEF_H_
 
@@ -1522,5 +1524,6 @@ enum TQC_RUN {
 #endif
 #include "xeve_type.h"
 
+// clang-format on
 
 #endif /* _XEVE_DEF_H_ */

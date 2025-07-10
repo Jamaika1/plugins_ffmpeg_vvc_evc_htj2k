@@ -25,8 +25,9 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/crc.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
-#include "libavcodec/lossless_audiodsp.h"
+#include "lossless_audiodsp.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/bswapdsp.h"
 #include "libavcodec/bytestream.h"
@@ -1220,7 +1221,7 @@ static av_always_inline int predictor_update_filter(APEPredictor64 *p,
     if (interim_mode < 1) {
         predictionA = (int32_t)predictionA;
         predictionB = (int32_t)predictionB;
-        p->lastA[filter] = decoded + ((int32_t)(predictionA + (predictionB >> 1)) >> 10);
+        p->lastA[filter] = (int32_t)(decoded + (unsigned)((int32_t)(predictionA + (predictionB >> 1)) >> 10));
     } else {
         p->lastA[filter] = decoded + ((int64_t)((uint64_t)predictionA + (predictionB >> 1)) >> 10);
     }
@@ -1284,9 +1285,9 @@ static void predictor_decode_stereo_3950(APEContext *ctx, int count)
             *decoded1++ = a1;
             if (num_passes > 1) {
                 int32_t left  = a1 - (unsigned)(a0 / 2);
-                int32_t right = left + a0;
+                int32_t right = left + (unsigned)a0;
 
-                if (FFMAX(FFABS(left), FFABS(right)) > (1<<23)) {
+                if (FFMIN(FFNABS(left), FFNABS(right)) < -(1<<23)) {
                     ctx->interim_mode = !interim_mode;
                     av_log(ctx->avctx, AV_LOG_VERBOSE, "Interim mode: %d\n", ctx->interim_mode);
                     break;
@@ -1737,8 +1738,8 @@ static void ape_flush(AVCodecContext *avctx)
 #define OFFSET(x) offsetof(APEContext, x)
 #define PAR (AV_OPT_FLAG_DECODING_PARAM | AV_OPT_FLAG_AUDIO_PARAM)
 static const AVOption options[] = {
-    { "max_samples", "maximum number of samples decoded per call",             OFFSET(blocks_per_loop), AV_OPT_TYPE_INT,   { .i64 = 4608 },    1,       INT_MAX, PAR, "max_samples" },
-    { "all",         "no maximum. decode all samples for each packet at once", 0,                       AV_OPT_TYPE_CONST, { .i64 = INT_MAX }, INT_MIN, INT_MAX, PAR, "max_samples" },
+    { "max_samples", "maximum number of samples decoded per call",             OFFSET(blocks_per_loop), AV_OPT_TYPE_INT,   { .i64 = 4608 },    1,       INT_MAX, PAR, .unit = "max_samples" },
+    { "all",         "no maximum. decode all samples for each packet at once", 0,                       AV_OPT_TYPE_CONST, { .i64 = INT_MAX }, INT_MIN, INT_MAX, PAR, .unit = "max_samples" },
     { NULL},
 };
 
@@ -1758,17 +1759,10 @@ const FFCodec ff_ape_decoder = {
     .init           = ape_decode_init,
     .close          = ape_decode_close,
     FF_CODEC_DECODE_CB(ape_decode_frame),
-    .p.capabilities =
-#if FF_API_SUBFRAMES
-                      AV_CODEC_CAP_SUBFRAMES |
-#endif
-                      AV_CODEC_CAP_DELAY |
+    .p.capabilities = AV_CODEC_CAP_DELAY |
                       AV_CODEC_CAP_DR1,
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
     .flush          = ape_flush,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
-                                                      AV_SAMPLE_FMT_S16P,
-                                                      AV_SAMPLE_FMT_S32P,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_U8P, AV_SAMPLE_FMT_S16P, AV_SAMPLE_FMT_S32P),
     .p.priv_class   = &ape_decoder_class,
 };

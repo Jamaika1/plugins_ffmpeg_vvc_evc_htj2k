@@ -19,8 +19,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "libavcodec/atsc_a53.h"
-#include "libavcodec/get_bits.h"
+#include "libavutil/mem.h"
+#include "atsc_a53.h"
+#include "get_bits.h"
 
 int ff_alloc_a53_sei(const AVFrame *frame, size_t prefix_len,
                      void **data, size_t *sei_size)

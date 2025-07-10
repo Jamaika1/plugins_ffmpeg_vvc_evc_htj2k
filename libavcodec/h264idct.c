@@ -25,7 +25,7 @@
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include "h264idct.h"
+#include "libavcodec/h264idct.h"
 
 #define BIT_DEPTH 8
 #include "extra/h264idct_template.c"

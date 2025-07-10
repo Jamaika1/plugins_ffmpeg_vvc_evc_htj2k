@@ -23,19 +23,19 @@
 #include "libavutil/attributes.h"
 #include "libavutil/emms.h"
 #include "libavutil/imgutils.h"
-#include "libavutil/internal.h"
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
 #define BITSTREAM_READER_LE
-#include "libavcodec/avcodec.h"
-#include "libavcodec/binkdata.h"
-#include "libavcodec/binkdsp.h"
-#include "libavcodec/blockdsp.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/hpeldsp.h"
+#include "avcodec.h"
+#include "binkdata.h"
+#include "binkdsp.h"
+#include "blockdsp.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "get_bits.h"
+#include "hpeldsp.h"
 
 #define BINK_FLAG_ALPHA 0x00100000
 #define BINK_FLAG_GRAY  0x00020000

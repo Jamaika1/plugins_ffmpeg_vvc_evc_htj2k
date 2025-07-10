@@ -1,12 +1,11 @@
+// SPDX-License-Identifier: 0BSD
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 /// \file       tuklib_physmem.c
 /// \brief      Get the amount of physical memory
 //
 //  Author:     Lasse Collin
-//
-//  This file has been put into the public domain.
-//  You can do whatever you want with this file.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +16,7 @@
 // gives wrong results (from our point of view).
 #if defined(_WIN32) || defined(__CYGWIN__)
 #	ifndef _WIN32_WINNT
-#		define _WIN32_WINNT 0x0500
+#		define _WIN32_WINNT 0x0A00
 #	endif
 #	include <windows.h>
 
@@ -92,18 +91,11 @@ tuklib_physmem(void)
 		// supports reporting values greater than 4 GiB. To keep the
 		// code working also on older Windows versions, use
 		// GlobalMemoryStatusEx() conditionally.
-		HMODULE kernel32 = GetModuleHandle(TEXT("kernel32.dll"));
+		HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
 		if (kernel32 != NULL) {
 			typedef BOOL (WINAPI *gmse_type)(LPMEMORYSTATUSEX);
-#ifdef CAN_DISABLE_WCAST_FUNCTION_TYPE
-#	pragma GCC diagnostic push
-#	pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
 			gmse_type gmse = (gmse_type)GetProcAddress(
 					kernel32, "GlobalMemoryStatusEx");
-#ifdef CAN_DISABLE_WCAST_FUNCTION_TYPE
-#	pragma GCC diagnostic pop
-#endif
 			if (gmse != NULL) {
 				MEMORYSTATUSEX meminfo;
 				meminfo.dwLength = sizeof(meminfo);
@@ -156,7 +148,7 @@ tuklib_physmem(void)
 			ret += entries[i].end - entries[i].start + 1;
 
 #elif defined(TUKLIB_PHYSMEM_AIX)
-	ret = _system_configuration.physmem;
+	ret = (uint64_t)_system_configuration.physmem;
 
 #elif defined(TUKLIB_PHYSMEM_SYSCONF)
 	const long pagesize = sysconf(_SC_PAGESIZE);

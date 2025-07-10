@@ -18,7 +18,8 @@
 
 #include "libavutil/config.h"
 
-#include "libavcodec/avcodec.h"
+#include "libavcodec/codec.h"
+#include "libavcodec/defs.h"
 #include "libavcodec/profiles.h"
 
 #if !CONFIG_SMALL
@@ -32,6 +33,7 @@ const AVProfile ff_aac_profiles[] = {
     { AV_PROFILE_AAC_MAIN,  "Main" },
     { AV_PROFILE_AAC_SSR,   "SSR"  },
     { AV_PROFILE_AAC_LTP,   "LTP"  },
+    { AV_PROFILE_AAC_USAC,  "xHE-AAC" },
     { AV_PROFILE_UNKNOWN },
 };
 
@@ -87,6 +89,7 @@ const AVProfile ff_h264_profiles[] = {
 };
 
 const AVProfile ff_vvc_profiles[] = {
+    { AV_PROFILE_VVC_MAIN,                      "Main" },
     { AV_PROFILE_VVC_MAIN_10,                   "Main 10" },
     { AV_PROFILE_VVC_MAIN_10_444,               "Main 10 4:4:4" },
     { AV_PROFILE_UNKNOWN },
@@ -97,6 +100,7 @@ const AVProfile ff_hevc_profiles[] = {
     { AV_PROFILE_HEVC_MAIN_10,              "Main 10"             },
     { AV_PROFILE_HEVC_MAIN_STILL_PICTURE,   "Main Still Picture"  },
     { AV_PROFILE_HEVC_REXT,                 "Rext"                },
+    { AV_PROFILE_HEVC_MULTIVIEW_MAIN,       "Multiview Main"      },
     { AV_PROFILE_HEVC_SCC,                  "Scc"                 },
     { AV_PROFILE_UNKNOWN },
 };
@@ -197,6 +201,17 @@ const AVProfile ff_arib_caption_profiles[] = {
 const AVProfile ff_evc_profiles[] = {
     { AV_PROFILE_EVC_BASELINE,             "Baseline"              },
     { AV_PROFILE_EVC_MAIN,                 "Main"                  },
+    { AV_PROFILE_UNKNOWN },
+};
+
+const AVProfile ff_apv_profiles[] = {
+    { AV_PROFILE_APV_422_10,             "422-10"          },
+    { AV_PROFILE_APV_422_12,             "422-12"          },
+    { AV_PROFILE_APV_444_10,             "444-10"          },
+    { AV_PROFILE_APV_444_12,             "444-12"          },
+    { AV_PROFILE_APV_4444_10,            "4444-10"         },
+    { AV_PROFILE_APV_4444_12,            "4444-12"         },
+    { AV_PROFILE_APV_400_10,             "400-10"          },
     { AV_PROFILE_UNKNOWN },
 };
 

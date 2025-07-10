@@ -36,8 +36,8 @@
  *       respectively of each byte are ignored.
  */
 
-#include "mathops.h"
-#include "g722.h"
+#include "libavcodec/mathops.h"
+#include "libavcodec/g722.h"
 
 static const int8_t sign_lookup[2] = { -1, 1 };
 

@@ -32,12 +32,12 @@
 #include "libavutil/log.h"
 #include "libavutil/macros.h"
 #include "libavutil/mem.h"
-#include "bytestream.h"
-#include "get_bits.h"
-#include "golomb.h"
-#include "h264_ps.h"
-#include "h264_sei.h"
-#include "sei.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/golomb.h"
+#include "libavcodec/h264_ps.h"
+#include "libavcodec/h264_sei.h"
+#include "libavcodec/sei.h"
 
 #define AVERROR_PS_NOT_FOUND      FFERRTAG(0xF8,'?','P','S')
 
@@ -55,7 +55,6 @@ void ff_h264_sei_uninit(H264SEIContext *h)
     h->picture_timing.present      = 0;
     h->buffering_period.present    = 0;
     h->common.frame_packing.present       = 0;
-    h->common.film_grain_characteristics.present = 0;
     h->common.display_orientation.present = 0;
     h->common.afd.present                 =  0;
 
@@ -179,7 +178,7 @@ static int decode_buffering_period(H264SEIBufferingPeriod *h, GetBitContext *gb,
                "non-existing SPS %d referenced in buffering period\n", sps_id);
         return sps_id > 31 ? AVERROR_INVALIDDATA : AVERROR_PS_NOT_FOUND;
     }
-    sps = (const SPS*)ps->sps_list[sps_id]->data;
+    sps = ps->sps_list[sps_id];
 
     // NOTE: This is really so duplicated in the standard... See H.264, D.1.1
     if (sps->nal_hrd_parameters_present_flag) {

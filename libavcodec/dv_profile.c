@@ -26,9 +26,9 @@
 #include "libavutil/macros.h"
 #include "libavutil/pixdesc.h"
 
-#include "avcodec.h"
-#include "dv_profile.h"
-#include "dv_profile_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/dv_profile.h"
+#include "libavcodec/dv_profile_internal.h"
 
 #if CONFIG_DVPROFILE
 

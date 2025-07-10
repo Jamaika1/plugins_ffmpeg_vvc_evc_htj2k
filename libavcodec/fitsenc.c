@@ -30,10 +30,10 @@
  */
 
 #include "libavutil/intreadwrite.h"
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "encode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
 
 static int fits_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
                              const AVFrame *p, int *got_packet)
@@ -104,6 +104,7 @@ static int fits_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
     bytes_left = padded_data_size - data_size;
     memset(bytestream, 0, bytes_left);
 
+    pkt->flags |= AV_PKT_FLAG_KEY;
     *got_packet = 1;
 
     return 0;
@@ -116,11 +117,6 @@ const FFCodec ff_fits_encoder = {
     .p.id           = AV_CODEC_ID_FITS,
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
     FF_CODEC_ENCODE_CB(fits_encode_frame),
-    .p.pix_fmts     = (const enum AVPixelFormat[]) { AV_PIX_FMT_GBRAP16BE,
-                                                     AV_PIX_FMT_GBRP16BE,
-                                                     AV_PIX_FMT_GBRP,
-                                                     AV_PIX_FMT_GBRAP,
-                                                     AV_PIX_FMT_GRAY16BE,
-                                                     AV_PIX_FMT_GRAY8,
-                                                     AV_PIX_FMT_NONE },
+    CODEC_PIXFMTS(AV_PIX_FMT_GBRAP16BE, AV_PIX_FMT_GBRP16BE, AV_PIX_FMT_GBRP,
+                  AV_PIX_FMT_GBRAP, AV_PIX_FMT_GRAY16BE, AV_PIX_FMT_GRAY8),
 };

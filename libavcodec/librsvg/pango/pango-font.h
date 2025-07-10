@@ -177,11 +177,30 @@ typedef enum {
  * @PANGO_FONT_MASK_WEIGHT: the font weight is specified.
  * @PANGO_FONT_MASK_STRETCH: the font stretch is specified.
  * @PANGO_FONT_MASK_SIZE: the font size is specified.
- * @PANGO_FONT_MASK_GRAVITY: the font gravity is specified (Since: 1.16.)
- * @PANGO_FONT_MASK_VARIATIONS: OpenType font variations are specified (Since: 1.42)
  *
  * The bits in a `PangoFontMask` correspond to the set fields in a
  * `PangoFontDescription`.
+ */
+/**
+ * PANGO_FONT_MASK_GRAVITY:
+ *
+ * The font gravity is specified.
+ *
+ * Since: 1.16
+ */
+/**
+ * PANGO_FONT_MASK_VARIATIONS:
+ *
+ * OpenType font variations are specified.
+ *
+ * Since: 1.42
+ */
+/**
+ * PANGO_FONT_MASK_FEATURES:
+ *
+ * OpenType font features are specified.
+ *
+ * Since: 1.56
  */
 typedef enum {
   PANGO_FONT_MASK_FAMILY  = 1 << 0,
@@ -192,6 +211,7 @@ typedef enum {
   PANGO_FONT_MASK_SIZE    = 1 << 5,
   PANGO_FONT_MASK_GRAVITY = 1 << 6,
   PANGO_FONT_MASK_VARIATIONS = 1 << 7,
+  PANGO_FONT_MASK_FEATURES = 1 << 8,
 } PangoFontMask;
 
 /* CSS scale factors (1.2 factor between each size) */
@@ -259,7 +279,7 @@ gboolean              pango_font_description_equal       (const PangoFontDescrip
                                                           const PangoFontDescription  *desc2) G_GNUC_PURE;
 PANGO_AVAILABLE_IN_ALL
 void                  pango_font_description_free        (PangoFontDescription        *desc);
-PANGO_AVAILABLE_IN_ALL
+PANGO_DEPRECATED_IN_1_56
 void                  pango_font_descriptions_free       (PangoFontDescription       **descs,
                                                           int                          n_descs);
 
@@ -315,6 +335,15 @@ void                 pango_font_description_set_variations    (PangoFontDescript
                                                                const char                 *variations);
 PANGO_AVAILABLE_IN_1_42
 const char          *pango_font_description_get_variations    (const PangoFontDescription *desc) G_GNUC_PURE;
+
+PANGO_AVAILABLE_IN_1_56
+void                 pango_font_description_set_features_static (PangoFontDescription       *desc,
+                                                                 const char                 *features);
+PANGO_AVAILABLE_IN_1_56
+void                 pango_font_description_set_features        (PangoFontDescription       *desc,
+                                                                 const char                 *features);
+PANGO_AVAILABLE_IN_1_42
+const char          *pango_font_description_get_features        (const PangoFontDescription *desc) G_GNUC_PURE;
 
 PANGO_AVAILABLE_IN_ALL
 PangoFontMask pango_font_description_get_set_fields (const PangoFontDescription *desc) G_GNUC_PURE;

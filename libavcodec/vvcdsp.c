@@ -26,26 +26,6 @@
 
 #define VVC_SIGN(v) (v < 0 ? -1 : !!v)
 
-static void av_always_inline pad_int16(int16_t *_dst, const ptrdiff_t dst_stride, const int width, const int height)
-{
-    const int padded_width = width + 2;
-    int16_t *dst;
-    for (int y = 0; y < height; y++) {
-        dst = _dst + y * dst_stride;
-        for (int x = 0; x < width; x++) {
-            dst[-1] = dst[0];
-            dst[width] = dst[width - 1];
-        }
-    }
-
-    _dst--;
-    //top
-    memcpy(_dst - dst_stride, _dst, padded_width * sizeof(int16_t));
-    //bottom
-    _dst += dst_stride * height;
-    memcpy(_dst, _dst - dst_stride, padded_width * sizeof(int16_t));
-}
-
 static int vvc_sad(const int16_t *src0, const int16_t *src1, int dx, int dy,
     const int block_w, const int block_h)
 {
@@ -64,34 +44,32 @@ static int vvc_sad(const int16_t *src0, const int16_t *src1, int dx, int dy,
     return sad;
 }
 
-#define itx_fn(type, s)                                                                         \
-static void itx_##type##_##s(int *out, ptrdiff_t out_step, const int *in, ptrdiff_t in_step)    \
-{                                                                                               \
-  ff_vvc_inv_##type##_##s(out, out_step, in, in_step);                                          \
+static av_always_inline void unpack_mip_info(int *intra_mip_transposed_flag,
+    int *intra_mip_mode, const uint8_t mip_info)
+{
+    if (intra_mip_transposed_flag)
+        *intra_mip_transposed_flag = (mip_info >> 1) & 0x1;
+    if (intra_mip_mode)
+        *intra_mip_mode = (mip_info >> 2) & 0xf;
 }
-
-#define itx_fn_common(type) \
-    itx_fn(type, 4);        \
-    itx_fn(type, 8);        \
-    itx_fn(type, 16);       \
-    itx_fn(type, 32);       \
-
-itx_fn_common(dct2);
-itx_fn_common(dst7);
-itx_fn_common(dct8);
-itx_fn(dct2, 2);
-itx_fn(dct2, 64);
 
 typedef struct IntraEdgeParams {
     uint8_t* top;
     uint8_t* left;
     int filter_flag;
 
-    uint16_t left_array[3 * MAX_TB_SIZE + 3];
-    uint16_t filtered_left_array[3 * MAX_TB_SIZE + 3];
-    uint16_t top_array[3 * MAX_TB_SIZE + 3];
-    uint16_t filtered_top_array[3 * MAX_TB_SIZE + 3];
+    uint16_t left_array[6 * MAX_TB_SIZE + 5];
+    uint16_t filtered_left_array[6 * MAX_TB_SIZE + 5];
+    uint16_t top_array[6 * MAX_TB_SIZE + 5];
+    uint16_t filtered_top_array[6 * MAX_TB_SIZE + 5];
 } IntraEdgeParams;
+
+#define PROF_BORDER_EXT         1
+#define PROF_BLOCK_SIZE         (AFFINE_MIN_BLOCK_SIZE + PROF_BORDER_EXT * 2)
+
+#define BDOF_BORDER_EXT         1
+#define BDOF_BLOCK_SIZE         16
+#define BDOF_MIN_BLOCK_SIZE     4
 
 #define BIT_DEPTH 8
 #include "extra/vvcdsp_template.c"
@@ -130,9 +108,12 @@ void ff_vvc_dsp_init(VVCDSPContext *vvcdsp, int bit_depth)
         VVC_DSP(8);
         break;
     }
-#if ARCH_X86
-    ff_vvc_dsp_init_x86(vvcdsp, bit_depth);
-#elif ARCH_AARCH64
+
+#if ARCH_AARCH64
     ff_vvc_dsp_init_aarch64(vvcdsp, bit_depth);
+#elif ARCH_RISCV
+    ff_vvc_dsp_init_riscv(vvcdsp, bit_depth);
+#elif ARCH_X86
+    ff_vvc_dsp_init_x86(vvcdsp, bit_depth);
 #endif
 }

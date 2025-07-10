@@ -282,8 +282,8 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
 
   // Init base contexts according to block type
   cabac_ctx_t *base_coeff_group_ctx = &(cabac->ctx.sig_coeff_group_model[type]);
-  cabac_ctx_t *baseCtx           = (type == 0) ? &(cabac->ctx.cu_sig_model_luma[0]) :
-                                 &(cabac->ctx.cu_sig_model_chroma[0]);
+  cabac_ctx_t *baseCtx           = ((type == 0) ? (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_luma[0]) :
+                                 (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_chroma[0]));
 
   // Scan all coeff groups to find out which of them have coeffs.
   // Populate sig_coeffgroup_nzs with that info.
@@ -295,7 +295,7 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
   // be useful information)
   int32_t scan_cg_last = -1;
 
-  for (int32_t i = 0; i < num_blocks; i++) {
+  for (int32_t i = 0; i < (int32_t)num_blocks; i++) {
     const uint32_t cg_id = scan_cg[i];
     const uint32_t n_xbits = log2_block_size - 2; // How many lowest bits of scan_cg represent X coord
     const uint32_t cg_x = cg_id & ((1 << n_xbits) - 1);
@@ -362,7 +362,7 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
 
   // transform skip flag
   if(width == 4 && encoder->cfg.trskip_enable) {
-    cabac->cur_ctx = (type == 0) ? &(cabac->ctx.cu_sig_model_luma) : &(cabac->ctx.cu_sig_model_chroma);
+    cabac->cur_ctx = ((type == 0) ? (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_luma) : (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_chroma));
     CABAC_FBITS_UPDATE(cabac, cabac->cur_ctx, tr_skip, bits, "transform_skip_flag");
   }
 
@@ -407,13 +407,13 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
       sig_coeffgroup_nzs[cg_blk_pos] = 1;
     } else {
       uint32_t sig_coeff_group   = (sig_coeffgroup_nzs[cg_blk_pos] != 0);
-      uint32_t ctx_sig  = uvg_context_get_sig_coeff_group(sig_coeffgroup_nzs, cg_pos_x,
+      uint32_t ctx_sig  = uvg_context_get_sig_coeff_group_ts(sig_coeffgroup_nzs, cg_pos_x,
                                                       cg_pos_y, width);
       CABAC_FBITS_UPDATE(cabac, &base_coeff_group_ctx[ctx_sig], sig_coeff_group, bits, "coded_sub_block_flag");
     }
 
     if (sig_coeffgroup_nzs[cg_blk_pos]) {
-      int32_t pattern_sig_ctx = uvg_context_calc_pattern_sig_ctx(sig_coeffgroup_nzs,
+      int32_t pattern_sig_ctx = (int32_t)uvg_context_get_sig_coeff_group_ts(sig_coeffgroup_nzs,
                                                              cg_pos_x, cg_pos_y, width);
 
       // A mask with the first 16-bit word unmasked (bits set ie. 0xffff)
@@ -496,8 +496,8 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
         ctx_set++;
       }
 
-      base_ctx_mod     = (type == 0) ? &(cabac->ctx.cu_sig_model_luma[4 * ctx_set]) :
-                         &(cabac->ctx.cu_sig_model_chroma[4 * ctx_set]);
+      base_ctx_mod     = ((type == 0) ? (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_luma[4 * ctx_set]) :
+                         (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_chroma[4 * ctx_set]));
       num_c1_flag      = MIN(num_non_zero, C1FLAG_NUMBER);
       first_c2_flag_idx = -1;
 
@@ -526,8 +526,8 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
       }
 
       if (c1 == 0) {
-        base_ctx_mod = (type == 0) ? &(cabac->ctx.cu_sig_model_luma[ctx_set]) :
-                       &(cabac->ctx.cu_sig_model_chroma[ctx_set]);
+        base_ctx_mod = ((type == 0) ? (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_luma[ctx_set]) :
+                       (cabac_ctx_t*)&(cabac->ctx.cu_sig_model_chroma[ctx_set]));
 
         if (first_c2_flag_idx != -1) {
           uint32_t shift = (first_c2_flag_idx << 1) + 1;
@@ -538,11 +538,11 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
       int32_t shiftamt = (be_valid && sign_hidden) ? 1 : 0;
       int32_t nnz = num_non_zero - shiftamt;
       coeff_signs >>= shiftamt;
-      if (!cabac->only_count) {
+      /*if (!cabac->only_count) {
         if (encoder->cfg.crypto_features & UVG_CRYPTO_TRANSF_COEFF_SIGNS) {
           coeff_signs ^= uvg_crypto_get_key(state->crypto_hdl, nnz);
         }
-      }
+      }*/
       CABAC_BINS_EP(cabac, coeff_signs, nnz, "coeff_sign_flag");
       if (cabac->only_count) bits += nnz;
 
@@ -582,11 +582,11 @@ void uvg_encode_coeff_nxn_avx2(encoder_state_t * const state,
 
           if (!(dont_encode_curr & 2)) {
             uint16_t level_diff = curr_abs_coeff - base_level;
-            if (!cabac->only_count && (encoder->cfg.crypto_features & UVG_CRYPTO_TRANSF_COEFFS)) {
-              uvg_cabac_write_coeff_remain_encry(state, cabac, level_diff, go_rice_param, base_level);
-            } else {
-              bits += uvg_cabac_write_coeff_remain(cabac, level_diff, go_rice_param);
-            }
+            //if (!cabac->only_count && (encoder->cfg.crypto_features & UVG_CRYPTO_TRANSF_COEFFS)) {
+              //uvg_cabac_write_coeff_remain_encry(state, cabac, level_diff, go_rice_param, base_level);
+            //} else {
+              bits += uvg_cabac_write_coeff_remain(cabac, level_diff, go_rice_param, 5);
+            //}
 
             if (curr_abs_coeff > 3 * (1 << go_rice_param)) {
               go_rice_param = MIN(go_rice_param + 1, 4);

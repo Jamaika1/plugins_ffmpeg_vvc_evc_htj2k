@@ -32,7 +32,7 @@
 
 #include "strategies-intra.h"
 #if defined(__AVX2__)
-#include "avx2/intra-avx2.h"
+//#include "avx2/intra-avx2.h"
 #endif
 #include "intra-generic.h"
 #include "strategyselector.h"
@@ -43,6 +43,7 @@ angular_pred_func *uvg_angular_pred;
 intra_pred_planar_func *uvg_intra_pred_planar;
 intra_pred_filtered_dc_func *uvg_intra_pred_filtered_dc;
 pdpc_planar_dc_func *uvg_pdpc_planar_dc;
+mip_pred_func *uvg_mip_predict;
 
 int uvg_strategy_register_intra(void* opaque, uint8_t bitdepth) {
   bool success = true;
@@ -50,9 +51,9 @@ int uvg_strategy_register_intra(void* opaque, uint8_t bitdepth) {
   success &= uvg_strategy_register_intra_generic(opaque, bitdepth);
 
 #if defined(__AVX2__)
-  if (uvg_g_hardware_flags.intel_flags.avx2) {
-    success &= uvg_strategy_register_intra_avx2(opaque, bitdepth);
-  }
+  //if (uvg_g_hardware_flags.intel_flags.avx2) {
+    //success &= uvg_strategy_register_intra_avx2(opaque, bitdepth);
+  //}
 #endif
 
   return success;

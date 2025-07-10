@@ -11,7 +11,6 @@
  ********************************************************************
 
   function:
-  last mod: $Id: theora.h,v 1.8 2004/03/15 22:17:32 derf Exp $
 
  ********************************************************************/
 
@@ -47,7 +46,7 @@
  * During initial development, prior to the 1.0 release,
  * \c libtheora exported a different \ref oldfuncs which
  * combined both encode and decode functions.
- * In general, legacy API symbols can be indentified
+ * In general, legacy API symbols can be identified
  * by their \c theora_ or \c OC_ namespace prefixes.
  * The current API uses \c th_ or \c TH_ instead.
  *
@@ -62,8 +61,8 @@
  * The shared <tt>libtheoradec</tt> and <tt>libtheoraenc</tt> C API.
  * You don't need to include this directly.*/
 
-#if !defined(_O_THEORA_CODEC_H_)
-# define _O_THEORA_CODEC_H_ (1)
+#if !defined(OGG_THEORA_CODEC_HEADER)
+# define OGG_THEORA_CODEC_HEADER (1)
 # include "../libogg/ogg.h"
 
 #if defined(__cplusplus)
@@ -603,4 +602,4 @@ extern void th_comment_clear(th_comment *_tc);
 }
 #endif
 
-#endif
+#endif /* OGG_THEORA_CODEC_HEADER */

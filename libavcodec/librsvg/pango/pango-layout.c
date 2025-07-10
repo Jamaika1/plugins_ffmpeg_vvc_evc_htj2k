@@ -359,7 +359,7 @@ pango_layout_get_context (PangoLayout *layout)
  *   wrapping or ellipsization should be performed.
  *
  * Sets the width to which the lines of the `PangoLayout` should wrap or
- * ellipsized.
+ * get ellipsized.
  *
  * The default value is -1: no width set.
  */
@@ -523,7 +523,6 @@ pango_layout_get_wrap (PangoLayout *layout)
  * Queries whether the layout had to wrap any paragraphs.
  *
  * This returns %TRUE if a positive width is set on @layout,
- * ellipsization mode of @layout is set to %PANGO_ELLIPSIZE_NONE,
  * and there are paragraphs exceeding the layout width that have
  * to be wrapped.
  *
@@ -3326,6 +3325,7 @@ ensure_tab_width (PangoLayout *layout)
       PangoFontDescription *font_desc = pango_font_description_copy_static (pango_context_get_font_description (layout->context));
       PangoLanguage *language = NULL;
       PangoShapeFlags shape_flags = PANGO_SHAPE_NONE;
+      const char *eight_spaces = "        ";
 
       if (pango_context_get_round_glyph_positions (layout->context))
         shape_flags |= PANGO_SHAPE_ROUND_POSITIONS;
@@ -3362,7 +3362,7 @@ ensure_tab_width (PangoLayout *layout)
       _pango_attr_list_destroy (&tmp_attrs);
 
       item = items->data;
-      pango_shape_with_flags ("        ", 8, "        ", 8, &item->analysis, glyphs, shape_flags);
+      pango_shape_with_flags (eight_spaces, 8, eight_spaces, 8, &item->analysis, glyphs, shape_flags);
 
       pango_item_free (item);
       g_list_free (items);
@@ -3466,7 +3466,13 @@ static void
 ensure_decimal (PangoLayout *layout)
 {
   if (layout->decimal == 0)
-    layout->decimal = g_utf8_get_char (localeconv ()->decimal_point);
+    {
+#ifndef __BIONIC__
+      layout->decimal = g_utf8_get_char (localeconv ()->decimal_point);
+#else
+      layout->decimal = g_utf8_get_char (".");
+#endif
+    }
 }
 
 struct _LastTabState {
@@ -3548,6 +3554,8 @@ can_break_at (PangoLayout   *layout,
 {
   if (offset == layout->n_chars)
     return TRUE;
+  else if (wrap == PANGO_WRAP_NONE)
+    return FALSE;
   else if (wrap == PANGO_WRAP_CHAR)
     return layout->log_attrs[offset].is_char_break;
   else
@@ -4415,6 +4423,9 @@ should_ellipsize_current_line (PangoLayout    *layout,
 {
   if (G_LIKELY (layout->ellipsize == PANGO_ELLIPSIZE_NONE || layout->width < 0))
     return FALSE;
+
+  if (layout->wrap == PANGO_WRAP_NONE)
+    return TRUE;
 
   if (layout->height >= 0)
     {
@@ -5631,7 +5642,7 @@ pango_layout_run_get_extents_and_height (PangoLayoutRun *run,
   if (!run_logical && line_logical)
     run_logical = &logical;
 
-  if (properties.shape_set)
+  if (properties.shape_set && !(run->item->analysis.flags & PANGO_ANALYSIS_FLAG_IS_ELLIPSIS))
     _pango_shape_get_extents (run->item->num_chars,
                               properties.shape_ink_rect,
                               properties.shape_logical_rect,

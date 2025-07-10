@@ -20,10 +20,11 @@
  */
 
 #define BITSTREAM_READER_LE
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
+#include "libavutil/mem.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "get_bits.h"
 
 typedef union MacroBlock {
     uint16_t pixels[4];
@@ -234,7 +235,7 @@ static int escape124_decode_frame(AVCodecContext *avctx, AVFrame *frame,
         if ((ret = av_frame_ref(frame, s->frame)) < 0)
             return ret;
 
-        return frame_size;
+        return 0;
     }
 
     for (i = 0; i < 3; i++) {
@@ -367,7 +368,7 @@ static int escape124_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
     *got_frame = 1;
 
-    return frame_size;
+    return 0;
 }
 
 

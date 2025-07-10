@@ -24,14 +24,14 @@
  * Silicon Graphics Motion Video Compressor 1 & 2 decoder
  */
 
-#include "config_components.h"
+#include "libavcodec/config_components.h"
 
 #include "libavutil/intreadwrite.h"
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
 
 typedef struct MvcContext {
     int vflip;
@@ -245,9 +245,6 @@ static int mvc_decode_frame(AVCodecContext *avctx, AVFrame *frame,
                           s->vflip);
     if (ret < 0)
         return ret;
-
-    frame->pict_type = AV_PICTURE_TYPE_I;
-    frame->flags |= AV_FRAME_FLAG_KEY;
 
     *got_frame = 1;
 

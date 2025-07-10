@@ -21,13 +21,13 @@
 /**
  * @file
  * WebVTT subtitle decoder
- * @see http://dev.w3.org/html5/webvtt/
+ * @see https://www.w3.org/TR/webvtt1/
  * @todo need to support extended markups and cue settings
  */
 
-#include "avcodec.h"
-#include "ass.h"
-#include "codec_internal.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/ass.h"
+#include "libavcodec/codec_internal.h"
 #include "libavutil/bprint.h"
 
 static const struct {
@@ -37,9 +37,9 @@ static const struct {
     {"<i>", "{\\i1}"}, {"</i>", "{\\i0}"},
     {"<b>", "{\\b1}"}, {"</b>", "{\\b0}"},
     {"<u>", "{\\u1}"}, {"</u>", "{\\u0}"},
-    {"{", "\\{"}, {"}", "\\}"}, // escape to avoid ASS markup conflicts
+    {"{", "\\{{}"}, {"\\", "\\\xe2\x81\xa0"}, // escape to avoid ASS markup conflicts
     {"&gt;", ">"}, {"&lt;", "<"},
-    {"&lrm;", ""}, {"&rlm;", ""}, // FIXME: properly honor bidi marks
+    {"&lrm;", "\xe2\x80\x8e"}, {"&rlm;", "\xe2\x80\x8f"},
     {"&amp;", "&"}, {"&nbsp;", "\\h"},
 };
 

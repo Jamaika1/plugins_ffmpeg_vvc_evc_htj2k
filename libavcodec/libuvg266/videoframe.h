@@ -41,6 +41,7 @@
 #include "cu.h"
 #include "global.h" // IWYU pragma: keep
 #include "uvg266.h"
+#include "hashmap.h"
 
 
 /**
@@ -77,18 +78,28 @@ typedef struct videoframe
   struct param_set_map* alf_param_set_map;
 
   int32_t poc;           //!< \brief Picture order count
-  cu_info_t* hmvp_lut; //!< \brief Look-up table for HMVP, one for each LCU row
+    
+  uvg_pixel **ibc_buffer_y; //!< \brief Intra Block Copy buffer for each LCU row 
+  uvg_pixel **ibc_buffer_u; //!< \brief Intra Block Copy buffer for each LCU row 
+  uvg_pixel **ibc_buffer_v; //!< \brief Intra Block Copy buffer for each LCU row
+  uvg_hashmap_t **ibc_hashmap_row; //!< \brief Hashmap for IBC hash search for each LCU row
+  uint32_t *ibc_hashmap_pos_to_hash; //!< \brief Hashmap reverse search for position to hash
+  uint32_t ibc_hashmap_pos_to_hash_stride; //!< \brief Hashmap position to hash stride
+  cu_info_t* hmvp_lut_ibc; //!< \brief Look-up table for HMVP in IBC, one for each LCU row
+  uint8_t* hmvp_size_ibc; //!< \brief HMVP IBC LUT size
 
+  cu_info_t* hmvp_lut; //!< \brief Look-up table for HMVP, one for each LCU row
   uint8_t* hmvp_size; //!< \brief HMVP LUT size
   bool source_lmcs_mapped; //!< \brief Indicate if source_lmcs is available and mapped to LMCS
   bool lmcs_top_level; //!< \brief Indicate that in this level the LMCS images are allocated
   bool rec_lmcs_mapped; //!< \brief Indicate if rec_lmcs is available and mapped to LMCS
+
 } videoframe_t;
 
 
 videoframe_t *uvg_videoframe_alloc(int32_t width, int32_t height, enum uvg_chroma_format chroma_format, enum uvg_alf alf_type, bool cclm);
 int uvg_videoframe_free(videoframe_t * const frame);
 
-void uvg_videoframe_set_poc(videoframe_t * frame, int32_t poc);
+void uvg_videoframe_set_poc(videoframe_t *const frame, const int32_t poc);
 
 #endif

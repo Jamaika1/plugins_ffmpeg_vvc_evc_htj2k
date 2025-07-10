@@ -67,13 +67,13 @@ int oc_ilog64(ogg_int64_t _v);
  * This is the number of bits that would be required to represent _v in two's
  *  complement notation with all of the leading zeros stripped.
  */
-#  define OC_ILOG_32(_v)   (OC_ILOGNZ_32(_v)&-!!(_v))
+#  define OC_ILOG_32(_v)   ((_v)?OC_ILOGNZ_32(_v):0)
 # else
 #  define OC_ILOGNZ_32(_v) (oc_ilog32(_v))
 #  define OC_ILOG_32(_v)   (oc_ilog32(_v))
 # endif
 
-# if defined(OC_CLZ64)
+# if defined(CLZ64)
 /**
  * OC_ILOGNZ_64 - Integer binary logarithm of a non-zero 64-bit value.
  * @_v: A non-zero 64-bit value.
@@ -82,7 +82,7 @@ int oc_ilog64(ogg_int64_t _v);
  *  complement notation with all of the leading zeros stripped.
  * If _v is zero, the return value is undefined; use OC_ILOG_64() instead.
  */
-#  define OC_ILOGNZ_64(_v) (OC_CLZ64_OFFS-OC_CLZ64(_v))
+#  define OC_ILOGNZ_64(_v) (CLZ64_OFFS-CLZ64(_v))
 /**
  * OC_ILOG_64 - Integer binary logarithm of a 64-bit value.
  * @_v: A 64-bit value.
@@ -90,7 +90,7 @@ int oc_ilog64(ogg_int64_t _v);
  * This is the number of bits that would be required to represent _v in two's
  *  complement notation with all of the leading zeros stripped.
  */
-#  define OC_ILOG_64(_v)   (OC_ILOGNZ_64(_v)&-!!(_v))
+#  define OC_ILOG_64(_v)   ((_v)?OC_ILOGNZ_64(_v):0)
 # else
 #  define OC_ILOGNZ_64(_v) (oc_ilog64(_v))
 #  define OC_ILOG_64(_v)   (oc_ilog64(_v))
@@ -131,7 +131,7 @@ int oc_ilog64(ogg_int64_t _v);
  */
 # define OC_STATIC_ILOG_64(_v) (OC_STATIC_ILOG6((ogg_int64_t)(_v)))
 
-#define OC_Q57(_v) ((ogg_int64_t)(_v)<<57)
+#define OC_Q57(_v) ((_v)*((ogg_int64_t)1<<57))
 #define OC_Q10(_v) ((_v)<<10)
 
 ogg_int64_t oc_bexp64(ogg_int64_t _z);

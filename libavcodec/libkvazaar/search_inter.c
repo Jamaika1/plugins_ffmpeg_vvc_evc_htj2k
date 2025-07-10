@@ -220,8 +220,9 @@ static bool check_mv_cost(inter_search_info_t *info,
       info->height,
       info->optimized_sad
   );
-
-  if (cost >= *best_cost) return false;
+  // On some platforms comparing two doubles give weird results, so add an offset
+#define KVZ_TEMP_DOUBLE_PRECISION 0.001
+  if (cost + KVZ_TEMP_DOUBLE_PRECISION >= *best_cost) return false;
 
   cost += info->mvd_cost_func(
       info->state,
@@ -233,7 +234,8 @@ static bool check_mv_cost(inter_search_info_t *info,
       &bitcost
   );
 
-  if (cost >= *best_cost) return false;
+  if (cost + KVZ_TEMP_DOUBLE_PRECISION >= *best_cost) return false;
+#undef KVZ_TEMP_DOUBLE_PRECISION
 
   // Set to motion vector in quarter pixel precision.
   best_mv->x = x * 4;
@@ -552,7 +554,7 @@ void kvz_tz_pattern_search(inter_search_info_t *info,
       //[ ][ ][6][ ][ ][ ][3][ ][ ]
       {
         { iDist / 2, iDist }, { iDist, 0 }, { iDist / 2, -iDist }, { -iDist, 0 },
-        { iDist / 2, iDist }, { -iDist / 2, -iDist }, { 0, 0 }, { 0, 0 }
+        { -iDist / 2, iDist }, { -iDist / 2, -iDist }, { 0, 0 }, { 0, 0 }
       }
   };
 
@@ -2143,7 +2145,7 @@ void kvz_cu_cost_inter_rd2(encoder_state_t * const state,
   *inter_cost += (bits)* state->lambda;
   *inter_bitcost = bits;
 
-  if(no_cbf_cost < *inter_cost) {
+  if(no_cbf_cost < *inter_cost && !state->encoder_control->cfg.lossless) {
     cur_cu->cbf = 0;
     if (cur_cu->merged && cur_cu->part_size == SIZE_2Nx2N) {
       cur_cu->skipped = 1;

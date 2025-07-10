@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avcodec.h"
-#include "bytestream.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "thread.h"
-#include "qoi.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/bytestream.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/thread.h"
+#include "libavcodec/qoi.h"
 
 static int qoi_decode_frame(AVCodecContext *avctx, AVFrame *p,
                             int *got_frame, AVPacket *avpkt)
@@ -105,9 +105,6 @@ static int qoi_decode_frame(AVCodecContext *avctx, AVFrame *p,
 
         memcpy(&dst[off_x * channels], px, channels);
     }
-
-    p->flags |= AV_FRAME_FLAG_KEY;
-    p->pict_type = AV_PICTURE_TYPE_I;
 
     *got_frame   = 1;
 

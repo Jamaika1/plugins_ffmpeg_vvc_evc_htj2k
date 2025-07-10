@@ -12,18 +12,21 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../sharpyuv/sharpyuv.h"
 #include "../sharpyuv/sharpyuv_csp.h"
-#include "../enc/vp8i_enc.h"
-#include "../utils/random_utils.h"
-#include "../utils/utils.h"
+#include "../dsp/cpu.h"
 #include "../dsp/dsp.h"
 #include "../dsp/lossless.h"
 #include "../dsp/yuv.h"
-#include "../dsp/cpu.h"
+#include "../enc/vp8i_enc.h"
+#include "../utils/random_utils.h"
+#include "../utils/utils.h"
+#include "../webp/encode.h"
+#include "../webp/types.h"
 
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>

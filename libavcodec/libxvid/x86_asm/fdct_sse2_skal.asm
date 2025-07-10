@@ -367,8 +367,10 @@ cglobal fdct_sse2_skal
 %macro TEST_ROW 2     ; %1:src,  %2:label x8
   mov _EAX, [%1   ]
   mov _EDX, [%1+ 8]
+%ifndef ARCH_IS_X86_64
   or  _EAX, [%1+ 4]
   or  _EDX, [%1+12]
+%endif
   or  _EAX, _EDX
   jz near %2
 %endmacro

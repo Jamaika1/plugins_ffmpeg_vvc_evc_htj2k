@@ -8,21 +8,23 @@
 #include "config_win32.h"
 
 #define XDG_PREFIX _gio_xdg
-#define GLIB_RUNSTATEDIR "@glib_runstatedir@"
-#define GLIB_LOCALE_DIR "@glib_locale_dir@"
-#define GDK_PIXBUF_LIBDIR "@gdk_pixbuf_libdir@"
-#define GDK_PIXBUF_LOCALEDIR "@gdk_pixbuf_localedir@"
+#define GLIB_RUNSTATEDIR "/usr64/local/glib/var/run"
+#define GLIB_LOCALE_DIR "/usr64/local/glib/share/locale"
+#define GDK_PIXBUF_LIBDIR "/usr64/local/gdk_pixbuf/lib"
+#define GDK_PIXBUF_LOCALEDIR "/usr64/local/gdk_pixbuf/share/locale"
 //#define G_LOG_DOMAIN "GLib-GIO"
-#define GIO_LAUNCH_DESKTOP "@gio-launch-desktop@"
-#define GIO_MODULE_DIR "@gio-module-dir@"
-#define LOCALSTATEDIR "@localstatedir@"
+#define GIO_LAUNCH_DESKTOP "/usr64/local/gio/share/applications"
+#define GIO_MODULE_DIR ""
+#define LOCALSTATEDIR "/usr64/local/gio/var"
 #define GDK_PIXBUF_BINARY_VERSION "2.10"
 #define HAVE_ROUND 1
 #define HAVE_LRINT 1
 //#define GDK_PIXBUF_RELOCATABLE 1
 #define GDK_PIXBUF_ENABLE_BACKEND 1
+#define GDK_PIXBUF_USE_GIO_MIME 1
 #define USE_GMODULE 1
 #define ENABLE_VALGRIND 1
+//#define IN_LIBASPRINTF 1
 
 #include "glibconfig.h"
 
@@ -34,11 +36,11 @@
 /* Whether to enable GC friendliness */
 /* #undef ENABLE_GC_FRIENDLY */
 /* always defined to indicate that i18n is enabled */
-//#define ENABLE_NLS 1
+#define ENABLE_NLS 1
 /* Define the gettext package to be used */
 #define GETTEXT_PACKAGE "dummy"
 /* Define to the GLIB binary age */
-#define GLIB_BINARY_AGE 8100
+#define GLIB_BINARY_AGE 8501
 /* Byte contents of gmutex */
 /* #undef GLIB_BYTE_CONTENTS_GMUTEX */
 /* Define to the GLIB interface age */
@@ -89,7 +91,7 @@
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1
 /* Define to 1 if you have the `getcwd' function. */
-#define HAVE_GETCWD 1
+/* #undef HAVE_GETCWD */
 /* Define to 1 if you have the `getc_unlocked' function. */
 /* #undef HAVE_GETC_UNLOCKED */
 /* Define if the GNU gettext() function is already present or preinstalled. */
@@ -104,7 +106,7 @@
 //#define HAVE_INTTYPES_H 1
 /* Define if <inttypes.h> exists, doesn't clash with <sys/types.h>, and
    declares uintmax_t. */
-//#define HAVE_INTTYPES_H_WITH_UINTMAX 1
+#define HAVE_INTTYPES_H_WITH_UINTMAX 1
 /* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
 /* #undef HAVE_LANGINFO_CODESET */
 /* Define to 1 if you have the <langinfo.h> header file. */
@@ -128,7 +130,7 @@
 /* Define to 1 if you have the `memmove' function. */
 #define HAVE_MEMMOVE 1
 /* Define to 1 if you have the <memory.h> header file. */
-#define HAVE_MEMORY_H 1
+#undef HAVE_MEMORY_H
 /* Define to 1 if you have the `mkstemp' function. */
 /* #undef HAVE_MKSTEMP */
 /* Define to 1 if you have the `nanosleep' function. */
@@ -145,6 +147,13 @@
 /* #undef HAVE_POSIX_GETPWUID_R */
 /* Have function pthread_attr_setstacksize */
 /* #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE */
+/* Have function pthread_cond_timedwait_relative_np */
+#undef HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
+/* Have function pthread_condattr_setclock */
+#define HAVE_PTHREAD_CONDATTR_SETCLOCK 1
+#define CLOCK_MONOTONIC 1
+/* Have function pthread_setname */
+#define HAVE_PTHREAD_SETNAME_NP_WITH_TID 1
 /* Define to 1 if the system has the type `ptrdiff_t'. */
 #define HAVE_PTRDIFF_T 1
 /* Define to 1 if you have the <pwd.h> header file. */
@@ -166,10 +175,10 @@
 /* Define to 1 if you have the <stddef.h> header file. */
 #define HAVE_STDDEF_H 1
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 /* Define if <stdint.h> exists, doesn't clash with <sys/types.h>, and declares
    uintmax_t. */
-#define HAVE_STDINT_H_WITH_UINTMAX 1
+#undef HAVE_STDINT_H_WITH_UINTMAX
 /* Define to 1 if you have the `stpcpy' function. */
 /* #undef HAVE_STPCPY */
 /* Define to 1 if you have the `strcasecmp' function. */
@@ -220,6 +229,8 @@
 #ifdef __DMC__
 #define vsnprintf _vsnprintf
 #endif
+/* Define to 1 if you have the 'wcslen' function. */
+#define HAVE_WCSLEN 1
 /* Define if you have the 'wchar_t' type. */
 #define HAVE_WCHAR_T 1
 /* Define if you have the 'wint_t' type. */
@@ -239,11 +250,11 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "glib"
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "glib 2.81.0-59fd9b8"
+#define PACKAGE_STRING "glib 2.85.1-25a1768"
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "glib"
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.81.0-59fd9b8"
+#define PACKAGE_VERSION "2.85.1-25a1768"
 /* Maximum POSIX RT priority */
 /* #undef POSIX_MAX_PRIORITY */
 /* Minimum POSIX RT priority */
@@ -254,26 +265,6 @@
 #define REALLOC_0_WORKS 1
 /* Define if you have correct malloc prototypes */
 #define SANE_MALLOC_PROTOS 1
-/* The size of a `char', as computed by sizeof. */
-#define SIZEOF_CHAR 1
-/* The size of a `int', as computed by sizeof. */
-#define SIZEOF_INT 4
-/* The size of a `long', as computed by sizeof. */
-#define SIZEOF_LONG 4
-/* The size of a `long long', as computed by sizeof. */
-#ifndef _MSC_VER
-#define SIZEOF_LONG_LONG 8
-#else /* _MSC_VER */
-#define SIZEOF_LONG_LONG 0
-#endif /* _MSC_VER */
-/* The size of a `short', as computed by sizeof. */
-#define SIZEOF_SHORT 2
-/* The size of a `size_t', as computed by sizeof. */
-#define SIZEOF_SIZE_T 8
-/* The size of a `void *', as computed by sizeof. */
-#define GLIB_SIZEOF_VOID_P 8
-/* The size of a `__int64', as computed by sizeof. */
-#define SIZEOF___INT64 8
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
@@ -291,7 +282,7 @@
    first (like Motorola and SPARC, unlike Intel and VAX). */
 /* #undef WORDS_BIGENDIAN */
 /* Number of bits in a file offset, on hosts where this is settable. */
-/* #undef _FILE_OFFSET_BITS */
+/* #undef __FILE_OFFSET_BITS */
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
 /* Define to empty if `const' does not conform to ANSI C. */

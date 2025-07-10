@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
-#include "lossless_videodsp.h"
+#include "libavutil/config.h"
+#include "libavcodec/lossless_videodsp.h"
 #include "libavcodec/mathops.h"
 
 // 0x7f7f7f7f or 0x7f7f7f7f7f7f7f7f or whatever, depending on the cpu's native arithmetic size
@@ -121,6 +121,8 @@ void ff_llviddsp_init(LLVidDSPContext *c)
 
 #if ARCH_PPC
     ff_llviddsp_init_ppc(c);
+#elif ARCH_RISCV
+    ff_llviddsp_init_riscv(c);
 #elif ARCH_X86
     ff_llviddsp_init_x86(c);
 #endif

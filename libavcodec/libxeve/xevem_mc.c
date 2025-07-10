@@ -44,6 +44,8 @@ XEVE_AFFINE_H_SOBEL_FLT xevem_func_aff_h_sobel_flt;
 XEVE_AFFINE_V_SOBEL_FLT xevem_func_aff_v_sobel_flt;
 XEVE_AFFINE_EQUAL_COEF  xevem_func_aff_eq_coef_comp;
 
+// clang-format off
+
 const s16 xevem_tbl_mc_l_coeff[16][8] =
 {
     {  0, 0,   0, 64,  0,   0,  0,  0 },
@@ -158,6 +160,7 @@ const s16 tbl_bl_eif_32_phases_mc_l_coeff[32][2] =
     { 2,  62 }
 };
 
+// clang-format on
 
 /****************************************************************************
  * motion compensation for luma
@@ -510,8 +513,8 @@ static BOOL mv_clip_only_one_ref_dmvr(int x, int y, int pic_w, int pic_h, int w,
     y <<= 2;
     w <<= 2;
     h <<= 2;
-    min_clip[MV_X] = (-MAX_CU_SIZE) << 2;
-    min_clip[MV_Y] = (-MAX_CU_SIZE) << 2;
+    min_clip[MV_X] = -(MAX_CU_SIZE << 2);
+    min_clip[MV_Y] = -(MAX_CU_SIZE << 2);
     max_clip[MV_X] = (pic_w - 1 + MAX_CU_SIZE) << 2;
     max_clip[MV_Y] = (pic_h - 1 + MAX_CU_SIZE) << 2;
 

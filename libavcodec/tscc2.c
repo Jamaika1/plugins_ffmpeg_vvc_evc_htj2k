@@ -26,16 +26,17 @@
 
 #include <inttypes.h>
 
+#include "libavutil/mem.h"
 #include "libavutil/thread.h"
 
 #define BITSTREAM_READER_LE
-#include "libavcodec/avcodec.h"
-#include "libavcodec/bytestream.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/mathops.h"
-#include "libavcodec/tscc2data.h"
+#include "avcodec.h"
+#include "bytestream.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "get_bits.h"
+#include "mathops.h"
+#include "tscc2data.h"
 
 #define TSCC2_VLC_BITS 9
 

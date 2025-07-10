@@ -26,9 +26,9 @@
 #include "libavutil/common.h"
 #include "libavutil/intmath.h"
 
-#include "acelp_vectors.h"
-#include "celp_math.h"
-#include "g723_1.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/celp_math.h"
+#include "libavcodec/g723_1.h"
 
 const int16_t ff_g723_1_cos_tab[COS_TBL_SIZE + 1] = {
     16384,  16383,  16379,  16373,  16364,  16353,  16340,  16324,

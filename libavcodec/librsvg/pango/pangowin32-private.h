@@ -83,41 +83,31 @@ typedef PangoFontFaceClass             PangoWin32FaceClass;
 typedef struct _PangoWin32GlyphInfo    PangoWin32GlyphInfo;
 typedef struct _PangoWin32MetricsInfo  PangoWin32MetricsInfo;
 
-typedef struct _PangoWin32DWriteFontSetBuilder PangoWin32DWriteFontSetBuilder;
-typedef struct _PangoWin32CustomFontsLegacy PangoWin32CustomFontsLegacy;
-
 struct _PangoWin32FontMap
 {
   PangoFontMap parent_instance;
 
   PangoWin32FontCache *font_cache;
-  GQueue *freed_fonts;
   guint serial;
 
   /* Map Pango family names to PangoWin32Family structs */
   GHashTable *families;
+  gpointer *families_list;
 
   /* Map LOGFONTWs (taking into account only the lfFaceName, lfItalic
-   * and lfWeight fields) to LOGFONTWs corresponding to actual fonts
-   * installed.
+   * and lfWeight fields) corresponding to actual fonts to IDWriteFonts
+   * (or NULL if not loaded yet).
    */
   GHashTable *fonts;
-
-  /* Map LOGFONTWs to IDWriteFonts corresponding to actual fonts
-   * installed, if applicable.
-   */
-  GHashTable *dwrite_fonts;
 
   /* keeps track of the system font aliases that we might have */
   GHashTable *aliases;
 
-  double resolution;		/* (points / pixel) * PANGO_SCALE */
+  double dpi;		/* (points / pixel) * PANGO_SCALE */
 
-  /* IDWriteFontSetBuilder for loading custom fonts on Windows 10+ */
-  PangoWin32DWriteFontSetBuilder *font_set_builder;
-
-  /* Items for loading custom fonts on legacy Windows 7/8.x */
-  PangoWin32CustomFontsLegacy *custom_fonts_legacy;
+  /* for loading custom fonts on Windows 10+ */
+  gpointer font_set_builder1; /* IDWriteFontSetBuilder1 */
+  gpointer font_set_builder; /* IDWriteFontSetBuilder */
 };
 
 struct _PangoWin32FontMapClass
@@ -137,20 +127,17 @@ struct _PangoWin32Font
 
   LOGFONTW logfontw;
   int size;
+  char *variations;
 
   GSList *metrics_by_lang;
 
   PangoFontMap *fontmap;
 
   /* Written by _pango_win32_font_get_hfont: */
-  HFONT hfont;
+  HFONT hfont;  
 
   PangoWin32Face *win32face;
 
-  /* If TRUE, font is in cache of recently unused fonts and not otherwise
-   * in use.
-   */
-  gboolean in_cache;
   GHashTable *glyph_info;
 
   /* whether the font supports hinting */
@@ -173,14 +160,11 @@ struct _PangoWin32Face
 
   gpointer family;
   LOGFONTW logfontw;
+  gpointer dwrite_font;
   PangoFontDescription *description;
   PangoCoverage *coverage;
   char *face_name;
   gboolean is_synthetic;
-
-  gboolean has_cmap;
-  guint16 cmap_format;
-  gpointer cmap;
 
   GSList *cached_fonts;
 };
@@ -197,80 +181,6 @@ struct _PangoWin32MetricsInfo
   PangoFontMetrics *metrics;
 };
 
-/* TrueType defines: */
-
-#define MAKE_TT_TABLE_NAME(c1, c2, c3, c4) \
-   (((guint32)c4) << 24 | ((guint32)c3) << 16 | ((guint32)c2) << 8 | ((guint32)c1))
-
-#define CMAP (MAKE_TT_TABLE_NAME('c','m','a','p'))
-#define CMAP_HEADER_SIZE 4
-
-#define NAME (MAKE_TT_TABLE_NAME('n','a','m','e'))
-#define NAME_HEADER_SIZE 6
-
-#define ENCODING_TABLE_SIZE 8
-
-#define APPLE_UNICODE_PLATFORM_ID 0
-#define MACINTOSH_PLATFORM_ID 1
-#define ISO_PLATFORM_ID 2
-#define MICROSOFT_PLATFORM_ID 3
-
-#define SYMBOL_ENCODING_ID 0
-#define UNICODE_ENCODING_ID 1
-#define UCS4_ENCODING_ID 10
-
-/* All the below structs must be packed! */
-
-struct cmap_encoding_subtable
-{
-  guint16 platform_id;
-  guint16 encoding_id;
-  guint32 offset;
-};
-
-struct format_4_cmap
-{
-  guint16 format;
-  guint16 length;
-  guint16 language;
-  guint16 seg_count_x_2;
-  guint16 search_range;
-  guint16 entry_selector;
-  guint16 range_shift;
-
-  guint16 reserved;
-
-  guint16 arrays[1];
-};
-
-struct format_12_cmap
-{
-  guint16 format;
-  guint16 reserved;
-  guint32 length;
-  guint32 language;
-  guint32 count;
-
-  guint32 groups[1];
-};
-
-struct name_header
-{
-  guint16 format_selector;
-  guint16 num_records;
-  guint16 string_storage_offset;
-};
-
-struct name_record
-{
-  guint16 platform_id;
-  guint16 encoding_id;
-  guint16 language_id;
-  guint16 name_id;
-  guint16 string_length;
-  guint16 string_offset;
-};
-
 _PANGO_EXTERN
 GType           _pango_win32_font_get_type          (void) G_GNUC_CONST;
 
@@ -284,18 +194,10 @@ _PANGO_EXTERN
 GType           pango_win32_font_map_get_type      (void) G_GNUC_CONST;
 
 _PANGO_EXTERN
-void            _pango_win32_fontmap_cache_remove   (PangoFontMap   *fontmap,
-						     PangoWin32Font *xfont);
-
-_PANGO_EXTERN
 HFONT		_pango_win32_font_get_hfont         (PangoFont          *font);
 
 _PANGO_EXTERN
 HDC             _pango_win32_get_display_dc                 (void);
-
-_PANGO_EXTERN
-gpointer        _pango_win32_copy_cmap (gpointer cmap,
-                                        guint16 cmap_format);
 
 _PANGO_EXTERN
 gboolean        pango_win32_dwrite_font_check_is_hinted       (PangoWin32Font    *font);
@@ -321,8 +223,6 @@ void                   pango_win32_dwrite_items_destroy       (PangoWin32DWriteI
 gboolean               pango_win32_dwrite_font_is_monospace   (gpointer               dwrite_font,
                                                                gboolean              *is_monospace);
 
-void                   pango_win32_dwrite_font_release        (gpointer               dwrite_font);
-
 _PANGO_EXTERN
 void                   pango_win32_dwrite_font_face_release   (gpointer               dwrite_font_face);
 
@@ -344,11 +244,6 @@ void                  pango_win32_font_map_cache_clear        (PangoFontMap     
 gboolean              pango_win32_dwrite_add_font_file        (PangoFontMap          *font_map,
                                                                const char            *font_file_path,
                                                                GError               **error);
-
-void
-pango_win32_dwrite_release_font_set_builders                  (PangoWin32FontMap     *win32fontmap);
-
-gboolean              pango_win32_release_legacy_font_loader  (PangoWin32FontMap     *win32fontmap);
 
 G_END_DECLS
 

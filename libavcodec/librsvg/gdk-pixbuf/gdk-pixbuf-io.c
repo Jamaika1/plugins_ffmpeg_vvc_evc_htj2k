@@ -659,6 +659,35 @@ gdk_pixbuf_io_init_builtin (void)
         /* Except the gdip-png loader which normally isn't built at all even */
         load_one_builtin_module (png);
 #endif
+#ifdef INCLUDE_glycin
+        load_one_builtin_module (avif);
+        load_one_builtin_module (bmp);
+        load_one_builtin_module (dds);
+        load_one_builtin_module (gif);
+        load_one_builtin_module (heic);
+        load_one_builtin_module (ico);
+        load_one_builtin_module (jpeg);
+        load_one_builtin_module (jxl);
+        load_one_builtin_module (openexr);
+        load_one_builtin_module (png);
+        load_one_builtin_module (pnm);
+        load_one_builtin_module (qoi);
+        load_one_builtin_module (raw);
+        load_one_builtin_module (svg);
+        load_one_builtin_module (tga);
+        load_one_builtin_module (tiff);
+        load_one_builtin_module (webp);
+#endif
+#ifdef INCLUDE_android
+	load_one_builtin_module (jpeg);
+	load_one_builtin_module (png);
+	load_one_builtin_module (gif);
+	load_one_builtin_module (webp);
+	load_one_builtin_module (bmp);
+	load_one_builtin_module (ico);
+	load_one_builtin_module (wbmp);
+	load_one_builtin_module (heif);
+#endif
 
 #undef load_one_builtin_module
 }
@@ -703,6 +732,31 @@ module (gdip_gif);
 module (gdip_jpeg);
 module (gdip_png);
 module (gdip_tiff);
+module (glycin_avif);
+module (glycin_bmp);
+module (glycin_dds);
+module (glycin_gif);
+module (glycin_heic);
+module (glycin_ico);
+module (glycin_jpeg);
+module (glycin_jxl);
+module (glycin_openexr);
+module (glycin_png);
+module (glycin_pnm);
+module (glycin_qoi);
+module (glycin_raw);
+module (glycin_svg);
+module (glycin_tga);
+module (glycin_tiff);
+module (glycin_webp);
+module (android_jpeg);
+module (android_png);
+module (android_gif);
+module (android_webp);
+module (android_bmp);
+module (android_ico);
+module (android_wbmp);
+module (android_heif);
 
 #undef module
 
@@ -737,6 +791,35 @@ gdk_pixbuf_load_module_unlocked (GdkPixbufModule *image_module,
 #endif
 #ifdef INCLUDE_gdip_png
         try_module (png,gdip_png);
+#endif
+#ifdef INCLUDE_glycin
+        try_module (avif,    glycin_avif);
+        try_module (bmp,     glycin_bmp);
+        try_module (dds,     glycin_dds);
+        try_module (gif,     glycin_gif);
+        try_module (heic,    glycin_heic);
+        try_module (ico,     glycin_ico);
+        try_module (jpeg,    glycin_jpeg);
+        try_module (jxl,     glycin_jxl);
+        try_module (openexr, glycin_openexr);
+        try_module (png,     glycin_png);
+        try_module (pnm,     glycin_pnm);
+        try_module (qoi,     glycin_qoi);
+        try_module (raw,     glycin_raw);
+        try_module (svg,     glycin_svg);
+        try_module (tga,     glycin_tga);
+        try_module (tiff,    glycin_tiff);
+        try_module (webp,    glycin_webp);
+#endif
+#ifdef INCLUDE_android
+	try_module (jpeg,android_jpeg);
+	try_module (png,android_png);
+	try_module (gif,android_gif);
+	try_module (webp,android_webp);
+	try_module (bmp,android_bmp);
+	try_module (ico,android_ico);
+	try_module (wbmp,android_wbmp);
+	try_module (heif,android_heif);
 #endif
 #ifdef INCLUDE_png
         try_module (png,png);
@@ -811,6 +894,7 @@ gdk_pixbuf_load_module_unlocked (GdkPixbufModule *image_module,
                 }
 
                 image_module->module = module;
+
 
                 if (g_module_symbol (module, "fill_vtable", &sym)) {
                         fill_vtable = (GdkPixbufModuleFillVtableFunc) sym;
@@ -1105,7 +1189,7 @@ _gdk_pixbuf_generic_image_load (GdkPixbufModule *module, FILE *f, GError **error
  *
  * The error domains are `GDK_PIXBUF_ERROR` and `G_FILE_ERROR`.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  */
 GdkPixbuf *
 gdk_pixbuf_new_from_file (const char *filename,
@@ -1186,14 +1270,14 @@ gdk_pixbuf_new_from_file (const char *filename,
 #ifdef G_OS_WIN32
 
 /**
- * gdk_pixbuf_new_from_file_utf8:
+ * gdk_pixbuf_new_from_file_utf8: (constructor)
  * @filename: (type filename): Name of file to load, in the GLib file name encoding
  * @error: Return location for an error
  *
  * Same as gdk_pixbuf_new_from_file()
  *
- * Return value: A newly-created pixbuf with a reference count of 1, or `NULL` if
- * any of several error conditions occurred:  the file could not be opened,
+ * Returns: (nullable): A newly-created pixbuf with a reference count of 1,
+ * or `NULL` if any of several error conditions occurred:  the file could not be opened,
  * there was no loader for the file's format, there was not enough memory to
  * allocate the image buffer, or the image file contained invalid data.
  **/
@@ -1234,7 +1318,7 @@ gdk_pixbuf_new_from_file_utf8 (const char *filename,
  * and image at the requested size, regardless of aspect ratio, use
  * [ctor@GdkPixbuf.Pixbuf.new_from_file_at_scale].
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.4
  **/
@@ -1252,7 +1336,7 @@ gdk_pixbuf_new_from_file_at_size (const char *filename,
 #ifdef G_OS_WIN32
 
 /**
- * gdk_pixbuf_new_from_file_at_size_utf8:
+ * gdk_pixbuf_new_from_file_at_size_utf8: (constructor)
  * @filename: (type filename): Name of file to load, in the GLib file name encoding
  * @width: The width the image should have or -1 to not constrain the width
  * @height: The height the image should have or -1 to not constrain the height
@@ -1260,7 +1344,7 @@ gdk_pixbuf_new_from_file_at_size (const char *filename,
  *
  * Same as gdk_pixbuf_new_from_file_at_size()
  *
- * Return value: A newly-created pixbuf with a reference count of 1, or
+ * Returns: (nullable): A newly-created pixbuf with a reference count of 1, or
  * `NULL` if any of several error conditions occurred:  the file could not
  * be opened, there was no loader for the file's format, there was not
  * enough memory to allocate the image buffer, or the image file contained
@@ -1366,7 +1450,7 @@ at_scale_size_prepared_cb (GdkPixbufLoader *loader,
  * at all in that dimension. Negative values for `width` and `height` are
  * allowed since 2.8.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.6
  **/
@@ -1467,7 +1551,7 @@ gdk_pixbuf_new_from_file_at_scale (const char *filename,
 #ifdef G_OS_WIN32
 
 /**
- * gdk_pixbuf_new_from_file_at_scale_utf8:
+ * gdk_pixbuf_new_from_file_at_scale_utf8: (constructor)
  * @filename: (type filename): Name of file to load, in the GLib file name encoding
  * @width: The width the image should have or -1 to not constrain the width
  * @height: The height the image should have or -1 to not constrain the height
@@ -1476,8 +1560,8 @@ gdk_pixbuf_new_from_file_at_scale (const char *filename,
  *
  * Same as gdk_pixbuf_new_from_file_at_scale().
  *
- * Return value: A newly-created pixbuf with a reference count of 1, or `NULL`
- * if any of several error conditions occurred:  the file could not be opened,
+ * Returns: (nullable): A newly-created pixbuf with a reference count of 1,
+ * or `NULL` if any of several error conditions occurred:  the file could not be opened,
  * there was no loader for the file's format, there was not enough memory to
  * allocate the image buffer, or the image file contained invalid data.
  *
@@ -1571,7 +1655,7 @@ load_from_stream (GdkPixbufLoader  *loader,
  *
  * The stream is not closed.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.14
  */
@@ -1653,13 +1737,13 @@ out:
 
 
 /**
- * gdk_pixbuf_new_from_stream_at_scale_async:
+ * gdk_pixbuf_new_from_stream_at_scale_async: (finish-func gdk_pixbuf_new_from_stream_finish)
  * @stream: a `GInputStream` from which to load the pixbuf
  * @width: the width the image should have or -1 to not constrain the width
  * @height: the height the image should have or -1 to not constrain the height
  * @preserve_aspect_ratio: `TRUE` to preserve the image's aspect ratio
- * @cancellable: (allow-none): optional `GCancellable` object, `NULL` to ignore
- * @callback: a `GAsyncReadyCallback` to call when the pixbuf is loaded
+ * @cancellable: (nullable): optional `GCancellable` object, `NULL` to ignore
+ * @callback: (scope async) (closure user_data): a `GAsyncReadyCallback` to call when the pixbuf is loaded
  * @user_data: the data to pass to the callback function
  *
  * Creates a new pixbuf by asynchronously loading an image from an input stream.
@@ -1715,7 +1799,7 @@ gdk_pixbuf_new_from_stream_at_scale_async (GInputStream        *stream,
 }
 
 /**
- * gdk_pixbuf_new_from_stream: (constructor)
+ * gdk_pixbuf_new_from_stream:
  * @stream:  a `GInputStream` to load the pixbuf from
  * @cancellable: (allow-none): optional `GCancellable` object, `NULL` to ignore
  * @error: Return location for an error
@@ -1733,7 +1817,7 @@ gdk_pixbuf_new_from_stream_at_scale_async (GInputStream        *stream,
  *
  * The stream is not closed.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.14
  **/
@@ -1800,7 +1884,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
  * The file format is detected automatically. If `NULL` is returned, then
  * @error will be set.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.26
  **/
@@ -1846,7 +1930,7 @@ gdk_pixbuf_new_from_resource (const gchar  *resource_path,
  *
  * The stream is not closed.
  *
- * Return value: (transfer full) (nullable): A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
  *
  * Since: 2.26
  */
@@ -1870,10 +1954,10 @@ gdk_pixbuf_new_from_resource_at_scale (const char *resource_path,
 }
 
 /**
- * gdk_pixbuf_new_from_stream_async:
+ * gdk_pixbuf_new_from_stream_async: (finish-func gdk_pixbuf_new_from_stream_finish)
  * @stream: a `GInputStream` from which to load the pixbuf
- * @cancellable: (allow-none): optional `GCancellable` object, `NULL` to ignore
- * @callback: a `GAsyncReadyCallback` to call when the pixbuf is loaded
+ * @cancellable: (nullable): optional `GCancellable` object, `NULL` to ignore
+ * @callback: (scope async) (closure user_data): a `GAsyncReadyCallback` to call when the pixbuf is loaded
  * @user_data: the data to pass to the callback function
  *
  * Creates a new pixbuf by asynchronously loading an image from an input stream.
@@ -1912,14 +1996,14 @@ gdk_pixbuf_new_from_stream_async (GInputStream        *stream,
 }
 
 /**
- * gdk_pixbuf_new_from_stream_finish:
+ * gdk_pixbuf_new_from_stream_finish: (constructor)
  * @async_result: a `GAsyncResult`
  * @error: a `GError`, or `NULL`
  *
  * Finishes an asynchronous pixbuf creation operation started with
  * gdk_pixbuf_new_from_stream_async().
  *
- * Return value: (transfer full) (nullable): the newly created pixbuf
+ * Returns: (nullable): the newly created pixbuf
  *
  * Since: 2.24
  **/
@@ -2146,7 +2230,7 @@ gdk_pixbuf_get_file_info_finish (GAsyncResult         *async_result,
 }
 
 /**
- * gdk_pixbuf_new_from_xpm_data:
+ * gdk_pixbuf_new_from_xpm_data: (constructor)
  * @data: (array zero-terminated=1): Pointer to inline XPM data.
  *
  * Creates a new pixbuf by parsing XPM data in memory.
@@ -2154,7 +2238,11 @@ gdk_pixbuf_get_file_info_finish (GAsyncResult         *async_result,
  * This data is commonly the result of including an XPM file into a
  * program's C source.
  *
- * Return value: A newly-created pixbuf
+ * Returns: (nullable): A newly-created pixbuf
+ *
+ * Deprecated: 2.44: Use [ctor@GdkPixbuf.Pixbuf.new_from_stream] with
+ *   a [class@Gio.MemoryInputStream], making sure to handle errors in
+ *   case the XPM format loader is not available
  **/
 GdkPixbuf *
 gdk_pixbuf_new_from_xpm_data (const char **data)
@@ -2493,7 +2581,7 @@ gdk_pixbuf_real_save_to_callback (GdkPixbuf         *pixbuf,
  * parameter. When the ICO saver is given "x_hot" and "y_hot" parameters,
  * it produces a CUR instead of an ICO.
  *
- * Return value: `TRUE` on success, and `FALSE` otherwise
+ * Returns: `TRUE` on success, and `FALSE` otherwise
  **/
 gboolean
 gdk_pixbuf_save (GdkPixbuf  *pixbuf,
@@ -2542,7 +2630,7 @@ gdk_pixbuf_save (GdkPixbuf  *pixbuf,
  *
  * See [method@GdkPixbuf.Pixbuf.save] for more details.
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  **/
 
 gboolean
@@ -2621,7 +2709,7 @@ gdk_pixbuf_savev (GdkPixbuf  *pixbuf,
  *
  * Same as gdk_pixbuf_savev()
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  **/
 gboolean
 gdk_pixbuf_savev_utf8 (GdkPixbuf  *pixbuf,
@@ -2659,7 +2747,7 @@ gdk_pixbuf_savev_utf8 (GdkPixbuf  *pixbuf,
  *
  * See [method@GdkPixbuf.Pixbuf.save] for more details.
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  *
  * Since: 2.4
  **/
@@ -2696,14 +2784,14 @@ gdk_pixbuf_save_to_callback    (GdkPixbuf  *pixbuf,
 
 /**
  * gdk_pixbuf_save_to_callbackv:
- * @pixbuf: a `GdkPixbuf`.
- * @save_func: (scope call): a function that is called to save each block of data that
- *   the save routine generates.
- * @user_data: (closure): user data to pass to the save function.
- * @type: name of file format.
+ * @pixbuf: a `GdkPixbuf`
+ * @save_func: (scope call) (closure user_data): a function that is called to
+ *   save each block of data that the save routine generates
+ * @user_data: user data to pass to the save function
+ * @type: name of file format
  * @option_keys: (array zero-terminated=1) (element-type utf8) (nullable): name of options to set
  * @option_values: (array zero-terminated=1) (element-type utf8) (nullable): values for named options
- * @error: (allow-none): return location for error, or `NULL`
+ * @error: return location for error, or `NULL`
  *
  * Vector version of `gdk_pixbuf_save_to_callback()`.
  *
@@ -2714,7 +2802,7 @@ gdk_pixbuf_save_to_callback    (GdkPixbuf  *pixbuf,
  *
  * See [method@GdkPixbuf.Pixbuf.save_to_callback] for more details.
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  *
  * Since: 2.4
  **/
@@ -2757,7 +2845,7 @@ gdk_pixbuf_save_to_callbackv   (GdkPixbuf  *pixbuf,
  *   to the new buffer.
  * @buffer_size: location to receive the size of the new buffer.
  * @type: name of file format.
- * @error: (allow-none): return location for error, or `NULL`
+ * @error: return location for error, or `NULL`
  * @...: list of key-value save options
  *
  * Saves pixbuf to a new buffer in format `type`, which is currently "jpeg",
@@ -2775,7 +2863,7 @@ gdk_pixbuf_save_to_callbackv   (GdkPixbuf  *pixbuf,
  *
  * See `gdk_pixbuf_save()` for more details.
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  *
  * Since: 2.4
  **/
@@ -2861,7 +2949,7 @@ save_to_buffer_callback (const gchar *data,
  *
  * See [method@GdkPixbuf.Pixbuf.save_to_buffer] for more details.
  *
- * Return value: whether an error was set
+ * Returns: whether an error was set
  *
  * Since: 2.4
  **/
@@ -3084,7 +3172,7 @@ save_to_stream_thread (GTask                 *task,
 }
 
 /**
- * gdk_pixbuf_save_to_streamv_async:
+ * gdk_pixbuf_save_to_streamv_async: (finish-func gdk_pixbuf_save_to_stream_finish)
  * @pixbuf: a `GdkPixbuf`
  * @stream: a `GOutputStream` to which to save the pixbuf
  * @type: name of file format
@@ -3142,7 +3230,7 @@ gdk_pixbuf_save_to_streamv_async (GdkPixbuf           *pixbuf,
 }
 
 /**
- * gdk_pixbuf_save_to_stream_async:
+ * gdk_pixbuf_save_to_stream_async: (finish-func gdk_pixbuf_save_to_stream_finish)
  * @pixbuf: a `GdkPixbuf`
  * @stream: a `GOutputStream` to which to save the pixbuf
  * @type: name of file format
@@ -3204,7 +3292,7 @@ gdk_pixbuf_save_to_stream_async (GdkPixbuf           *pixbuf,
  * Finishes an asynchronous pixbuf save operation started with
  * gdk_pixbuf_save_to_stream_async().
  *
- * Return value: `TRUE` if the pixbuf was saved successfully, `FALSE` if an error was set.
+ * Returns: `TRUE` if the pixbuf was saved successfully, `FALSE` if an error was set.
  *
  * Since: 2.24
  **/
@@ -3234,7 +3322,7 @@ gdk_pixbuf_save_to_stream_finish (GAsyncResult  *async_result,
  *
  * Returns the name of the format.
  *
- * Return value: the name of the format.
+ * Returns: (transfer full) (nullable): the name of the format.
  *
  * Since: 2.2
  */
@@ -3252,7 +3340,7 @@ gdk_pixbuf_format_get_name (GdkPixbufFormat *format)
  *
  * Returns a description of the format.
  *
- * Return value: a description of the format.
+ * Returns: (transfer full) (nullable): a description of the format.
  *
  * Since: 2.2
  */
@@ -3278,7 +3366,7 @@ gdk_pixbuf_format_get_description (GdkPixbufFormat *format)
  *
  * Returns the mime types supported by the format.
  *
- * Return value: (transfer full) (array zero-terminated=1): an array of mime types
+ * Returns: (transfer full) (array zero-terminated=1) (nullable): an array of mime types
  *
  * Since: 2.2
  */
@@ -3297,7 +3385,7 @@ gdk_pixbuf_format_get_mime_types (GdkPixbufFormat *format)
  * Returns the filename extensions typically used for files in the
  * given format.
  *
- * Return value: (transfer full) (array zero-terminated=1): an array of
+ * Returns: (transfer full) (array zero-terminated=1) (nullable): an array of
  *   filename extensions
  *
  * Since: 2.2
@@ -3316,7 +3404,7 @@ gdk_pixbuf_format_get_extensions (GdkPixbufFormat *format)
  *
  * Returns whether pixbufs can be saved in the given format.
  *
- * Return value: whether pixbufs can be saved in the given format.
+ * Returns: whether pixbufs can be saved in the given format.
  *
  * Since: 2.2
  */
@@ -3338,7 +3426,7 @@ gdk_pixbuf_format_is_writable (GdkPixbufFormat *format)
  * the desired size, rather than loading it at the default size and
  * scaling the resulting pixbuf to the desired size.
  *
- * Return value: whether this image format is scalable.
+ * Returns: whether this image format is scalable.
  *
  * Since: 2.6
  */
@@ -3358,7 +3446,7 @@ gdk_pixbuf_format_is_scalable (GdkPixbufFormat *format)
  *
  * See gdk_pixbuf_format_set_disabled().
  *
- * Return value: whether this image format is disabled.
+ * Returns: whether this image format is disabled.
  *
  * Since: 2.6
  */
@@ -3403,7 +3491,7 @@ gdk_pixbuf_format_set_disabled (GdkPixbufFormat *format,
  * The returned string should be a shorthand for a well known license, e.g.
  * "LGPL", "GPL", "QPL", "GPL/QPL", or "other" to indicate some other license.
  *
- * Returns: (transfer full): a string describing the license of the pixbuf format
+ * Returns: (transfer full) (nullable): a string describing the license of the pixbuf format
  *
  * Since: 2.6
  */
@@ -3455,7 +3543,7 @@ gdk_pixbuf_get_formats (void)
  *
  * Creates a copy of `format`.
  *
- * Return value: the newly allocated copy of a `GdkPixbufFormat`. Use
+ * Returns: (transfer full) (nullable): the newly allocated copy of a `GdkPixbufFormat`. Use
  *   gdk_pixbuf_format_free() to free the resources when done
  *
  * Since: 2.22

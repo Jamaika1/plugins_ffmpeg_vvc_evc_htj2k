@@ -1,3 +1,4 @@
+#define HAVE_VALGRIND 1
 // #define HAVE_BYTESWAP_H 1
 #define HAVE_INTTYPES_H 1
 //#define HAVE_STDINT_H 1
@@ -7,7 +8,7 @@
 #define HAVE_UINT64_T 1
 
 #define WIN32_LEAN_AND_MEAN
-#define NOMINMAX 1
+//#define NOMINMAX
 
 #define SIZEOF_INT 4
 /* The size of a `long', as computed by sizeof. */
@@ -21,7 +22,7 @@
 #define SIZEOF_VOID_P 8
 /* The size of a `__int64', as computed by sizeof. */
 
-#define HAVE_GCC_LEGACY_ATOMICS 1
+//#define HAVE_GCC_LEGACY_ATOMICS 1
 //#define HAVE_FT_COLR_V1 1
 //#define HAVE_FT_SVG_DOCUMENT 1
 //#define HAVE_FT_LOAD_NO_SVG 1

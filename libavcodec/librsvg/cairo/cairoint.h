@@ -89,12 +89,6 @@
 
 CAIRO_BEGIN_DECLS
 
-#if _WIN32 && !_WIN32_WCE /* Permissions on WinCE? No worries! */
-cairo_private FILE *
-_cairo_win32_tmpfile (void);
-#define tmpfile() _cairo_win32_tmpfile()
-#endif
-
 #undef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -181,7 +175,7 @@ do {					\
 static inline int cairo_const
 _cairo_popcount (uint32_t mask)
 {
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#if defined (__GNUC__)
     return __builtin_popcount (mask);
 #else
     register int y;
@@ -1962,6 +1956,9 @@ _cairo_observers_notify (cairo_list_t *observers, void *arg);
 cairo_private cairo_status_t
 _cairo_fopen (const char *filename, const char *mode, FILE **file_out);
 
+cairo_private FILE *
+_cairo_tmpfile (void);
+
 #include "cairo-mutex-private.h"
 #include "cairo-fixed-private.h"
 #include "cairo-wideint-private.h"
@@ -1969,7 +1966,7 @@ _cairo_fopen (const char *filename, const char *mode, FILE **file_out);
 #include "cairo-hash-private.h"
 
 #if HAVE_VALGRIND
-#include <memcheck.h>
+#include "memcheck.h"
 
 #define VG(x) x
 

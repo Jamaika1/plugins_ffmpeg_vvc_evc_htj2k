@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "vp9.h"
-#include "vp9data.h"
+#include "libavcodec/vp9.h"
+#include "libavcodec/vp9data.h"
 
 const uint8_t ff_vp9_bwh_tab[2][N_BS_SIZES][2] = {
     {

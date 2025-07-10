@@ -23,13 +23,14 @@
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
 #include "libavutil/fifo.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "audio_frame_queue.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "version.h"
-#include "vorbis_parser.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/audio_frame_queue.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/version.h"
+#include "libavcodec/vorbis_parser.h"
 
 
 /* Number of samples the user should send in each call.
@@ -385,8 +386,7 @@ const FFCodec ff_libvorbis_encoder = {
     .init           = libvorbis_encode_init,
     FF_CODEC_ENCODE_CB(libvorbis_encode_frame),
     .close          = libvorbis_encode_close,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLTP,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLTP),
     .p.priv_class   = &vorbis_class,
     .defaults       = defaults,
     .p.wrapper_name = "libvorbis",

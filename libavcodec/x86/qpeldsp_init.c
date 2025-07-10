@@ -82,7 +82,7 @@ void ff_put_no_rnd_mpeg4_qpel8_v_lowpass_mmxext(uint8_t *dst,
 #define ff_put_no_rnd_pixels16_mmxext ff_put_pixels16_mmx
 #define ff_put_no_rnd_pixels8_mmxext ff_put_pixels8_mmx
 
-#if HAVE_X86ASM
+#if HAVE_MMXEXT_EXTERNAL
 
 #define ff_put_pixels16_mmxext ff_put_pixels16_mmx
 #define ff_put_pixels8_mmxext  ff_put_pixels8_mmx
@@ -504,7 +504,7 @@ QPEL_OP(put_,        _,        mmxext)
 QPEL_OP(avg_,        _,        mmxext)
 QPEL_OP(put_no_rnd_, _no_rnd_, mmxext)
 
-#endif /* HAVE_X86ASM */
+#endif /* HAVE_MMXEXT_EXTERNAL */
 
 #define SET_QPEL_FUNCS(PFX, IDX, SIZE, CPU, PREFIX)                          \
 do {                                                                         \
@@ -528,10 +528,11 @@ do {                                                                         \
 
 av_cold void ff_qpeldsp_init_x86(QpelDSPContext *c)
 {
+//#if HAVE_X86ASM
     int cpu_flags = av_get_cpu_flags();
 
-    if (X86_MMXEXT(cpu_flags)) {
-#if !HAVE_MMXEXT_EXTERNAL
+#if HAVE_MMXEXT_EXTERNAL
+    if (EXTERNAL_MMXEXT(cpu_flags)) {
         SET_QPEL_FUNCS(avg_qpel,        0, 16, mmxext, );
         SET_QPEL_FUNCS(avg_qpel,        1,  8, mmxext, );
 
@@ -539,6 +540,7 @@ av_cold void ff_qpeldsp_init_x86(QpelDSPContext *c)
         SET_QPEL_FUNCS(put_qpel,        1,  8, mmxext, );
         SET_QPEL_FUNCS(put_no_rnd_qpel, 0, 16, mmxext, );
         SET_QPEL_FUNCS(put_no_rnd_qpel, 1,  8, mmxext, );
-#endif /* HAVE_MMXEXT_EXTERNAL */
     }
+#endif
+//#endif /* HAVE_X86ASM */
 }

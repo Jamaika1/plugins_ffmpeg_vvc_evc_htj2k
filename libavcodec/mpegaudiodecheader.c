@@ -26,9 +26,9 @@
 
 #include "libavutil/macros.h"
 
-#include "mpegaudio.h"
-#include "mpegaudiodata.h"
-#include "mpegaudiodecheader.h"
+#include "libavcodec/mpegaudio.h"
+#include "libavcodec/mpegaudiodata.h"
+#include "libavcodec/mpegaudiodecheader.h"
 
 
 int avpriv_mpegaudio_decode_header(MPADecodeHeader *s, uint32_t header)

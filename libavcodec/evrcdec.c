@@ -28,13 +28,13 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/opt.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "decode.h"
-#include "get_bits.h"
-#include "evrcdata.h"
-#include "acelp_vectors.h"
-#include "lsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/decode.h"
+#include "libavcodec/get_bits.h"
+#include "libavcodec/evrcdata.h"
+#include "libavcodec/acelp_vectors.h"
+#include "libavcodec/lsp.h"
 
 #define MIN_LSP_SEP (0.05 / (2.0 * M_PI))
 #define MIN_DELAY      20
@@ -495,11 +495,11 @@ static void fcb_excitation(EVRCContext *e, const uint16_t *codebook,
 /**
  * Synthesis of the decoder output signal.
  *
- * param[in]     in              input signal
- * param[in]     filter_coeffs   LPC coefficients
- * param[in/out] memory          synthesis filter memory
- * param         buffer_length   amount of data to process
- * param[out]    samples         output samples
+ * @param[in]     in              input signal
+ * @param[in]     filter_coeffs   LPC coefficients
+ * @param[in/out] memory          synthesis filter memory
+ * @param         buffer_length   amount of data to process
+ * @param[out]    samples         output samples
  *
  * TIA/IS-127 5.2.3.15, 5.7.3.4
  */

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: 0BSD
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 /// \file       tuklib_cpucores.c
@@ -5,16 +7,13 @@
 //
 //  Author:     Lasse Collin
 //
-//  This file has been put into the public domain.
-//  You can do whatever you want with this file.
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "tuklib_cpucores.h"
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #	ifndef _WIN32_WINNT
-#		define _WIN32_WINNT 0x0500
+#		define _WIN32_WINNT 0x0A00
 #	endif
 #	include <windows.h>
 

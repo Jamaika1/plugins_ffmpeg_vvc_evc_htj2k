@@ -42,12 +42,16 @@
 #define opus_uint8       unsigned char
 
 /* Use the real stdint.h if it's there (taken from Paul Hsieh's pstdint.h) */
-#if (defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) //|| (defined(__GNUC__) && (defined(_STDINT_H) || defined(_STDINT_H_)) || defined (HAVE_STDINT_H))
+#if (defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || /*(*/defined(__GNUC__) //&& (defined(_STDINT_H) || defined(_STDINT_H_)) || defined (HAVE_STDINT_H))
 //#include <stdint.h>
 #include <inttypes.h>
 #  undef opus_int64
-#  undef opus_int8
 #  undef opus_uint64
+#  undef opus_int32
+#  undef opus_uint32
+#  undef opus_int16
+#  undef opus_uint16
+#  undef opus_int8
 #  undef opus_uint8
    typedef int8_t opus_int8;
    typedef uint8_t opus_uint8;

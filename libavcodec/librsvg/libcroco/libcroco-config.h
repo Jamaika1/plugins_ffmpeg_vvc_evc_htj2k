@@ -3,7 +3,7 @@
 #endif
 
 #ifndef LIBCROCO_VERSION
-#define LIBCROCO_VERSION "0.6.99-b9e4b47"
+#define LIBCROCO_VERSION "0.6.99-ea3de62"
 #endif
 
 /*#ifndef G_DISABLE_CHECKS

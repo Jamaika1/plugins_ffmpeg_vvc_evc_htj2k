@@ -32,7 +32,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/mem.h"
 
-#include "parser.h"
+#include "libavcodec/parser.h"
 
 #define DIRAC_PARSE_INFO_PREFIX 0x42424344
 

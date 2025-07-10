@@ -19,13 +19,14 @@
  */
 
 #define BITSTREAM_WRITER_LE
-#include "ttadata.h"
-#include "ttaencdsp.h"
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "encode.h"
-#include "put_bits.h"
+#include "libavcodec/ttadata.h"
+#include "libavcodec/ttaencdsp.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/encode.h"
+#include "libavcodec/put_bits.h"
 #include "libavutil/crc.h"
+#include "libavutil/mem.h"
 
 typedef struct TTAEncContext {
     const AVCRC *crc_table;
@@ -210,8 +211,5 @@ const FFCodec ff_tta_encoder = {
     .init           = tta_encode_init,
     .close          = tta_encode_close,
     FF_CODEC_ENCODE_CB(tta_encode_frame),
-    .p.sample_fmts  = (const enum AVSampleFormat[]){ AV_SAMPLE_FMT_U8,
-                                                     AV_SAMPLE_FMT_S16,
-                                                     AV_SAMPLE_FMT_S32,
-                                                     AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_U8, AV_SAMPLE_FMT_S16, AV_SAMPLE_FMT_S32),
 };

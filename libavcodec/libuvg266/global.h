@@ -134,6 +134,9 @@ typedef int32_t mv_t;
 
 //#define UVG_DEBUG_PRINT_YUVIEW_CSV 1
 //#define UVG_DEBUG_PRINT_MV_INFO 1
+
+//#define UVG_ENCODING_RESUME 1
+
 /* CONFIG VARIABLES */
 
 //spec: references to variables defined in Rec. ITU-T H.265 (04/2013)
@@ -145,11 +148,11 @@ typedef int32_t mv_t;
 
 #define INTERNAL_MV_PREC 4 // Internal motion vector precision, 4 = 1/16 pel
 
-//! Limits for prediction block sizes. 0 = 64x64, 4 = 4x4.
+//! Limits for prediction block sizes.
 #define PU_DEPTH_INTER_MIN 0
-#define PU_DEPTH_INTER_MAX 3
+#define PU_DEPTH_INTER_MAX 8
 #define PU_DEPTH_INTRA_MIN 0
-#define PU_DEPTH_INTRA_MAX 4
+#define PU_DEPTH_INTRA_MAX 8
 
 //! Maximum number of layers in GOP structure (for allocating structures)
 #define MAX_GOP_LAYERS 6
@@ -176,7 +179,6 @@ typedef int32_t mv_t;
 //! pow(2, MIN_SIZE)
 #define CU_MIN_SIZE_PIXELS (1 << MIN_SIZE)
 
-//! Round frame size up to this interval (8 pixels)
 #define CONF_WINDOW_PAD_IN_PIXELS ((1 << MIN_SIZE)<<1)
 
 //! spec: CtbSizeY
@@ -254,6 +256,15 @@ typedef int32_t mv_t;
 #define AMVP_MAX_NUM_CANDS 2
 #define AMVP_MAX_NUM_CANDS_MEM 3
 #define MRG_MAX_NUM_CANDS 6
+/**
+ * \brief Max number of merge candidates in Intra Block Copy
+ *
+ */
+#define IBC_MRG_MAX_NUM_CANDS 6
+#define IBC_BUFFER_SIZE       (128*128)
+#define IBC_BUFFER_WIDTH      (IBC_BUFFER_SIZE / LCU_WIDTH)
+#define IBC_BUFFER_WIDTH_C    ((IBC_BUFFER_SIZE / LCU_WIDTH) >> 1)
+
 
 #define MAX_NUM_HMVP_CANDS 5
 
@@ -265,7 +276,6 @@ typedef int32_t mv_t;
 #define CLIP_TO_PIXEL(value) CLIP(0, PIXEL_MAX, (value))
 #define CLIP_TO_QP(value) CLIP(0, 51, (value))
 #define SWAP(a,b,swaptype) { swaptype tempval; tempval = a; a = b; b = tempval; }
-#define CU_WIDTH_FROM_DEPTH(depth) (LCU_WIDTH >> depth)
 #define WITHIN(val, min_val, max_val) ((min_val) <= (val) && (val) <= (max_val))
 #define CEILDIV(x,y) (((x) + (y) - 1) / (y))
 
@@ -304,6 +314,12 @@ typedef int32_t mv_t;
   #define ALIGNED(alignment) __declspec(align(alignment))
 #else
   #define ALIGNED(alignment) __attribute__((aligned (alignment)))
+#endif
+
+#ifdef _MSC_VER
+#define NO_ASAN
+#else
+#define NO_ASAN __attribute__((no_sanitize("address")))
 #endif
 
 #ifdef _MSC_VER

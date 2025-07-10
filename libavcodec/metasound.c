@@ -28,12 +28,12 @@
 #include "libavutil/channel_layout.h"
 
 #define BITSTREAM_READER_LE
-#include "avcodec.h"
-#include "codec_internal.h"
-#include "get_bits.h"
+#include "libavcodec/avcodec.h"
+#include "libavcodec/codec_internal.h"
+#include "libavcodec/get_bits.h"
 
-#include "twinvq.h"
-#include "metasound_data.h"
+#include "libavcodec/twinvq.h"
+#include "libavcodec/metasound_data.h"
 
 static void add_peak(float period, int width, const float *shape,
                      float ppc_gain, float *speech, int len)
@@ -374,7 +374,6 @@ const FFCodec ff_metasound_decoder = {
     .close          = ff_twinvq_decode_close,
     FF_CODEC_DECODE_CB(ff_twinvq_decode_frame),
     .p.capabilities = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_CHANNEL_CONF,
-    .p.sample_fmts  = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_FLTP,
-                                                      AV_SAMPLE_FMT_NONE },
+    CODEC_SAMPLEFMTS(AV_SAMPLE_FMT_FLTP),
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
 };

@@ -37,11 +37,12 @@
 
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/bytestream.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "bytestream.h"
 
 #define VMD_HEADER_SIZE 0x330
 #define PALETTE_COUNT 256

@@ -24,7 +24,7 @@
  * mpeg audio layer common tables.
  */
 
-#include "mpegaudiodata.h"
+#include "libavcodec/mpegaudiodata.h"
 
 /*******************************************************/
 /* layer 2 tables */

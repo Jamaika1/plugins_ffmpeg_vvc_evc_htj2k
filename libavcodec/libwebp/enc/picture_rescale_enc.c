@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "../webp/types.h"
+#include "../dsp/dsp.h"
 #include "../enc/vp8i_enc.h"
 
 #if !defined(WEBP_REDUCE_SIZE)

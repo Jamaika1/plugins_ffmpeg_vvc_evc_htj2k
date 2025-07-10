@@ -24,7 +24,7 @@
  * MPEG Audio common code.
  */
 
-#include "mpegaudio.h"
+#include "libavcodec/mpegaudio.h"
 
 
 /* bitrate is in kb/s */

@@ -24,8 +24,8 @@
  * For more information, contact us at licensing@x264.com.
  *****************************************************************************/
 
-#ifndef X264_ENCODER_SET_H
-#define X264_ENCODER_SET_H
+#ifndef X264_ENCODER_SET_ENC_H
+#define X264_ENCODER_SET_ENC_H
 
 #define x264_sps_init x264_template(sps_init)
 void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param );

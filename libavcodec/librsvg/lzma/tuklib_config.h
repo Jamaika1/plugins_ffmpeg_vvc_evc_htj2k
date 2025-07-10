@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: 0BSD
+
+#define ENABLE_NLS 1
+
 // If config.h isn't available, assume that the headers required by
 // tuklib_common.h are available. This is required by crc32_tablegen.c.
 #ifdef HAVE_CONFIG_H

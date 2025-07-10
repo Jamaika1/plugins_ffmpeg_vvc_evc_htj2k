@@ -812,10 +812,10 @@ static int cabac_reinit(VVCLocalContext *lc)
 
 static void cabac_init_state(VVCLocalContext *lc)
 {
-    const VVCSPS *sps               = lc->fc->ps.sps;
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const int qp                    = av_clip_uintp2(lc->sc->sh.slice_qp_y, 6);
-    int init_type                   = 2 - rsh->sh_slice_type;
+    const VVCSPS *sps             = lc->fc->ps.sps;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const int qp                  = av_clip_uintp2(lc->sc->sh.slice_qp_y, 6);
+    int init_type                 = 2 - rsh->sh_slice_type;
 
     av_assert0(VVC_CONTEXTS == SYNTAX_ELEMENT_LAST);
 
@@ -843,14 +843,14 @@ int ff_vvc_cabac_init(VVCLocalContext *lc,
     const int ctu_idx, const int rx, const int ry)
 {
     int ret = 0;
-    const VVCPPS *pps               = lc->fc->ps.pps;
-    const int first_ctb_in_slice    = !ctu_idx;
-    const int first_ctb_in_tile     = rx == pps->ctb_to_col_bd[rx] && ry == pps->ctb_to_row_bd[ry];
+    const VVCPPS *pps            = lc->fc->ps.pps;
+    const int first_ctb_in_slice = !ctu_idx;
+    const int first_ctb_in_tile  = rx == pps->ctb_to_col_bd[rx] && ry == pps->ctb_to_row_bd[ry];
 
     if (first_ctb_in_slice|| first_ctb_in_tile) {
         if (lc->sc->nb_eps == 1 && !first_ctb_in_slice)
             ret = cabac_reinit(lc);
-        if (ret == 0)
+        if (!ret)
             cabac_init_state(lc);
     }
     return ret;
@@ -912,11 +912,6 @@ static int inline vvc_get_cabac(CABACContext *c, VVCCabacState* base, const int 
 
 #define GET_CABAC(ctx) vvc_get_cabac(&lc->ep->cc, lc->ep->cabac_state, ctx)
 
-static av_always_inline int vvc_get_cabac_bypass(CABACContext *c)
-{
-    return get_cabac_bypass(c);
-}
-
 //9.3.3.4 Truncated binary (TB) binarization process
 static int truncated_binary_decode(VVCLocalContext *lc, const int c_max)
 {
@@ -925,12 +920,33 @@ static int truncated_binary_decode(VVCLocalContext *lc, const int c_max)
     const int u = (1 << (k+1)) - n;
     int v = 0;
     for (int i = 0; i < k; i++)
-        v = (v << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+        v = (v << 1) | get_cabac_bypass(&lc->ep->cc);
     if (v >= u) {
-        v = (v << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+        v = (v << 1) | get_cabac_bypass(&lc->ep->cc);
         v -= u;
     }
     return v;
+}
+
+// 9.3.3.5 k-th order Exp - Golomb binarization process
+static int kth_order_egk_decode(CABACContext *c, int k)
+{
+    int bit    = 1;
+    int value  = 0;
+    int symbol = 0;
+
+    while (bit) {
+        bit = get_cabac_bypass(c);
+        value += bit << k++;
+    }
+
+    if (--k) {
+        for (int i = 0; i < k; i++)
+            symbol = (symbol << 1) | get_cabac_bypass(c);
+        value += symbol;
+    }
+
+    return value;
 }
 
 // 9.3.3.6 Limited k-th order Exp-Golomb binarization process
@@ -939,28 +955,39 @@ static int limited_kth_order_egk_decode(CABACContext *c, const int k, const int 
     int pre_ext_len = 0;
     int escape_length;
     int val = 0;
-    while ((pre_ext_len < max_pre_ext_len) && vvc_get_cabac_bypass(c))
+    while ((pre_ext_len < max_pre_ext_len) && get_cabac_bypass(c))
         pre_ext_len++;
     if (pre_ext_len == max_pre_ext_len)
         escape_length = trunc_suffix_len;
     else
         escape_length = pre_ext_len + k;
     while (escape_length-- > 0) {
-        val = (val << 1) + vvc_get_cabac_bypass(c);
+        val = (val << 1) + get_cabac_bypass(c);
     }
     val += ((1 << pre_ext_len) - 1) << k;
     return val;
+}
+
+// 9.3.3.7 Fixed-length binarization process
+static int fixed_length_decode(CABACContext* c, const int len)
+{
+    int value = 0;
+
+    for (int i = 0; i < len; i++)
+        value = (value << 1) | get_cabac_bypass(c);
+
+    return value;
 }
 
 static av_always_inline
 void get_left_top(const VVCLocalContext *lc, uint8_t *left, uint8_t *top,
     const int x0, const int y0, const uint8_t *left_ctx, const uint8_t *top_ctx)
 {
-    const VVCFrameContext *fc   = lc->fc;
-    const VVCSPS *sps           = fc->ps.sps;
-    const int min_cb_width      = fc->ps.pps->min_cb_width;
-    const int x0b = av_mod_uintp2(x0, sps->ctb_log2_size_y);
-    const int y0b = av_mod_uintp2(y0, sps->ctb_log2_size_y);
+    const VVCFrameContext *fc = lc->fc;
+    const VVCSPS *sps         = fc->ps.sps;
+    const int min_cb_width    = fc->ps.pps->min_cb_width;
+    const int x0b = av_zero_extend(x0, sps->ctb_log2_size_y);
+    const int y0b = av_zero_extend(y0, sps->ctb_log2_size_y);
     const int x_cb = x0 >> sps->min_cb_log2_size_y;
     const int y_cb = y0 >> sps->min_cb_log2_size_y;
 
@@ -988,41 +1015,34 @@ int ff_vvc_sao_type_idx_decode(VVCLocalContext *lc)
     if (!GET_CABAC(SAO_TYPE_IDX))
         return SAO_NOT_APPLIED;
 
-    if (!vvc_get_cabac_bypass(&lc->ep->cc))
+    if (!get_cabac_bypass(&lc->ep->cc))
         return SAO_BAND;
     return SAO_EDGE;
 }
 
 int ff_vvc_sao_band_position_decode(VVCLocalContext *lc)
 {
-    int i;
-    int value = vvc_get_cabac_bypass(&lc->ep->cc);
-
-    for (i = 0; i < 4; i++)
-        value = (value << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
-    return value;
+    return fixed_length_decode(&lc->ep->cc, 5);
 }
 
 int ff_vvc_sao_offset_abs_decode(VVCLocalContext *lc)
 {
     int i = 0;
-    int length = (1 << (FFMIN(lc->fc->ps.sps->bit_depth, 10) - 5)) - 1;
+    const int length = (1 << (FFMIN(lc->fc->ps.sps->bit_depth, 10) - 5)) - 1;
 
-    while (i < length && vvc_get_cabac_bypass(&lc->ep->cc))
+    while (i < length && get_cabac_bypass(&lc->ep->cc))
         i++;
     return i;
 }
 
 int ff_vvc_sao_offset_sign_decode(VVCLocalContext *lc)
 {
-    return vvc_get_cabac_bypass(&lc->ep->cc);
+    return get_cabac_bypass(&lc->ep->cc);
 }
 
 int ff_vvc_sao_eo_class_decode(VVCLocalContext *lc)
 {
-    int ret = vvc_get_cabac_bypass(&lc->ep->cc) << 1;
-    ret    |= vvc_get_cabac_bypass(&lc->ep->cc);
-    return ret;
+    return (get_cabac_bypass(&lc->ep->cc) << 1) | get_cabac_bypass(&lc->ep->cc);
 }
 
 int ff_vvc_alf_ctb_flag(VVCLocalContext *lc, const int rx, const int ry, const int c_idx)
@@ -1082,7 +1102,7 @@ int ff_vvc_alf_ctb_cc_idc(VVCLocalContext *lc, const int rx, const int ry, const
     if (!GET_CABAC(inc))
         return 0;
     i++;
-    while (i < cc_filters_signalled && vvc_get_cabac_bypass(&lc->ep->cc))
+    while (i < cc_filters_signalled && get_cabac_bypass(&lc->ep->cc))
         i++;
     return i;
 }
@@ -1091,8 +1111,8 @@ int ff_vvc_split_cu_flag(VVCLocalContext *lc, const int x0, const int y0,
     const int cb_width, const int cb_height, const int is_chroma, const VVCAllowedSplit *a)
 {
     const VVCFrameContext *fc = lc->fc;
-    const VVCPPS *pps   = fc->ps.pps;
-    const int is_inside = (x0 + cb_width <= pps->width) && (y0 + cb_height <= pps->height);
+    const VVCPPS *pps         = fc->ps.pps;
+    const int is_inside       = (x0 + cb_width <= pps->width) && (y0 + cb_height <= pps->height);
 
     if ((a->btv || a->bth || a->ttv || a->tth || a->qt) && is_inside)
     {
@@ -1135,17 +1155,17 @@ static int mtt_split_cu_vertical_flag_decode(VVCLocalContext *lc, const int x0, 
         else if (v < h)
             inc = 3;
         else {
-            const VVCFrameContext *fc   = lc->fc;
-            const VVCSPS *sps           = fc->ps.sps;
-            const int min_cb_width      = fc->ps.pps->min_cb_width;
-            const int x0b               = av_mod_uintp2(x0, sps->ctb_log2_size_y);
-            const int y0b               = av_mod_uintp2(y0, sps->ctb_log2_size_y);
-            const int x_cb              = x0 >> sps->min_cb_log2_size_y;
-            const int y_cb              = y0 >> sps->min_cb_log2_size_y;
-            const int available_a       = lc->ctb_up_flag || y0b;
-            const int available_l       = lc->ctb_left_flag || x0b;
-            const int da                = cb_width  / (available_a ? SAMPLE_CTB(fc->tab.cb_width[ch_type], x_cb, y_cb - 1) : 1);
-            const int dl                = cb_height / (available_l ? SAMPLE_CTB(fc->tab.cb_height[ch_type], x_cb - 1, y_cb) : 1);
+            const VVCFrameContext *fc = lc->fc;
+            const VVCSPS *sps         = fc->ps.sps;
+            const int min_cb_width    = fc->ps.pps->min_cb_width;
+            const int x0b             = av_zero_extend(x0, sps->ctb_log2_size_y);
+            const int y0b             = av_zero_extend(y0, sps->ctb_log2_size_y);
+            const int x_cb            = x0 >> sps->min_cb_log2_size_y;
+            const int y_cb            = y0 >> sps->min_cb_log2_size_y;
+            const int available_a     = lc->ctb_up_flag || y0b;
+            const int available_l     = lc->ctb_left_flag || x0b;
+            const int da              = cb_width  / (available_a ? SAMPLE_CTB(fc->tab.cb_width[ch_type], x_cb, y_cb - 1) : 1);
+            const int dl              = cb_height / (available_l ? SAMPLE_CTB(fc->tab.cb_height[ch_type], x_cb - 1, y_cb) : 1);
 
             if (da == dl || !available_a || !available_l)
                 inc = 0;
@@ -1161,14 +1181,14 @@ static int mtt_split_cu_vertical_flag_decode(VVCLocalContext *lc, const int x0, 
 
 static int mtt_split_cu_binary_flag_decode(VVCLocalContext *lc, const int mtt_split_cu_vertical_flag, const int mtt_depth)
 {
-    int inc = (2 * mtt_split_cu_vertical_flag) + ((mtt_depth <= 1) ? 1 : 0);
+    const int inc = (2 * mtt_split_cu_vertical_flag) + ((mtt_depth <= 1) ? 1 : 0);
     return GET_CABAC(MTT_SPLIT_CU_BINARY_FLAG + inc);
 }
 
 VVCSplitMode ff_vvc_split_mode(VVCLocalContext *lc, const int x0, const int y0, const int cb_width, const int cb_height,
     const int cqt_depth, const int mtt_depth, const int ch_type, const VVCAllowedSplit *a)
 {
-    int allow_no_qt = a->btv || a->bth || a->ttv || a->tth;
+    const int allow_no_qt = a->btv || a->bth || a->ttv || a->tth;
     int split_qt_flag;
     int mtt_split_cu_vertical_flag;
     int mtt_split_cu_binary_flag;
@@ -1202,21 +1222,21 @@ VVCSplitMode ff_vvc_split_mode(VVCLocalContext *lc, const int x0, const int y0, 
 int ff_vvc_non_inter_flag(VVCLocalContext *lc, const int x0, const int y0, const int ch_type)
 {
     const VVCFrameContext *fc = lc->fc;
-    uint8_t inc, left = 0, top = 0;
+    uint8_t inc, left = MODE_INTER, top = MODE_INTER;
 
     get_left_top(lc, &left, &top, x0, y0, fc->tab.cpm[ch_type], fc->tab.cpm[ch_type]);
-    inc = left || top;
+    inc = left == MODE_INTRA || top == MODE_INTRA;
     return GET_CABAC(NON_INTER_FLAG + inc);
 }
 
 int ff_vvc_pred_mode_flag(VVCLocalContext *lc, const int is_chroma)
 {
-    const VVCFrameContext *fc    = lc->fc;
-    const CodingUnit *cu        = lc->cu;
-    uint8_t inc, left = 0, top = 0;
+    const VVCFrameContext *fc = lc->fc;
+    const CodingUnit *cu      = lc->cu;
+    uint8_t inc, left = MODE_INTER, top = MODE_INTER;
 
     get_left_top(lc, &left, &top, cu->x0, cu->y0, fc->tab.cpm[is_chroma], fc->tab.cpm[is_chroma]);
-    inc = left || top;
+    inc = left == MODE_INTRA || top == MODE_INTRA;
     return GET_CABAC(PRED_MODE_FLAG + inc);
 }
 
@@ -1254,7 +1274,7 @@ int ff_vvc_cu_skip_flag(VVCLocalContext *lc, const uint8_t *cu_skip_flag)
 int ff_vvc_pred_mode_ibc_flag(VVCLocalContext *lc, const int is_chroma)
 {
     const VVCFrameContext *fc = lc->fc;
-    const CodingUnit *cu        = lc->cu;
+    const CodingUnit *cu      = lc->cu;
     uint8_t left_mode = MODE_INTER, top_mode = MODE_INTER;
     int inc;
 
@@ -1263,17 +1283,25 @@ int ff_vvc_pred_mode_ibc_flag(VVCLocalContext *lc, const int is_chroma)
     return GET_CABAC(PRED_MODE_IBC_FLAG + inc);
 }
 
+static av_always_inline
+uint8_t get_mip_inc(VVCLocalContext *lc, const uint8_t *ctx)
+{
+    uint8_t left = 0, top = 0;
+    get_left_top(lc, &left, &top, lc->cu->x0, lc->cu->y0, ctx, ctx);
+    return (left & 1) + (top & 1);
+}
+
 int ff_vvc_intra_mip_flag(VVCLocalContext *lc, const uint8_t *intra_mip_flag)
 {
-    const int w     = lc->cu->cb_width;
-    const int h     = lc->cu->cb_height;
-    const int inc   =  (w > h * 2 || h > w * 2) ? 3 : get_inc(lc, intra_mip_flag);
+    const int w   = lc->cu->cb_width;
+    const int h   = lc->cu->cb_height;
+    const int inc =  (w > h * 2 || h > w * 2) ? 3 : get_mip_inc(lc, intra_mip_flag);
     return GET_CABAC(INTRA_MIP_FLAG + inc);
 }
 
 int ff_vvc_intra_mip_transposed_flag(VVCLocalContext *lc)
 {
-    return vvc_get_cabac_bypass(&lc->ep->cc);
+    return get_cabac_bypass(&lc->ep->cc);
 }
 
 int ff_vvc_intra_mip_mode(VVCLocalContext *lc)
@@ -1320,7 +1348,7 @@ int ff_vvc_intra_luma_not_planar_flag(VVCLocalContext *lc, const int intra_subpa
 int ff_vvc_intra_luma_mpm_idx(VVCLocalContext *lc)
 {
     int i;
-    for (i = 0; i < 4 && vvc_get_cabac_bypass(&lc->ep->cc); i++)
+    for (i = 0; i < 4 && get_cabac_bypass(&lc->ep->cc); i++)
         /* nothing */;
     return i;
 }
@@ -1339,14 +1367,66 @@ int ff_vvc_cclm_mode_idx(VVCLocalContext *lc)
 {
     if (!GET_CABAC(CCLM_MODE_IDX))
         return 0;
-    return vvc_get_cabac_bypass(&lc->ep->cc) + 1;
+    return get_cabac_bypass(&lc->ep->cc) + 1;
 }
 
 int ff_vvc_intra_chroma_pred_mode(VVCLocalContext *lc)
 {
     if (!GET_CABAC(INTRA_CHROMA_PRED_MODE))
         return 4;
-    return (vvc_get_cabac_bypass(&lc->ep->cc) << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+    return (get_cabac_bypass(&lc->ep->cc) << 1) | get_cabac_bypass(&lc->ep->cc);
+}
+
+int ff_vvc_palette_predictor_run(VVCLocalContext *lc)
+{
+    return kth_order_egk_decode(&lc->ep->cc, 0);
+}
+
+int ff_vvc_num_signalled_palette_entries(VVCLocalContext *lc)
+{
+    return kth_order_egk_decode(&lc->ep->cc, 0);
+}
+
+int ff_vvc_new_palette_entries(VVCLocalContext *lc, const int bit_depth)
+{
+    return fixed_length_decode(&lc->ep->cc, bit_depth);
+}
+
+bool ff_vvc_palette_escape_val_present_flag(VVCLocalContext *lc)
+{
+    return get_cabac_bypass(&lc->ep->cc);
+}
+
+bool ff_vvc_palette_transpose_flag(VVCLocalContext *lc)
+{
+    return GET_CABAC(PALETTE_TRANSPOSE_FLAG);
+}
+
+bool ff_vvc_run_copy_flag(VVCLocalContext *lc, const int prev_run_type, const int prev_run_position, const int cur_pos)
+{
+    uint8_t run_left_lut[] = { 0, 1, 2, 3, 4 };
+    uint8_t run_top_lut[] = { 5, 6, 6, 7, 7 };
+
+    int bin_dist = cur_pos - prev_run_position - 1;
+    uint8_t *run_lut = prev_run_type == 1 ? run_top_lut : run_left_lut;
+    uint8_t ctx_inc = bin_dist <= 4 ? run_lut[bin_dist] : run_lut[4];
+
+    return GET_CABAC(RUN_COPY_FLAG + ctx_inc);
+}
+
+bool ff_vvc_copy_above_palette_indices_flag(VVCLocalContext *lc)
+{
+    return GET_CABAC(COPY_ABOVE_PALETTE_INDICES_FLAG);
+}
+
+int ff_vvc_palette_idx_idc(VVCLocalContext *lc, const int max_palette_index, const bool adjust)
+{
+    return truncated_binary_decode(lc, max_palette_index - adjust);
+}
+
+int ff_vvc_palette_escape_val(VVCLocalContext *lc)
+{
+    return kth_order_egk_decode(&lc->ep->cc, 5);
 }
 
 int ff_vvc_general_merge_flag(VVCLocalContext *lc)
@@ -1376,7 +1456,7 @@ int ff_vvc_merge_subblock_idx(VVCLocalContext *lc, const int max_num_subblock_me
     int i;
     if (!GET_CABAC(MERGE_SUBBLOCK_IDX))
         return 0;
-    for (i = 1; i < max_num_subblock_merge_cand - 1 && vvc_get_cabac_bypass(&lc->ep->cc); i++)
+    for (i = 1; i < max_num_subblock_merge_cand - 1 && get_cabac_bypass(&lc->ep->cc); i++)
         /* nothing */;
     return i;
 }
@@ -1402,14 +1482,14 @@ static int mmvd_distance_idx_decode(VVCLocalContext *lc)
     int i;
     if (!GET_CABAC(MMVD_DISTANCE_IDX))
         return 0;
-    for (i = 1; i < 7 && vvc_get_cabac_bypass(&lc->ep->cc); i++)
+    for (i = 1; i < 7 && get_cabac_bypass(&lc->ep->cc); i++)
         /* nothing */;
     return i;
 }
 
 static int mmvd_direction_idx_decode(VVCLocalContext *lc)
 {
-    return (vvc_get_cabac_bypass(&lc->ep->cc) << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+    return (get_cabac_bypass(&lc->ep->cc) << 1) | get_cabac_bypass(&lc->ep->cc);
 }
 
 void ff_vvc_mmvd_offset_coding(VVCLocalContext *lc, Mv *mmvd_offset, const int ph_mmvd_fullpel_only_flag)
@@ -1424,15 +1504,16 @@ void ff_vvc_mmvd_offset_coding(VVCLocalContext *lc, Mv *mmvd_offset, const int p
 
 static PredMode get_luma_pred_mode(VVCLocalContext *lc)
 {
-    const VVCFrameContext *fc  = lc->fc;
-    const CodingUnit *cu = lc->cu;
+    const VVCFrameContext *fc = lc->fc;
+    const CodingUnit *cu      = lc->cu;
     PredMode pred_mode;
+
     if (cu->tree_type != DUAL_TREE_CHROMA) {
         pred_mode = cu->pred_mode;
     } else {
-        const int x_cb           = cu->x0 >> fc->ps.sps->min_cb_log2_size_y;
-        const int y_cb           = cu->y0 >> fc->ps.sps->min_cb_log2_size_y;
-        const int min_cb_width   = fc->ps.pps->min_cb_width;
+        const int x_cb         = cu->x0 >> fc->ps.sps->min_cb_log2_size_y;
+        const int y_cb         = cu->y0 >> fc->ps.sps->min_cb_log2_size_y;
+        const int min_cb_width = fc->ps.pps->min_cb_width;
         pred_mode = SAMPLE_CTB(fc->tab.cpm[0], x_cb, y_cb);
     }
     return pred_mode;
@@ -1448,19 +1529,14 @@ int ff_vvc_merge_idx(VVCLocalContext *lc)
     if (!GET_CABAC(MERGE_IDX))
         return 0;
 
-    for (i = 1; i < c_max && vvc_get_cabac_bypass(&lc->ep->cc); i++)
+    for (i = 1; i < c_max && get_cabac_bypass(&lc->ep->cc); i++)
         /* nothing */;
     return i;
 }
 
 int ff_vvc_merge_gpm_partition_idx(VVCLocalContext *lc)
 {
-    int i = 0;
-
-    for (int j = 0; j < 6; j++)
-        i = (i << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
-
-    return i;
+    return fixed_length_decode(&lc->ep->cc, 6);
 }
 
 int ff_vvc_merge_gpm_idx(VVCLocalContext *lc, const int idx)
@@ -1471,7 +1547,7 @@ int ff_vvc_merge_gpm_idx(VVCLocalContext *lc, const int idx)
     if (!GET_CABAC(MERGE_IDX))
         return 0;
 
-    for (i = 1; i < c_max && vvc_get_cabac_bypass(&lc->ep->cc); i++)
+    for (i = 1; i < c_max && get_cabac_bypass(&lc->ep->cc); i++)
         /* nothing */;
 
     return i;
@@ -1522,7 +1598,7 @@ int ff_vvc_ref_idx_lx(VVCLocalContext *lc, const uint8_t nb_refs)
     while (i < max_ctx && GET_CABAC(REF_IDX_LX + i))
         i++;
     if (i == 2) {
-        while (i < c_max && vvc_get_cabac_bypass(&lc->ep->cc))
+        while (i < c_max && get_cabac_bypass(&lc->ep->cc))
             i++;
     }
     return i;
@@ -1545,7 +1621,7 @@ int ff_vvc_abs_mvd_minus2(VVCLocalContext *lc)
 
 int ff_vvc_mvd_sign_flag(VVCLocalContext *lc)
 {
-    return vvc_get_cabac_bypass(&lc->ep->cc);
+    return get_cabac_bypass(&lc->ep->cc);
 }
 
 int ff_vvc_mvp_lx_flag(VVCLocalContext *lc)
@@ -1574,7 +1650,7 @@ int ff_vvc_amvr_shift(VVCLocalContext *lc, const int inter_affine_flag,
 {
     int amvr_shift = 2;
     if (has_amvr_flag) {
-        if (amvr_flag(lc, inter_affine_flag)) {
+        if (pred_mode == MODE_IBC || amvr_flag(lc, inter_affine_flag)) {
             int idx;
             if (inter_affine_flag) {
                 idx = amvr_precision_idx(lc, 2, 1);
@@ -1598,7 +1674,7 @@ int ff_vvc_bcw_idx(VVCLocalContext *lc, const int no_backward_pred_flag)
     int i = 1;
     if (!GET_CABAC(BCW_IDX))
         return 0;
-    while (i < c_max && vvc_get_cabac_bypass(&lc->ep->cc))
+    while (i < c_max && get_cabac_bypass(&lc->ep->cc))
         i++;
     return i;
 }
@@ -1627,6 +1703,11 @@ int ff_vvc_tu_y_coded_flag(VVCLocalContext *lc)
     return lc->parse.prev_tu_cbf_y;
 }
 
+int ff_vvc_cu_act_enabled_flag(VVCLocalContext *lc)
+{
+    return GET_CABAC(CU_ACT_ENABLED_FLAG);
+}
+
 int ff_vvc_cu_qp_delta_abs(VVCLocalContext *lc)
 {
     int v, i, k;
@@ -1644,12 +1725,12 @@ int ff_vvc_cu_qp_delta_abs(VVCLocalContext *lc)
 
     // CuQpDeltaVal shall in the range of −( 32 + QpBdOffset / 2 ) to +( 31 + QpBdOffset / 2 )
     // so k = 6 should enough
-    for (k = 0; k < 6 && vvc_get_cabac_bypass(&lc->ep->cc); k++)
+    for (k = 0; k < 6 && get_cabac_bypass(&lc->ep->cc); k++)
         /* nothing */;
     i = (1 << k) - 1;
     v = 0;
     while (k--)
-        v = (v << 1) + vvc_get_cabac_bypass(&lc->ep->cc);
+        v = (v << 1) + get_cabac_bypass(&lc->ep->cc);
     v += i;
 
     return v + 5;
@@ -1657,13 +1738,14 @@ int ff_vvc_cu_qp_delta_abs(VVCLocalContext *lc)
 
 int ff_vvc_cu_qp_delta_sign_flag(VVCLocalContext *lc)
 {
-    return vvc_get_cabac_bypass(&lc->ep->cc);
+    return get_cabac_bypass(&lc->ep->cc);
 }
 
 int ff_vvc_cu_chroma_qp_offset_flag(VVCLocalContext *lc)
 {
     return GET_CABAC(CU_CHROMA_QP_OFFSET_FLAG);
 }
+
 int ff_vvc_cu_chroma_qp_offset_idx(VVCLocalContext *lc)
 {
     const int c_max = lc->fc->ps.pps->r->pps_chroma_qp_offset_list_len_minus1;
@@ -1710,12 +1792,11 @@ static av_always_inline int last_significant_coeff_y_prefix_decode(VVCLocalConte
 static av_always_inline int last_sig_coeff_suffix_decode(VVCLocalContext *lc,
     const int last_significant_coeff_y_prefix)
 {
-    int i;
     const int length = (last_significant_coeff_y_prefix >> 1) - 1;
-    int value = vvc_get_cabac_bypass(&lc->ep->cc);
+    int value = get_cabac_bypass(&lc->ep->cc);
 
-    for (i = 1; i < length; i++)
-        value = (value << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+    for (int i = 1; i < length; i++)
+        value = (value << 1) | get_cabac_bypass(&lc->ep->cc);
     return value;
 }
 
@@ -1804,14 +1885,14 @@ static int par_level_flag_ts_decode(VVCLocalContext *lc)
 static int sb_coded_flag_decode(VVCLocalContext *lc, const uint8_t *sb_coded_flag,
     const ResidualCoding *rc, const int xs, const int ys)
 {
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const TransformBlock *tb        = rc->tb;
-    const int w                     = rc->width_in_sbs;
-    const int h                     = rc->height_in_sbs;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const TransformBlock *tb      = rc->tb;
+    const int w                   = rc->width_in_sbs;
+    const int h                   = rc->height_in_sbs;
     int inc;
 
     if (tb->ts && !rsh->sh_ts_residual_coding_disabled_flag) {
-        const int left = xs > 0 ? sb_coded_flag[-1] : 0;
+        const int left  = xs > 0 ? sb_coded_flag[-1] : 0;
         const int above = ys > 0 ? sb_coded_flag[-w] : 0;
         inc = left + above + 4;
     } else {
@@ -1824,8 +1905,8 @@ static int sb_coded_flag_decode(VVCLocalContext *lc, const uint8_t *sb_coded_fla
 
 static int sig_coeff_flag_decode(VVCLocalContext *lc, const ResidualCoding* rc, const int xc, const int yc)
 {
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const TransformBlock *tb        = rc->tb;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const TransformBlock *tb      = rc->tb;
     int inc;
 
     if (tb->ts && !rsh->sh_ts_residual_coding_disabled_flag) {
@@ -1877,13 +1958,12 @@ static int abs_decode(VVCLocalContext *lc, const int c_rice_param)
     const int MAX_BIN = 6;
     int prefix = 0;
     int suffix = 0;
-    int i;
 
-    while (prefix < MAX_BIN && vvc_get_cabac_bypass(&lc->ep->cc))
+    while (prefix < MAX_BIN && get_cabac_bypass(&lc->ep->cc))
         prefix++;
     if (prefix < MAX_BIN) {
-        for (i = 0; i < c_rice_param; i++) {
-            suffix = (suffix << 1) | vvc_get_cabac_bypass(&lc->ep->cc);
+        for (int i = 0; i < c_rice_param; i++) {
+            suffix = (suffix << 1) | get_cabac_bypass(&lc->ep->cc);
         }
     } else {
         suffix = limited_kth_order_egk_decode(&lc->ep->cc,
@@ -1896,15 +1976,16 @@ static int abs_decode(VVCLocalContext *lc, const int c_rice_param)
 
 static int abs_remainder_decode(VVCLocalContext *lc, const ResidualCoding* rc, const int xc, const int yc)
 {
-    const VVCSPS *sps            = lc->fc->ps.sps;
+    const VVCSPS *sps             = lc->fc->ps.sps;
     const H266RawSliceHeader *rsh = lc->sc->sh.r;
-    const int base_level[][2][2] = {
+    const int base_level[][2][2]  = {
         { {4, 4}, {4, 4} },
         { {3, 2}, {2, 1} }
     };
     const int c_rice_param = abs_get_rice_param(lc, rc, xc, yc,
         base_level[sps->r->sps_rrc_rice_extension_flag][sps->bit_depth > 12][IS_I(rsh)]);
     const int rem = abs_decode(lc, c_rice_param);
+
     return rem;
 }
 
@@ -1919,26 +2000,26 @@ static int abs_remainder_ts_decode(VVCLocalContext *lc, const ResidualCoding* rc
 
 static int coeff_sign_flag_decode(VVCLocalContext *lc)
 {
-    return vvc_get_cabac_bypass(&lc->ep->cc);
+    return get_cabac_bypass(&lc->ep->cc);
 }
 
 //9.3.4.2.10 Derivation process of ctxInc for the syntax element coeff_sign_flag for transform skip mode
 static int coeff_sign_flag_ts_decode(VVCLocalContext *lc, const CodingUnit *cu, const ResidualCoding *rc, const int xc, const int yc)
 {
-    const TransformBlock *tb    = rc->tb;
-    const int w                 = tb->tb_width;
-    const int *level            = rc->coeff_sign_level + yc * w + xc;
-    const int left_sign         = (xc == 0) ? 0 : level[-1];
-    const int above_sign        = (yc == 0) ? 0 : level[-w];
-    const int bdpcm_flag        = cu->bdpcm_flag[tb->c_idx];
+    const TransformBlock *tb = rc->tb;
+    const int w              = tb->tb_width;
+    const int *level         = rc->coeff_sign_level + yc * w + xc;
+    const int left_sign      = xc ? level[-1] : 0;
+    const int above_sign     = yc ? level[-w] : 0;
+    const int bdpcm_flag     = cu->bdpcm_flag[tb->c_idx];
     int inc;
 
     if (left_sign == -above_sign)
-        inc = bdpcm_flag == 0 ? 0 : 3;
+        inc = bdpcm_flag ? 3 : 0;
     else if (left_sign >= 0 && above_sign >= 0)
-        inc = bdpcm_flag == 0 ? 1 : 4;
+        inc = bdpcm_flag ? 4 : 1;
     else
-        inc = bdpcm_flag == 0 ? 2 : 5;
+        inc = bdpcm_flag ? 5 : 2;
     return GET_CABAC(COEFF_SIGN_FLAG + inc);
 }
 
@@ -1994,13 +2075,13 @@ static void ep_update_hist(EntryPoint *ep, ResidualCoding *rc,
     }
 }
 
-static void init_residual_coding(VVCLocalContext *lc, ResidualCoding *rc,
-        const int log2_zo_tb_width, const int log2_zo_tb_height,
-        TransformBlock *tb)
+static void init_residual_coding(const VVCLocalContext *lc, ResidualCoding *rc,
+    const int log2_zo_tb_width, const int log2_zo_tb_height,
+    TransformBlock *tb)
 {
-    const VVCSPS *sps   = lc->fc->ps.sps;
-    int log2_sb_w = (FFMIN(log2_zo_tb_width, log2_zo_tb_height ) < 2 ? 1 : 2 );
-    int log2_sb_h = log2_sb_w;
+    const VVCSPS *sps = lc->fc->ps.sps;
+    int log2_sb_w     = (FFMIN(log2_zo_tb_width, log2_zo_tb_height ) < 2 ? 1 : 2 );
+    int log2_sb_h     = log2_sb_w;
 
     if ( log2_zo_tb_width + log2_zo_tb_height > 3 ) {
         if ( log2_zo_tb_width < 2 ) {
@@ -2040,12 +2121,12 @@ static void init_residual_coding(VVCLocalContext *lc, ResidualCoding *rc,
 
 static int residual_ts_coding_subblock(VVCLocalContext *lc, ResidualCoding* rc, const int i)
 {
-    const CodingUnit *cu    = lc->cu;
-    TransformBlock *tb      = rc->tb;
-    const int bdpcm_flag    = cu->bdpcm_flag[tb->c_idx];
-    const int xs            = rc->sb_scan_x_off[i];
-    const int ys            = rc->sb_scan_y_off[i];
-    uint8_t *sb_coded_flag  = rc->sb_coded_flag + ys * rc->width_in_sbs + xs;
+    const CodingUnit *cu   = lc->cu;
+    TransformBlock *tb     = rc->tb;
+    const int bdpcm_flag   = cu->bdpcm_flag[tb->c_idx];
+    const int xs           = rc->sb_scan_x_off[i];
+    const int ys           = rc->sb_scan_y_off[i];
+    uint8_t *sb_coded_flag = rc->sb_coded_flag + ys * rc->width_in_sbs + xs;
     int infer_sb_sig_coeff_flag = 1;
     int last_scan_pos_pass1 = -1, last_scan_pos_pass2 = -1, n;
     int abs_level_gtx_flag[MAX_SUB_BLOCK_SIZE * MAX_SUB_BLOCK_SIZE];
@@ -2060,8 +2141,8 @@ static int residual_ts_coding_subblock(VVCLocalContext *lc, ResidualCoding* rc, 
 
     //first scan pass
     for (n = 0; n < rc->num_sb_coeff && rc->rem_bins_pass1 >= 4; n++) {
-        const int xc  = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
-        const int yc  = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
+        const int xc = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
+        const int yc = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
         const int off = yc * tb->tb_width + xc;
         int *sig_coeff_flag   = rc->sig_coeff_flag + off;
         int *abs_level_pass1  = rc->abs_level_pass1 + off;
@@ -2111,10 +2192,10 @@ static int residual_ts_coding_subblock(VVCLocalContext *lc, ResidualCoding* rc, 
         const int xc  = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
         const int yc  = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
         const int off = yc * tb->tb_width + xc;
-        const int *abs_level_pass1  = rc->abs_level_pass1 + off;
-        int *abs_level              = rc->abs_level + off;
-        int *coeff_sign_level       = rc->coeff_sign_level + off;
-        int abs_remainder = 0;
+        const int *abs_level_pass1 = rc->abs_level_pass1 + off;
+        int *abs_level             = rc->abs_level + off;
+        int *coeff_sign_level      = rc->coeff_sign_level + off;
+        int abs_remainder          = 0;
 
         if ((n <= last_scan_pos_pass2 && abs_level_pass2[n] >= 10) ||
             (n > last_scan_pos_pass2 && n <= last_scan_pos_pass1 &&
@@ -2135,7 +2216,7 @@ static int residual_ts_coding_subblock(VVCLocalContext *lc, ResidualCoding* rc, 
         if (!bdpcm_flag && n <= last_scan_pos_pass1) {
             const int left  = xc > 0 ? abs_level[-1] : 0;
             const int above = yc > 0 ? abs_level[-tb->tb_width] : 0;
-            const int pred = FFMAX(left, above);
+            const int pred  = FFMAX(left, above);
 
             if (*abs_level == 1 && pred > 0)
                 *abs_level = pred;
@@ -2172,8 +2253,8 @@ static int hls_residual_ts_coding(VVCLocalContext *lc, TransformBlock *tb)
 
 static inline int residual_coding_subblock(VVCLocalContext *lc, ResidualCoding *rc, const int i)
 {
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    TransformBlock *tb              = rc->tb;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    TransformBlock *tb            = rc->tb;
     int first_sig_scan_pos_sb, last_sig_scan_pos_sb;
     int first_pos_mode0, first_pos_mode1;
     int infer_sb_dc_sig_coeff_flag = 0;
@@ -2192,7 +2273,7 @@ static inline int residual_coding_subblock(VVCLocalContext *lc, ResidualCoding *
     } else {
         *sb_coded_flag = 1;
     }
-    if (*sb_coded_flag && (xs > 3 || ys > 3) && tb->c_idx == 0)
+    if (*sb_coded_flag && (xs > 3 || ys > 3) && !tb->c_idx)
         lc->parse.mts_zero_out_sig_coeff_flag = 0;
 
     if (!*sb_coded_flag)
@@ -2249,8 +2330,8 @@ static inline int residual_coding_subblock(VVCLocalContext *lc, ResidualCoding *
     for (n = first_pos_mode0; n > first_pos_mode1; n--) {
         const int xc = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
         const int yc = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
-        const int *abs_level_pass1  = rc->abs_level_pass1 + yc * tb->tb_width + xc;
-        int *abs_level              = rc->abs_level + yc * tb->tb_width + xc;
+        const int *abs_level_pass1 = rc->abs_level_pass1 + yc * tb->tb_width + xc;
+        int *abs_level             = rc->abs_level + yc * tb->tb_width + xc;
 
         *abs_level = *abs_level_pass1;
         if (abs_level_gt2_flag[n]) {
@@ -2260,9 +2341,9 @@ static inline int residual_coding_subblock(VVCLocalContext *lc, ResidualCoding *
         }
     }
     for (n = first_pos_mode1; n >= 0; n--) {
-        const int xc    = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
-        const int yc    = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
-        int *abs_level  = rc->abs_level + yc * tb->tb_width + xc;
+        const int xc   = (xs << rc->log2_sb_w) + rc->scan_x_off[n];
+        const int yc   = (ys << rc->log2_sb_h) + rc->scan_y_off[n];
+        int *abs_level = rc->abs_level + yc * tb->tb_width + xc;
 
         if (*sb_coded_flag) {
             const int dec_abs_level = dec_abs_level_decode(lc, rc, xc, yc, abs_level);
@@ -2314,12 +2395,11 @@ static inline int residual_coding_subblock(VVCLocalContext *lc, ResidualCoding *
     return 0;
 }
 
-static void derive_last_scan_pos(ResidualCoding *rc,
-    const int log2_zo_tb_width, int log2_zo_tb_height)
+static void derive_last_scan_pos(ResidualCoding *rc)
 {
     int xc, yc, xs, ys;
     do {
-        if (rc->last_scan_pos == 0) {
+        if (!rc->last_scan_pos) {
             rc->last_scan_pos = rc->num_sb_coeff;
             rc->last_sub_block--;
         }
@@ -2334,8 +2414,8 @@ static void derive_last_scan_pos(ResidualCoding *rc,
 static void last_significant_coeff_x_y_decode(ResidualCoding *rc, VVCLocalContext *lc,
     const int log2_zo_tb_width, const int log2_zo_tb_height)
 {
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const TransformBlock *tb        = rc->tb;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const TransformBlock *tb      = rc->tb;
     int last_significant_coeff_x, last_significant_coeff_y;
 
     last_significant_coeff_x = last_significant_coeff_x_prefix_decode(lc,
@@ -2364,35 +2444,35 @@ static void last_significant_coeff_x_y_decode(ResidualCoding *rc, VVCLocalContex
 
 static int hls_residual_coding(VVCLocalContext *lc, TransformBlock *tb)
 {
-    const VVCSPS *sps           = lc->fc->ps.sps;
-    const CodingUnit *cu        = lc->cu;
-    const int log2_tb_width     = tb->log2_tb_width;
-    const int log2_tb_height    = tb->log2_tb_height;
-    const int c_idx             = tb->c_idx;
+    const VVCSPS *sps        = lc->fc->ps.sps;
+    const CodingUnit *cu     = lc->cu;
+    const int log2_tb_width  = tb->log2_tb_width;
+    const int log2_tb_height = tb->log2_tb_height;
+    const int c_idx          = tb->c_idx;
     int log2_zo_tb_width, log2_zo_tb_height;
     ResidualCoding rc;
 
-    if (sps->r->sps_mts_enabled_flag && cu->sbt_flag && c_idx == 0 && log2_tb_width == 5 && log2_tb_height < 6)
+    if (sps->r->sps_mts_enabled_flag && cu->sbt_flag && !c_idx && log2_tb_width == 5 && log2_tb_height < 6)
         log2_zo_tb_width = 4;
     else
         log2_zo_tb_width = FFMIN(log2_tb_width, 5 );
 
-    if (sps->r->sps_mts_enabled_flag && cu->sbt_flag && c_idx == 0 && log2_tb_width < 6 && log2_tb_height == 5 )
+    if (sps->r->sps_mts_enabled_flag && cu->sbt_flag && !c_idx && log2_tb_width < 6 && log2_tb_height == 5 )
         log2_zo_tb_height = 4;
     else
         log2_zo_tb_height = FFMIN(log2_tb_height, 5);
 
     init_residual_coding(lc, &rc, log2_zo_tb_width, log2_zo_tb_height, tb);
     last_significant_coeff_x_y_decode(&rc, lc, log2_zo_tb_width, log2_zo_tb_height);
-    derive_last_scan_pos(&rc, log2_zo_tb_width, log2_zo_tb_height);
+    derive_last_scan_pos(&rc);
 
-    if (rc.last_sub_block == 0 && log2_tb_width >= 2 && log2_tb_height >= 2 && !tb->ts && rc.last_scan_pos > 0)
+    if (!rc.last_sub_block && log2_tb_width >= 2 && log2_tb_height >= 2 && !tb->ts && rc.last_scan_pos > 0)
         lc->parse.lfnst_dc_only = 0;
     if ((rc.last_sub_block > 0 && log2_tb_width >= 2 && log2_tb_height >= 2 ) ||
          (rc.last_scan_pos > 7 && (log2_tb_width == 2 || log2_tb_width == 3 ) &&
          log2_tb_width == log2_tb_height))
         lc->parse.lfnst_zero_out_sig_coeff_flag = 0;
-    if ((rc.last_sub_block > 0 || rc.last_scan_pos > 0 ) && c_idx == 0)
+    if ((rc.last_sub_block > 0 || rc.last_scan_pos > 0 ) && !c_idx)
         lc->parse.mts_dc_only = 0;
 
     memset(tb->coeffs, 0, tb->tb_width * tb->tb_height * sizeof(*tb->coeffs));
@@ -2412,8 +2492,8 @@ static int hls_residual_coding(VVCLocalContext *lc, TransformBlock *tb)
 
 int ff_vvc_residual_coding(VVCLocalContext *lc, TransformBlock *tb)
 {
-    const H266RawSliceHeader *rsh   = lc->sc->sh.r;
-    const int ts                    = !rsh->sh_ts_residual_coding_disabled_flag && tb->ts;
+    const H266RawSliceHeader *rsh = lc->sc->sh.r;
+    const int ts                  = !rsh->sh_ts_residual_coding_disabled_flag && tb->ts;
 
     return ts ? hls_residual_ts_coding(lc, tb) : hls_residual_coding(lc, tb);
 }
@@ -2425,9 +2505,9 @@ int ff_vvc_cu_coded_flag(VVCLocalContext *lc)
 
 int ff_vvc_sbt_flag(VVCLocalContext *lc)
 {
-    const int w     = lc->cu->cb_width;
-    const int h     = lc->cu->cb_height;
-    const int inc   = w * h <= 256;
+    const int w   = lc->cu->cb_width;
+    const int h   = lc->cu->cb_height;
+    const int inc = w * h <= 256;
     return GET_CABAC(CU_SBT_FLAG + inc);
 }
 

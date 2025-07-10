@@ -37,6 +37,8 @@
 #include <limits.h>
 #include <stdint.h>
 
+// clang-format off
+
 /*****************************************************************************
  * types
  *****************************************************************************/
@@ -164,4 +166,7 @@ void xeve_trace_line(char * pre);
 #endif
 #endif
 #endif
+
+// clang-format on
+
 #endif /* _XEVE_PORT_H_ */

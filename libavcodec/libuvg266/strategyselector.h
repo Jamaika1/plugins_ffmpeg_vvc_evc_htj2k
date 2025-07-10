@@ -96,7 +96,7 @@ extern hardware_flags_t uvg_g_strategies_in_use;
 extern hardware_flags_t uvg_g_strategies_available;
 
 int uvg_strategyselector_init(int32_t cpuid, uint8_t bitdepth);
-int uvg_strategyselector_register(void *opaque, const char *type, const char *strategy_name, int priority, void *fptr);
+int uvg_strategyselector_register(void *const opaque, const char *const type, const char *const strategy_name, int priority, void *const fptr);
 
 
 //Strategy to include
@@ -108,6 +108,7 @@ int uvg_strategyselector_register(void *opaque, const char *type, const char *st
 #include "strategies-intra.h"
 #include "strategies-sao.h"
 #include "strategies-encode.h"
+#include "strategies-depquant.h"
 #include "strategies-alf.h"
 
 static const strategy_to_select_t strategies_to_select[] = {
@@ -120,6 +121,7 @@ static const strategy_to_select_t strategies_to_select[] = {
   STRATEGIES_SAO_EXPORTS
   STRATEGIES_ENCODE_EXPORTS
   STRATEGIES_ALF_EXPORTS
+  STRATEGIES_DEPQUANT_EXPORTS
   { NULL, NULL },
 };
 

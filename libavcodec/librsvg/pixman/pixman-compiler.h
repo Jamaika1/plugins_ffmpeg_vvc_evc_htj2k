@@ -90,12 +90,12 @@
 #endif
 
 /* GCC visibility */
-#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
-#   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
+//#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
+//#   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
 /* Sun Studio 8 visibility */
-#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#   define PIXMAN_EXPORT __global
-#elif defined (_MSC_VER) || defined(__MINGW32__)
+//#elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+//#   define PIXMAN_EXPORT __global
+#if defined (_MSC_VER) || defined(__MINGW32__)
 #   define PIXMAN_EXPORT PIXMAN_API
 #else
 #   define PIXMAN_EXPORT
@@ -120,7 +120,7 @@
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     (&name)
 
-/*#elif defined(__MINGW32__)
+#elif defined(__MINGW32__)
 
 #   define _NO_W32_PSEUDO_MODIFIERS
 #   include <windows.h>
@@ -171,7 +171,7 @@
     }
 
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
-    tls_ ## name ## _get ()*/
+    tls_ ## name ## _get ()
 
 #elif defined(_MSC_VER)
 
@@ -183,7 +183,6 @@
 #elif defined(HAVE_PTHREADS)
 
 #include <pthread.h>
-//#include "../../libpthread_win32/pthread.h"
 
 #  define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static pthread_once_t tls_ ## name ## _once_control = PTHREAD_ONCE_INIT; \

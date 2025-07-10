@@ -58,13 +58,13 @@ char   *strchr(), *strrchr();
 # include <fcntl.h>
 #endif
 
-#if defined(macintosh)
+/*#if defined(macintosh)
 # include <types.h>
 # include <stat.h>
 #else
 # include <sys/types.h>
 # include <sys/stat.h>
-#endif
+#endif*/
 
 #ifdef HAVE_INTTYPES_H
 # include <inttypes.h>

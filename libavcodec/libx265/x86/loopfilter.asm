@@ -3867,7 +3867,7 @@ cglobal pelFilterLumaStrong_H, 5,7,10
     movh            [r0 + r6], m0
     movhps          [r0 + r1], m0
     movh            [r0], m3
-    movhps          [r0 + r2 * 2], m3,
+    movhps          [r0 + r2 * 2], m3
     movh            [r0 + r2 * 1], m9
     movhps          [r0 + r1 * 2], m9
 %else
@@ -4213,3 +4213,4 @@ cglobal pelFilterChroma_V, 6,6,5
 %endif
     RET
 %endif ; ARCH_X86_64
+SECTION_IBT_SHSTK

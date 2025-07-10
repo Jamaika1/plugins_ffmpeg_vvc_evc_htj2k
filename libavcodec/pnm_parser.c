@@ -22,8 +22,8 @@
 #include "libavutil/avassert.h"
 #include "libavutil/imgutils.h"
 
-#include "parser.h" //for ParseContext
-#include "pnm.h"
+#include "libavcodec/parser.h" //for ParseContext
+#include "libavcodec/pnm.h"
 
 typedef struct PNMParseContext {
     ParseContext pc;

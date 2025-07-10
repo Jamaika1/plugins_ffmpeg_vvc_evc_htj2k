@@ -557,6 +557,9 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   return FFI_OK;
 }
 
+/* n.b. ffi_call_unix64 will steal the alloca'd `stack` variable here for use
+   _as its own stack_ - so we need to compile this function without ASAN */
+FFI_ASAN_NO_SANITIZE
 static void
 ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 	      void **avalue, void *closure)
@@ -596,7 +599,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
   /* If the return value is passed in memory, add the pointer as the
      first integer argument.  */
   if (flags & UNIX64_FLAG_RET_IN_MEM)
-    reg_args->gpr[gprcount++] = (unsigned long long) rvalue;
+    reg_args->gpr[gprcount++] = (unsigned long) rvalue;
 
   for (i = 0; i < avn; ++i)
     {
@@ -651,7 +654,7 @@ ffi_call_int (ffi_cif *cif, void (*fn)(void), void *rvalue,
 		      break;
 		    default:
 		      reg_args->gpr[gprcount] = 0;
-		      memcpy (&reg_args->gpr[gprcount], a, size);
+		      memcpy (&reg_args->gpr[gprcount], a, size <= 8 ? size : 8);
 		    }
 		  gprcount++;
 		  break;

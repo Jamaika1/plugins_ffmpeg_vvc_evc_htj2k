@@ -78,13 +78,10 @@ GDK_PIXBUF_AVAILABLE_IN_2_28
 GdkPixbufAnimation *gdk_pixbuf_animation_new_from_resource(const char        *resource_path,
                                                           GError            **error);
 
-#ifndef GDK_PIXBUF_DISABLE_DEPRECATED
-
 GDK_PIXBUF_DEPRECATED_IN_2_0_FOR(g_object_ref)
 GdkPixbufAnimation *gdk_pixbuf_animation_ref             (GdkPixbufAnimation *animation);
 GDK_PIXBUF_DEPRECATED_IN_2_0_FOR(g_object_unref)
 void                gdk_pixbuf_animation_unref           (GdkPixbufAnimation *animation);
-#endif
 
 GDK_PIXBUF_AVAILABLE_IN_ALL
 int                 gdk_pixbuf_animation_get_width       (GdkPixbufAnimation *animation);
@@ -207,6 +204,10 @@ struct _GdkPixbufAnimationIterClass {
                                         const GTimeVal         *current_time);
 };
 G_GNUC_END_IGNORE_DEPRECATIONS
+
+#define GDK_TYPE_PIXBUF_NON_ANIM              (gdk_pixbuf_non_anim_get_type ())
+#define GDK_PIXBUF_NON_ANIM(object)           (G_TYPE_CHECK_INSTANCE_CAST ((object), GDK_TYPE_PIXBUF_NON_ANIM, GdkPixbufNonAnim))
+#define GDK_IS_PIXBUF_NON_ANIM(object)        (G_TYPE_CHECK_INSTANCE_TYPE ((object), GDK_TYPE_PIXBUF_NON_ANIM))
 
 
 GDK_PIXBUF_AVAILABLE_IN_ALL

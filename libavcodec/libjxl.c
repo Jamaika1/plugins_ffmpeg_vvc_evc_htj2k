@@ -28,7 +28,7 @@
 #include "libavutil/mem.h"
 
 #include <jxl/memory_manager.h>
-#include "libjxl.h"
+#include "libavcodec/libjxl.h"
 
 size_t ff_libjxl_get_threadcount(int threads)
 {

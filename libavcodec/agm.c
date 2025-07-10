@@ -24,16 +24,17 @@
 
 #define BITSTREAM_READER_LE
 
+#include "libavutil/mem.h"
 #include "libavutil/mem_internal.h"
 
-#include "libavcodec/avcodec.h"
-#include "libavcodec/bytestream.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/copy_block.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/idctdsp.h"
-#include "libavcodec/jpegquanttables.h"
+#include "avcodec.h"
+#include "bytestream.h"
+#include "codec_internal.h"
+#include "copy_block.h"
+#include "decode.h"
+#include "get_bits.h"
+#include "idctdsp.h"
+#include "jpegquanttables.h"
 
 typedef struct MotionVector {
     int16_t x, y;

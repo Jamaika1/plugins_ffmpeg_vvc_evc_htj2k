@@ -35,6 +35,7 @@ const XEVE_MC_L (*xeve_func_mc_l)[2];
 const XEVE_MC_C (*xeve_func_mc_c)[2];
 XEVE_AVG_NO_CLIP xeve_func_average_no_clip;
 
+// clang-format off
 const s16 xeve_tbl_mc_l_coeff[16][8] =
 {
     {  0, 0,   0, 64,  0,   0,  0,  0 },
@@ -90,6 +91,7 @@ const s16 xeve_tbl_mc_c_coeff[32][4] =
     {  0,  0,  0,  0 },
     {  0,  0,  0,  0 },
 };
+// clang-format on
 
 /****************************************************************************
  * motion compensation for luma
@@ -321,8 +323,8 @@ void xeve_mv_clip(int x, int y, int pic_w, int pic_h, int w, int h, s8 refi[REFP
     y <<= 2;
     w <<= 2;
     h <<= 2;
-    min_clip[MV_X] = (-MAX_CU_SIZE) << 2;
-    min_clip[MV_Y] = (-MAX_CU_SIZE) << 2;
+    min_clip[MV_X] = -(MAX_CU_SIZE << 2);
+    min_clip[MV_Y] = -(MAX_CU_SIZE << 2);
     max_clip[MV_X] = (pic_w - 1 + MAX_CU_SIZE) << 2;
     max_clip[MV_Y] = (pic_h - 1 + MAX_CU_SIZE) << 2;
 

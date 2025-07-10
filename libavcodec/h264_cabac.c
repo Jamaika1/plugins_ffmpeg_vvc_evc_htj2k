@@ -31,13 +31,13 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
-#include "config.h"
-#include "cabac.h"
-#include "cabac_functions.h"
-#include "h264dec.h"
-#include "h264data.h"
-#include "h264_mvpred.h"
-#include "mpegutils.h"
+#include "libavutil/config.h"
+#include "libavcodec/cabac.h"
+#include "libavcodec/cabac_functions.h"
+#include "libavcodec/h264dec.h"
+#include "libavcodec/h264data.h"
+#include "libavcodec/h264_mvpred.h"
+#include "libavcodec/mpegutils.h"
 
 #if ARCH_X86
 #include "x86/extra/h264_cabac.c"

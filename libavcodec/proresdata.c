@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "proresdata.h"
+#include "libavcodec/proresdata.h"
 
 const uint8_t ff_prores_progressive_scan[64] = {
      0,  1,  8,  9,  2,  3, 10, 11,
@@ -43,3 +43,11 @@ const uint8_t ff_prores_interlaced_scan[64] = {
     30, 23, 31, 38, 45, 52, 60, 53,
     46, 39, 47, 54, 61, 62, 55, 63
 };
+
+const uint8_t ff_prores_dc_codebook[7] = { 0x04, 0x28, 0x28, 0x4D, 0x4D, 0x70, 0x70 };
+
+const uint8_t ff_prores_run_to_cb[16] = { 0x06, 0x06, 0x05, 0x05, 0x04, 0x29,
+        0x29, 0x29, 0x29, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x4C };
+
+const uint8_t ff_prores_level_to_cb[10] = { 0x04, 0x0A, 0x05, 0x06, 0x04, 0x28,
+        0x28, 0x28, 0x28, 0x4C };

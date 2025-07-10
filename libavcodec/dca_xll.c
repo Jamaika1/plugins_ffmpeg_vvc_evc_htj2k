@@ -18,14 +18,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "libavcodec/avcodec.h"
+#include "avcodec.h"
 #include "libavutil/channel_layout.h"
-#include "libavcodec/dcadec.h"
-#include "libavcodec/dcadata.h"
-#include "libavcodec/dcamath.h"
-#include "libavcodec/dca_syncwords.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/unary.h"
+#include "libavutil/mem.h"
+#include "dcadec.h"
+#include "dcadata.h"
+#include "dcamath.h"
+#include "dca_syncwords.h"
+#include "decode.h"
+#include "unary.h"
 
 static int get_linear(GetBitContext *gb, int n)
 {

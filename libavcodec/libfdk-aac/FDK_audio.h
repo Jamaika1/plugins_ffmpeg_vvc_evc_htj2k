@@ -708,7 +708,7 @@ typedef enum {
  *  Build text string of version.
  */
 #define LIB_VERSION_STRING(info)                                               \
-  FDKsprintf((info)->versionStr, "%d.%d.%d", (((info)->version >> 24) & 0xff), \
+  FDKsprintf((info)->versionStr, "%d.%d.%d-2ef9a14", (((info)->version >> 24) & 0xff), \
              (((info)->version >> 16) & 0xff),                                 \
              (((info)->version >> 8) & 0xff))
 

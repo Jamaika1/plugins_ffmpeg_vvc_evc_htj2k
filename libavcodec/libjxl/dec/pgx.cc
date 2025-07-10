@@ -5,11 +5,18 @@
 
 #include "lib/jxl/extras/dec/pgx.h"
 
-#include <string.h>
+#include <jxl/codestream_header.h>
+#include <jxl/types.h>
 
+#include <cstdint>
+#include <cstring>
+#include <utility>
+
+#include "lib/jxl/extras/dec/color_hints.h"
+#include "lib/jxl/extras/packed_image.h"
 #include "lib/jxl/extras/size_constraints.h"
-#include "lib/jxl/base/bits.h"
-#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 
 namespace jxl {
 namespace extras {
@@ -150,7 +157,7 @@ Status DecodeImagePGX(const Span<const uint8_t> bytes,
                       const SizeConstraints* constraints) {
   Parser parser(bytes);
   HeaderPGX header = {};
-  const uint8_t* pos;
+  const uint8_t* pos = nullptr;
   if (!parser.ParseHeader(&header, &pos)) return false;
   JXL_RETURN_IF_ERROR(
       VerifyDimensions(constraints, header.xsize, header.ysize));
@@ -165,7 +172,7 @@ Status DecodeImagePGX(const Span<const uint8_t> bytes,
   // Original data is uint, so exponent_bits_per_sample = 0.
   ppf->info.bits_per_sample = header.bits_per_sample;
   ppf->info.exponent_bits_per_sample = 0;
-  ppf->info.uses_original_profile = true;
+  ppf->info.uses_original_profile = JXL_TRUE;
 
   // No alpha in PGX
   ppf->info.alpha_bits = 0;
@@ -188,7 +195,12 @@ Status DecodeImagePGX(const Span<const uint8_t> bytes,
   };
   ppf->frames.clear();
   // Allocates the frame buffer.
-  ppf->frames.emplace_back(header.xsize, header.ysize, format);
+  {
+    JXL_ASSIGN_OR_RETURN(
+        PackedFrame frame,
+        PackedFrame::Create(header.xsize, header.ysize, format));
+    ppf->frames.emplace_back(std::move(frame));
+  }
   const auto& frame = ppf->frames.back();
   size_t pgx_remaining_size = bytes.data() + bytes.size() - pos;
   if (pgx_remaining_size < frame.color.pixels_size) {

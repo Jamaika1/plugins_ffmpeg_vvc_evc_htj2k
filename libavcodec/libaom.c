@@ -22,7 +22,7 @@
  */
 
 #include "libavutil/pixdesc.h"
-#include "libaom.h"
+#include "libavcodec/libaom.h"
 
 void ff_aom_image_copy_16_to_8(AVFrame *pic, struct aom_image *img)
 {

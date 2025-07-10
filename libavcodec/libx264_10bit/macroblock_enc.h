@@ -24,8 +24,8 @@
  * For more information, contact us at licensing@x264.com.
  *****************************************************************************/
 
-#ifndef X264_ENCODER_MACROBLOCK_H
-#define X264_ENCODER_MACROBLOCK_H
+#ifndef X264_ENCODER_MACROBLOCK_ENC_H
+#define X264_ENCODER_MACROBLOCK_ENC_H
 
 #include "macroblock.h"
 

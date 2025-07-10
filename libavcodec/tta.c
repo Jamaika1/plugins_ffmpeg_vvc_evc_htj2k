@@ -32,16 +32,17 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/crc.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
 #define BITSTREAM_READER_LE
-#include "libavcodec/ttadata.h"
-#include "libavcodec/ttadsp.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/thread.h"
-#include "libavcodec/unary.h"
+#include "ttadata.h"
+#include "ttadsp.h"
+#include "avcodec.h"
+#include "codec_internal.h"
+#include "get_bits.h"
+#include "thread.h"
+#include "unary.h"
 
 #define FORMAT_SIMPLE    1
 #define FORMAT_ENCRYPTED 2

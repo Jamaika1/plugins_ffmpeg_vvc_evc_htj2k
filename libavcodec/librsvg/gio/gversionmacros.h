@@ -40,7 +40,7 @@
 /**
  * GIO_VERSION_2_26:
  *
- * A macro that evaluates to the 2.26 version of GLib, in a format
+ * A macro that evaluates to the 2.26 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.32
@@ -50,7 +50,7 @@
 /**
  * GIO_VERSION_2_28:
  *
- * A macro that evaluates to the 2.28 version of GLib, in a format
+ * A macro that evaluates to the 2.28 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.32
@@ -60,7 +60,7 @@
 /**
  * GIO_VERSION_2_30:
  *
- * A macro that evaluates to the 2.30 version of GLib, in a format
+ * A macro that evaluates to the 2.30 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.32
@@ -70,7 +70,7 @@
 /**
  * GIO_VERSION_2_32:
  *
- * A macro that evaluates to the 2.32 version of GLib, in a format
+ * A macro that evaluates to the 2.32 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.32
@@ -80,7 +80,7 @@
 /**
  * GIO_VERSION_2_34:
  *
- * A macro that evaluates to the 2.34 version of GLib, in a format
+ * A macro that evaluates to the 2.34 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.34
@@ -90,7 +90,7 @@
 /**
  * GIO_VERSION_2_36:
  *
- * A macro that evaluates to the 2.36 version of GLib, in a format
+ * A macro that evaluates to the 2.36 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.36
@@ -100,7 +100,7 @@
 /**
  * GIO_VERSION_2_38:
  *
- * A macro that evaluates to the 2.38 version of GLib, in a format
+ * A macro that evaluates to the 2.38 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.38
@@ -110,7 +110,7 @@
 /**
  * GIO_VERSION_2_40:
  *
- * A macro that evaluates to the 2.40 version of GLib, in a format
+ * A macro that evaluates to the 2.40 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.40
@@ -120,7 +120,7 @@
 /**
  * GIO_VERSION_2_42:
  *
- * A macro that evaluates to the 2.42 version of GLib, in a format
+ * A macro that evaluates to the 2.42 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.42
@@ -130,7 +130,7 @@
 /**
  * GIO_VERSION_2_44:
  *
- * A macro that evaluates to the 2.44 version of GLib, in a format
+ * A macro that evaluates to the 2.44 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.44
@@ -140,7 +140,7 @@
 /**
  * GIO_VERSION_2_46:
  *
- * A macro that evaluates to the 2.46 version of GLib, in a format
+ * A macro that evaluates to the 2.46 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.46
@@ -150,7 +150,7 @@
 /**
  * GIO_VERSION_2_48:
  *
- * A macro that evaluates to the 2.48 version of GLib, in a format
+ * A macro that evaluates to the 2.48 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.48
@@ -160,7 +160,7 @@
 /**
  * GIO_VERSION_2_50:
  *
- * A macro that evaluates to the 2.50 version of GLib, in a format
+ * A macro that evaluates to the 2.50 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.50
@@ -170,7 +170,7 @@
 /**
  * GIO_VERSION_2_52:
  *
- * A macro that evaluates to the 2.52 version of GLib, in a format
+ * A macro that evaluates to the 2.52 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.52
@@ -180,7 +180,7 @@
 /**
  * GIO_VERSION_2_54:
  *
- * A macro that evaluates to the 2.54 version of GLib, in a format
+ * A macro that evaluates to the 2.54 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.54
@@ -190,7 +190,7 @@
 /**
  * GIO_VERSION_2_56:
  *
- * A macro that evaluates to the 2.56 version of GLib, in a format
+ * A macro that evaluates to the 2.56 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.56
@@ -200,7 +200,7 @@
 /**
  * GIO_VERSION_2_58:
  *
- * A macro that evaluates to the 2.58 version of GLib, in a format
+ * A macro that evaluates to the 2.58 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.58
@@ -210,7 +210,7 @@
 /**
  * GIO_VERSION_2_60:
  *
- * A macro that evaluates to the 2.60 version of GLib, in a format
+ * A macro that evaluates to the 2.60 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.60
@@ -220,7 +220,7 @@
 /**
  * GIO_VERSION_2_62:
  *
- * A macro that evaluates to the 2.62 version of GLib, in a format
+ * A macro that evaluates to the 2.62 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.62
@@ -230,7 +230,7 @@
 /**
  * GIO_VERSION_2_64:
  *
- * A macro that evaluates to the 2.64 version of GLib, in a format
+ * A macro that evaluates to the 2.64 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.64
@@ -240,7 +240,7 @@
 /**
  * GIO_VERSION_2_66:
  *
- * A macro that evaluates to the 2.66 version of GLib, in a format
+ * A macro that evaluates to the 2.66 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.66
@@ -250,7 +250,7 @@
 /**
  * GIO_VERSION_2_68:
  *
- * A macro that evaluates to the 2.68 version of GLib, in a format
+ * A macro that evaluates to the 2.68 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.68
@@ -260,7 +260,7 @@
 /**
  * GIO_VERSION_2_70:
  *
- * A macro that evaluates to the 2.70 version of GLib, in a format
+ * A macro that evaluates to the 2.70 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.70
@@ -270,7 +270,7 @@
 /**
  * GIO_VERSION_2_72:
  *
- * A macro that evaluates to the 2.72 version of GLib, in a format
+ * A macro that evaluates to the 2.72 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.72
@@ -280,7 +280,7 @@
 /**
  * GIO_VERSION_2_74:
  *
- * A macro that evaluates to the 2.74 version of GLib, in a format
+ * A macro that evaluates to the 2.74 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.74
@@ -290,7 +290,7 @@
 /**
  * GIO_VERSION_2_76:
  *
- * A macro that evaluates to the 2.76 version of GLib, in a format
+ * A macro that evaluates to the 2.76 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.76
@@ -300,7 +300,7 @@
 /**
  * GIO_VERSION_2_78:
  *
- * A macro that evaluates to the 2.78 version of GLib, in a format
+ * A macro that evaluates to the 2.78 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.78
@@ -310,7 +310,7 @@
 /**
  * GIO_VERSION_2_80:
  *
- * A macro that evaluates to the 2.80 version of GLib, in a format
+ * A macro that evaluates to the 2.80 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.80
@@ -320,7 +320,7 @@
 /**
  * GIO_VERSION_2_82:
  *
- * A macro that evaluates to the 2.82 version of GLib, in a format
+ * A macro that evaluates to the 2.82 version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * Since: 2.82
@@ -328,9 +328,29 @@
 #define GIO_VERSION_2_82       (G_ENCODE_VERSION (2, 82))
 
 /**
+ * GIO_VERSION_2_84:
+ *
+ * A macro that evaluates to the 2.84 version of Gio, in a format
+ * that can be used by the C pre-processor.
+ *
+ * Since: 2.84
+ */
+#define GIO_VERSION_2_84       (G_ENCODE_VERSION (2, 84))
+
+/**
+ * GIO_VERSION_2_86:
+ *
+ * A macro that evaluates to the 2.86 version of Gio, in a format
+ * that can be used by the C pre-processor.
+ *
+ * Since: 2.86
+ */
+#define GIO_VERSION_2_86       (G_ENCODE_VERSION (2, 86))
+
+/**
  * GIO_VERSION_CUR_STABLE:
  *
- * A macro that evaluates to the current stable version of GLib, in a format
+ * A macro that evaluates to the current stable version of Gio, in a format
  * that can be used by the C pre-processor.
  *
  * During an unstable development cycle, this evaluates to the next stable
@@ -1389,6 +1409,74 @@
 # define GIO_AVAILABLE_MACRO_IN_2_82
 # define GIO_AVAILABLE_ENUMERATOR_IN_2_82
 # define GIO_AVAILABLE_TYPE_IN_2_82
+#endif
+
+#if GIO_VERSION_MIN_REQUIRED >= GIO_VERSION_2_84
+# define GIO_DEPRECATED_IN_2_84                GIO_DEPRECATED
+# define GIO_DEPRECATED_IN_2_84_FOR(f)         GIO_DEPRECATED_FOR(f)
+# define GIO_DEPRECATED_MACRO_IN_2_84          GIO_DEPRECATED_MACRO
+# define GIO_DEPRECATED_MACRO_IN_2_84_FOR(f)   GIO_DEPRECATED_MACRO_FOR(f)
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_84          GIO_DEPRECATED_ENUMERATOR
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_84_FOR(f)   GIO_DEPRECATED_ENUMERATOR_FOR(f)
+# define GIO_DEPRECATED_TYPE_IN_2_84           GIO_DEPRECATED_TYPE
+# define GIO_DEPRECATED_TYPE_IN_2_84_FOR(f)    GIO_DEPRECATED_TYPE_FOR(f)
+#else
+# define GIO_DEPRECATED_IN_2_84                _GLIB_EXTERN
+# define GIO_DEPRECATED_IN_2_84_FOR(f)         _GLIB_EXTERN
+# define GIO_DEPRECATED_MACRO_IN_2_84
+# define GIO_DEPRECATED_MACRO_IN_2_84_FOR(f)
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_84
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_84_FOR(f)
+# define GIO_DEPRECATED_TYPE_IN_2_84
+# define GIO_DEPRECATED_TYPE_IN_2_84_FOR(f)
+#endif
+
+#if GIO_VERSION_MAX_ALLOWED < GIO_VERSION_2_84
+# define GIO_AVAILABLE_IN_2_84                 GIO_UNAVAILABLE(2, 84)
+# define GIO_AVAILABLE_STATIC_INLINE_IN_2_84   GIO_UNAVAILABLE_STATIC_INLINE(2, 84)
+# define GIO_AVAILABLE_MACRO_IN_2_84           GIO_UNAVAILABLE_MACRO(2, 84)
+# define GIO_AVAILABLE_ENUMERATOR_IN_2_84      GIO_UNAVAILABLE_ENUMERATOR(2, 84)
+# define GIO_AVAILABLE_TYPE_IN_2_84            GIO_UNAVAILABLE_TYPE(2, 84)
+#else
+# define GIO_AVAILABLE_IN_2_84                 _GLIB_EXTERN
+# define GIO_AVAILABLE_STATIC_INLINE_IN_2_84
+# define GIO_AVAILABLE_MACRO_IN_2_84
+# define GIO_AVAILABLE_ENUMERATOR_IN_2_84
+# define GIO_AVAILABLE_TYPE_IN_2_84
+#endif
+
+#if GIO_VERSION_MIN_REQUIRED >= GIO_VERSION_2_86
+# define GIO_DEPRECATED_IN_2_86                GIO_DEPRECATED
+# define GIO_DEPRECATED_IN_2_86_FOR(f)         GIO_DEPRECATED_FOR(f)
+# define GIO_DEPRECATED_MACRO_IN_2_86          GIO_DEPRECATED_MACRO
+# define GIO_DEPRECATED_MACRO_IN_2_86_FOR(f)   GIO_DEPRECATED_MACRO_FOR(f)
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_86          GIO_DEPRECATED_ENUMERATOR
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_86_FOR(f)   GIO_DEPRECATED_ENUMERATOR_FOR(f)
+# define GIO_DEPRECATED_TYPE_IN_2_86           GIO_DEPRECATED_TYPE
+# define GIO_DEPRECATED_TYPE_IN_2_86_FOR(f)    GIO_DEPRECATED_TYPE_FOR(f)
+#else
+# define GIO_DEPRECATED_IN_2_86                _GLIB_EXTERN
+# define GIO_DEPRECATED_IN_2_86_FOR(f)         _GLIB_EXTERN
+# define GIO_DEPRECATED_MACRO_IN_2_86
+# define GIO_DEPRECATED_MACRO_IN_2_86_FOR(f)
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_86
+# define GIO_DEPRECATED_ENUMERATOR_IN_2_86_FOR(f)
+# define GIO_DEPRECATED_TYPE_IN_2_86
+# define GIO_DEPRECATED_TYPE_IN_2_86_FOR(f)
+#endif
+
+#if GIO_VERSION_MAX_ALLOWED < GIO_VERSION_2_86
+# define GIO_AVAILABLE_IN_2_86                 GIO_UNAVAILABLE(2, 86)
+# define GIO_AVAILABLE_STATIC_INLINE_IN_2_86   GIO_UNAVAILABLE_STATIC_INLINE(2, 86)
+# define GIO_AVAILABLE_MACRO_IN_2_86           GIO_UNAVAILABLE_MACRO(2, 86)
+# define GIO_AVAILABLE_ENUMERATOR_IN_2_86      GIO_UNAVAILABLE_ENUMERATOR(2, 86)
+# define GIO_AVAILABLE_TYPE_IN_2_86            GIO_UNAVAILABLE_TYPE(2, 86)
+#else
+# define GIO_AVAILABLE_IN_2_86                 _GLIB_EXTERN
+# define GIO_AVAILABLE_STATIC_INLINE_IN_2_86
+# define GIO_AVAILABLE_MACRO_IN_2_86
+# define GIO_AVAILABLE_ENUMERATOR_IN_2_86
+# define GIO_AVAILABLE_TYPE_IN_2_86
 #endif
 
 #endif /*  __G_VERSION_MACROS_H__ */

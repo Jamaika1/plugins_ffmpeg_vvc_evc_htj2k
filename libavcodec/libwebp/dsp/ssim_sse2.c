@@ -14,11 +14,13 @@
 #include "../dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
-
-#include <assert.h>
 #include <emmintrin.h>
 
+#include <assert.h>
+
 #include "../dsp/common_sse2.h"
+#include "../dsp/cpu.h"
+#include "../webp/types.h"
 
 #if !defined(WEBP_DISABLE_STATS)
 

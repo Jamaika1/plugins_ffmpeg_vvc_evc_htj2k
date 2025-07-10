@@ -29,13 +29,12 @@
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/decode.h"
 #include "libavcodec/get_bits.h"
-#include "libavcodec/internal.h"
 #include "libavcodec/raw.h"
 #include "libavutil/avassert.h"
 #include "libavutil/buffer.h"
-#include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/imgutils.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
 typedef struct RawVideoContext {
@@ -226,9 +225,6 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
 
     need_copy = !avpkt->buf || context->is_1_2_4_8_bpp || context->is_yuv2 || context->is_lt_16bpp;
 
-    frame->pict_type        = AV_PICTURE_TYPE_I;
-    frame->flags |= AV_FRAME_FLAG_KEY;
-
     res = ff_decode_frame_props(avctx, frame);
     if (res < 0)
         return res;
@@ -373,7 +369,11 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
         }
 
         if (ff_copy_palette(context->palette->data, avpkt, avctx)) {
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
             frame->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
         } else if (context->is_nut_pal8) {
             int vid_size = avctx->width * avctx->height;
             int pal_size = avpkt->size - vid_size;
@@ -381,7 +381,11 @@ static int raw_decode(AVCodecContext *avctx, AVFrame *frame,
             if (avpkt->size > vid_size && pal_size <= AVPALETTE_SIZE) {
                 const uint8_t *pal = avpkt->data + vid_size;
                 memcpy(context->palette->data, pal, pal_size);
+#if FF_API_PALETTE_HAS_CHANGED
+FF_DISABLE_DEPRECATION_WARNINGS
                 frame->palette_has_changed = 1;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
             }
         }
     }

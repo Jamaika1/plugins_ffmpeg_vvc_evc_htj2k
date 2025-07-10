@@ -26,14 +26,15 @@
  * @author Marco Gerards <marco@gnu.org>, David Conrad, Jordi Ortiz <nenjordi@gmail.com>
  */
 
-#include "libavutil/config.h"
+#include "config.h"
 
+#include "libavutil/mem.h"
 #include "libavutil/pixdesc.h"
 
-#include "libavcodec/dirac.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/golomb.h"
-#include "libavcodec/mpeg12data.h"
+#include "dirac.h"
+#include "get_bits.h"
+#include "golomb.h"
+#include "mpeg12data.h"
 
 #if CONFIG_DIRAC_PARSE
 

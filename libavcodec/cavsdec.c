@@ -27,15 +27,16 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/emms.h"
-#include "libavcodec/avcodec.h"
-#include "libavcodec/get_bits.h"
-#include "libavcodec/golomb.h"
-#include "libavcodec/cavs.h"
-#include "libavcodec/codec_internal.h"
-#include "libavcodec/decode.h"
-#include "libavcodec/mathops.h"
-#include "libavcodec/mpeg12data.h"
-#include "libavcodec/startcode.h"
+#include "libavutil/mem.h"
+#include "avcodec.h"
+#include "get_bits.h"
+#include "golomb.h"
+#include "cavs.h"
+#include "codec_internal.h"
+#include "decode.h"
+#include "mathops.h"
+#include "mpeg12data.h"
+#include "startcode.h"
 
 static const uint8_t mv_scan[4] = {
     MV_FWD_X0, MV_FWD_X1,
