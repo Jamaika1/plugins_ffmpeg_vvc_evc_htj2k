@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2011-2016  mingw-w64 project
+   Copyright (c) 2013-2016  mingw-w64 project
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -19,47 +19,11 @@
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 */
-#ifndef WIN_PTHREADS_SCHED_H
-#define WIN_PTHREADS_SCHED_H
 
-#include <stddef.h>
-#include <errno.h>
-#include <sys/types.h>
+#ifndef WIN_PTHREADS_SIGNAL_H
+#define WIN_PTHREADS_SIGNAL_H
 
-#include <process.h>
-#include <limits.h>
-#include <signal.h>
+/* Windows has rudimentary signals support.  */
+#define pthread_sigmask(H, S1, S2) 0
 
-#include "pthread_compat.h"
-
-/* Some POSIX realtime extensions, mostly stubbed */
-#define SCHED_OTHER     0
-#define SCHED_FIFO      1
-#define SCHED_RR        2
-#define SCHED_MIN       SCHED_OTHER
-#define SCHED_MAX       SCHED_RR
-
-struct sched_param {
-  int sched_priority;
-};
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-WINPTHREAD_API int sched_yield(void);
-WINPTHREAD_API int sched_get_priority_min(int pol);
-WINPTHREAD_API int sched_get_priority_max(int pol);
-WINPTHREAD_API int sched_getscheduler(pid_t pid);
-WINPTHREAD_API int sched_setscheduler(pid_t pid, int pol, const struct sched_param *param);
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifndef sched_rr_get_interval
-#define sched_rr_get_interval(_p, _i) \
-  ( errno = ENOTSUP, (int) -1 )
-#endif
-
-#endif /* WIN_PTHREADS_SCHED_H */
+#endif /* WIN_PTHREADS_SIGNAL_H */
