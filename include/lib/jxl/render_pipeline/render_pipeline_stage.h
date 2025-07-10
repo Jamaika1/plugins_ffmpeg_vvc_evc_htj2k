@@ -6,9 +6,12 @@
 #ifndef LIB_JXL_RENDER_PIPELINE_RENDER_PIPELINE_STAGE_H_
 #define LIB_JXL_RENDER_PIPELINE_RENDER_PIPELINE_STAGE_H_
 
-#include <stdint.h>
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 #include "lib/jxl/base/arch_macros.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/frame_header.h"
 
 namespace jxl {
@@ -84,7 +87,7 @@ class RenderPipelineStage {
     }
   };
 
-  virtual ~RenderPipelineStage() = default;
+  virtual ~RenderPipelineStage();
 
   // Processes one row of input, producing the appropriate number of rows of
   // output. Input/output rows can be obtained by calls to
@@ -99,9 +102,10 @@ class RenderPipelineStage {
   // `GroupBorderAssigner::kPaddingXRound`. If `settings_.temp_buffer_size` is
   // nonzero, `temp` will point to an HWY-aligned buffer of at least that number
   // of floats; concurrent calls will have different buffers.
-  virtual void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                          size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                          size_t thread_id) const = 0;
+  virtual Status ProcessRow(const RowInfo& input_rows,
+                            const RowInfo& output_rows, size_t xextra,
+                            size_t xsize, size_t xpos, size_t ypos,
+                            size_t thread_id) const = 0;
 
   // How each channel will be processed. Channels are numbered starting from
   // color channels (always 3) and followed by all other channels.
@@ -110,14 +114,14 @@ class RenderPipelineStage {
  protected:
   explicit RenderPipelineStage(Settings settings) : settings_(settings) {}
 
-  virtual Status IsInitialized() const { return true; }
+  virtual Status IsInitialized() const;
 
   // Informs the stage about the total size of each channel. Few stages will
   // actually need to use this information.
-  virtual void SetInputSizes(
-      const std::vector<std::pair<size_t, size_t>>& input_sizes) {}
+  virtual Status SetInputSizes(
+      const std::vector<std::pair<size_t, size_t>>& input_sizes);
 
-  virtual Status PrepareForThreads(size_t num_threads) { return true; }
+  virtual Status PrepareForThreads(size_t num_threads);
 
   // Returns a pointer to the input row of channel `c` with offset `y`.
   // `y` must be in [-settings_.border_y, settings_.border_y]. `c` must be such
@@ -145,18 +149,18 @@ class RenderPipelineStage {
   // should return true, and it should implement ProcessPaddingRow below too.
   // It is assumed that, if there is a SwitchToImageDimensions() == true stage,
   // all kInput stages appear after it.
-  virtual bool SwitchToImageDimensions() const { return false; }
+  virtual bool SwitchToImageDimensions() const;
 
   // If SwitchToImageDimensions returns true, then this should set xsize and
   // ysize to the image size, and frame_origin to the location of the frame
   // within the image. Otherwise, this is not called at all.
   virtual void GetImageDimensions(size_t* xsize, size_t* ysize,
-                                  FrameOrigin* frame_origin) const {}
+                                  FrameOrigin* frame_origin) const;
 
   // Produces the appropriate output data outside of the frame dimensions. xpos
   // and ypos are now relative to the full image.
   virtual void ProcessPaddingRow(const RowInfo& output_rows, size_t xsize,
-                                 size_t xpos, size_t ypos) const {}
+                                 size_t xpos, size_t ypos) const;
 
   virtual const char* GetName() const = 0;
 

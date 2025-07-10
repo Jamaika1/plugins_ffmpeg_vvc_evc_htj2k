@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2020, Alliance for Open Media. All rights reserved
  *
@@ -11,10 +10,10 @@
  */
 
 #define VERSION_MAJOR 3
-#define VERSION_MINOR 8
-#define VERSION_PATCH 2
-#define VERSION_EXTRA "03d1fb6"
+#define VERSION_MINOR 12
+#define VERSION_PATCH 1
+#define VERSION_EXTRA "ba61d43"
 #define VERSION_PACKED \
   ((VERSION_MAJOR << 16) | (VERSION_MINOR << 8) | (VERSION_PATCH))
-#define VERSION_STRING_NOSP "v3.8.2-03d1fb6"
-#define VERSION_STRING " v3.8.2-03d1fb6"
+#define VERSION_STRING_NOSP "v3.12.1-ba61d43"
+#define VERSION_STRING " v3.12.1-ba61d43"

@@ -4,7 +4,7 @@
  *
  *   Define a set of compiler macros used in public FreeType headers.
  *
- * Copyright (C) 2020-2023 by
+ * Copyright (C) 2020-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -62,24 +62,24 @@ FT_BEGIN_HEADER
    * because it is needed by `FT_EXPORT`.
    */
 
-  /* Visual C, mingw */
-#if defined( _WIN32 ) && defined( FT2_BUILD_LIBRARY )
+  // Visual C, MinGW, Cygwin
+/*if defined( _WIN32 ) || defined( __CYGWIN__ )
 
-#if defined( DLL_EXPORT )
+#if defined( FT2_BUILD_LIBRARY ) && defined( DLL_EXPORT )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE  __declspec( dllexport )
 #elif defined( DLL_IMPORT )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE  __declspec( dllimport )
 #endif
 
-  /* gcc, clang */
-#elif (( defined( __GNUC__ ) && __GNUC__ >= 4 ) || defined( __clang__ )) && !defined( _WIN32 )
+  // gcc, clang
+#elif ( defined( __GNUC__ ) && __GNUC__ >= 4 ) || defined( __clang__ )
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE \
           __attribute__(( visibility( "default" ) ))
 
-  /* Sun */
+  // Sun
 #elif defined( __SUNPRO_C ) && __SUNPRO_C >= 0x550
 #define FT_PUBLIC_FUNCTION_ATTRIBUTE  __global
-#endif
+#endif*/
 
 
 #ifndef FT_PUBLIC_FUNCTION_ATTRIBUTE

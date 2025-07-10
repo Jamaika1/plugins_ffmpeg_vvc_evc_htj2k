@@ -5,21 +5,22 @@
 
 #include "lib/jxl/render_pipeline/stage_cms.h"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
+#include <vector>
 
-#include "jxl/cms_interface.h"
-#include "jxl/color_encoding.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_xyb.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_cms.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
-
-#include "lib/jxl/dec_xyb-inl.h"
-#include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -27,10 +28,14 @@ namespace HWY_NAMESPACE {
 
 class CmsStage : public RenderPipelineStage {
  public:
-  explicit CmsStage(OutputEncodingInfo output_encoding_info)
+  explicit CmsStage(OutputEncodingInfo output_encoding_info, bool linear)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
         output_encoding_info_(std::move(output_encoding_info)) {
-    c_src_ = output_encoding_info_.linear_color_encoding;
+    if (linear) {
+      c_src_ = output_encoding_info_.linear_color_encoding;
+    } else {
+      c_src_ = output_encoding_info_.orig_color_encoding;
+    }
   }
 
   bool IsNeeded() const {
@@ -44,38 +49,63 @@ class CmsStage : public RenderPipelineStage {
            not_mixing_color_and_grey;
   }
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
-    JXL_ASSERT(xsize == xsize_);
-    // TODO(firsching): handle grey case seperately
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
+    JXL_ENSURE(xsize <= xsize_);
+    // TODO(firsching): handle grey case separately
     //  interleave
-    float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);
-    float* JXL_RESTRICT row1 = GetInputRow(input_rows, 1, 0);
-    float* JXL_RESTRICT row2 = GetInputRow(input_rows, 2, 0);
-    float* mutable_buf_src = color_space_transform->BufSrc(thread_id);
+    if (c_src_.IsCMYK()) {
+      float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);
+      float* JXL_RESTRICT row1 = GetInputRow(input_rows, 1, 0);
+      float* JXL_RESTRICT row2 = GetInputRow(input_rows, 2, 0);
+      float* JXL_RESTRICT row3 = GetInputRow(input_rows, 3, 0);
+      float* mutable_buf_src = color_space_transform->BufSrc(thread_id);
 
-    for (size_t x = 0; x < xsize; x++) {
-      mutable_buf_src[3 * x + 0] = row0[x];
-      mutable_buf_src[3 * x + 1] = row1[x];
-      mutable_buf_src[3 * x + 2] = row2[x];
+      for (size_t x = 0; x < xsize; x++) {
+        mutable_buf_src[4 * x + 0] = row0[x];
+        mutable_buf_src[4 * x + 1] = row1[x];
+        mutable_buf_src[4 * x + 2] = row2[x];
+        mutable_buf_src[4 * x + 3] = row3[x];
+      }
+      const float* buf_src = mutable_buf_src;
+      float* JXL_RESTRICT buf_dst = color_space_transform->BufDst(thread_id);
+      JXL_RETURN_IF_ERROR(
+          color_space_transform->Run(thread_id, buf_src, buf_dst, xsize));
+      // de-interleave
+      for (size_t x = 0; x < xsize; x++) {
+        row0[x] = buf_dst[3 * x + 0];
+        row1[x] = buf_dst[3 * x + 1];
+        row2[x] = buf_dst[3 * x + 2];
+      }
+
+    } else {
+      float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);
+      float* JXL_RESTRICT row1 = GetInputRow(input_rows, 1, 0);
+      float* JXL_RESTRICT row2 = GetInputRow(input_rows, 2, 0);
+      float* mutable_buf_src = color_space_transform->BufSrc(thread_id);
+
+      for (size_t x = 0; x < xsize; x++) {
+        mutable_buf_src[3 * x + 0] = row0[x];
+        mutable_buf_src[3 * x + 1] = row1[x];
+        mutable_buf_src[3 * x + 2] = row2[x];
+      }
+      const float* buf_src = mutable_buf_src;
+      float* JXL_RESTRICT buf_dst = color_space_transform->BufDst(thread_id);
+      JXL_RETURN_IF_ERROR(
+          color_space_transform->Run(thread_id, buf_src, buf_dst, xsize));
+      // de-interleave
+      for (size_t x = 0; x < xsize; x++) {
+        row0[x] = buf_dst[3 * x + 0];
+        row1[x] = buf_dst[3 * x + 1];
+        row2[x] = buf_dst[3 * x + 2];
+      }
     }
-    const float* buf_src = mutable_buf_src;
-    float* JXL_RESTRICT buf_dst = color_space_transform->BufDst(thread_id);
-    if (!color_space_transform->Run(thread_id, buf_src, buf_dst)) {
-      // TODO(firsching): somehow mark failing here?
-      return;
-    }
-    // de-interleave
-    for (size_t x = 0; x < xsize; x++) {
-      row0[x] = buf_dst[3 * x + 0];
-      row1[x] = buf_dst[3 * x + 1];
-      row2[x] = buf_dst[3 * x + 2];
-    }
+    return true;
   }
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
-    return c < 3 ? RenderPipelineChannelMode::kInPlace
-                 : RenderPipelineChannelMode::kIgnored;
+    return c < (c_src_.IsCMYK() ? 4 : 3) ? RenderPipelineChannelMode::kInPlace
+                                         : RenderPipelineChannelMode::kIgnored;
   }
 
   const char* GetName() const override { return "Cms"; }
@@ -86,16 +116,15 @@ class CmsStage : public RenderPipelineStage {
   std::unique_ptr<jxl::ColorSpaceTransform> color_space_transform;
   ColorEncoding c_src_;
 
-  void SetInputSizes(
+  Status SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) override {
-#if JXL_ENABLE_ASSERT
-    JXL_ASSERT(input_sizes.size() >= 3);
+    JXL_ENSURE(input_sizes.size() >= 3);
     for (size_t c = 1; c < input_sizes.size(); c++) {
-      JXL_ASSERT(input_sizes[c].first == input_sizes[0].first);
-      JXL_ASSERT(input_sizes[c].second == input_sizes[0].second);
+      JXL_ENSURE(input_sizes[c].first == input_sizes[0].first);
+      JXL_ENSURE(input_sizes[c].second == input_sizes[0].second);
     }
-#endif
     xsize_ = input_sizes[0].first;
+    return true;
   }
 
   Status PrepareForThreads(size_t num_threads) override {
@@ -109,8 +138,8 @@ class CmsStage : public RenderPipelineStage {
 };
 
 std::unique_ptr<RenderPipelineStage> GetCmsStage(
-    const OutputEncodingInfo& output_encoding_info) {
-  auto stage = jxl::make_unique<CmsStage>(output_encoding_info);
+    const OutputEncodingInfo& output_encoding_info, bool linear) {
+  auto stage = jxl::make_unique<CmsStage>(output_encoding_info, linear);
   if (!stage->IsNeeded()) return nullptr;
   return stage;
 }
@@ -126,8 +155,8 @@ namespace jxl {
 HWY_EXPORT(GetCmsStage);
 
 std::unique_ptr<RenderPipelineStage> GetCmsStage(
-    const OutputEncodingInfo& output_encoding_info) {
-  return HWY_DYNAMIC_DISPATCH(GetCmsStage)(output_encoding_info);
+    const OutputEncodingInfo& output_encoding_info, bool linear) {
+  return HWY_DYNAMIC_DISPATCH(GetCmsStage)(output_encoding_info, linear);
 }
 
 }  // namespace jxl

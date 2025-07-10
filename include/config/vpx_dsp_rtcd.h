@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) 2024, Alliance for Open Media. All rights reserved.
+ *
+ * This source code is subject to the terms of the BSD 2 Clause License and
+ * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+ * was not distributed with this source code in the LICENSE file, you can
+ * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * Media Patent License 1.0 was not distributed with this source code in the
+ * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ */
+
+// This file is generated. Do not edit.
 #ifndef VPX_DSP_RTCD_H_
 #define VPX_DSP_RTCD_H_
 
@@ -1890,6 +1902,9 @@ RTCD_EXTERN unsigned int (*vpx_sad64x64)(const uint8_t *src_ptr, int src_stride,
 #if defined(__AVX2__)
 unsigned int vpx_sad64x64_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
 #endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad64x64_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
+#endif
 #else
 #define vpx_sad64x64 vpx_sad64x64_c
 #endif
@@ -1902,6 +1917,9 @@ RTCD_EXTERN unsigned int (*vpx_sad64x32)(const uint8_t *src_ptr, int src_stride,
 #endif
 #if defined(__AVX2__)
 unsigned int vpx_sad64x32_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
+#endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad64x32_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
 #endif
 #else
 #define vpx_sad64x32 vpx_sad64x32_c
@@ -2019,6 +2037,9 @@ RTCD_EXTERN unsigned int (*vpx_sad_skip_64x64)(const uint8_t *src_ptr, int src_s
 #if defined(__AVX2__)
 unsigned int vpx_sad_skip_64x64_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
 #endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad_skip_64x64_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
+#endif
 #else
 #define vpx_sad_skip_64x64 vpx_sad_skip_64x64_c
 #endif
@@ -2031,6 +2052,9 @@ RTCD_EXTERN unsigned int (*vpx_sad_skip_64x32)(const uint8_t *src_ptr, int src_s
 #endif
 #if defined(__AVX2__)
 unsigned int vpx_sad_skip_64x32_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
+#endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad_skip_64x32_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride);
 #endif
 #else
 #define vpx_sad_skip_64x32 vpx_sad_skip_64x32_c
@@ -2334,6 +2358,9 @@ RTCD_EXTERN unsigned int (*vpx_sad64x64_avg)(const uint8_t *src_ptr, int src_str
 #if defined(__AVX2__)
 unsigned int vpx_sad64x64_avg_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride, const uint8_t *second_pred);
 #endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad64x64_avg_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride, const uint8_t *second_pred);
+#endif
 #else
 #define vpx_sad64x64_avg vpx_sad64x64_avg_c
 #endif
@@ -2346,6 +2373,9 @@ RTCD_EXTERN unsigned int (*vpx_sad64x32_avg)(const uint8_t *src_ptr, int src_str
 #endif
 #if defined(__AVX2__)
 unsigned int vpx_sad64x32_avg_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride, const uint8_t *second_pred);
+#endif
+#if defined(__AVX512F__)
+unsigned int vpx_sad64x32_avg_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr, int ref_stride, const uint8_t *second_pred);
 #endif
 #else
 #define vpx_sad64x32_avg vpx_sad64x32_avg_c
@@ -2581,6 +2611,9 @@ RTCD_EXTERN void (*vpx_sad_skip_64x64x4d)(const uint8_t *src_ptr, int src_stride
 #if defined(__AVX2__)
 void vpx_sad_skip_64x64x4d_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_array[4], int ref_stride, uint32_t sad_array[4]);
 #endif
+#if defined(__AVX512F__)
+void vpx_sad_skip_64x64x4d_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_array[4], int ref_stride, uint32_t sad_array[4]);
+#endif
 #else
 #define vpx_sad_skip_64x64x4d vpx_sad_skip_64x64x4d_c
 #endif
@@ -2593,6 +2626,9 @@ RTCD_EXTERN void (*vpx_sad_skip_64x32x4d)(const uint8_t *src_ptr, int src_stride
 #endif
 #if defined(__AVX2__)
 void vpx_sad_skip_64x32x4d_avx2(const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_array[4], int ref_stride, uint32_t sad_array[4]);
+#endif
+#if defined(__AVX512F__)
+void vpx_sad_skip_64x32x4d_avx512(const uint8_t *src_ptr, int src_stride, const uint8_t * const ref_array[4], int ref_stride, uint32_t sad_array[4]);
 #endif
 #else
 #define vpx_sad_skip_64x32x4d vpx_sad_skip_64x32x4d_c
@@ -2706,14 +2742,6 @@ void vpx_ssim_parms_8x8_sse2(const uint8_t *s, int sp, const uint8_t *r, int rp,
 #define vpx_ssim_parms_8x8 vpx_ssim_parms_8x8_sse2
 #else
 #define vpx_ssim_parms_8x8 vpx_ssim_parms_8x8_c
-#endif
-
-void vpx_ssim_parms_16x16_c(const uint8_t *s, int sp, const uint8_t *r, int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr);
-#if HAVE_SIMD && defined(__x86_64__)
-void vpx_ssim_parms_16x16_sse2(const uint8_t *s, int sp, const uint8_t *r, int rp, uint32_t *sum_s, uint32_t *sum_r, uint32_t *sum_sq_s, uint32_t *sum_sq_r, uint32_t *sum_sxr);
-#define vpx_ssim_parms_16x16 vpx_ssim_parms_16x16_sse2
-#else
-#define vpx_ssim_parms_16x16 vpx_ssim_parms_16x16_c
 #endif
 #endif
 
@@ -4122,18 +4150,20 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   vpx_sub_pixel_avg_variance4x8 =
   vpx_sub_pixel_avg_variance4x4 =
   vpx_comp_avg_pred =
-  vpx_sad_skip_64x64 =
-  vpx_sad_skip_64x32 =
+  vpx_sad_skip_64x64 = vpx_sad_skip_64x64_sse2;
+  vpx_sad_skip_64x32 = vpx_sad_skip_64x32_sse2;
   vpx_sad_skip_32x64 =
   vpx_sad_skip_32x32 =
   vpx_sad_skip_32x16 =
   vpx_sad64x64x4d =
   vpx_sad32x32x4d =
-  vpx_sad_skip_64x64x4d =
-  vpx_sad_skip_64x32x4d =
+  vpx_sad_skip_64x64x4d = vpx_sad_skip_64x64x4d_sse2;
+  vpx_sad_skip_64x32x4d = vpx_sad_skip_64x32x4d_sse2;
   vpx_sad_skip_32x64x4d =
   vpx_sad_skip_32x32x4d =
   vpx_sad_skip_32x16x4d =
+  vpx_sad64x64_avg = vpx_sad64x64_avg_sse2;
+  vpx_sad64x32_avg = vpx_sad64x32_avg_sse2;
   vpx_subtract_block =
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
@@ -4249,19 +4279,29 @@ vpx_scaled_2d = vpx_scaled_2d_c;
   if (flags & HAS_AVX2) vpx_sub_pixel_avg_variance64x64 =
   if (flags & HAS_AVX2) vpx_sub_pixel_avg_variance32x32 =
   if (flags & HAS_AVX2) vpx_comp_avg_pred =
-  if (flags & HAS_AVX2) vpx_sad_skip_64x64 =
-  if (flags & HAS_AVX2) vpx_sad_skip_64x32 =
+  if (flags & HAS_AVX2) vpx_sad_skip_64x64 = vpx_sad_skip_64x64_avx2;
+  if (flags & HAS_AVX2) vpx_sad_skip_64x32 = vpx_sad_skip_64x32_avx2;
   if (flags & HAS_AVX2) vpx_sad_skip_32x64 =
   if (flags & HAS_AVX2) vpx_sad_skip_32x32 =
   if (flags & HAS_AVX2) vpx_sad_skip_32x16 =
-  if (flags & HAS_AVX2) vpx_sad_skip_64x64x4d =
-  if (flags & HAS_AVX2) vpx_sad_skip_64x32x4d =
+  if (flags & HAS_AVX2) vpx_sad_skip_64x64x4d = vpx_sad_skip_64x64x4d_avx2;
+  if (flags & HAS_AVX2) vpx_sad_skip_64x32x4d = vpx_sad_skip_64x32x4d_avx2;
   if (flags & HAS_AVX2) vpx_sad_skip_32x64x4d =
   if (flags & HAS_AVX2) vpx_sad_skip_32x32x4d =
   if (flags & HAS_AVX2) vpx_sad_skip_32x16x4d =
+  if (flags & HAS_AVX2) vpx_sad64x64_avg = vpx_sad64x64_avg_avx2;
+  if (flags & HAS_AVX2) vpx_sad64x32_avg = vpx_sad64x32_avg_avx2;
 #endif
 #if defined(__AVX512F__) && HAVE_SIMD
-  if (flags & HAS_AVX512) vpx_sad64x64x4d =
+  if (flags & HAS_AVX512) vpx_sad64x64x4d = vpx_sad64x64x4d_avx512;
+  if (flags & HAS_AVX512) vpx_sad_skip_64x64x4d = vpx_sad_skip_64x64x4d_avx512;
+  if (flags & HAS_AVX512) vpx_sad_skip_64x32x4d = vpx_sad_skip_64x32x4d_avx512;
+  if (flags & HAS_AVX512) vpx_sad64x64 = vpx_sad64x64_avx512;
+  if (flags & HAS_AVX512) vpx_sad64x32 = vpx_sad64x32_avx512;
+  if (flags & HAS_AVX512) vpx_sad_skip_64x64 = vpx_sad_skip_64x64_avx512;
+  if (flags & HAS_AVX512) vpx_sad_skip_64x32 = vpx_sad_skip_64x32_avx512;
+  if (flags & HAS_AVX512) vpx_sad64x64_avg = vpx_sad64x64_avg_avx512;
+  if (flags & HAS_AVX512) vpx_sad64x32_avg = vpx_sad64x32_avg_avx512;
 #endif
 
 #if CONFIG_VP9_HIGHBITDEPTH

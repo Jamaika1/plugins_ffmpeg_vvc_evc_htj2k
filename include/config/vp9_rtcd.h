@@ -1,3 +1,14 @@
+/*
+ *  Copyright (c) 2024 The WebM project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree. An additional intellectual property rights grant can be found
+ *  in the file PATENTS.  All contributing project authors may
+ *  be found in the AUTHORS file in the root of the source tree.
+ */
+
+// This file is generated. Do not edit.
 #ifndef VP9_RTCD_H_
 #define VP9_RTCD_H_
 
@@ -15,6 +26,9 @@
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_enums.h"
 #include "vp9/common/vp9_filter.h"
+#if !CONFIG_REALTIME_ONLY && CONFIG_VP9_ENCODER
+#include "vp9/encoder/vp9_temporal_filter.h"
+#endif
 
 struct macroblockd;
 
@@ -258,6 +272,88 @@ RTCD_EXTERN void (*vp9_highbd_apply_temporal_filter)(const uint16_t *y_src, int 
 #define vp9_highbd_apply_temporal_filter vp9_highbd_apply_temporal_filter_c
 #endif
 
+#if !CONFIG_REALTIME_ONLY
+void vpx_convolve12_vert_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_convolve12_vert)(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if defined(__SSSE3__)
+void vpx_convolve12_vert_ssse3(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#if defined(__AVX2__)
+void vpx_convolve12_vert_avx2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#else
+#define vpx_convolve12_vert vpx_convolve12_vert_c
+#endif
+
+void vpx_convolve12_horiz_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_convolve12_horiz)(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if defined(__SSSE3__)
+void vpx_convolve12_horiz_ssse3(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#if defined(__AVX2__)
+void vpx_convolve12_horiz_avx2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#else
+#define vpx_convolve12_horiz vpx_convolve12_horiz_c
+#endif
+
+void vpx_convolve12_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_convolve12)(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#if defined(__SSSE3__)
+void vpx_convolve12_ssse3(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#if defined(__AVX2__)
+void vpx_convolve12_avx2(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
+#endif
+#else
+#define vpx_convolve12 vpx_convolve12_c
+#endif
+
+#if CONFIG_VP9_HIGHBITDEPTH
+void vpx_highbd_convolve12_vert_c(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_highbd_convolve12_vert)(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if defined(__SSSE3__)
+void vpx_highbd_convolve12_vert_ssse3(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#if defined(__AVX2__)
+void vpx_highbd_convolve12_vert_avx2(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#else
+#define vpx_highbd_convolve12_vert vpx_highbd_convolve12_vert_c
+#endif
+
+void vpx_highbd_convolve12_horiz_c(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_highbd_convolve12_horiz)(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if defined(__SSSE3__)
+void vpx_highbd_convolve12_horiz_ssse3(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#if defined(__AVX2__)
+void vpx_highbd_convolve12_horiz_avx2(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#else
+#define vpx_highbd_convolve12_horiz vpx_highbd_convolve12_horiz_c
+#endif
+
+void vpx_highbd_convolve12_c(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if HAVE_SIMD
+RTCD_EXTERN void (*vpx_highbd_convolve12)(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#if defined(__SSSE3__)
+void vpx_highbd_convolve12_ssse3(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#if defined(__AVX2__)
+void vpx_highbd_convolve12_avx2(const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst, ptrdiff_t dst_stride, const InterpKernel12 *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h, int bd);
+#endif
+#else
+#define vpx_highbd_convolve12 vpx_highbd_convolve12_c
+#endif
+#endif
+#endif
+
 void vp9_highbd_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
 #if HAVE_SIMD
 RTCD_EXTERN void (*vp9_highbd_quantize_fp)(const tran_low_t *coeff_ptr, intptr_t n_coeffs, const struct macroblock_plane * const mb_plane, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const struct ScanOrder * const scan_order);
@@ -318,6 +414,9 @@ static void setup_rtcd_internal(void)
 
   //vp9_diamond_search_sad = vp9_diamond_search_sad_c;
   vp9_scale_and_extend_frame = vp9_scale_and_extend_frame_c;
+  vpx_convolve12_vert = vpx_convolve12_vert_c;
+  vpx_convolve12_horiz = vpx_convolve12_horiz_c;
+  vpx_convolve12 = vpx_convolve12_c;
 #if defined(__SSE2__) && HAVE_SIMD
   vp9_block_error = vp9_block_error_sse2;
   vp9_block_error_fp = vp9_block_error_fp_sse2;
@@ -328,6 +427,9 @@ static void setup_rtcd_internal(void)
   if (flags & HAS_SSSE3) vp9_scale_and_extend_frame = vp9_scale_and_extend_frame_ssse3;
   if (flags & HAS_SSSE3) vp9_quantize_fp = vp9_quantize_fp_ssse3;
   if (flags & HAS_SSSE3) vp9_quantize_fp_32x32 = vp9_quantize_fp_32x32_ssse3;
+  if (flags & HAS_SSSE3) vpx_convolve12_vert = vpx_convolve12_vert_ssse3;
+  if (flags & HAS_SSSE3) vpx_convolve12_horiz = vpx_convolve12_horiz_ssse3;
+  if (flags & HAS_SSSE3) vpx_convolve12 = vpx_convolve12_ssse3;
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
   if (flags & HAS_SSE4_1) vp9_apply_temporal_filter = vp9_apply_temporal_filter_sse4_1;
@@ -340,6 +442,9 @@ static void setup_rtcd_internal(void)
   if (flags & HAS_AVX2) vp9_block_error_fp = vp9_block_error_fp_avx2;
   if (flags & HAS_AVX2) vp9_quantize_fp = vp9_quantize_fp_avx2;
   if (flags & HAS_AVX2) vp9_quantize_fp_32x32 = vp9_quantize_fp_32x32_avx2;
+  if (flags & HAS_AVX2) vpx_convolve12_vert = vpx_convolve12_vert_avx2;
+  if (flags & HAS_AVX2) vpx_convolve12_horiz = vpx_convolve12_horiz_avx2;
+  if (flags & HAS_AVX2) vpx_convolve12 = vpx_convolve12_avx2;
 #endif
 
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -349,6 +454,14 @@ static void setup_rtcd_internal(void)
   vp9_highbd_apply_temporal_filter = vp9_highbd_apply_temporal_filter_c;
   vp9_highbd_quantize_fp = vp9_highbd_quantize_fp_c;
   vp9_highbd_quantize_fp_32x32 = vp9_highbd_quantize_fp_32x32_c;
+  vpx_highbd_convolve12_vert = vpx_highbd_convolve12_vert_c;
+  vpx_highbd_convolve12_horiz = vpx_highbd_convolve12_horiz_c;
+  vpx_highbd_convolve12 = vpx_highbd_convolve12_c;
+#if defined(__SSSE3__) && HAVE_SIMD
+  if (flags & HAS_SSSE3) vpx_highbd_convolve12_vert = vpx_highbd_convolve12_vert_ssse3;
+  if (flags & HAS_SSSE3) vpx_highbd_convolve12_horiz = vpx_highbd_convolve12_horiz_ssse3;
+  if (flags & HAS_SSSE3) vpx_highbd_convolve12 = vpx_highbd_convolve12_ssse3;
+#endif
 #if defined(__SSE4_1__) && HAVE_SIMD
 #if CONFIG_EMULATE_HARDWARE
   if (flags & HAS_SSE4_1) vp9_highbd_iht4x4_16_add = vp9_highbd_iht4x4_16_add_sse4_1;
@@ -360,6 +473,9 @@ static void setup_rtcd_internal(void)
 #if defined(__AVX2__) && HAVE_SIMD
   if (flags & HAS_AVX2) vp9_highbd_quantize_fp = vp9_highbd_quantize_fp_avx2;
   if (flags & HAS_AVX2) vp9_highbd_quantize_fp_32x32 = vp9_highbd_quantize_fp_32x32_avx2;
+  if (flags & HAS_AVX2) vpx_highbd_convolve12_vert = vpx_highbd_convolve12_vert_avx2;
+  if (flags & HAS_AVX2) vpx_highbd_convolve12_horiz = vpx_highbd_convolve12_horiz_avx2;
+  if (flags & HAS_AVX2) vpx_highbd_convolve12 = vpx_highbd_convolve12_avx2;
 #endif
 #endif
 #endif

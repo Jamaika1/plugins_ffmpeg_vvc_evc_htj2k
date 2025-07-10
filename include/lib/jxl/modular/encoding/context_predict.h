@@ -6,10 +6,19 @@
 #ifndef LIB_JXL_MODULAR_ENCODING_CONTEXT_PREDICT_H_
 #define LIB_JXL_MODULAR_ENCODING_CONTEXT_PREDICT_H_
 
-#include <utility>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
+#include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
+#include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 
@@ -32,11 +41,11 @@ struct Header : public Fields {
       visitor->SetDefault(this);
       return true;
     }
-    auto visit_p = [visitor](pixel_type val, pixel_type *p) {
+    auto visit_p = [visitor](pixel_type val, pixel_type *p) -> Status {
       uint32_t up = *p;
       JXL_QUIET_RETURN_IF_ERROR(visitor->Bits(5, val, &up));
       *p = up;
-      return Status(true);
+      return true;
     };
     JXL_QUIET_RETURN_IF_ERROR(visit_p(16, &p1C));
     JXL_QUIET_RETURN_IF_ERROR(visit_p(10, &p2C));
@@ -62,7 +71,7 @@ struct State {
   pixel_type_w pred = 0;  // *before* removing the added bits.
   std::vector<uint32_t> pred_errors[kNumPredictors];
   std::vector<int32_t> error;
-  const Header header;
+  const Header &header;
 
   // Allows to approximate division by a number from 1 to 64.
   //  for (int i = 0; i < 64; i++) divlookup[i] = (1 << 24) / (i + 1);
@@ -78,14 +87,14 @@ struct State {
       294337,   289262,  284359,  279620,  275036,  270600,  266305,  262144};
 
   constexpr static pixel_type_w AddBits(pixel_type_w x) {
-    return uint64_t(x) << kPredExtraBits;
+    return static_cast<uint64_t>(x) << kPredExtraBits;
   }
 
-  State(Header header, size_t xsize, size_t ysize) : header(header) {
+  State(const Header &header, size_t xsize, size_t ysize) : header(header) {
     // Extra margin to avoid out-of-bounds writes.
     // All have space for two rows of data.
-    for (size_t i = 0; i < 4; i++) {
-      pred_errors[i].resize((xsize + 2) * 2);
+    for (auto &pred_error : pred_errors) {
+      pred_error.resize((xsize + 2) * 2);
     }
     error.resize((xsize + 2) * 2);
   }
@@ -313,17 +322,18 @@ class MATreeLookup {
   JXL_INLINE LookupResult Lookup(const Properties &properties) const {
     uint32_t pos = 0;
     while (true) {
-#define TRAVERSE_THE_TREE                                                      \
-  {                                                                            \
-    const FlatDecisionNode &node = nodes_[pos];                                \
-    if (node.property0 < 0) {                                                  \
-      return {node.childID, node.predictor, node.predictor_offset,             \
-              node.multiplier};                                                \
-    }                                                                          \
-    bool p0 = properties[node.property0] <= node.splitval0;                    \
-    uint32_t off0 = properties[node.properties[0]] <= node.splitvals[0];       \
-    uint32_t off1 = 2 | (properties[node.properties[1]] <= node.splitvals[1]); \
-    pos = node.childID + (p0 ? off1 : off0);                                   \
+#define TRAVERSE_THE_TREE                                                \
+  {                                                                      \
+    const FlatDecisionNode &node = nodes_[pos];                          \
+    if (node.property0 < 0) {                                            \
+      return {node.childID, node.predictor, node.predictor_offset,       \
+              node.multiplier};                                          \
+    }                                                                    \
+    bool p0 = properties[node.property0] <= node.splitval0;              \
+    uint32_t off0 = properties[node.properties[0]] <= node.splitvals[0]; \
+    uint32_t off1 =                                                      \
+        2 | int{properties[node.properties[1]] <= node.splitvals[1]};    \
+    pos = node.childID + (p0 ? off1 : off0);                             \
   }
 
       TRAVERSE_THE_TREE;
@@ -538,8 +548,9 @@ JXL_INLINE PredictionResult Predict(
   }
   if (mode & kAllPredictions) {
     for (size_t i = 0; i < kNumModularPredictors; i++) {
-      predictions[i] = PredictOne((Predictor)i, left, top, toptop, topleft,
-                                  topright, leftleft, toprightright, wp_pred);
+      predictions[i] =
+          PredictOne(static_cast<Predictor>(i), left, top, toptop, topleft,
+                     topright, leftleft, toprightright, wp_pred);
     }
   }
   result.guess += PredictOne(predictor, left, top, toptop, topleft, topright,

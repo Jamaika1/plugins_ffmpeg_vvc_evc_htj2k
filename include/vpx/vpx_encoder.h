@@ -29,9 +29,8 @@
 extern "C" {
 #endif
 
-#include "./vpx_codec.h"
+#include "./vpx_codec.h"  // IWYU pragma: export
 #include "./vpx_ext_ratectrl.h"
-#include "./vpx_tpl.h"
 
 /*! Temporal Scalability: Maximum length of the sequence defining frame
  * layer membership
@@ -57,10 +56,15 @@ extern "C" {
  * must be bumped.  Examples include, but are not limited to, changing
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
+ *
+ * \note
+ * VPX_ENCODER_ABI_VERSION has a VPX_EXT_RATECTRL_ABI_VERSION component
+ * because the VP9E_SET_EXTERNAL_RATE_CONTROL codec control uses
+ * vpx_rc_funcs_t.
  */
-#define VPX_ENCODER_ABI_VERSION                                \
-  (16 + VPX_CODEC_ABI_VERSION + VPX_EXT_RATECTRL_ABI_VERSION + \
-   VPX_TPL_ABI_VERSION) /**<\hideinitializer*/
+#define VPX_ENCODER_ABI_VERSION \
+  (18 + VPX_CODEC_ABI_VERSION + \
+   VPX_EXT_RATECTRL_ABI_VERSION) /**<\hideinitializer*/
 
 /*! \brief Encoder capabilities bitfield
  *
@@ -460,6 +464,8 @@ typedef struct vpx_codec_enc_cfg {
   /*!\brief Target data rate
    *
    * Target bitrate to use for this stream, in kilobits per second.
+   * Internally capped to the smaller of the uncompressed bitrate and
+   * 1000000 kilobits per second.
    */
   unsigned int rc_target_bitrate;
 
@@ -873,7 +879,7 @@ typedef struct vpx_svc_parameters {
  *
  * \param[in]    ctx     Pointer to this instance's context.
  * \param[in]    iface   Pointer to the algorithm interface to use.
- * \param[in]    cfg     Configuration to use, if known. May be NULL.
+ * \param[in]    cfg     Configuration to use.
  * \param[in]    flags   Bitfield of VPX_CODEC_USE_* flags
  * \param[in]    ver     ABI version number. Must be set to
  *                       VPX_ENCODER_ABI_VERSION
@@ -896,27 +902,32 @@ vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t *ctx,
 
 /*!\brief Initialize multi-encoder instance
  *
- * Initializes multi-encoder context using the given interface.
+ * Initializes multiple encoder contexts using the given interface.
  * Applications should call the vpx_codec_enc_init_multi convenience macro
  * instead of this function directly, to ensure that the ABI version number
  * parameter is properly initialized.
  *
- * \param[in]    ctx     Pointer to this instance's context.
+ * \param[in]    ctx     Pointer to an array of num_enc instances' contexts.
  * \param[in]    iface   Pointer to the algorithm interface to use.
- * \param[in]    cfg     Configuration to use, if known. May be NULL.
+ * \param[in]    cfg     An array of num_enc configurations to use.
  * \param[in]    num_enc Total number of encoders.
  * \param[in]    flags   Bitfield of VPX_CODEC_USE_* flags
- * \param[in]    dsf     Pointer to down-sampling factors.
+ * \param[in]    dsf     Pointer to an array of num_enc down-sampling factors.
  * \param[in]    ver     ABI version number. Must be set to
  *                       VPX_ENCODER_ABI_VERSION
  * \retval #VPX_CODEC_OK
  *     The encoder algorithm has been initialized.
  * \retval #VPX_CODEC_MEM_ERROR
  *     Memory allocation failed.
+ *
+ * \note
+ * This is only supported by VP8. iface must point to the interface to the VP8
+ * encoder.
  */
 vpx_codec_err_t vpx_codec_enc_init_multi_ver(
-    vpx_codec_ctx_t *ctx, vpx_codec_iface_t *iface, vpx_codec_enc_cfg_t *cfg,
-    int num_enc, vpx_codec_flags_t flags, vpx_rational_t *dsf, int ver);
+    vpx_codec_ctx_t *ctx, vpx_codec_iface_t *iface,
+    const vpx_codec_enc_cfg_t *cfg, int num_enc, vpx_codec_flags_t flags,
+    const vpx_rational_t *dsf, int ver);
 
 /*!\brief Convenience macro for vpx_codec_enc_init_multi_ver()
  *
@@ -970,12 +981,21 @@ vpx_codec_err_t vpx_codec_enc_config_set(vpx_codec_ctx_t *ctx,
  *
  * Retrieves a stream level global header packet, if supported by the codec.
  *
+ * \li VP8: Unsupported
+ * \li VP9: Returns a buffer of <tt>ID (1 byte)|Length (1 byte)|Length
+ * bytes</tt> values. The function should be called after encoding to retrieve
+ * the most accurate information.
+ *
  * \param[in]    ctx     Pointer to this instance's context
  *
  * \retval NULL
  *     Encoder does not support global header
  * \retval Non-NULL
- *     Pointer to buffer containing global header packet
+ *     Pointer to buffer containing global header packet. The buffer pointer
+ *     and its contents are only valid for the lifetime of \a ctx. The contents
+ *     may change in subsequent calls to the function.
+ * \sa
+ * https://www.webmproject.org/docs/container/#vp9-codec-feature-metadata-codecprivate
  */
 vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t *ctx);
 
@@ -1015,6 +1035,8 @@ typedef unsigned long vpx_enc_deadline_t;
  *
  * \param[in]    ctx       Pointer to this instance's context
  * \param[in]    img       Image data to encode, NULL to flush.
+ *                         Encoding sample values outside the range
+ *                         [0..(1<<img->bit_depth)-1] is undefined behavior.
  * \param[in]    pts       Presentation time stamp, in timebase units.
  * \param[in]    duration  Duration to show frame, in timebase units.
  * \param[in]    flags     Flags to use for encoding this frame.
@@ -1074,6 +1096,12 @@ vpx_codec_err_t vpx_codec_encode(vpx_codec_ctx_t *ctx, const vpx_image_t *img,
  *     The buffer was set successfully.
  * \retval #VPX_CODEC_INVALID_PARAM
  *     A parameter was NULL, the image format is unsupported, etc.
+ *
+ * \note
+ * `duration` and `deadline` are of the unsigned long type, which can be 32
+ * or 64 bits. `duration` and `deadline` must be less than or equal to
+ * UINT32_MAX so that their ranges are independent of the size of unsigned
+ * long.
  */
 vpx_codec_err_t vpx_codec_set_cx_data_buf(vpx_codec_ctx_t *ctx,
                                           const vpx_fixed_buf_t *buf,

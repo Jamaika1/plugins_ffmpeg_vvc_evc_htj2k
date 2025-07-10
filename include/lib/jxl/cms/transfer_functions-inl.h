@@ -5,6 +5,9 @@
 
 // Transfer functions for color encodings.
 
+#include <cstdint>
+
+#include "lib/jxl/base/common.h"
 #if defined(LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_) == defined(HWY_TARGET_TOGGLE)
 #ifdef LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
 #undef LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
@@ -12,14 +15,13 @@
 #define LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
 #endif
 
-#include <algorithm>
 #include <cmath>
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/fast_math-inl.h"
 #include "lib/jxl/base/rational_polynomial-inl.h"
-#include "lib/jxl/base/status.h"
+#include "lib/jxl/cms/transfer_functions.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -48,18 +50,8 @@ using hwy::HWY_NAMESPACE::TableLookupBytes;
 // and extend the function domains above 1.
 
 // Hybrid Log-Gamma.
-class TF_HLG {
+class TF_HLG : TF_HLG_Base {
  public:
-  // EOTF. e = encoded.
-  JXL_INLINE double DisplayFromEncoded(const double e) const {
-    return OOTF(InvOETF(e));
-  }
-
-  // Inverse EOTF. d = display.
-  JXL_INLINE double EncodedFromDisplay(const double d) const {
-    return OETF(InvOOTF(d));
-  }
-
   // Maximum error 5e-7.
   template <class D, class V>
   JXL_INLINE V EncodedFromDisplay(D d, V x) const {
@@ -67,66 +59,43 @@ class TF_HLG {
     const V kSign = BitCast(d, Set(du, 0x80000000u));
     const V original_sign = And(x, kSign);
     x = AndNot(kSign, x);  // abs
-    const V below_div12 = Sqrt(Mul(Set(d, 3.0f), x));
-    const V e =
-        MulAdd(Set(d, kA * 0.693147181f),
+    const auto belowInv12 = Le(x, Set(d, kInv12));
+    const V lo = Sqrt(Mul(Set(d, k3), x));
+    const V hi =
+        MulAdd(Set(d, kA * kInvLog2e),
                FastLog2f(d, MulAdd(Set(d, 12), x, Set(d, -kB))), Set(d, kC));
-    const V magnitude = IfThenElse(Le(x, Set(d, kDiv12)), below_div12, e);
+    const V magnitude = IfThenElse(belowInv12, lo, hi);
+    return Or(AndNot(kSign, magnitude), original_sign);
+  }
+
+  template <class D, class V>
+  JXL_INLINE V DisplayFromEncoded(D d, V x) const {
+    const hwy::HWY_NAMESPACE::Rebind<uint32_t, D> du;
+    const V kSign = BitCast(d, Set(du, 0x80000000u));
+    const V original_sign = And(x, kSign);
+    x = AndNot(kSign, x);  // abs
+    const auto below05 = Le(x, Set(d, k05));
+    const V lo = Mul(x, Mul(x, Set(d, kInv3)));
+    const V hi = MulAdd(FastPow2f(d, Mul(x, Set(d, kHiPow))), Set(d, kHiMul),
+                        Set(d, kHiAdd));
+    const V magnitude = IfThenElse(below05, lo, hi);
     return Or(AndNot(kSign, magnitude), original_sign);
   }
 
  private:
-  // OETF (defines the HLG approach). s = scene, returns encoded.
-  JXL_INLINE double OETF(double s) const {
-    if (s == 0.0) return 0.0;
-    const double original_sign = s;
-    s = std::abs(s);
-
-    if (s <= kDiv12) return copysignf(std::sqrt(3.0 * s), original_sign);
-
-    const double e = kA * std::log(12 * s - kB) + kC;
-    JXL_ASSERT(e > 0.0);
-    return copysignf(e, original_sign);
-  }
-
-  // e = encoded, returns scene.
-  JXL_INLINE double InvOETF(double e) const {
-    if (e == 0.0) return 0.0;
-    const double original_sign = e;
-    e = std::abs(e);
-
-    if (e <= 0.5) return copysignf(e * e * (1.0 / 3), original_sign);
-
-    const double s = (std::exp((e - kC) * kRA) + kB) * kDiv12;
-    JXL_ASSERT(s >= 0);
-    return copysignf(s, original_sign);
-  }
-
-  // s = scene, returns display.
-  JXL_INLINE double OOTF(const double s) const {
-    // The actual (red channel) OOTF is RD = alpha * YS^(gamma-1) * RS, where
-    // YS = 0.2627 * RS + 0.6780 * GS + 0.0593 * BS. Let alpha = 1 so we return
-    // "display" (normalized [0, 1]) instead of nits. Our transfer function
-    // interface does not allow a dependency on YS. Fortunately, the system
-    // gamma at 334 nits is 1.0, so this reduces to RD = RS.
-    return s;
-  }
-
-  // d = display, returns scene.
-  JXL_INLINE double InvOOTF(const double d) const {
-    return d;  // see OOTF().
-  }
-
-  static constexpr double kA = 0.17883277;
-  static constexpr double kRA = 1.0 / kA;
-  static constexpr double kB = 1 - 4 * kA;
-  static constexpr double kC = 0.5599107295;
-  static constexpr double kDiv12 = 1.0 / 12;
+  static constexpr double k05 = 0.5;
+  static constexpr double k3 = 3.0;
+  static constexpr double kInv3 = 1.0 / 3.0;
+  static constexpr double kHiAdd = kB * kInv12;
+  // std::exp(-kC * kRA) * kInv12;
+  static constexpr double kHiMul = 0.003639807079052639;
+  // kRA * std::log2e_v
+  static constexpr double kHiPow = 8.067285659607931;
 };
 
 class TF_709 {
  public:
-  JXL_INLINE double EncodedFromDisplay(const double d) const {
+  static JXL_INLINE double EncodedFromDisplay(const double d) {
     if (d < kThresh) return kMulLow * d;
     return kMulHi * std::pow(d, kPowHi) + kSub;
   }
@@ -163,29 +132,13 @@ class TF_709 {
 };
 
 // Perceptual Quantization
-class TF_PQ {
+class TF_PQ : TF_PQ_Base {
  public:
   explicit TF_PQ(float display_intensity_target = kDefaultIntensityTarget)
       : display_scaling_factor_to_10000_nits_(display_intensity_target *
                                               (1.0f / 10000.0f)),
         display_scaling_factor_from_10000_nits_(10000.0f /
                                                 display_intensity_target) {}
-
-  // EOTF (defines the PQ approach). e = encoded.
-  JXL_INLINE double DisplayFromEncoded(double e) const {
-    if (e == 0.0) return 0.0;
-    const double original_sign = e;
-    e = std::abs(e);
-
-    const double xp = std::pow(e, 1.0 / kM2);
-    const double num = std::max(xp - kC1, 0.0);
-    const double den = kC2 - kC3 * xp;
-    JXL_DASSERT(den != 0.0);
-    const double d = std::pow(num / den, 1.0 / kM1);
-    JXL_DASSERT(d >= 0.0);  // Equal for e ~= 1E-9
-    return copysignf(d * display_scaling_factor_from_10000_nits_,
-                     original_sign);
-  }
 
   // Maximum error 3e-6
   template <class D, class V>
@@ -212,20 +165,6 @@ class TF_PQ {
         AndNot(kSign,
                Mul(magnitude, Set(d, display_scaling_factor_from_10000_nits_))),
         original_sign);
-  }
-
-  // Inverse EOTF. d = display.
-  JXL_INLINE double EncodedFromDisplay(double d) const {
-    if (d == 0.0) return 0.0;
-    const double original_sign = d;
-    d = std::abs(d);
-
-    const double xp = std::pow(d * display_scaling_factor_to_10000_nits_, kM1);
-    const double num = kC1 + xp * kC2;
-    const double den = 1.0 + xp * kC3;
-    const double e = std::pow(num / den, kM2);
-    JXL_DASSERT(e > 0.0);
-    return copysignf(e, original_sign);
   }
 
   // Maximum error 7e-7.
@@ -268,12 +207,6 @@ class TF_PQ {
   }
 
  private:
-  static constexpr double kM1 = 2610.0 / 16384;
-  static constexpr double kM2 = (2523.0 / 4096) * 128;
-  static constexpr double kC1 = 3424.0 / 4096;
-  static constexpr double kC2 = (2413.0 / 4096) * 32;
-  static constexpr double kC3 = (2392.0 / 4096) * 32;
-
   const float display_scaling_factor_to_10000_nits_;
   const float display_scaling_factor_from_10000_nits_;
 };
@@ -292,20 +225,14 @@ class TF_SRGB {
     // TODO(janwas): range reduction
     // Computed via af_cheb_rational (k=100); replicated 4x.
     HWY_ALIGN constexpr float p[(4 + 1) * 4] = {
-        2.200248328e-04f, 2.200248328e-04f, 2.200248328e-04f, 2.200248328e-04f,
-        1.043637593e-02f, 1.043637593e-02f, 1.043637593e-02f, 1.043637593e-02f,
-        1.624820318e-01f, 1.624820318e-01f, 1.624820318e-01f, 1.624820318e-01f,
-        7.961564959e-01f, 7.961564959e-01f, 7.961564959e-01f, 7.961564959e-01f,
-        8.210152774e-01f, 8.210152774e-01f, 8.210152774e-01f, 8.210152774e-01f,
+        HWY_REP4(2.200248328e-04f), HWY_REP4(1.043637593e-02f),
+        HWY_REP4(1.624820318e-01f), HWY_REP4(7.961564959e-01f),
+        HWY_REP4(8.210152774e-01f),
     };
     HWY_ALIGN constexpr float q[(4 + 1) * 4] = {
-        2.631846970e-01f,  2.631846970e-01f,  2.631846970e-01f,
-        2.631846970e-01f,  1.076976492e+00f,  1.076976492e+00f,
-        1.076976492e+00f,  1.076976492e+00f,  4.987528350e-01f,
-        4.987528350e-01f,  4.987528350e-01f,  4.987528350e-01f,
-        -5.512498495e-02f, -5.512498495e-02f, -5.512498495e-02f,
-        -5.512498495e-02f, 6.521209011e-03f,  6.521209011e-03f,
-        6.521209011e-03f,  6.521209011e-03f,
+        HWY_REP4(2.631846970e-01f), HWY_REP4(1.076976492e+00f),
+        HWY_REP4(4.987528350e-01f), HWY_REP4(-5.512498495e-02f),
+        HWY_REP4(6.521209011e-03f),
     };
     const V linear = Mul(x, Set(d, kLowDivInv));
     const V poly = EvalRationalPolynomial(d, x, p, q);
@@ -324,20 +251,14 @@ class TF_SRGB {
 
     // Computed via af_cheb_rational (k=100); replicated 4x.
     HWY_ALIGN constexpr float p[(4 + 1) * 4] = {
-        -5.135152395e-04f, -5.135152395e-04f, -5.135152395e-04f,
-        -5.135152395e-04f, 5.287254571e-03f,  5.287254571e-03f,
-        5.287254571e-03f,  5.287254571e-03f,  3.903842876e-01f,
-        3.903842876e-01f,  3.903842876e-01f,  3.903842876e-01f,
-        1.474205315e+00f,  1.474205315e+00f,  1.474205315e+00f,
-        1.474205315e+00f,  7.352629620e-01f,  7.352629620e-01f,
-        7.352629620e-01f,  7.352629620e-01f,
+        HWY_REP4(-5.135152395e-04f), HWY_REP4(5.287254571e-03f),
+        HWY_REP4(3.903842876e-01f),  HWY_REP4(1.474205315e+00f),
+        HWY_REP4(7.352629620e-01f),
     };
     HWY_ALIGN constexpr float q[(4 + 1) * 4] = {
-        1.004519624e-02f, 1.004519624e-02f, 1.004519624e-02f, 1.004519624e-02f,
-        3.036675394e-01f, 3.036675394e-01f, 3.036675394e-01f, 3.036675394e-01f,
-        1.340816930e+00f, 1.340816930e+00f, 1.340816930e+00f, 1.340816930e+00f,
-        9.258482155e-01f, 9.258482155e-01f, 9.258482155e-01f, 9.258482155e-01f,
-        2.424867759e-02f, 2.424867759e-02f, 2.424867759e-02f, 2.424867759e-02f,
+        HWY_REP4(1.004519624e-02f), HWY_REP4(3.036675394e-01f),
+        HWY_REP4(1.340816930e+00f), HWY_REP4(9.258482155e-01f),
+        HWY_REP4(2.424867759e-02f),
     };
     const V linear = Mul(x, Set(d, kLowDiv));
     const V poly = EvalRationalPolynomial(d, Sqrt(x), p, q);

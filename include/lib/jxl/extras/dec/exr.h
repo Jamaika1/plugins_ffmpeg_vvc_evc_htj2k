@@ -8,10 +8,8 @@
 
 // Decodes OpenEXR images in memory.
 
-#include "lib/jxl/extras/dec/color_hints.h"
-#include "lib/jxl/extras/packed_image.h"
-#include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/padded_bytes.h"
+#include <cstdint>
+
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 
@@ -20,6 +18,9 @@ namespace jxl {
 struct SizeConstraints;
 
 namespace extras {
+
+class ColorHints;
+class PackedPixelFile;
 
 bool CanDecodeEXR();
 

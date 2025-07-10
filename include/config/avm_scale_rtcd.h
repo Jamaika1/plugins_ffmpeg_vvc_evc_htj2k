@@ -8,6 +8,8 @@
 #define RTCD_EXTERN extern
 #endif
 
+#include <stdbool.h>
+
 struct yv12_buffer_config;
 
 #ifdef __cplusplus
@@ -65,8 +67,8 @@ void aom_vertical_band_2_1_scale_i_c(unsigned char* source,
 int aom_yv12_realloc_with_new_border_c(struct yv12_buffer_config* ybf,
                                        int new_border,
                                        int byte_alignment,
-                                       int num_pyramid_levels,
-                                       int num_planes);
+                                       int num_planes,
+                                       bool alloc_pyramid);
 #define aom_yv12_realloc_with_new_border aom_yv12_realloc_with_new_border_c
 
 void aom_yv12_extend_frame_borders_c(struct yv12_buffer_config* ybf,

@@ -10,10 +10,11 @@
 
 #include <jxl/cms_interface.h>
 #include <jxl/color_encoding.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <jxl/types.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>  // free
 #include <ostream>
 #include <string>
@@ -22,7 +23,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/cms/color_encoding_cms.h"
-#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/cms/jxl_cms_internal.h"
 #include "lib/jxl/field_encodings.h"
 
 namespace jxl {
@@ -130,14 +131,11 @@ struct ColorEncoding : public Fields {
   // Must be called after modifying fields. Defined in color_management.cc.
   Status CreateICC() {
     storage_.icc.clear();
-    uint8_t* new_icc_ptr;
-    size_t new_icc_size;
     const JxlColorEncoding external = ToExternal();
-    if (!JxlCmsCreateProfile(&external, &new_icc_ptr, &new_icc_size)) {
+    if (!MaybeCreateProfile(external, &storage_.icc)) {
+      storage_.icc.clear();
       return JXL_FAILURE("Failed to create ICC profile");
     }
-    storage_.icc.assign(new_icc_ptr, new_icc_ptr + new_icc_size);
-    free(new_icc_ptr);
     return true;
   }
 
@@ -150,19 +148,20 @@ struct ColorEncoding : public Fields {
   // subsequent WantICC() will return true until DecideIfWantICC() changes it.
   // Returning false indicates data has been lost.
   Status SetICC(IccBytes&& icc, const JxlCmsInterface* cms) {
-    JXL_ASSERT(cms != nullptr);
-    JXL_ASSERT(!icc.empty());
+    JXL_ENSURE(cms != nullptr);
+    JXL_ENSURE(!icc.empty());
+    storage_.have_fields = true;
     want_icc_ = storage_.SetFieldsFromICC(std::move(icc), *cms);
     return want_icc_;
   }
 
   // Sets the raw ICC profile bytes, without parsing the ICC, and without
-  // updating the direct fields such as whitepoint, primaries and color
+  // updating the direct fields such as white point, primaries and color
   // space. Functions to get and set fields, such as SetWhitePoint, cannot be
   // used anymore after this and functions such as IsSRGB return false no matter
   // what the contents of the icc profile.
   void SetICCRaw(IccBytes&& icc) {
-    JXL_ASSERT(!icc.empty());
+    JXL_DASSERT(!icc.empty());
     storage_.icc = std::move(icc);
     storage_.have_fields = false;
     want_icc_ = true;
@@ -223,7 +222,7 @@ struct ColorEncoding : public Fields {
   Status SetSRGB(const ColorSpace cs,
                  const RenderingIntent ri = RenderingIntent::kRelative) {
     storage_.icc.clear();
-    JXL_ASSERT(cs == ColorSpace::kGray || cs == ColorSpace::kRGB);
+    JXL_ENSURE(cs == ColorSpace::kGray || cs == ColorSpace::kRGB);
     storage_.color_space = cs;
     storage_.white_point = WhitePoint::kD65;
     storage_.primaries = Primaries::kSRGB;
@@ -241,7 +240,9 @@ struct ColorEncoding : public Fields {
 
   WhitePoint GetWhitePointType() const { return storage_.white_point; }
   Status SetWhitePointType(const WhitePoint& wp);
-  PrimariesCIExy GetPrimaries() const { return storage_.GetPrimaries(); }
+  Status GetPrimaries(PrimariesCIExy& p) const {
+    return storage_.GetPrimaries(p);
+  }
 
   Primaries GetPrimariesType() const { return storage_.primaries; }
   Status SetPrimariesType(const Primaries& p);
@@ -293,11 +294,10 @@ struct ColorEncoding : public Fields {
 };
 
 static inline std::string Description(const ColorEncoding& c) {
-  char data[320];
   const JxlColorEncoding external = c.View().ToExternal();
-  JxlCmsColorEncodingDescription(&external, data);
-  return data;
+  return ColorEncodingDescription(external);
 }
+
 static inline std::ostream& operator<<(std::ostream& os,
                                        const ColorEncoding& c) {
   return os << Description(c);
@@ -318,7 +318,6 @@ class ColorSpaceTransform {
 
   Status Init(const ColorEncoding& c_src, const ColorEncoding& c_dst,
               float intensity_target, size_t xsize, size_t num_threads) {
-    xsize_ = xsize;
     JxlColorProfile input_profile;
     icc_src_ = c_src.ICC();
     input_profile.icc.data = icc_src_.data();
@@ -347,8 +346,10 @@ class ColorSpaceTransform {
     return cms_.get_dst_buf(cms_data_, thread);
   }
 
-  Status Run(const size_t thread, const float* buf_src, float* buf_dst) {
-    return cms_.run(cms_data_, thread, buf_src, buf_dst, xsize_);
+  Status Run(const size_t thread, const float* buf_src, float* buf_dst,
+             size_t xsize) {
+    // TODO(eustas): convert false to Status?
+    return FROM_JXL_BOOL(cms_.run(cms_data_, thread, buf_src, buf_dst, xsize));
   }
 
  private:
@@ -357,7 +358,6 @@ class ColorSpaceTransform {
   // The interface may retain pointers into these.
   IccBytes icc_src_;
   IccBytes icc_dst_;
-  size_t xsize_;
 };
 
 }  // namespace jxl

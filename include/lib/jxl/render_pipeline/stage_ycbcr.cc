@@ -5,6 +5,14 @@
 
 #include "lib/jxl/render_pipeline/stage_ycbcr.h"
 
+#include <cstddef>
+#include <memory>
+
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/status.h"
+#include "lib/jxl/render_pipeline/render_pipeline_stage.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_ycbcr.cc"
 #include <hwy/foreach_target.h>
@@ -22,9 +30,9 @@ class kYCbCrStage : public RenderPipelineStage {
  public:
   kYCbCrStage() : RenderPipelineStage(RenderPipelineStage::Settings()) {}
 
-  void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
-                  size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  size_t thread_id) const final {
+  Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
+                    size_t xextra, size_t xsize, size_t xpos, size_t ypos,
+                    size_t thread_id) const final {
     const HWY_FULL(float) df;
 
     // Full-range BT.601 as defined by JFIF Clause 7:
@@ -51,6 +59,7 @@ class kYCbCrStage : public RenderPipelineStage {
       StoreU(g_vec, df, row1 + x);
       StoreU(b_vec, df, row2 + x);
     }
+    return true;
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {

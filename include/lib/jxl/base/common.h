@@ -8,11 +8,13 @@
 
 // Shared constants and helper functions.
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "lib/jxl/base/compiler_specific.h"
 
@@ -22,11 +24,11 @@ namespace jxl {
 constexpr size_t kBitsPerByte = 8;  // more clear than CHAR_BIT
 
 constexpr inline size_t RoundUpBitsToByteMultiple(size_t bits) {
-  return (bits + 7) & ~size_t(7);
+  return (bits + 7) & ~static_cast<size_t>(7);
 }
 
 constexpr inline size_t RoundUpToBlockDim(size_t dim) {
-  return (dim + 7) & ~size_t(7);
+  return (dim + 7) & ~static_cast<size_t>(7);
 }
 
 static inline bool JXL_MAYBE_UNUSED SafeAdd(const uint64_t a, const uint64_t b,
@@ -46,6 +48,10 @@ constexpr inline size_t RoundUpTo(size_t what, size_t align) {
 }
 
 constexpr double kPi = 3.14159265358979323846264338327950288;
+
+// Multiplier for conversion of log2(x) result to ln(x).
+// print(1.0 / math.log2(math.e))
+constexpr float kInvLog2e = 0.6931471805599453;
 
 // Reasonable default for sRGB, matches common monitors. We map white to this
 // many nits (cd/m^2) by default. Butteraugli was tuned for 250 nits, which is
@@ -68,6 +74,37 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 using std::make_unique;
 #endif
 
+typedef std::array<float, 3> Color;
+
+// Backported std::experimental::to_array
+
+template <typename T>
+using remove_cv_t = typename std::remove_cv<T>::type;
+
+template <size_t... I>
+struct index_sequence {};
+
+template <size_t N, size_t... I>
+struct make_index_sequence : make_index_sequence<N - 1, N - 1, I...> {};
+
+template <size_t... I>
+struct make_index_sequence<0, I...> : index_sequence<I...> {};
+
+namespace detail {
+
+template <typename T, size_t N, size_t... I>
+constexpr auto to_array(T (&&arr)[N], index_sequence<I...> _)
+    -> std::array<remove_cv_t<T>, N> {
+  return {{std::move(arr[I])...}};
+}
+
+}  // namespace detail
+
+template <typename T, size_t N>
+constexpr auto to_array(T (&&arr)[N]) -> std::array<remove_cv_t<T>, N> {
+  return detail::to_array(std::move(arr), make_index_sequence<N>());
+}
+
 template <typename T>
 JXL_INLINE T Clamp1(T val, T low, T hi) {
   return val < low ? low : val > hi ? hi : val;
@@ -77,10 +114,10 @@ JXL_INLINE T Clamp1(T val, T low, T hi) {
 template <typename T>
 std::string ToString(T n) {
   char data[32] = {};
-  if (T(0.1) != T(0)) {
+  if (std::is_floating_point<T>::value) {
     // float
     snprintf(data, sizeof(data), "%g", static_cast<double>(n));
-  } else if (T(-1) > T(0)) {
+  } else if (std::is_unsigned<T>::value) {
     // unsigned
     snprintf(data, sizeof(data), "%llu", static_cast<unsigned long long>(n));
   } else {
@@ -89,6 +126,9 @@ std::string ToString(T n) {
   }
   return data;
 }
+
+#define JXL_JOIN(x, y) JXL_DO_JOIN(x, y)
+#define JXL_DO_JOIN(x, y) x##y
 
 }  // namespace jxl
 

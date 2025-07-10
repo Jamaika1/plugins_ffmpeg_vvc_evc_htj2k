@@ -6,23 +6,26 @@
 #ifndef TOOLS_FILE_IO_H_
 #define TOOLS_FILE_IO_H_
 
-#include <errno.h>
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <list>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 namespace jpegxl {
 namespace tools {
-
-namespace {
 
 // RAII, ensures files are closed even when returning early.
 class FileWrapper {
@@ -36,11 +39,14 @@ class FileWrapper {
         close_on_delete_(pathname != "-") {
 #ifdef _WIN32
     struct __stat64 s = {};
-    const int err = _stat64(pathname.c_str(), &s);
+    int err = _stat64(pathname.c_str(), &s);
     const bool is_file = (s.st_mode & S_IFREG) != 0;
+    if (pathname == "-") {
+      err |= _setmode(_fileno(file_), _O_BINARY);
+    }
 #else
     struct stat s = {};
-    const int err = stat(pathname.c_str(), &s);
+    int err = stat(pathname.c_str(), &s);
     const bool is_file = S_ISREG(s.st_mode);
 #endif
     if (err == 0 && is_file) {
@@ -64,7 +70,7 @@ class FileWrapper {
   // NOLINTNEXTLINE(google-explicit-constructor)
   operator FILE*() const { return file_; }
 
-  int64_t size() { return size_; }
+  int64_t size() const { return size_; }
 
  private:
   FILE* const file_;
@@ -72,13 +78,8 @@ class FileWrapper {
   int64_t size_ = -1;
 };
 
-}  // namespace
-
 template <typename ContainerType>
-static inline bool ReadFile(const std::string& filename,
-                            ContainerType* JXL_RESTRICT bytes) {
-  FileWrapper f(filename, "rb");
-
+static inline bool ReadFile(FileWrapper& f, ContainerType* JXL_RESTRICT bytes) {
   if (!f) return false;
 
   // Get size of file in bytes
@@ -120,6 +121,13 @@ static inline bool ReadFile(const std::string& filename,
   }
 
   return true;
+}
+
+template <typename ContainerType>
+static inline bool ReadFile(const std::string& filename,
+                            ContainerType* JXL_RESTRICT bytes) {
+  FileWrapper f(filename, "rb");
+  return ReadFile(f, bytes);
 }
 
 template <typename ContainerType>

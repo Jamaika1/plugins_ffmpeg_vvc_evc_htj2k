@@ -1,3 +1,14 @@
+/*
+ * Copyright (c) 2024, Alliance for Open Media. All rights reserved.
+ *
+ * This source code is subject to the terms of the BSD 2 Clause License and
+ * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+ * was not distributed with this source code in the LICENSE file, you can
+ * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * Media Patent License 1.0 was not distributed with this source code in the
+ * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ */
+
 // This file is generated. Do not edit.
 #ifndef AV1_RTCD_H_
 #define AV1_RTCD_H_
@@ -82,144 +93,7 @@ typedef void (*cfl_predict_lbd_fn)(const int16_t* src,
 extern "C" {
 #endif
 
-void aom_comp_avg_upsampled_pred_c(
-    MACROBLOCKD* xd,
-    const struct AV1Common* const cm,
-    int mi_row,
-    int mi_col,
-    const MV* const mv,
-    uint8_t* comp_pred,
-    const uint8_t* pred,
-    int width,
-    int height,
-    int subpel_x_q3,
-    int subpel_y_q3,
-    const uint8_t* ref,
-    int ref_stride,
-    int subpel_search);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_comp_avg_upsampled_pred_sse2(
-    MACROBLOCKD* xd,
-    const struct AV1Common* const cm,
-    int mi_row,
-    int mi_col,
-    const MV* const mv,
-    uint8_t* comp_pred,
-    const uint8_t* pred,
-    int width,
-    int height,
-    int subpel_x_q3,
-    int subpel_y_q3,
-    const uint8_t* ref,
-    int ref_stride,
-    int subpel_search);
-#define aom_comp_avg_upsampled_pred aom_comp_avg_upsampled_pred_sse2
-#else
-#define aom_comp_avg_upsampled_pred aom_comp_avg_upsampled_pred_c
-#endif
-
-void aom_dist_wtd_comp_avg_upsampled_pred_c(
-    MACROBLOCKD* xd,
-    const struct AV1Common* const cm,
-    int mi_row,
-    int mi_col,
-    const MV* const mv,
-    uint8_t* comp_pred,
-    const uint8_t* pred,
-    int width,
-    int height,
-    int subpel_x_q3,
-    int subpel_y_q3,
-    const uint8_t* ref,
-    int ref_stride,
-    const DIST_WTD_COMP_PARAMS* jcp_param,
-    int subpel_search);
-#if defined(__SSSE3__) && HAVE_SIMD
-void aom_dist_wtd_comp_avg_upsampled_pred_ssse3(
-    MACROBLOCKD* xd,
-    const struct AV1Common* const cm,
-    int mi_row,
-    int mi_col,
-    const MV* const mv,
-    uint8_t* comp_pred,
-    const uint8_t* pred,
-    int width,
-    int height,
-    int subpel_x_q3,
-    int subpel_y_q3,
-    const uint8_t* ref,
-    int ref_stride,
-    const DIST_WTD_COMP_PARAMS* jcp_param,
-    int subpel_search);
-RTCD_EXTERN void (*aom_dist_wtd_comp_avg_upsampled_pred)(
-    MACROBLOCKD* xd,
-    const struct AV1Common* const cm,
-    int mi_row,
-    int mi_col,
-    const MV* const mv,
-    uint8_t* comp_pred,
-    const uint8_t* pred,
-    int width,
-    int height,
-    int subpel_x_q3,
-    int subpel_y_q3,
-    const uint8_t* ref,
-    int ref_stride,
-    const DIST_WTD_COMP_PARAMS* jcp_param,
-    int subpel_search);
-#else
-#define aom_dist_wtd_comp_avg_upsampled_pred aom_dist_wtd_comp_avg_upsampled_pred_c
-#endif
-
-void aom_quantize_b_helper_c(const tran_low_t* coeff_ptr,
-                             intptr_t n_coeffs,
-                             const int16_t* zbin_ptr,
-                             const int16_t* round_ptr,
-                             const int16_t* quant_ptr,
-                             const int16_t* quant_shift_ptr,
-                             tran_low_t* qcoeff_ptr,
-                             tran_low_t* dqcoeff_ptr,
-                             const int16_t* dequant_ptr,
-                             uint16_t* eob_ptr,
-                             const int16_t* scan,
-                             const int16_t* iscan,
-                             const qm_val_t* qm_ptr,
-                             const qm_val_t* iqm_ptr,
-                             const int log_scale);
-#define aom_quantize_b_helper aom_quantize_b_helper_c
-
-void aom_upsampled_pred_c(MACROBLOCKD* xd,
-                          const struct AV1Common* const cm,
-                          int mi_row,
-                          int mi_col,
-                          const MV* const mv,
-                          uint8_t* comp_pred,
-                          int width,
-                          int height,
-                          int subpel_x_q3,
-                          int subpel_y_q3,
-                          const uint8_t* ref,
-                          int ref_stride,
-                          int subpel_search);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_upsampled_pred_sse2(MACROBLOCKD* xd,
-                             const struct AV1Common* const cm,
-                             int mi_row,
-                             int mi_col,
-                             const MV* const mv,
-                             uint8_t* comp_pred,
-                             int width,
-                             int height,
-                             int subpel_x_q3,
-                             int subpel_y_q3,
-                             const uint8_t* ref,
-                             int ref_stride,
-                             int subpel_search);
-#define aom_upsampled_pred aom_upsampled_pred_sse2
-#else
-#define aom_upsampled_pred aom_upsampled_pred_c
-#endif
-
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 int av1_apply_selfguided_restoration_c(const uint8_t* dat,
                                         int width,
                                         int height,
@@ -272,52 +146,7 @@ int av1_apply_selfguided_restoration_avx2(const uint8_t* dat,
 #else
 #define av1_apply_selfguided_restoration av1_apply_selfguided_restoration_c
 #endif
-
-int64_t av1_block_error_c(const tran_low_t* coeff,
-                          const tran_low_t* dqcoeff,
-                          intptr_t block_size,
-                          int64_t* ssz);
-#if HAVE_SIMD
-#if defined(__SSE2__)
-int64_t av1_block_error_sse2(const tran_low_t* coeff,
-                             const tran_low_t* dqcoeff,
-                             intptr_t block_size,
-                             int64_t* ssz);
-RTCD_EXTERN int64_t (*av1_block_error)(const tran_low_t* coeff,
-                                       const tran_low_t* dqcoeff,
-                                       intptr_t block_size,
-                                       int64_t* ssz);
-#endif
-#if defined(__AVX2__)
-int64_t av1_block_error_avx2(const tran_low_t* coeff,
-                             const tran_low_t* dqcoeff,
-                             intptr_t block_size,
-                             int64_t* ssz);
-#endif
-#else
-#define av1_block_error av1_block_error_c
-#endif
-
-int64_t av1_block_error_lp_c(const int16_t* coeff,
-                             const int16_t* dqcoeff,
-                             intptr_t block_size);
-#if HAVE_SIMD
-#if defined(__SSE2__)
-int64_t av1_block_error_lp_sse2(const int16_t* coeff,
-                                const int16_t* dqcoeff,
-                                intptr_t block_size);
-RTCD_EXTERN int64_t (*av1_block_error_lp)(const int16_t* coeff,
-                                          const int16_t* dqcoeff,
-                                          intptr_t block_size);
-#endif
-#if defined(__AVX2__)
-int64_t av1_block_error_lp_avx2(const int16_t* coeff,
-                                const int16_t* dqcoeff,
-                                intptr_t block_size);
-#endif
-#else
-#define av1_block_error_lp av1_block_error_lp_c
-#endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
 void av1_build_compound_diffwtd_mask_c(uint8_t* mask,
                                        DIFFWTD_MASK_TYPE mask_type,
@@ -410,6 +239,144 @@ void av1_build_compound_diffwtd_mask_d16_avx2(uint8_t* mask,
 #define av1_build_compound_diffwtd_mask_d16 av1_build_compound_diffwtd_mask_d16_c
 #endif
 
+#if CONFIG_AV1_ENCODER
+void aom_comp_avg_upsampled_pred_c(
+    MACROBLOCKD* xd,
+    const struct AV1Common* const cm,
+    int mi_row,
+    int mi_col,
+    const MV* const mv,
+    uint8_t* comp_pred,
+    const uint8_t* pred,
+    int width,
+    int height,
+    int subpel_x_q3,
+    int subpel_y_q3,
+    const uint8_t* ref,
+    int ref_stride,
+    int subpel_search);
+#if defined(__SSE2__) && HAVE_SIMD
+void aom_comp_avg_upsampled_pred_sse2(
+    MACROBLOCKD* xd,
+    const struct AV1Common* const cm,
+    int mi_row,
+    int mi_col,
+    const MV* const mv,
+    uint8_t* comp_pred,
+    const uint8_t* pred,
+    int width,
+    int height,
+    int subpel_x_q3,
+    int subpel_y_q3,
+    const uint8_t* ref,
+    int ref_stride,
+    int subpel_search);
+#define aom_comp_avg_upsampled_pred aom_comp_avg_upsampled_pred_sse2
+#else
+#define aom_comp_avg_upsampled_pred aom_comp_avg_upsampled_pred_c
+#endif
+
+void aom_quantize_b_helper_c(const tran_low_t* coeff_ptr,
+                             intptr_t n_coeffs,
+                             const int16_t* zbin_ptr,
+                             const int16_t* round_ptr,
+                             const int16_t* quant_ptr,
+                             const int16_t* quant_shift_ptr,
+                             tran_low_t* qcoeff_ptr,
+                             tran_low_t* dqcoeff_ptr,
+                             const int16_t* dequant_ptr,
+                             uint16_t* eob_ptr,
+                             const int16_t* scan,
+                             const int16_t* iscan,
+                             const qm_val_t* qm_ptr,
+                             const qm_val_t* iqm_ptr,
+                             const int log_scale);
+#define aom_quantize_b_helper aom_quantize_b_helper_c
+
+void av1_fdwt8x8_uint8_input_c(const uint8_t *input,
+                               tran_low_t *output,
+                               int stride,
+                               int hbd);
+#define av1_fdwt8x8_uint8_input av1_fdwt8x8_uint8_input_c
+
+void aom_upsampled_pred_c(MACROBLOCKD* xd,
+                          const struct AV1Common* const cm,
+                          int mi_row,
+                          int mi_col,
+                          const MV* const mv,
+                          uint8_t* comp_pred,
+                          int width,
+                          int height,
+                          int subpel_x_q3,
+                          int subpel_y_q3,
+                          const uint8_t* ref,
+                          int ref_stride,
+                          int subpel_search);
+#if defined(__SSE2__) && HAVE_SIMD
+void aom_upsampled_pred_sse2(MACROBLOCKD* xd,
+                             const struct AV1Common* const cm,
+                             int mi_row,
+                             int mi_col,
+                             const MV* const mv,
+                             uint8_t* comp_pred,
+                             int width,
+                             int height,
+                             int subpel_x_q3,
+                             int subpel_y_q3,
+                             const uint8_t* ref,
+                             int ref_stride,
+                             int subpel_search);
+#define aom_upsampled_pred aom_upsampled_pred_sse2
+#else
+#define aom_upsampled_pred aom_upsampled_pred_c
+#endif
+
+int64_t av1_block_error_c(const tran_low_t* coeff,
+                          const tran_low_t* dqcoeff,
+                          intptr_t block_size,
+                          int64_t* ssz);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+int64_t av1_block_error_sse2(const tran_low_t* coeff,
+                             const tran_low_t* dqcoeff,
+                             intptr_t block_size,
+                             int64_t* ssz);
+RTCD_EXTERN int64_t (*av1_block_error)(const tran_low_t* coeff,
+                                       const tran_low_t* dqcoeff,
+                                       intptr_t block_size,
+                                       int64_t* ssz);
+#endif
+#if defined(__AVX2__)
+int64_t av1_block_error_avx2(const tran_low_t* coeff,
+                             const tran_low_t* dqcoeff,
+                             intptr_t block_size,
+                             int64_t* ssz);
+#endif
+#else
+#define av1_block_error av1_block_error_c
+#endif
+
+int64_t av1_block_error_lp_c(const int16_t* coeff,
+                             const int16_t* dqcoeff,
+                             intptr_t block_size);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+int64_t av1_block_error_lp_sse2(const int16_t* coeff,
+                                const int16_t* dqcoeff,
+                                intptr_t block_size);
+RTCD_EXTERN int64_t (*av1_block_error_lp)(const int16_t* coeff,
+                                          const int16_t* dqcoeff,
+                                          intptr_t block_size);
+#endif
+#if defined(__AVX2__)
+int64_t av1_block_error_lp_avx2(const int16_t* coeff,
+                                const int16_t* dqcoeff,
+                                intptr_t block_size);
+#endif
+#else
+#define av1_block_error_lp av1_block_error_lp_c
+#endif
+
 void av1_calc_indices_dim1_c(const int16_t* data,
      const int16_t* centroids,
      uint8_t* indices,
@@ -475,6 +442,7 @@ void av1_calc_indices_dim2_avx2(const int16_t* data,
 #else
 #define av1_calc_indices_dim2 av1_calc_indices_dim2_c
 #endif
+#endif // CONFIG_AV1_ENCODER
 
 void av1_convolve_2d_scale_c(const uint8_t* src,
                              int src_stride,
@@ -664,6 +632,17 @@ void av1_convolve_x_sr_avx2(const uint8_t* src,
 #define av1_convolve_x_sr av1_convolve_x_sr_c
 #endif
 
+void av1_convolve_x_sr_intrabc_c(const uint8_t *src,
+                                 int src_stride,
+                                 uint8_t *dst,
+                                 int dst_stride,
+                                 int w,
+                                 int h,
+                                 const InterpFilterParams *filter_params_x,
+                                 const int subpel_x_qn,
+                                 ConvolveParams *conv_params);
+#define av1_convolve_x_sr_intrabc av1_convolve_x_sr_intrabc_c
+
 void av1_convolve_y_sr_c(const uint8_t* src,
                          int src_stride,
                          uint8_t* dst,
@@ -705,7 +684,17 @@ void av1_convolve_y_sr_avx2(const uint8_t* src,
 #define av1_convolve_y_sr av1_convolve_y_sr_c
 #endif
 
-#if CONFIG_AV1_TEMPORAL_DENOISING
+void av1_convolve_y_sr_intrabc_c(const uint8_t *src,
+                                 int src_stride,
+                                 uint8_t *dst,
+                                 int dst_stride,
+                                 int w,
+                                 int h,
+                                 const InterpFilterParams *filter_params_y,
+                                 const int subpel_y_qn);
+#define av1_convolve_y_sr_intrabc av1_convolve_y_sr_intrabc_c
+
+#if CONFIG_AV1_ENCODER && CONFIG_AV1_TEMPORAL_DENOISING
 int av1_denoiser_filter_c(const uint8_t* sig,
                           int sig_stride,
                           const uint8_t* mc_avg,
@@ -1094,6 +1083,7 @@ RTCD_EXTERN void (*av1_filter_intra_predictor)(uint8_t* dst,
 #define av1_filter_intra_predictor av1_filter_intra_predictor_c
 #endif
 
+#if CONFIG_AV1_ENCODER
 void av1_fwd_txfm2d_16x16_c(const int16_t* input,
                             int32_t* output,
                             int stride,
@@ -1128,7 +1118,8 @@ void av1_fwd_txfm2d_16x32_c(const int16_t* input,
                             int stride,
                             TX_TYPE tx_type,
                             int bd);
-#if defined(__SSE4_1__) && HAVE_SIMD
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
 void av1_fwd_txfm2d_16x32_sse4_1(const int16_t* input,
                                  int32_t* output,
                                  int stride,
@@ -1139,6 +1130,21 @@ RTCD_EXTERN void (*av1_fwd_txfm2d_16x32)(const int16_t* input,
                                          int stride,
                                          TX_TYPE tx_type,
                                          int bd);
+#endif
+#if defined(__AVX512F__) // HWY
+void av1_fwd_txfm2d_16x32_avx2(const int16_t* input,
+                                 int32_t* output,
+                                 int stride,
+                                 TX_TYPE tx_type,
+                                 int bd);
+#endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_16x32_avx512(const int16_t* input,
+                                 int32_t* output,
+                                 int stride,
+                                 TX_TYPE tx_type,
+                                 int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_16x32 av1_fwd_txfm2d_16x32_c
 #endif
@@ -1188,6 +1194,13 @@ void av1_fwd_txfm2d_16x8_avx2(const int16_t* input,
                               TX_TYPE tx_type,
                               int bd);
 #endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_16x8_avx512(const int16_t* input,
+                              int32_t* output,
+                              int stride,
+                              TX_TYPE tx_type,
+                              int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_16x8 av1_fwd_txfm2d_16x8_c
 #endif
@@ -1197,7 +1210,8 @@ void av1_fwd_txfm2d_32x16_c(const int16_t* input,
                             int stride,
                             TX_TYPE tx_type,
                             int bd);
-#if defined(__SSE4_1__) && HAVE_SIMD
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
 void av1_fwd_txfm2d_32x16_sse4_1(const int16_t* input,
                                  int32_t* output,
                                  int stride,
@@ -1208,6 +1222,21 @@ RTCD_EXTERN void (*av1_fwd_txfm2d_32x16)(const int16_t* input,
                                          int stride,
                                          TX_TYPE tx_type,
                                          int bd);
+#endif
+#if defined(__AVX512F__) //HWY
+void av1_fwd_txfm2d_32x16_avx2(const int16_t* input,
+                                 int32_t* output,
+                                 int stride,
+                                 TX_TYPE tx_type,
+                                 int bd);
+#endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_32x16_avx512(const int16_t* input,
+                                 int32_t* output,
+                                 int stride,
+                                 TX_TYPE tx_type,
+                                 int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_32x16 av1_fwd_txfm2d_32x16_c
 #endif
@@ -1286,7 +1315,8 @@ void av1_fwd_txfm2d_4x8_c(const int16_t* input,
                           int stride,
                           TX_TYPE tx_type,
                           int bd);
-#if defined(__SSE4_1__) && HAVE_SIMD
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
 void av1_fwd_txfm2d_4x8_sse4_1(const int16_t* input,
                                int32_t* output,
                                int stride,
@@ -1297,6 +1327,21 @@ RTCD_EXTERN void (*av1_fwd_txfm2d_4x8)(const int16_t* input,
                                        int stride,
                                        TX_TYPE tx_type,
                                        int bd);
+#endif
+#if defined(__AVX512F__) // HWY
+void av1_fwd_txfm2d_4x8_avx2(const int16_t* input,
+                               int32_t* output,
+                               int stride,
+                               TX_TYPE tx_type,
+                               int bd);
+#endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_4x8_avx512(const int16_t* input,
+                               int32_t* output,
+                               int stride,
+                               TX_TYPE tx_type,
+                               int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_4x8 av1_fwd_txfm2d_4x8_c
 #endif
@@ -1375,6 +1420,13 @@ void av1_fwd_txfm2d_8x16_avx2(const int16_t* input,
                               TX_TYPE tx_type,
                               int bd);
 #endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_8x16_avx512(const int16_t* input,
+                              int32_t* output,
+                              int stride,
+                              TX_TYPE tx_type,
+                              int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_8x16 av1_fwd_txfm2d_8x16_c
 #endif
@@ -1384,7 +1436,8 @@ void av1_fwd_txfm2d_8x4_c(const int16_t* input,
                           int stride,
                           TX_TYPE tx_type,
                           int bd);
-#if defined(__SSE4_1__) && HAVE_SIMD
+#if HAVE_SIMD
+#if defined(__SSE4_1__)
 void av1_fwd_txfm2d_8x4_sse4_1(const int16_t* input,
                                int32_t* output,
                                int stride,
@@ -1395,6 +1448,21 @@ RTCD_EXTERN void (*av1_fwd_txfm2d_8x4)(const int16_t* input,
                                        int stride,
                                        TX_TYPE tx_type,
                                        int bd);
+#endif
+#if defined(__AVX512F__) // HWY
+void av1_fwd_txfm2d_8x4_avx2(const int16_t* input,
+                               int32_t* output,
+                               int stride,
+                               TX_TYPE tx_type,
+                               int bd);
+#endif
+#if defined(__AVX512F__)
+void av1_fwd_txfm2d_8x4_avx512(const int16_t* input,
+                               int32_t* output,
+                               int stride,
+                               TX_TYPE tx_type,
+                               int bd);
+#endif
 #else
 #define av1_fwd_txfm2d_8x4 av1_fwd_txfm2d_8x4_c
 #endif
@@ -1427,7 +1495,6 @@ void av1_fwd_txfm2d_8x8_avx2(const int16_t* input,
 #else
 #define av1_fwd_txfm2d_8x8 av1_fwd_txfm2d_8x8_c
 #endif
-
 
 void av1_fwht4x4_c(const int16_t* input, tran_low_t* output, int stride);
 #if HAVE_SIMD
@@ -1506,6 +1573,7 @@ void av1_get_nz_map_contexts_sse2(const uint8_t* const levels,
 #else
 #define av1_get_nz_map_contexts av1_get_nz_map_contexts_c
 #endif
+#endif // CONFIG_AV1_ENCODER
 
 void av1_highbd_inv_txfm_add_c(const tran_low_t* input,
                                uint8_t* dest,
@@ -1530,180 +1598,6 @@ void av1_highbd_inv_txfm_add_avx2(const tran_low_t* input,
 #endif
 #else
 #define av1_highbd_inv_txfm_add av1_highbd_inv_txfm_add_c
-#endif
-
-void av1_highbd_inv_txfm_add_16x32_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_16x32 av1_highbd_inv_txfm_add_16x32_c
-
-void av1_highbd_inv_txfm_add_16x4_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_16x4_sse4_1(const tran_low_t* input,
-                                         uint8_t* dest,
-                                         int stride,
-                                         const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_16x4)(const tran_low_t* input,
-                                                 uint8_t* dest,
-                                                 int stride,
-                                                 const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_16x4 av1_highbd_inv_txfm_add_16x4_c
-#endif
-
-void av1_highbd_inv_txfm_add_16x64_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_16x64 av1_highbd_inv_txfm_add_16x64_c
-
-void av1_highbd_inv_txfm_add_16x8_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_16x8 av1_highbd_inv_txfm_add_16x8_c
-
-void av1_highbd_inv_txfm_add_32x16_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_32x16 av1_highbd_inv_txfm_add_32x16_c
-
-void av1_highbd_inv_txfm_add_32x32_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_32x32 av1_highbd_inv_txfm_add_32x32_c
-
-void av1_highbd_inv_txfm_add_32x64_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_32x64 av1_highbd_inv_txfm_add_32x64_c
-
-void av1_highbd_inv_txfm_add_32x8_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_32x8 av1_highbd_inv_txfm_add_32x8_c
-
-void av1_highbd_inv_txfm_add_4x16_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_4x16_sse4_1(const tran_low_t* input,
-                                         uint8_t* dest,
-                                         int stride,
-                                         const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_4x16)(const tran_low_t* input,
-                                                 uint8_t* dest,
-                                                 int stride,
-                                                 const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_4x16 av1_highbd_inv_txfm_add_4x16_c
-#endif
-
-void av1_highbd_inv_txfm_add_4x4_c(const tran_low_t* input,
-                                   uint8_t* dest,
-                                   int stride,
-                                   const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_4x4_sse4_1(const tran_low_t* input,
-                                        uint8_t* dest,
-                                        int stride,
-                                        const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_4x4)(const tran_low_t* input,
-                                                uint8_t* dest,
-                                                int stride,
-                                                const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_4x4 av1_highbd_inv_txfm_add_4x4_c
-#endif
-
-void av1_highbd_inv_txfm_add_4x8_c(const tran_low_t* input,
-                                   uint8_t* dest,
-                                   int stride,
-                                   const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_4x8_sse4_1(const tran_low_t* input,
-                                        uint8_t* dest,
-                                        int stride,
-                                        const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_4x8)(const tran_low_t* input,
-                                                uint8_t* dest,
-                                                int stride,
-                                                const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_4x8 av1_highbd_inv_txfm_add_4x8_c
-#endif
-
-void av1_highbd_inv_txfm_add_64x16_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_64x16 av1_highbd_inv_txfm_add_64x16_c
-
-void av1_highbd_inv_txfm_add_64x32_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_64x32 av1_highbd_inv_txfm_add_64x32_c
-
-void av1_highbd_inv_txfm_add_64x64_c(const tran_low_t* input,
-                                     uint8_t* dest,
-                                     int stride,
-                                     const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_64x64 av1_highbd_inv_txfm_add_64x64_c
-
-void av1_highbd_inv_txfm_add_8x16_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_8x16 av1_highbd_inv_txfm_add_8x16_c
-
-void av1_highbd_inv_txfm_add_8x32_c(const tran_low_t* input,
-                                    uint8_t* dest,
-                                    int stride,
-                                    const TxfmParam* txfm_param);
-#define av1_highbd_inv_txfm_add_8x32 av1_highbd_inv_txfm_add_8x32_c
-
-void av1_highbd_inv_txfm_add_8x4_c(const tran_low_t* input,
-                                   uint8_t* dest,
-                                   int stride,
-                                   const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_8x4_sse4_1(const tran_low_t* input,
-                                        uint8_t* dest,
-                                        int stride,
-                                        const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_8x4)(const tran_low_t* input,
-                                                uint8_t* dest,
-                                                int stride,
-                                                const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_8x4 av1_highbd_inv_txfm_add_8x4_c
-#endif
-
-void av1_highbd_inv_txfm_add_8x8_c(const tran_low_t* input,
-                                   uint8_t* dest,
-                                   int stride,
-                                   const TxfmParam* txfm_param);
-#if defined(__SSE4_1__) && HAVE_SIMD
-void av1_highbd_inv_txfm_add_8x8_sse4_1(const tran_low_t* input,
-                                        uint8_t* dest,
-                                        int stride,
-                                        const TxfmParam* txfm_param);
-RTCD_EXTERN void (*av1_highbd_inv_txfm_add_8x8)(const tran_low_t* input,
-                                                uint8_t* dest,
-                                                int stride,
-                                                const TxfmParam* txfm_param);
-#else
-#define av1_highbd_inv_txfm_add_8x8 av1_highbd_inv_txfm_add_8x8_c
 #endif
 
 void av1_highbd_iwht4x4_16_add_c(const tran_low_t* input,
@@ -1913,11 +1807,18 @@ void av1_inv_txfm_add_avx2(const tran_low_t* dqcoeff,
 #define av1_inv_txfm_add av1_inv_txfm_add_c
 #endif
 
+#if CONFIG_AV1_ENCODER
 void av1_lowbd_fwd_txfm_c(const int16_t* src_diff,
                           tran_low_t* coeff,
                           int diff_stride,
                           TxfmParam* txfm_param);
 #if HAVE_SIMD
+#if defined(__SSE2__) && !defined(__X86_64__)
+void av1_lowbd_fwd_txfm_sse2(const int16_t* src_diff,
+                               tran_low_t* coeff,
+                               int diff_stride,
+                               TxfmParam* txfm_param);
+#endif
 #if defined(__SSE4_1__)
 void av1_lowbd_fwd_txfm_sse4_1(const int16_t* src_diff,
                                tran_low_t* coeff,
@@ -1934,13 +1835,18 @@ void av1_lowbd_fwd_txfm_avx2(const int16_t* src_diff,
                              int diff_stride,
                              TxfmParam* txfm_param);
 #endif
+#if defined(__AVX512F__)
+void av1_lowbd_fwd_txfm_avx512(const int16_t* src_diff,
+                             tran_low_t* coeff,
+                             int diff_stride,
+                             TxfmParam* txfm_param);
+#endif
 #else
 #define av1_lowbd_fwd_txfm av1_lowbd_fwd_txfm_c
 #endif
 
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
 void av1_nn_fast_softmax_16_c(const float* input_nodes, float* output);
-#if defined(__SSSE3__) && HAVE_SIMD
+#if defined(__SSE3__) && HAVE_SIMD && !CONFIG_EXCLUDE_SIMD_MISMATCH
 void av1_nn_fast_softmax_16_sse3(const float* input_nodes, float* output);
 RTCD_EXTERN void (*av1_nn_fast_softmax_16)(const float* input_nodes,
                                            float* output);
@@ -1952,8 +1858,8 @@ void av1_nn_predict_c(const float* input_nodes,
                       const NN_CONFIG* const nn_config,
                       int reduce_prec,
                       float* const output);
-#if HAVE_SIMD
-#if defined(__SSSE3__)
+#if HAVE_SIMD && !CONFIG_EXCLUDE_SIMD_MISMATCH
+#if defined(__SSE3__)
 void av1_nn_predict_sse3(const float* input_nodes,
                          const NN_CONFIG* const nn_config,
                          int reduce_prec,
@@ -1972,7 +1878,6 @@ void av1_nn_predict_avx2(const float* input_nodes,
 #else
 #define av1_nn_predict av1_nn_predict_c
 #endif
-#endif // CONFIG_EXCLUDE_SIMD_MISMATCH
 
 void av1_quantize_b_c(const tran_low_t* coeff_ptr,
                       intptr_t n_coeffs,
@@ -2211,6 +2116,7 @@ void av1_quantize_lp_avx2(const int16_t* coeff_ptr,
 #else
 #define av1_quantize_lp av1_quantize_lp_c
 #endif
+#endif // CONFIG_AV1_ENCODER
 
 void av1_resize_and_extend_frame_c(const YV12_BUFFER_CONFIG* src,
                                    YV12_BUFFER_CONFIG* dst,
@@ -2240,6 +2146,7 @@ RTCD_EXTERN void (*av1_round_shift_array)(int32_t* arr, int size, int bit);
 #define av1_round_shift_array av1_round_shift_array_c
 #endif
 
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 int av1_selfguided_restoration_c(const uint8_t* dgd8,
                                  int width,
                                  int height,
@@ -2288,7 +2195,9 @@ int av1_selfguided_restoration_avx2(const uint8_t* dgd8,
 #else
 #define av1_selfguided_restoration av1_selfguided_restoration_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
+#if CONFIG_AV1_ENCODER
 void av1_txb_init_levels_c(const tran_low_t* const coeff,
                            const int width,
                            const int height,
@@ -2313,6 +2222,7 @@ void av1_txb_init_levels_avx2(const tran_low_t* const coeff,
 #else
 #define av1_txb_init_levels av1_txb_init_levels_c
 #endif
+#endif // CONFIG_AV1_ENCODER
 
 void av1_upsample_intra_edge_c(uint8_t* p, int sz);
 #if defined(__SSE4_1__) && HAVE_SIMD
@@ -2332,6 +2242,73 @@ RTCD_EXTERN void (*av1_highbd_upsample_intra_edge)(uint16_t* p, int sz, int bd);
 #endif
 #endif
 
+bool av1_resize_vert_dir_c(uint8_t *intbuf,
+                           uint8_t *output,
+                           int out_stride,
+                           int height,
+                           int height2,
+                           int width2,
+                           int start_col);
+#if HAVE_SIMD
+RTCD_EXTERN bool (*av1_resize_vert_dir)(uint8_t *intbuf,
+                           uint8_t *output,
+                           int out_stride,
+                           int height,
+                           int height2,
+                           int width2,
+                           int start_col);
+bool av1_resize_vert_dir_sse2(uint8_t *intbuf,
+                           uint8_t *output,
+                           int out_stride,
+                           int height,
+                           int height2,
+                           int width2,
+                           int start_col);
+#if defined(__AVX2__)
+bool av1_resize_vert_dir_avx2(uint8_t *intbuf,
+                           uint8_t *output,
+                           int out_stride,
+                           int height,
+                           int height2,
+                           int width2,
+                           int start_col);
+#endif
+#else
+#define av1_resize_vert_dir av1_resize_vert_dir_c
+#endif
+
+void av1_resize_horz_dir_c(const uint8_t *const input,
+                           int in_stride,
+                           uint8_t *intbuf,
+                           int height,
+                           int filtered_length,
+                           int width2);
+#if HAVE_SIMD
+RTCD_EXTERN void (*av1_resize_horz_dir)(const uint8_t *const input,
+                           int in_stride,
+                           uint8_t *intbuf,
+                           int height,
+                           int filtered_length,
+                           int width2);
+void av1_resize_horz_dir_sse2(const uint8_t *const input,
+                           int in_stride,
+                           uint8_t *intbuf,
+                           int height,
+                           int filtered_length,
+                           int width2);
+#if defined(__AVX2__)
+void av1_resize_horz_dir_avx2(const uint8_t *const input,
+                           int in_stride,
+                           uint8_t *intbuf,
+                           int height,
+                           int filtered_length,
+                           int width2);
+#endif
+#else
+#define av1_resize_horz_dir av1_resize_horz_dir_c
+#endif
+
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 void av1_warp_affine_c(const int32_t* mat,
                        const uint8_t* ref,
                        int width,
@@ -2412,7 +2389,9 @@ void av1_warp_affine_avx2(const int32_t* mat,
 #else
 #define av1_warp_affine av1_warp_affine_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
+#if CONFIG_AV1_ENCODER
 void av1_wedge_compute_delta_squares_c(int16_t* d,
                                        const int16_t* a,
                                        const int16_t* b,
@@ -2487,7 +2466,9 @@ uint64_t av1_wedge_sse_from_residuals_avx2(const int16_t* r1,
 #else
 #define av1_wedge_sse_from_residuals av1_wedge_sse_from_residuals_c
 #endif
+#endif // CONFIG_AV1_ENCODER
 
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 void av1_wiener_convolve_add_src_c(const uint8_t* src,
                                    ptrdiff_t src_stride,
                                    uint8_t* dst,
@@ -2541,7 +2522,9 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t* src,
 #else
 #define av1_wiener_convolve_add_src av1_wiener_convolve_add_src_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
+#if CONFIG_AV1_HIGHBITDEPTH
 void cdef_copy_rect8_16bit_to_16bit_c(uint16_t* dst,
                                       int dstride,
                                       const uint16_t* src,
@@ -2549,6 +2532,14 @@ void cdef_copy_rect8_16bit_to_16bit_c(uint16_t* dst,
                                       int width,
                                       int height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_copy_rect8_16bit_to_16bit_ssse3(uint16_t* dst,
+                                           int dstride,
+                                           const uint16_t* src,
+                                           int sstride,
+                                           int width,
+                                           int height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_copy_rect8_16bit_to_16bit_sse4_1(uint16_t* dst,
                                            int dstride,
@@ -2574,6 +2565,7 @@ void cdef_copy_rect8_16bit_to_16bit_avx2(uint16_t* dst,
 #else
 #define cdef_copy_rect8_16bit_to_16bit cdef_copy_rect8_16bit_to_16bit_c
 #endif
+#endif
 
 void cdef_copy_rect8_8bit_to_16bit_c(uint16_t* dst,
                                      int dstride,
@@ -2582,6 +2574,14 @@ void cdef_copy_rect8_8bit_to_16bit_c(uint16_t* dst,
                                      int width,
                                      int height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_copy_rect8_8bit_to_16bit_ssse3(uint16_t* dst,
+                                          int dstride,
+                                          const uint8_t* src,
+                                          int sstride,
+                                          int width,
+                                          int height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_copy_rect8_8bit_to_16bit_sse4_1(uint16_t* dst,
                                           int dstride,
@@ -2620,6 +2620,19 @@ void cdef_filter_16_0_c(void* dst16,
                         int block_width,
                         int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_16_0_ssse3(void* dst16,
+                             int dstride,
+                             const uint16_t* in,
+                             int pri_strength,
+                             int sec_strength,
+                             int dir,
+                             int pri_damping,
+                             int sec_damping,
+                             int coeff_shift,
+                             int block_width,
+                             int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_16_0_sse4_1(void* dst16,
                              int dstride,
@@ -2673,6 +2686,19 @@ void cdef_filter_16_1_c(void* dst16,
                         int block_width,
                         int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_16_1_ssse3(void* dst16,
+                             int dstride,
+                             const uint16_t* in,
+                             int pri_strength,
+                             int sec_strength,
+                             int dir,
+                             int pri_damping,
+                             int sec_damping,
+                             int coeff_shift,
+                             int block_width,
+                             int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_16_1_sse4_1(void* dst16,
                              int dstride,
@@ -2726,6 +2752,19 @@ void cdef_filter_16_2_c(void* dst16,
                         int block_width,
                         int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_16_2_ssse3(void* dst16,
+                             int dstride,
+                             const uint16_t* in,
+                             int pri_strength,
+                             int sec_strength,
+                             int dir,
+                             int pri_damping,
+                             int sec_damping,
+                             int coeff_shift,
+                             int block_width,
+                             int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_16_2_sse4_1(void* dst16,
                              int dstride,
@@ -2779,6 +2818,19 @@ void cdef_filter_16_3_c(void* dst16,
                         int block_width,
                         int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_16_3_ssse3(void* dst16,
+                             int dstride,
+                             const uint16_t* in,
+                             int pri_strength,
+                             int sec_strength,
+                             int dir,
+                             int pri_damping,
+                             int sec_damping,
+                             int coeff_shift,
+                             int block_width,
+                             int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_16_3_sse4_1(void* dst16,
                              int dstride,
@@ -2832,6 +2884,19 @@ void cdef_filter_8_0_c(void* dst8,
                        int block_width,
                        int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_8_0_ssse3(void* dst8,
+                            int dstride,
+                            const uint16_t* in,
+                            int pri_strength,
+                            int sec_strength,
+                            int dir,
+                            int pri_damping,
+                            int sec_damping,
+                            int coeff_shift,
+                            int block_width,
+                            int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_8_0_sse4_1(void* dst8,
                             int dstride,
@@ -2885,6 +2950,19 @@ void cdef_filter_8_1_c(void* dst8,
                        int block_width,
                        int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_8_1_ssse3(void* dst8,
+                            int dstride,
+                            const uint16_t* in,
+                            int pri_strength,
+                            int sec_strength,
+                            int dir,
+                            int pri_damping,
+                            int sec_damping,
+                            int coeff_shift,
+                            int block_width,
+                            int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_8_1_sse4_1(void* dst8,
                             int dstride,
@@ -2938,6 +3016,19 @@ void cdef_filter_8_2_c(void* dst8,
                        int block_width,
                        int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_8_2_ssse3(void* dst8,
+                            int dstride,
+                            const uint16_t* in,
+                            int pri_strength,
+                            int sec_strength,
+                            int dir,
+                            int pri_damping,
+                            int sec_damping,
+                            int coeff_shift,
+                            int block_width,
+                            int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_8_2_sse4_1(void* dst8,
                             int dstride,
@@ -2991,6 +3082,19 @@ void cdef_filter_8_3_c(void* dst8,
                        int block_width,
                        int block_height);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_filter_8_3_ssse3(void* dst8,
+                            int dstride,
+                            const uint16_t* in,
+                            int pri_strength,
+                            int sec_strength,
+                            int dir,
+                            int pri_damping,
+                            int sec_damping,
+                            int coeff_shift,
+                            int block_width,
+                            int block_height);
+#endif
 #if defined(__SSE4_1__)
 void cdef_filter_8_3_sse4_1(void* dst8,
                             int dstride,
@@ -3037,6 +3141,12 @@ int cdef_find_dir_c(const uint16_t* img,
                     int32_t* var,
                     int coeff_shift);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+int cdef_find_dir_ssse3(const uint16_t* img,
+                         int stride,
+                         int32_t* var,
+                         int coeff_shift);
+#endif
 #if defined(__SSE4_1__)
 int cdef_find_dir_sse4_1(const uint16_t* img,
                          int stride,
@@ -3066,6 +3176,16 @@ void cdef_find_dir_dual_c(const uint16_t* img1,
                           int* out1,
                           int* out2);
 #if HAVE_SIMD
+#if defined(__SSSE3__) && !defined(__X86_64__)
+void cdef_find_dir_dual_ssse3(const uint16_t* img1,
+                               const uint16_t* img2,
+                               int stride,
+                               int32_t* var1,
+                               int32_t* var2,
+                               int coeff_shift,
+                               int* out1,
+                               int* out2);
+#endif
 #if defined(__SSE4_1__)
 void cdef_find_dir_dual_sse4_1(const uint16_t* img1,
                                const uint16_t* img2,
@@ -3096,6 +3216,21 @@ void cdef_find_dir_dual_avx2(const uint16_t* img1,
 #endif
 #else
 #define cdef_find_dir_dual cdef_find_dir_dual_c
+#endif
+
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
+cfl_subtract_average_fn cfl_get_subtract_average_fn_c(TX_SIZE tx_size);
+#if HAVE_SIMD
+#if defined(__SSE2__)
+cfl_subtract_average_fn cfl_get_subtract_average_fn_sse2(TX_SIZE tx_size);
+RTCD_EXTERN cfl_subtract_average_fn (*cfl_get_subtract_average_fn)(
+    TX_SIZE tx_size);
+#endif
+#if defined(__AVX2__)
+cfl_subtract_average_fn cfl_get_subtract_average_fn_avx2(TX_SIZE tx_size);
+#endif
+#else
+#define cfl_get_subtract_average_fn cfl_get_subtract_average_fn_c
 #endif
 
 cfl_subsample_lbd_fn cfl_get_luma_subsampling_420_lbd_c(TX_SIZE tx_size);
@@ -3152,20 +3287,7 @@ cfl_predict_lbd_fn cfl_get_predict_lbd_fn_avx2(TX_SIZE tx_size);
 #else
 #define cfl_get_predict_lbd_fn cfl_get_predict_lbd_fn_c
 #endif
-
-cfl_subtract_average_fn cfl_get_subtract_average_fn_c(TX_SIZE tx_size);
-#if HAVE_SIMD
-#if defined(__SSE2__)
-cfl_subtract_average_fn cfl_get_subtract_average_fn_sse2(TX_SIZE tx_size);
-RTCD_EXTERN cfl_subtract_average_fn (*cfl_get_subtract_average_fn)(
-    TX_SIZE tx_size);
-#endif
-#if defined(__AVX2__)
-cfl_subtract_average_fn cfl_get_subtract_average_fn_avx2(TX_SIZE tx_size);
-#endif
-#else
-#define cfl_get_subtract_average_fn cfl_get_subtract_average_fn_c
-#endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
 #if CONFIG_AV1_HIGHBITDEPTH
 void av1_highbd_convolve_horiz_rs_c(const uint16_t *src,
@@ -3203,6 +3325,7 @@ RTCD_EXTERN void (*av1_highbd_convolve_horiz_rs)(const uint16_t *src,
 #define av1_highbd_convolve_horiz_rs av1_highbd_convolve_horiz_rs_c
 #endif
 
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 void av1_highbd_wiener_convolve_add_src_c(const uint8_t *src,
                                           ptrdiff_t src_stride,
                                           uint8_t *dst,
@@ -3259,6 +3382,7 @@ void av1_highbd_wiener_convolve_add_src_avx2(const uint8_t *src,
 #else
 #define av1_highbd_wiener_convolve_add_src av1_highbd_wiener_convolve_add_src_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
 void av1_highbd_convolve_copy_c(const uint8_t *src,
                                 ptrdiff_t src_stride,
@@ -3527,7 +3651,9 @@ void av1_highbd_dr_prediction_z3_avx2(uint16_t *dst,
 #else
 #define av1_highbd_dr_prediction_z3 av1_highbd_dr_prediction_z3_c
 #endif
+#endif CONFIG_AV1_HIGHBITDEPTH
 
+#if CONFIG_AV1_ENCODER && CONFIG_AV1_HIGHBITDEPTH
 void aom_highbd_upsampled_pred_c(MACROBLOCKD *xd,
                                  const struct AV1Common *const cm,
                                  int mi_row,
@@ -3596,44 +3722,6 @@ void aom_highbd_comp_avg_upsampled_pred_sse2(MACROBLOCKD *xd,
 #define aom_highbd_comp_avg_upsampled_pred aom_highbd_comp_avg_upsampled_pred_sse2
 #else
 #define aom_highbd_comp_avg_upsampled_pred aom_highbd_comp_avg_upsampled_pred_c
-#endif
-
-void aom_highbd_dist_wtd_comp_avg_upsampled_pred_c(MACROBLOCKD *xd,
-                                                   const struct AV1Common *const cm,
-                                                   int mi_row,
-                                                   int mi_col,
-                                                   const MV *const mv,
-                                                   uint8_t *comp_pred8,
-                                                   const uint8_t *pred8,
-                                                   int width,
-                                                   int height,
-                                                   int subpel_x_q3,
-                                                   int subpel_y_q3,
-                                                   const uint8_t *ref8,
-                                                   int ref_stride,
-                                                   int bd,
-                                                   const DIST_WTD_COMP_PARAMS *jcp_param,
-                                                   int subpel_search);
-#if defined(__SSE2__) && HAVE_SIMD
-void aom_highbd_dist_wtd_comp_avg_upsampled_pred_sse2(MACROBLOCKD *xd,
-                                                      const struct AV1Common *const cm,
-                                                      int mi_row,
-                                                      int mi_col,
-                                                      const MV *const mv,
-                                                      uint8_t *comp_pred8,
-                                                      const uint8_t *pred8,
-                                                      int width,
-                                                      int height,
-                                                      int subpel_x_q3,
-                                                      int subpel_y_q3,
-                                                      const uint8_t *ref8,
-                                                      int ref_stride,
-                                                      int bd,
-                                                      const DIST_WTD_COMP_PARAMS *jcp_param,
-                                                      int subpel_search);
-#define aom_highbd_dist_wtd_comp_avg_upsampled_pred aom_highbd_dist_wtd_comp_avg_upsampled_pred_sse2
-#else
-#define aom_highbd_dist_wtd_comp_avg_upsampled_pred aom_highbd_dist_wtd_comp_avg_upsampled_pred_c
 #endif
 
 int64_t av1_highbd_block_error_c(const tran_low_t *coeff,
@@ -3725,7 +3813,10 @@ void av1_highbd_quantize_fp_avx2(const tran_low_t *coeff_ptr,
 #else
 #define av1_highbd_quantize_fp av1_highbd_quantize_fp_c
 #endif
+#endif // CONFIG_AV1_ENCODER && CONFIG_AV1_HIGHBITDEPTH
 
+#if CONFIG_AV1_HIGHBITDEPTH
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 void av1_highbd_warp_affine_c(const int32_t *mat,
                               const uint16_t *ref,
                               int width,
@@ -3810,6 +3901,7 @@ void av1_highbd_warp_affine_avx2(const int32_t *mat,
 #else
 #define av1_highbd_warp_affine av1_highbd_warp_affine_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 
 void av1_highbd_convolve_2d_sr_c(const uint16_t *src,
                                  int src_stride,
@@ -3868,6 +3960,20 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src,
 #define av1_highbd_convolve_2d_sr av1_highbd_convolve_2d_sr_c
 #endif
 
+void av1_highbd_convolve_2d_sr_intrabc_c(const uint16_t *src,
+                                         int src_stride,
+                                         uint16_t *dst,
+                                         int dst_stride,
+                                         int w,
+                                         int h,
+                                         const InterpFilterParams *filter_params_x,
+                                         const InterpFilterParams *filter_params_y,
+                                         const int subpel_x_qn,
+                                         const int subpel_y_qn,
+                                         ConvolveParams *conv_params,
+                                         int bd);
+#define av1_highbd_convolve_2d_sr_intrabc av1_highbd_convolve_2d_sr_intrabc_c
+
 void av1_highbd_convolve_x_sr_c(const uint16_t *src,
                                 int src_stride,
                                 uint16_t *dst,
@@ -3917,6 +4023,18 @@ void av1_highbd_convolve_x_sr_avx2(const uint16_t *src,
 #define av1_highbd_convolve_x_sr av1_highbd_convolve_x_sr_c
 #endif
 
+void av1_highbd_convolve_x_sr_intrabc_c(const uint16_t *src,
+                                        int src_stride,
+                                        uint16_t *dst,
+                                        int dst_stride,
+                                        int w,
+                                        int h,
+                                        const InterpFilterParams *filter_params_x,
+                                        const int subpel_x_qn,
+                                        ConvolveParams *conv_params,
+                                        int bd);
+#define av1_highbd_convolve_x_sr_intrabc av1_highbd_convolve_x_sr_intrabc_c
+
 void av1_highbd_convolve_y_sr_c(const uint16_t *src,
                                 int src_stride,
                                 uint16_t *dst,
@@ -3961,6 +4079,17 @@ void av1_highbd_convolve_y_sr_avx2(const uint16_t *src,
 #else
 #define av1_highbd_convolve_y_sr av1_highbd_convolve_y_sr_c
 #endif
+
+void av1_highbd_convolve_y_sr_intrabc_c(const uint16_t *src,
+                                        int src_stride,
+                                        uint16_t *dst,
+                                        int dst_stride,
+                                        int w,
+                                        int h,
+                                        const InterpFilterParams *filter_params_y,
+                                        const int subpel_y_qn,
+                                        int bd);
+#define av1_highbd_convolve_y_sr_intrabc av1_highbd_convolve_y_sr_intrabc_c
 
 void av1_highbd_dist_wtd_convolve_2d_c(const uint16_t *src,
                                        int src_stride,
@@ -4205,6 +4334,7 @@ RTCD_EXTERN void (*av1_highbd_convolve_2d_scale)(const uint16_t *src,
 #define av1_highbd_convolve_2d_scale av1_highbd_convolve_2d_scale_c
 #endif
 
+#if !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 cfl_subsample_hbd_fn cfl_get_luma_subsampling_420_hbd_c(TX_SIZE tx_size);
 #if HAVE_SIMD
 #if defined(__SSSE3__)
@@ -4256,9 +4386,10 @@ cfl_predict_hbd_fn cfl_get_predict_hbd_fn_avx2(TX_SIZE tx_size);
 #else
 #define cfl_get_predict_hbd_fn cfl_get_predict_hbd_fn_c
 #endif
+#endif // !CONFIG_REALTIME_ONLY || CONFIG_AV1_DECODER
 #endif // CONFIG_AV1_HIGHBITDEPTH
 
-//#if CONFIG_REALTIME_ONLY
+#if CONFIG_AV1_ENCODER && !CONFIG_REALTIME_ONLY
 void av1_fwd_txfm2d_4x16_c(const int16_t *input, int32_t *output, int stride, TX_TYPE tx_type, int bd);
 #if defined(__SSE4_1__) && HAVE_SIMD
 void av1_fwd_txfm2d_4x16_sse4_1(const int16_t *input, int32_t *output, int stride, TX_TYPE tx_type, int bd);
@@ -4450,7 +4581,10 @@ void av1_highbd_apply_temporal_filter_avx2(const struct yv12_buffer_config *fram
 #else
 #define av1_highbd_apply_temporal_filter av1_highbd_apply_temporal_filter_c
 #endif
+#endif // CONFIG_AV1_HIGHBITDEPTH
+#endif // CONFIG_AV1_ENCODER && CONFIG_REALTIME_ONLY
 
+#if CONFIG_AV1_ENCODER && CONFIG_AV1_HIGHBITDEPTH && !CONFIG_REALTIME_ONLY
 void av1_calc_proj_params_high_bd_c(const uint8_t *src8,
                                     int width,
                                     int height,
@@ -4572,6 +4706,8 @@ int64_t av1_highbd_pixel_proj_error_avx2(const uint8_t *src8,
 void av1_compute_stats_highbd_c(int wiener_win,
                                 const uint8_t *dgd8,
                                 const uint8_t *src8,
+                                int16_t *dgd_avg,
+                                int16_t *src_avg,
                                 int h_start,
                                 int h_end,
                                 int v_start,
@@ -4586,6 +4722,8 @@ void av1_compute_stats_highbd_c(int wiener_win,
 void av1_compute_stats_highbd_sse4_1(int wiener_win,
                                 const uint8_t *dgd8,
                                 const uint8_t *src8,
+                                int16_t *dgd_avg,
+                                int16_t *src_avg,
                                 int h_start,
                                 int h_end,
                                 int v_start,
@@ -4598,6 +4736,8 @@ void av1_compute_stats_highbd_sse4_1(int wiener_win,
 RTCD_EXTERN void (*av1_compute_stats_highbd)(int wiener_win,
                                 const uint8_t *dgd8,
                                 const uint8_t *src8,
+                                int16_t *dgd_avg,
+                                int16_t *src_avg,
                                 int h_start,
                                 int h_end,
                                 int v_start,
@@ -4612,6 +4752,8 @@ RTCD_EXTERN void (*av1_compute_stats_highbd)(int wiener_win,
 void av1_compute_stats_highbd_avx2(int wiener_win,
                                 const uint8_t *dgd8,
                                 const uint8_t *src8,
+                                int16_t *dgd_avg,
+                                int16_t *src_avg,
                                 int h_start,
                                 int h_end,
                                 int v_start,
@@ -4625,8 +4767,9 @@ void av1_compute_stats_highbd_avx2(int wiener_win,
 #else
 #define av1_compute_stats_highbd av1_compute_stats_highbd_c
 #endif
-#endif // CONFIG_AV1_HIGHBITDEPTH
+#endif // CONFIG_AV1_ENCODER && CONFIG_AV1_HIGHBITDEPTH && CONFIG_REALTIME_ONLY
 
+#if CONFIG_AV1_ENCODER && !CONFIG_REALTIME_ONLY
 void av1_compute_stats_c(int wiener_win,
                          const uint8_t *dgd8,
                          const uint8_t *src8,
@@ -4829,7 +4972,7 @@ void av1_cnn_convolve_no_maxpool_padding_valid_c(const float **input,
                                                  int start_idx,
                                                  int cstep,
                                                  int channel_step);
-#if HAVE_SIMD && CONFIG_EXCLUDE_SIMD_MISMATCH
+#if HAVE_SIMD && !CONFIG_EXCLUDE_SIMD_MISMATCH
 RTCD_EXTERN void (*av1_cnn_convolve_no_maxpool_padding_valid)(const float **input,
                                                  int in_width,
                                                  int in_height,
@@ -4861,7 +5004,7 @@ void av1_cnn_deconvolve_c( const float **input, int in_width, int in_height, int
 
 void av1_cnn_batchnorm_c(float **image, int channels, int width, int height, int stride, const float *gamma, const float *beta, const float *mean, const float *std);
 #define av1_cnn_batchnorm av1_cnn_batchnorm_c
-//#endif // CONFIG_REALTIME_ONLY
+#endif // CONFIG_AV1_ENCODER && CONFIG_REALTIME_ONLY
 
 void av1_rtcd(void);
 
@@ -4873,7 +5016,6 @@ static void setup_rtcd_internal(void) {
   (void)flags;
 
 #if HAVE_SIMD
-  aom_dist_wtd_comp_avg_upsampled_pred = aom_dist_wtd_comp_avg_upsampled_pred_c;
   av1_apply_selfguided_restoration = av1_apply_selfguided_restoration_c;
   av1_build_compound_diffwtd_mask = av1_build_compound_diffwtd_mask_c;
   av1_build_compound_diffwtd_mask_d16 = av1_build_compound_diffwtd_mask_d16_c;
@@ -4902,17 +5044,11 @@ static void setup_rtcd_internal(void) {
   av1_get_crc32c_value = av1_get_crc32c_value_c;
   av1_get_horver_correlation_full = av1_get_horver_correlation_full_c;
   av1_highbd_inv_txfm_add = av1_highbd_inv_txfm_add_c;
-  av1_highbd_inv_txfm_add_16x4 = av1_highbd_inv_txfm_add_16x4_c;
-  av1_highbd_inv_txfm_add_4x16 = av1_highbd_inv_txfm_add_4x16_c;
-  av1_highbd_inv_txfm_add_4x4 = av1_highbd_inv_txfm_add_4x4_c;
-  av1_highbd_inv_txfm_add_4x8 = av1_highbd_inv_txfm_add_4x8_c;
-  av1_highbd_inv_txfm_add_8x4 = av1_highbd_inv_txfm_add_8x4_c;
-  av1_highbd_inv_txfm_add_8x8 = av1_highbd_inv_txfm_add_8x8_c;
   av1_highbd_iwht4x4_16_add = av1_highbd_iwht4x4_16_add_c;
   av1_inv_txfm2d_add_4x4 = av1_inv_txfm2d_add_4x4_c;
   av1_inv_txfm2d_add_8x8 = av1_inv_txfm2d_add_8x8_c;
   av1_inv_txfm_add = av1_inv_txfm_add_c;
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
+#if !CONFIG_EXCLUDE_SIMD_MISMATCH
   av1_nn_fast_softmax_16 = av1_nn_fast_softmax_16_c;
   av1_nn_predict = av1_nn_predict_c;
 #endif
@@ -4924,7 +5060,6 @@ static void setup_rtcd_internal(void) {
   av1_txb_init_levels = av1_txb_init_levels_c;
   av1_upsample_intra_edge = av1_upsample_intra_edge_c;
   av1_warp_affine = av1_warp_affine_c;
-  av1_estimate_noise_from_single_plane = av1_estimate_noise_from_single_plane_c;
   cfl_get_luma_subsampling_420_lbd = cfl_get_luma_subsampling_420_lbd_c;
   cfl_get_luma_subsampling_422_lbd = cfl_get_luma_subsampling_422_lbd_c;
   cfl_get_luma_subsampling_444_lbd = cfl_get_luma_subsampling_444_lbd_c;
@@ -4941,11 +5076,15 @@ static void setup_rtcd_internal(void) {
   cdef_filter_8_1 = cdef_filter_8_1_c;
   cdef_filter_8_2 = cdef_filter_8_2_c;
   cdef_filter_8_3 = cdef_filter_8_3_c;
-  cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_c;
   cdef_copy_rect8_8bit_to_16bit = cdef_copy_rect8_8bit_to_16bit_c;
   av1_dist_wtd_convolve_2d = av1_dist_wtd_convolve_2d_c;
 #endif
 #if defined(__SSE2__) && HAVE_SIMD
+#if !defined(__X86_64__)
+  av1_lowbd_fwd_txfm = av1_lowbd_fwd_txfm_sse2;
+#endif
+  av1_resize_horz_dir = av1_resize_horz_dir_sse2;
+  av1_resize_vert_dir = av1_resize_vert_dir_sse2;
   //av1_fwht4x4 = av1_fwht4x4_sse2;
   av1_calc_indices_dim2 = av1_calc_indices_dim2_sse2;
   av1_block_error = av1_block_error_sse2;
@@ -4966,9 +5105,30 @@ static void setup_rtcd_internal(void) {
   cfl_get_subtract_average_fn = cfl_get_subtract_average_fn_sse2;
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
+#if !defined(__x86_64__)
   if (flags & HAS_SSSE3)
-    aom_dist_wtd_comp_avg_upsampled_pred =
-        aom_dist_wtd_comp_avg_upsampled_pred_ssse3;
+    cdef_filter_8_0 = cdef_filter_8_0_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_8_1 = cdef_filter_8_1_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_8_2 = cdef_filter_8_2_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_8_3 = cdef_filter_8_3_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_16_0 = cdef_filter_16_0_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_16_1 = cdef_filter_16_1_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_16_2 = cdef_filter_16_2_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_filter_16_3 = cdef_filter_16_3_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_find_dir = cdef_find_dir_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_find_dir_dual = cdef_find_dir_dual_ssse3;
+  if (flags & HAS_SSSE3)
+    cdef_copy_rect8_8bit_to_16bit = cdef_copy_rect8_8bit_to_16bit_ssse3;
+#endif
   if (flags & HAS_SSSE3)
     av1_dist_wtd_convolve_2d = av1_dist_wtd_convolve_2d_ssse3;
 #if defined(__x86_64__)
@@ -4977,7 +5137,7 @@ static void setup_rtcd_internal(void) {
 #endif
   if (flags & HAS_SSSE3)
     av1_inv_txfm_add = av1_inv_txfm_add_ssse3;
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
+#if !CONFIG_EXCLUDE_SIMD_MISMATCH
   if (flags & HAS_SSE3)
     av1_nn_fast_softmax_16 = av1_nn_fast_softmax_16_sse3;
   if (flags & HAS_SSE3)
@@ -5051,18 +5211,6 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1)
     av1_highbd_inv_txfm_add = av1_highbd_inv_txfm_add_sse4_1;
   if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_16x4 = av1_highbd_inv_txfm_add_16x4_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_4x16 = av1_highbd_inv_txfm_add_4x16_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_4x4 = av1_highbd_inv_txfm_add_4x4_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_4x8 = av1_highbd_inv_txfm_add_4x8_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_8x4 = av1_highbd_inv_txfm_add_8x4_sse4_1;
-  if (flags & HAS_SSE4_1)
-    av1_highbd_inv_txfm_add_8x8 = av1_highbd_inv_txfm_add_8x8_sse4_1;
-  if (flags & HAS_SSE4_1)
     av1_highbd_iwht4x4_16_add = av1_highbd_iwht4x4_16_add_sse4_1;
   if (flags & HAS_SSE4_1)
     av1_inv_txfm2d_add_4x4 = av1_inv_txfm2d_add_4x4_sse4_1;
@@ -5080,8 +5228,6 @@ static void setup_rtcd_internal(void) {
     av1_upsample_intra_edge = av1_upsample_intra_edge_sse4_1;
   if (flags & HAS_SSE4_1)
     av1_warp_affine = av1_warp_affine_sse4_1;
-  if (flags & HAS_SSE4_1)
-    cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_sse4_1;
   if (flags & HAS_SSE4_1)
     cdef_copy_rect8_8bit_to_16bit = cdef_copy_rect8_8bit_to_16bit_sse4_1;
   if (flags & HAS_SSE4_1)
@@ -5124,7 +5270,7 @@ static void setup_rtcd_internal(void) {
     av1_calc_indices_dim1 = av1_calc_indices_dim1_avx2;
   if (flags & HAS_AVX2)
     av1_calc_indices_dim2 = av1_calc_indices_dim2_avx2;
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
+#if !CONFIG_EXCLUDE_SIMD_MISMATCH
   if (flags & HAS_AVX2)
     av1_nn_predict = av1_nn_predict_avx2;
 #endif
@@ -5181,6 +5327,10 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2)
     av1_txb_init_levels = av1_txb_init_levels_avx2;
   if (flags & HAS_AVX2)
+    av1_resize_vert_dir = av1_resize_vert_dir_avx2;
+  if (flags & HAS_AVX2)
+    av1_resize_horz_dir = av1_resize_horz_dir_avx2;
+  if (flags & HAS_AVX2)
     av1_warp_affine = av1_warp_affine_avx2;
   if (flags & HAS_AVX2)
     av1_wedge_compute_delta_squares = av1_wedge_compute_delta_squares_avx2;
@@ -5190,10 +5340,6 @@ static void setup_rtcd_internal(void) {
     av1_wedge_sse_from_residuals = av1_wedge_sse_from_residuals_avx2;
   if (flags & HAS_AVX2)
     av1_wiener_convolve_add_src = av1_wiener_convolve_add_src_avx2;
-  if (flags & HAS_AVX2)
-    av1_estimate_noise_from_single_plane = av1_estimate_noise_from_single_plane_avx2;
-  if (flags & HAS_AVX2)
-    cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_avx2;
   if (flags & HAS_AVX2)
     cdef_copy_rect8_8bit_to_16bit = cdef_copy_rect8_8bit_to_16bit_avx2;
   if (flags & HAS_AVX2)
@@ -5230,6 +5376,7 @@ static void setup_rtcd_internal(void) {
 
 #if CONFIG_AV1_HIGHBITDEPTH
 #if HAVE_SIMD
+  cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_c;
   av1_highbd_filter_intra_edge = av1_highbd_filter_intra_edge_c;
   av1_highbd_upsample_intra_edge = av1_highbd_upsample_intra_edge_c;
   av1_highbd_convolve_horiz_rs = av1_highbd_convolve_horiz_rs_c;
@@ -5257,6 +5404,10 @@ static void setup_rtcd_internal(void) {
   av1_highbd_block_error = av1_highbd_block_error_sse2;
 #endif
 #if defined(__SSSE3__) && HAVE_SIMD
+#if !defined(__x86_64__)
+  if (flags & HAS_SSSE3)
+    cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_ssse3;
+#endif
   if (flags & HAS_SSSE3) av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_ssse3;
   if (flags & HAS_SSSE3) av1_highbd_convolve_2d_sr = av1_highbd_convolve_2d_sr_ssse3;
   if (flags & HAS_SSSE3) av1_highbd_convolve_x_sr = av1_highbd_convolve_x_sr_ssse3;
@@ -5268,6 +5419,8 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSSE3) av1_highbd_wiener_convolve_add_src = av1_highbd_wiener_convolve_add_src_ssse3;
 #endif
 #if defined(__SSE4_1__) && HAVE_SIMD
+  if (flags & HAS_SSE4_1)
+    cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_filter_intra_edge = av1_highbd_filter_intra_edge_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_upsample_intra_edge = av1_highbd_upsample_intra_edge_sse4_1;
   if (flags & HAS_SSE4_1) av1_highbd_convolve_horiz_rs = av1_highbd_convolve_horiz_rs_sse4_1;
@@ -5280,6 +5433,8 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_SSE4_1) av1_highbd_convolve_2d_scale = av1_highbd_convolve_2d_scale_sse4_1;
 #endif
 #if defined(__AVX2__) && HAVE_SIMD
+  if (flags & HAS_AVX2)
+    cdef_copy_rect8_16bit_to_16bit = cdef_copy_rect8_16bit_to_16bit_avx2;
   if (flags & HAS_AVX2) av1_build_compound_diffwtd_mask_highbd = av1_build_compound_diffwtd_mask_highbd_avx2;
   if (flags & HAS_AVX2) av1_highbd_dr_prediction_z1 = av1_highbd_dr_prediction_z1_avx2;
   if (flags & HAS_AVX2) av1_highbd_dr_prediction_z2 = av1_highbd_dr_prediction_z2_avx2;
@@ -5302,13 +5457,14 @@ static void setup_rtcd_internal(void) {
 #endif
 #endif // CONFIG_AV1_HIGHBITDEPTH
 
-//#if CONFIG_REALTIME_ONLY
+#if !CONFIG_REALTIME_ONLY
 #if HAVE_SIMD
   av1_fwd_txfm2d_4x16 = av1_fwd_txfm2d_4x16_c;
   av1_fwd_txfm2d_8x32 = av1_fwd_txfm2d_8x32_c;
   av1_fwd_txfm2d_32x8 = av1_fwd_txfm2d_32x8_c;
   av1_fwd_txfm2d_16x64 = av1_fwd_txfm2d_16x64_c;
   av1_fwd_txfm2d_64x16 = av1_fwd_txfm2d_64x16_c;
+  av1_estimate_noise_from_single_plane = av1_estimate_noise_from_single_plane_c;
 #if CONFIG_AV1_HIGHBITDEPTH
   av1_calc_proj_params_high_bd = av1_calc_proj_params_high_bd_c;
   av1_highbd_pixel_proj_error = av1_highbd_pixel_proj_error_c;
@@ -5320,7 +5476,7 @@ static void setup_rtcd_internal(void) {
   //av1_cnn_activate = av1_cnn_activate_c;
   //av1_cnn_add = av1_cnn_add_c;
   //av1_cnn_predict = av1_cnn_predict_c;
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
+#if !CONFIG_EXCLUDE_SIMD_MISMATCH
   av1_cnn_convolve_no_maxpool_padding_valid = av1_cnn_convolve_no_maxpool_padding_valid_c;
 #endif
   //av1_cnn_deconvolve = av1_cnn_deconvolve_c;
@@ -5358,11 +5514,13 @@ static void setup_rtcd_internal(void) {
   if (flags & HAS_AVX2) av1_compute_stats = av1_compute_stats_avx2;
   if (flags & HAS_AVX2) av1_calc_proj_params = av1_calc_proj_params_avx2;
   if (flags & HAS_AVX2) av1_lowbd_pixel_proj_error = av1_lowbd_pixel_proj_error_avx2;
-#if CONFIG_EXCLUDE_SIMD_MISMATCH
+  if (flags & HAS_AVX2)
+    av1_estimate_noise_from_single_plane = av1_estimate_noise_from_single_plane_avx2;
+#if !CONFIG_EXCLUDE_SIMD_MISMATCH
   if (flags & HAS_AVX2) av1_cnn_convolve_no_maxpool_padding_valid = av1_cnn_convolve_no_maxpool_padding_valid_avx2;
 #endif // CONFIG_EXCLUDE_SIMD_MISMATCH
 #endif
-//#endif // CONFIG_REALTIME_ONLY
+#endif // !CONFIG_REALTIME_ONLY
 }
 #endif
 
