@@ -25,6 +25,7 @@
  */
 
 #include "libavutil/common.h"
+#include "libavutil/mem.h"
 #include "libavutil/pca.h"
 
 typedef struct PCA{
