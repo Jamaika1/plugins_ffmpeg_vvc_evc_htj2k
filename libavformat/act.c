@@ -22,6 +22,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavformat/avformat.h"
 #include "libavformat/avio_internal.h"
+#include "libavformat/demux.h"
 #include "libavformat/riff.h"
 #include "libavformat/internal.h"
 
@@ -198,9 +199,9 @@ static int read_packet(AVFormatContext *s,
     return ret;
 }
 
-const AVInputFormat ff_act_demuxer = {
-    .name           = "act",
-    .long_name      = "ACT Voice file format",
+const FFInputFormat ff_act_demuxer = {
+    .p.name         = "act",
+    .p.long_name    = "ACT Voice file format",
     .priv_data_size = sizeof(ACTContext),
     .read_probe     = probe,
     .read_header    = read_header,

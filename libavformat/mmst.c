@@ -30,9 +30,9 @@
 
 #include "libavformat/avformat.h"
 #include "libavformat/mms.h"
-#include "libavformat/internal.h"
 #include "libavformat/avio_internal.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavcodec/bytestream.h"
 #include "libavformat/network.h"
 #include "libavformat/url.h"

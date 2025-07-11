@@ -37,6 +37,7 @@
 #include "libavutil/base64.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 #include "libavformat/avformat.h"
 
 #include "libavformat/rtpdec.h"

@@ -29,13 +29,13 @@
 
 #include "libavformat/avformat.h"
 #include "libavutil/avassert.h"
+#include "libavutil/mem.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/fifo.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 #include "libavutil/log.h"
 #include "libavutil/time.h"
-#include "libavformat/internal.h"
 #include "libavformat/network.h"
 #include "libavformat/os_support.h"
 #include "libavformat/url.h"
@@ -780,7 +780,7 @@ static int udp_open(URLContext *h, const char *uri, int flags)
             goto fail;
     }
 
-    if ((s->is_multicast || s->local_port <= 0) && (h->flags & AVIO_FLAG_READ))
+    if ((s->is_multicast || s->local_port < 0) && (h->flags & AVIO_FLAG_READ))
         s->local_port = port;
 
     udp_fd = udp_socket_create(h, &my_addr, &len, s->localaddr);

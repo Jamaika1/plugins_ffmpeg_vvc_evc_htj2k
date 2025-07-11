@@ -23,6 +23,7 @@
 
 #include "libavutil/avstring.h"
 #include "libavutil/internal.h"
+#include "libavutil/mem.h"
 #include "libavutil/parseutils.h"
 #include "libavformat/avformat.h"
 #include "libavformat/internal.h"

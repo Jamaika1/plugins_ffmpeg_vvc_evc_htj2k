@@ -20,11 +20,11 @@
  */
 #include "libavformat/avformat.h"
 #include "libavutil/avassert.h"
+#include "libavutil/mem.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
 
-#include "libavformat/internal.h"
 #include "libavformat/network.h"
 #include "libavformat/os_support.h"
 #include "libavformat/url.h"

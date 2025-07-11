@@ -26,9 +26,11 @@
 #include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/log.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavutil/time_internal.h"
 #include "libavformat/avformat.h"
+#include "libavformat/demux.h"
 #include "libavformat/internal.h"
 
 #define SBG_SCALE (1 << 16)
@@ -386,7 +388,7 @@ static int parse_options(struct sbg_parser *p)
                 case 'L':
                     FORWARD_ERROR(parse_optarg(p, opt, &oarg));
                     r = str_to_time(oarg.s, &p->scs.opt_duration);
-                    if (oarg.e != oarg.s + r) {
+                    if (oarg.e != oarg.s + r || p->scs.opt_duration < 0) {
                         snprintf(p->err_msg, sizeof(p->err_msg),
                                  "syntax error for option -L");
                         return AVERROR_INVALIDDATA;
@@ -1273,7 +1275,10 @@ static int generate_intervals(void *log, struct sbg_script *s, int sample_rate,
     /* SBaGen handles the time before and after the extremal events,
        and the corresponding transitions, as if the sequence were cyclic
        with a 24-hours period. */
-    period = s->events[s->nb_events - 1].ts - s->events[0].ts;
+    period = s->events[s->nb_events - 1].ts - (uint64_t)s->events[0].ts;
+    if (period < 0)
+        return AVERROR_INVALIDDATA;
+
     period = (period + (DAY_TS - 1)) / DAY_TS * DAY_TS;
     period = FFMAX(period, DAY_TS);
 
@@ -1429,8 +1434,10 @@ static av_cold int sbg_read_header(AVFormatContext *avf)
     }
 
     st = avformat_new_stream(avf, NULL);
-    if (!st)
-        return AVERROR(ENOMEM);
+    if (!st) {
+        r = AVERROR(ENOMEM);
+        goto fail;
+    }
     sti = ffstream(st);
     st->codecpar->codec_type     = AVMEDIA_TYPE_AUDIO;
     st->codecpar->codec_id       = AV_CODEC_ID_FFWAVESYNTH;
@@ -1444,6 +1451,13 @@ static av_cold int sbg_read_header(AVFormatContext *avf)
     st->duration      = script.end_ts == AV_NOPTS_VALUE ? AV_NOPTS_VALUE :
                         av_rescale(script.end_ts - script.start_ts,
                                    sbg->sample_rate, AV_TIME_BASE);
+
+    if (st->duration != AV_NOPTS_VALUE && (
+        st->duration < 0 || st->start_time > INT64_MAX - st->duration)) {
+        r = AVERROR_INVALIDDATA;
+        goto fail;
+    }
+
     sti->cur_dts      = st->start_time;
     r = encode_intervals(&script, st->codecpar, &inter);
     if (r < 0)
@@ -1519,15 +1533,15 @@ static const AVClass sbg_demuxer_class = {
     .version    = LIBAVUTIL_VERSION_INT,
 };
 
-const AVInputFormat ff_sbg_demuxer = {
-    .name           = "sbg",
-    .long_name      = NULL_IF_CONFIG_SMALL("SBaGen binaural beats script"),
+const FFInputFormat ff_sbg_demuxer = {
+    .p.name         = "sbg",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("SBaGen binaural beats script"),
+    .p.extensions   = "sbg",
+    .p.priv_class   = &sbg_demuxer_class,
     .priv_data_size = sizeof(struct sbg_demuxer),
     .read_probe     = sbg_read_probe,
     .read_header    = sbg_read_header,
     .read_packet    = sbg_read_packet,
     .read_seek      = sbg_read_seek,
     .read_seek2     = sbg_read_seek2,
-    .extensions     = "sbg",
-    .priv_class     = &sbg_demuxer_class,
 };

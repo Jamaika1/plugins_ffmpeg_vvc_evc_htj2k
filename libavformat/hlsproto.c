@@ -26,6 +26,7 @@
  */
 
 #include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 #include "libavutil/time.h"
 #include "libavformat/avio_internal.h"
 #include "libavformat/internal.h"

@@ -24,9 +24,11 @@
 #include <stdint.h>
 
 #include "libavutil/attributes.h"
+#include "libavutil/attributes_internal.h"
 #include "libavutil/fifo.h"
 #include "libavutil/log.h"
 #include "libavutil/mathematics.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 
 #include "libavcodec/put_bits.h"
@@ -87,10 +89,10 @@ typedef struct MpegMuxContext {
     int preload;
 } MpegMuxContext;
 
-extern const FFOutputFormat ff_mpeg1vcd_muxer;
-extern const FFOutputFormat ff_mpeg2dvd_muxer;
-extern const FFOutputFormat ff_mpeg2svcd_muxer;
-extern const FFOutputFormat ff_mpeg2vob_muxer;
+EXTERN const FFOutputFormat ff_mpeg1vcd_muxer;
+EXTERN const FFOutputFormat ff_mpeg2dvd_muxer;
+EXTERN const FFOutputFormat ff_mpeg2svcd_muxer;
+EXTERN const FFOutputFormat ff_mpeg2vob_muxer;
 
 static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
                            int64_t timestamp)
@@ -123,7 +125,7 @@ static int put_pack_header(AVFormatContext *ctx, uint8_t *buf,
         put_bits(&pb, 3, 0); /* stuffing length */
     }
     flush_put_bits(&pb);
-    return put_bits_ptr(&pb) - pb.buf;
+    return put_bytes_output(&pb);
 }
 
 static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
@@ -268,7 +270,7 @@ static int put_system_header(AVFormatContext *ctx, uint8_t *buf,
     }
 
     flush_put_bits(&pb);
-    size = put_bits_ptr(&pb) - pb.buf;
+    size = put_bytes_output(&pb);
     /* patch packet size */
     AV_WB16(buf + 4, size - 6);
 
@@ -342,8 +344,6 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
     lpcm_id = LPCM_ID;
 
     for (i = 0; i < ctx->nb_streams; i++) {
-        AVCPBProperties *props;
-
         st     = ctx->streams[i];
         stream = av_mallocz(sizeof(StreamInfo));
         if (!stream)
@@ -430,13 +430,19 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
             stream->max_buffer_size = 4 * 1024;
             s->audio_bound++;
             break;
-        case AVMEDIA_TYPE_VIDEO:
+        case AVMEDIA_TYPE_VIDEO: {
+            const AVPacketSideData *sd;
+            AVCPBProperties *props = NULL;
             if (st->codecpar->codec_id == AV_CODEC_ID_H264)
                 stream->id = h264_id++;
             else
                 stream->id = mpv_id++;
 
-            props = (AVCPBProperties*)av_stream_get_side_data(st, AV_PKT_DATA_CPB_PROPERTIES, NULL);
+            sd = av_packet_side_data_get(st->codecpar->coded_side_data,
+                                         st->codecpar->nb_coded_side_data,
+                                         AV_PKT_DATA_CPB_PROPERTIES);
+            if (sd)
+                props = (AVCPBProperties*)sd->data;
             if (props && props->buffer_size)
                 stream->max_buffer_size = 6 * 1024 + props->buffer_size / 8;
             else {
@@ -453,6 +459,7 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
             }
             s->video_bound++;
             break;
+        }
         case AVMEDIA_TYPE_SUBTITLE:
             stream->id              = mps_id++;
             stream->max_buffer_size = 16 * 1024;
@@ -470,12 +477,17 @@ static av_cold int mpeg_mux_init(AVFormatContext *ctx)
     audio_bitrate = 0;
     video_bitrate = 0;
     for (i = 0; i < ctx->nb_streams; i++) {
-        AVCPBProperties *props;
+        const AVPacketSideData *sd;
+        AVCPBProperties *props = NULL;
         int codec_rate;
         st     = ctx->streams[i];
         stream = (StreamInfo *)st->priv_data;
 
-        props = (AVCPBProperties*)av_stream_get_side_data(st, AV_PKT_DATA_CPB_PROPERTIES, NULL);
+        sd = av_packet_side_data_get(st->codecpar->coded_side_data,
+                                     st->codecpar->nb_coded_side_data,
+                                     AV_PKT_DATA_CPB_PROPERTIES);
+        if (sd)
+            props = (AVCPBProperties*)sd->data;
         if (props)
             codec_rate = props->max_bitrate;
         else
@@ -1281,8 +1293,8 @@ static void mpeg_mux_deinit(AVFormatContext *ctx)
 #define OFFSET(x) offsetof(MpegMuxContext, x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-    { "muxrate", NULL,                                          OFFSET(user_mux_rate), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, ((1<<22) - 1) * (8 * 50), E },
-    { "preload", "Initial demux-decode delay in microseconds.", OFFSET(preload),  AV_OPT_TYPE_INT, { .i64 = 500000 }, 0, INT_MAX, E },
+    { "muxrate", "mux rate as bits/s", OFFSET(user_mux_rate), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, ((1<<22) - 1) * (8 * 50), E },
+    { "preload", "initial demux-decode delay in microseconds", OFFSET(preload),  AV_OPT_TYPE_INT, { .i64 = 500000 }, 0, INT_MAX, E },
     { NULL },
 };
 

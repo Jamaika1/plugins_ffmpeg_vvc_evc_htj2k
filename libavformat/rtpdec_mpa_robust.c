@@ -21,6 +21,7 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 
 #include "libavformat/avio_internal.h"
 #include "libavformat/rtpdec_formats.h"

@@ -22,6 +22,7 @@
 #include "libavformat/httpauth.h"
 #include "libavutil/base64.h"
 #include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 #include "libavformat/internal.h"
 #include "libavutil/random_seed.h"
 #include "libavutil/md5.h"

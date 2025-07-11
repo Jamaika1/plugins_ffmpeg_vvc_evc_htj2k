@@ -25,10 +25,9 @@
  */
 
 #include "libavutil/avstring.h"
-#include "libavutil/intfloat.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
-#include "libavformat/internal.h"
 #include "libavformat/http.h"
 #include "libavformat/rtmp.h"
 

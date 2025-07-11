@@ -22,12 +22,12 @@
 #include "libavcodec/config_components.h"
 
 #include "libavutil/avstring.h"
-#include "libavutil/bprint.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
-#include "libavutil/thread.h"
 
 #include "libavformat/avio_internal.h"
 #include "libavformat/avformat.h"
+#include "libavformat/demux.h"
 #include "libavformat/id3v2.h"
 #include "libavformat/internal.h"
 #include "libavformat/url.h"
@@ -95,6 +95,8 @@ const AVOutputFormat *av_guess_format(const char *short_name, const char *filena
     /* Find the proper file type. */
     score_max = 0;
     while ((fmt = av_muxer_iterate(&i))) {
+        if (fmt->flags & AVFMT_EXPERIMENTAL && !short_name)
+            continue;
         score = 0;
         if (fmt->name && short_name && av_match_name(short_name, fmt->name))
             score += 100;
@@ -189,8 +191,8 @@ const AVInputFormat *av_probe_input_format3(const AVProbeData *pd,
         if (!is_opened == !(fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
             continue;
         score = 0;
-        if (fmt1->read_probe) {
-            score = fmt1->read_probe(&lpd);
+        if (ffifmt(fmt1)->read_probe) {
+            score = ffifmt(fmt1)->read_probe(&lpd);
             if (score)
                 av_log(NULL, AV_LOG_TRACE, "Probing %s score:%d size:%d\n", fmt1->name, score, lpd.buf_size);
             if (fmt1->extensions && av_match_ext(lpd.filename, fmt1->extensions)) {
@@ -212,10 +214,10 @@ const AVInputFormat *av_probe_input_format3(const AVProbeData *pd,
                 score = AVPROBE_SCORE_EXTENSION;
         }
         if (av_match_name(lpd.mime_type, fmt1->mime_type)) {
-            if (AVPROBE_SCORE_MIME > score) {
-                av_log(NULL, AV_LOG_DEBUG, "Probing %s score:%d increased to %d due to MIME type\n", fmt1->name, score, AVPROBE_SCORE_MIME);
-                score = AVPROBE_SCORE_MIME;
-            }
+            int old_score = score;
+            score += AVPROBE_SCORE_MIME_BONUS;
+            if (score > AVPROBE_SCORE_MAX) score = AVPROBE_SCORE_MAX;
+            av_log(NULL, AV_LOG_DEBUG, "Probing %s score:%d increased to %d due to MIME type\n", fmt1->name, old_score, score);
         }
         if (score > score_max) {
             score_max = score;
@@ -257,6 +259,7 @@ int av_probe_input_buffer2(AVIOContext *pb, const AVInputFormat **fmt,
     int ret = 0, probe_size, buf_offset = 0;
     int score = 0;
     int ret2;
+    int eof = 0;
 
     if (!max_probe_size)
         max_probe_size = PROBE_BUF_MAX;
@@ -280,7 +283,7 @@ int av_probe_input_buffer2(AVIOContext *pb, const AVInputFormat **fmt,
         }
     }
 
-    for (probe_size = PROBE_BUF_MIN; probe_size <= max_probe_size && !*fmt;
+    for (probe_size = PROBE_BUF_MIN; probe_size <= max_probe_size && !*fmt && !eof;
          probe_size = FFMIN(probe_size << 1,
                             FFMAX(max_probe_size, probe_size + 1))) {
         score = probe_size < max_probe_size ? AVPROBE_SCORE_RETRY : 0;
@@ -296,6 +299,7 @@ int av_probe_input_buffer2(AVIOContext *pb, const AVInputFormat **fmt,
 
             score = 0;
             ret   = 0;          /* error was end of file, nothing read */
+            eof   = 1;
         }
         buf_offset += ret;
         if (buf_offset < offset)

@@ -120,7 +120,7 @@ static int adx_read_header(AVFormatContext *s)
 
     par->ch_layout.nb_channels = channels;
     par->codec_type  = AVMEDIA_TYPE_AUDIO;
-    par->codec_id    = s->iformat->raw_codec_id;
+    par->codec_id    = AV_CODEC_ID_ADPCM_ADX;
     par->bit_rate    = (int64_t)par->sample_rate * par->ch_layout.nb_channels * BLOCK_SIZE * 8LL / BLOCK_SAMPLES;
 
     avpriv_set_pts_info(st, 64, BLOCK_SAMPLES, par->sample_rate);
@@ -128,14 +128,14 @@ static int adx_read_header(AVFormatContext *s)
     return 0;
 }
 
-const AVInputFormat ff_adx_demuxer = {
-    .name           = "adx",
-    .long_name      = NULL_IF_CONFIG_SMALL("CRI ADX"),
+const FFInputFormat ff_adx_demuxer = {
+    .p.name         = "adx",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("CRI ADX"),
+    .p.extensions   = "adx",
+    .p.flags        = AVFMT_GENERIC_INDEX,
     .read_probe     = adx_probe,
     .priv_data_size = sizeof(ADXDemuxerContext),
     .read_header    = adx_read_header,
     .read_packet    = adx_read_packet,
-    .extensions     = "adx",
     .raw_codec_id   = AV_CODEC_ID_ADPCM_ADX,
-    .flags          = AVFMT_GENERIC_INDEX,
 };

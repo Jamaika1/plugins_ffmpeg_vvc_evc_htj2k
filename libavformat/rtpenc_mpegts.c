@@ -20,6 +20,7 @@
  */
 
 #include "libavutil/mathematics.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavformat/avformat.h"
 #include "libavformat/avio_internal.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Tim Walker <tdskywalker@gmail.com>
+ * H.266 / VVC helper functions for muxers
  *
  * This file is part of FFmpeg.
  *
@@ -20,7 +20,7 @@
 
 /**
  * @file
- * internal header for VVC (de)muxer utilities
+ * internal header for H.266/VVC (de)muxer utilities
  */
 
 #ifndef AVFORMAT_VVC_H
@@ -28,10 +28,9 @@
 
 #include <stdint.h>
 #include "avio.h"
-#include "../libavcodec/vvc.h"
 
 /**
- * Writes Annex B formatted VVC NAL units to the provided AVIOContext.
+ * Writes Annex B formatted H.266/VVC NAL units to the provided AVIOContext.
  *
  * The NAL units are converted to an MP4-compatible format (start code prefixes
  * are replaced by 4-byte size fields, as per ISO/IEC 14496-15).
@@ -50,10 +49,10 @@
  *         value corresponding to an AVERROR code in case of failure
  */
 int ff_vvc_annexb2mp4(AVIOContext *pb, const uint8_t *buf_in,
-                       int size, int filter_ps, int *ps_count);
+                      int size, int filter_ps, int *ps_count);
 
 /**
- * Writes Annex B formatted VVC NAL units to a data buffer.
+ * Writes Annex B formatted H.266/VVC NAL units to a data buffer.
  *
  * The NAL units are converted to an MP4-compatible format (start code prefixes
  * are replaced by 4-byte size fields, as per ISO/IEC 14496-15).
@@ -77,19 +76,19 @@ int ff_vvc_annexb2mp4(AVIOContext *pb, const uint8_t *buf_in,
  * @note *buf_out will be treated as uninitialized on input and won't be freed.
  */
 int ff_vvc_annexb2mp4_buf(const uint8_t *buf_in, uint8_t **buf_out,
-                           int *size, int filter_ps, int *ps_count);
+                          int *size, int filter_ps, int *ps_count);
 
 /**
- * Writes VVC extradata (parameter sets, declarative SEI NAL units) to the
- * provided AVIOContext.
+ * Writes H.266/VVC extradata (parameter sets, declarative SEI NAL units) to
+ * the provided AVIOContext.
  *
- * If the extradata is Annex B format, it gets converted to hvcC format before
+ * If the extradata is Annex B format, it gets converted to vvcC format before
  * writing.
  *
- * @param pb address of the AVIOContext where the hvcC shall be written
- * @param data address of the buffer holding the data needed to write the hvcC
+ * @param pb address of the AVIOContext where the vvcC shall be written
+ * @param data address of the buffer holding the data needed to write the vvcC
  * @param size size (in bytes) of the data buffer
- * @param ps_array_completeness whether all parameter sets are in the hvcC (1)
+ * @param ps_array_completeness whether all parameter sets are in the vvcC (1)
  *        or there may be additional parameter sets in the bitstream (0)
  * @return >=0 in case of success, a negative value corresponding to an AVERROR
  *         code in case of failure

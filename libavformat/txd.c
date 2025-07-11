@@ -21,6 +21,7 @@
 
 #include "libavutil/intreadwrite.h"
 #include "libavformat/avformat.h"
+#include "libavformat/demux.h"
 #include "libavformat/internal.h"
 
 #define TXD_FILE            0x16
@@ -92,9 +93,9 @@ next_chunk:
     return 0;
 }
 
-const AVInputFormat ff_txd_demuxer = {
-    .name        = "txd",
-    .long_name   = NULL_IF_CONFIG_SMALL("Renderware TeXture Dictionary"),
+const FFInputFormat ff_txd_demuxer = {
+    .p.name      = "txd",
+    .p.long_name = NULL_IF_CONFIG_SMALL("Renderware TeXture Dictionary"),
     .read_probe  = txd_probe,
     .read_header = txd_read_header,
     .read_packet = txd_read_packet,

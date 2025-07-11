@@ -22,6 +22,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/file_open.h"
 #include "libavutil/getenv_utf8.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include <sys/stat.h>
 #include "libavformat/os_support.h"
@@ -69,7 +70,7 @@ static int populate_ipfs_gateway(URLContext *h)
             av_log(h, AV_LOG_WARNING,
                    "The IPFS_GATEWAY environment variable "
                    "exceeds the maximum length. "
-                   "We allow a max of %zu characters\n",
+                   "We allow a max of %"SIZE_SPECIFIER" characters\n",
                    sizeof(c->gateway_buffer));
             ret = AVERROR(EINVAL);
             goto err;
@@ -104,7 +105,7 @@ static int populate_ipfs_gateway(URLContext *h)
         if (printed >= sizeof(ipfs_full_data_folder)) {
             av_log(h, AV_LOG_WARNING,
                    "The IPFS data path exceeds the "
-                   "max path length (%zu)\n",
+                   "max path length (%"SIZE_SPECIFIER")\n",
                    sizeof(ipfs_full_data_folder));
             ret = AVERROR(EINVAL);
             goto err;
@@ -132,7 +133,7 @@ static int populate_ipfs_gateway(URLContext *h)
             av_log(h, AV_LOG_WARNING,
                    "The IPFS_PATH environment variable "
                    "exceeds the maximum length. "
-                   "We allow a max of %zu characters\n",
+                   "We allow a max of %"SIZE_SPECIFIER" characters\n",
                    sizeof(c->gateway_buffer));
             ret = AVERROR(EINVAL);
             goto err;
@@ -145,7 +146,7 @@ static int populate_ipfs_gateway(URLContext *h)
         >= sizeof(ipfs_gateway_file)) {
         av_log(h, AV_LOG_WARNING,
                "The IPFS gateway file path exceeds "
-               "the max path length (%zu)\n",
+               "the max path length (%"SIZE_SPECIFIER")\n",
                sizeof(ipfs_gateway_file));
         ret = AVERROR(ENOENT);
         goto err;
@@ -230,7 +231,7 @@ static int translate_ipfs_to_http(URLContext *h, const char *uri, int flags, AVD
             >= sizeof(c->gateway_buffer)) {
             av_log(h, AV_LOG_WARNING,
                    "The -gateway parameter is too long. "
-                   "We allow a max of %zu characters\n",
+                   "We allow a max of %"SIZE_SPECIFIER" characters\n",
                    sizeof(c->gateway_buffer));
             ret = AVERROR(EINVAL);
             goto err;
@@ -289,7 +290,7 @@ static int translate_ipfs_to_http(URLContext *h, const char *uri, int flags, AVD
         goto err;
     }
 
-    // Pass the URL back to FFMpeg's protocol handler.
+    // Pass the URL back to FFmpeg's protocol handler.
     ret = ffurl_open_whitelist(&c->inner, fulluri, flags,
                                &h->interrupt_callback, options,
                                h->protocol_whitelist,

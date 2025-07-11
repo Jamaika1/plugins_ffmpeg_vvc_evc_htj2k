@@ -21,6 +21,7 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 
 #include "libavformat/avformat.h"
 #include "libavformat/internal.h"

@@ -25,6 +25,7 @@
 #define _SVID_SOURCE
 
 #include "libavutil/config.h"
+#include "libavutil/mem.h"
 #include "libavformat/avformat.h"
 #include "libavformat/os_support.h"
 

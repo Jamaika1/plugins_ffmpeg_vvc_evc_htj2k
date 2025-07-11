@@ -33,6 +33,9 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_RAWVIDEO, MKTAG('y', 'u', 'v', '2') }, /* uncompressed YUV422 */
     { AV_CODEC_ID_RAWVIDEO, MKTAG('2', 'v', 'u', 'y') }, /* uncompressed 8-bit 4:2:2 */
     { AV_CODEC_ID_RAWVIDEO, MKTAG('y', 'u', 'v', 's') }, /* same as 2VUY but byte-swapped */
+    { AV_CODEC_ID_RAWVIDEO, MKTAG('v', '3', '0', '8') }, /* uncompressed  8-bit 4:4:4 */
+    { AV_CODEC_ID_RAWVIDEO, MKTAG('v', '4', '0', '8') }, /* uncompressed  8-bit 4:4:4:4 */
+    { AV_CODEC_ID_RAWVIDEO, MKTAG('v', '4', '1', '0') }, /* uncompressed 10-bit 4:4:4 */
 
     { AV_CODEC_ID_RAWVIDEO, MKTAG('L', '5', '5', '5') },
     { AV_CODEC_ID_RAWVIDEO, MKTAG('L', '5', '6', '5') },
@@ -60,9 +63,11 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_AVRP,   MKTAG('S', 'U', 'D', 'S') }, /* Avid DS Uncompressed */
     { AV_CODEC_ID_V210,   MKTAG('v', '2', '1', '0') }, /* uncompressed 10-bit 4:2:2 */
     { AV_CODEC_ID_V210,   MKTAG('b', 'x', 'y', '2') }, /* BOXX 10-bit 4:2:2 */
+#if FF_API_V408_CODECID
     { AV_CODEC_ID_V308,   MKTAG('v', '3', '0', '8') }, /* uncompressed  8-bit 4:4:4 */
     { AV_CODEC_ID_V408,   MKTAG('v', '4', '0', '8') }, /* uncompressed  8-bit 4:4:4:4 */
     { AV_CODEC_ID_V410,   MKTAG('v', '4', '1', '0') }, /* uncompressed 10-bit 4:4:4 */
+#endif
     { AV_CODEC_ID_Y41P,   MKTAG('Y', '4', '1', 'P') }, /* uncompressed 12-bit 4:1:1 */
     { AV_CODEC_ID_YUV4,   MKTAG('y', 'u', 'v', '4') }, /* libquicktime packed yuv420p */
     { AV_CODEC_ID_TARGA_Y216, MKTAG('Y', '2', '1', '6') },
@@ -118,6 +123,9 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
 
     { AV_CODEC_ID_RAWVIDEO, MKTAG('W', 'R', 'A', 'W') },
 
+    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'c', '1') },
+    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'i', '1') },
+
     { AV_CODEC_ID_HEVC, MKTAG('h', 'e', 'v', '1') }, /* HEVC/H.265 which indicates parameter sets may be in ES */
     { AV_CODEC_ID_HEVC, MKTAG('h', 'v', 'c', '1') }, /* HEVC/H.265 which indicates parameter sets shall not be in ES */
     { AV_CODEC_ID_HEVC, MKTAG('d', 'v', 'h', 'e') }, /* HEVC-based Dolby Vision derived from hev1 */
@@ -148,8 +156,6 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_H264, MKTAG('d', 'v', 'a', 'v') }, /* AVC-based Dolby Vision derived from avc3 */
 
     { AV_CODEC_ID_EVC,  MKTAG('e', 'v', 'c', '1') }, /* EVC/MPEG-5 */
-    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'i', '1') }, /* VVC/H.266 which indicates parameter sets may be in ES */
-    { AV_CODEC_ID_VVC,  MKTAG('v', 'v', 'c', '1') }, /* VVC/H.266 which indicates parameter shall not be in ES */
 
     { AV_CODEC_ID_VP8,  MKTAG('v', 'p', '0', '8') }, /* VP8 */
     { AV_CODEC_ID_VP9,  MKTAG('v', 'p', '0', '9') }, /* VP9 */
@@ -207,6 +213,7 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_MPEG2VIDEO, MKTAG('m', 'p', '2', 'v') }, /* FCP5 */
 
     { AV_CODEC_ID_JPEG2000, MKTAG('m', 'j', 'p', '2') }, /* JPEG 2000 produced by FCP */
+    { AV_CODEC_ID_JPEGXS,   MKTAG('j', 'x', 's', ' ') }, /* JPEGXS */
 
     { AV_CODEC_ID_TARGA, MKTAG('t', 'g', 'a', ' ') }, /* Truevision Targa */
     { AV_CODEC_ID_TIFF,  MKTAG('t', 'i', 'f', 'f') }, /* TIFF embedded in MOV */
@@ -264,6 +271,8 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_MAGICYUV, MKTAG('M', '8', 'Y', 'A') },
     { AV_CODEC_ID_MAGICYUV, MKTAG('M', '2', 'R', 'A') },
     { AV_CODEC_ID_MAGICYUV, MKTAG('M', '2', 'R', 'G') },
+    { AV_CODEC_ID_MAGICYUV, MKTAG('M', '4', 'R', 'A') },
+    { AV_CODEC_ID_MAGICYUV, MKTAG('M', '4', 'R', 'G') },
 
     { AV_CODEC_ID_SHEERVIDEO, MKTAG('S', 'h', 'r', '0') },
     { AV_CODEC_ID_SHEERVIDEO, MKTAG('S', 'h', 'r', '1') },
@@ -286,6 +295,12 @@ const AVCodecTag ff_codec_movvideo_tags[] = {
     { AV_CODEC_ID_MEDIA100, MKTAG('d', 't', 'N', 'T') },
     { AV_CODEC_ID_MEDIA100, MKTAG('d', 't', 'p', 'a') },
     { AV_CODEC_ID_MEDIA100, MKTAG('d', 't', 'P', 'A') },
+
+    { AV_CODEC_ID_CFHD, MKTAG('C', 'F', 'H', 'D') },
+
+    { AV_CODEC_ID_LCEVC, MKTAG('l', 'v', 'c', '1') }, /* LCEVC raw payload */
+
+    { AV_CODEC_ID_APV, MKTAG('a', 'p', 'v', '1') },
 
     { AV_CODEC_ID_NONE, 0 },
 };

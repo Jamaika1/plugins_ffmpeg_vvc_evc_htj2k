@@ -160,11 +160,11 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
             return AVERROR(EINVAL);
         }
     } else if (img->frame_pts) {
-        if (av_get_frame_filename2(filename, sizeof(filename), s->url, pkt->pts, AV_FRAME_FILENAME_FLAGS_MULTIPLE) < 0) {
+        if (ff_get_frame_filename(filename, sizeof(filename), s->url, pkt->pts, AV_FRAME_FILENAME_FLAGS_MULTIPLE) < 0) {
             av_log(s, AV_LOG_ERROR, "Cannot write filename by pts of the frames.");
             return AVERROR(EINVAL);
         }
-    } else if (av_get_frame_filename2(filename, sizeof(filename), s->url,
+    } else if (ff_get_frame_filename(filename, sizeof(filename), s->url,
                                       img->img_number,
                                       AV_FRAME_FILENAME_FLAGS_MULTIPLE) < 0) {
         if (img->img_number == img->start_img_number) {
@@ -275,7 +275,7 @@ const FFOutputFormat ff_image2_muxer = {
     .p.name         = "image2",
     .p.long_name    = NULL_IF_CONFIG_SMALL("image2 sequence"),
     .p.extensions   = "bmp,dpx,exr,jls,jpeg,jpg,jxl,ljpg,pam,pbm,pcx,pfm,pgm,pgmyuv,phm,"
-                      "png,ppm,sgi,tga,tif,tiff,jp2,j2c,j2k,xwd,sun,ras,rs,im1,im8,"
+                      "png,ppm,sgi,tga,tif,tiff,jp2,j2c,j2k,jxs,xwd,sun,ras,rs,im1,im8,"
                       "im24,sunras,vbn,xbm,xface,pix,y,avif,qoi,hdr,wbmp",
     .priv_data_size = sizeof(VideoMuxData),
     .p.video_codec  = AV_CODEC_ID_MJPEG,

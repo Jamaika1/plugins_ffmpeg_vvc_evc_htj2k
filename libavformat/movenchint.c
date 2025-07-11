@@ -21,6 +21,7 @@
 
 #include "libavformat/movenc.h"
 #include "libavutil/intreadwrite.h"
+#include "libavutil/mem.h"
 #include "libavformat/mux.h"
 #include "libavformat/rtpenc_chain.h"
 #include "libavformat/avio_internal.h"
