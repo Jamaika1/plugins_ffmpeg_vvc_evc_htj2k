@@ -1,0 +1,205 @@
+/* Copyright (c) V-Nova International Limited 2023-2024. All rights reserved.
+ * This software is licensed under the BSD-3-Clause-Clear License by V-Nova Limited.
+ * No patent licenses are granted under this license. For enquiries about patent licenses,
+ * please contact legal@v-nova.com.
+ * The LCEVCdec software is a stand-alone project and is NOT A CONTRIBUTION to any other project.
+ * If the software is incorporated into another project, THE TERMS OF THE BSD-3-CLAUSE-CLEAR LICENSE
+ * AND THE ADDITIONAL LICENSING INFORMATION CONTAINED IN THIS FILE MUST BE MAINTAINED, AND THE
+ * SOFTWARE DOES NOT AND MUST NOT ADOPT THE LICENSE OF THE INCORPORATING PROJECT. However, the
+ * software may be incorporated into a project under a compatible license provided the requirements
+ * of the BSD-3-Clause-Clear license are respected, and V-Nova Limited remains
+ * licensor of the software ONLY UNDER the BSD-3-Clause-Clear license (not the compatible license).
+ * ANY ONWARD DISTRIBUTION, WHETHER STAND-ALONE OR AS PART OF ANY OTHER PROJECT, REMAINS SUBJECT TO
+ * THE EXCLUSION OF PATENT LICENSES PROVISION OF THE BSD-3-CLAUSE-CLEAR LICENSE. */
+
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+#include "../fmt/core.h"
+#endif
+#include "types_convert.h"
+#include "types_stream.h"
+
+using namespace lcevc_dec::utility;
+
+std::istream& operator>>(std::istream& in, LCEVC_ColorFormat& v)
+{
+    std::string str;
+    in >> str;
+
+    if (!fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorFormat: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid ColorFormat: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_ReturnCode& v)
+{
+    std::string str;
+    in >> str;
+
+    if (!fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ReturnCode: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid ReturnCode: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_ColorRange& v)
+{
+    std::string str;
+    in >> str;
+
+    if (!fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorRange: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid ColorRange: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_ColorPrimaries& v)
+{
+    std::string str;
+    in >> str;
+
+    if (fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorPrimaries: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid ColorPrimaries: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_TransferCharacteristics& v)
+{
+    std::string str;
+    in >> str;
+
+    if (fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorTransfer: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid ColorTransfer: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_PictureFlag& v)
+{
+    std::string str;
+    in >> str;
+
+    if (fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid PictureFlag: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid PictureFlag: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_Access& v)
+{
+    std::string str;
+    in >> str;
+
+    if (fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid Access: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid Access: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::istream& operator>>(std::istream& in, LCEVC_Event& v)
+{
+    std::string str;
+    in >> str;
+
+    if (fromString(str.c_str(), v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid Event: '{}'\n", str);
+#else
+        fprintf(stderr, "Not a valid Event: '%s'\n", str.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return in;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_ReturnCode& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_ColorRange& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_ColorPrimaries& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_TransferCharacteristics& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_PictureFlag& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_ColorFormat& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_Access& v)
+{
+    out << toString(v);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const LCEVC_Event& v)
+{
+    out << toString(v);
+    return out;
+}

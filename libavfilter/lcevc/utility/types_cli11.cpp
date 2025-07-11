@@ -1,0 +1,136 @@
+/* Copyright (c) V-Nova International Limited 2023-2024. All rights reserved.
+ * This software is licensed under the BSD-3-Clause-Clear License by V-Nova Limited.
+ * No patent licenses are granted under this license. For enquiries about patent licenses,
+ * please contact legal@v-nova.com.
+ * The LCEVCdec software is a stand-alone project and is NOT A CONTRIBUTION to any other project.
+ * If the software is incorporated into another project, THE TERMS OF THE BSD-3-CLAUSE-CLEAR LICENSE
+ * AND THE ADDITIONAL LICENSING INFORMATION CONTAINED IN THIS FILE MUST BE MAINTAINED, AND THE
+ * SOFTWARE DOES NOT AND MUST NOT ADOPT THE LICENSE OF THE INCORPORATING PROJECT. However, the
+ * software may be incorporated into a project under a compatible license provided the requirements
+ * of the BSD-3-Clause-Clear license are respected, and V-Nova Limited remains
+ * licensor of the software ONLY UNDER the BSD-3-Clause-Clear license (not the compatible license).
+ * ANY ONWARD DISTRIBUTION, WHETHER STAND-ALONE OR AS PART OF ANY OTHER PROJECT, REMAINS SUBJECT TO
+ * THE EXCLUSION OF PATENT LICENSES PROVISION OF THE BSD-3-CLAUSE-CLEAR LICENSE. */
+
+// The operator>>() declarations for enum types do not work with CLI11, as its
+// own specialisation of lexical_cast for enum overrides them.
+//
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+#include "../fmt/core.h"
+#endif
+#include "types_convert.h"
+#include "types_stream.h"
+
+using namespace lcevc_dec::utility;
+
+bool lexical_cast(const std::string& input, LCEVC_ColorFormat& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorFormat: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ColorFormat: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_ReturnCode& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ReturnCode: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ReturnCode: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_ColorRange& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorRange: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ColorRange: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_ColorPrimaries& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorPrimaries: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ColorPrimaries: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_TransferCharacteristics& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorTransfer: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ColorTransfer: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_PictureFlag& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid PictureFlag: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid PictureFlag: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_Access& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid ColorFormat: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid ColorFormat: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
+
+bool lexical_cast(const std::string& input, LCEVC_Event& v) // NOLINT
+{
+    if (!fromString(input, v)) {
+#if FMT_FORMAT && (__cplusplus >= 202207L)
+        fmt::print(stderr, "Not a valid Event: '{}'\n", input);
+#else
+        fprintf(stderr, "Not a valid Event: '%s'\n", input.c_str());
+#endif
+        std::exit(EXIT_FAILURE);
+    }
+
+    return true;
+}
