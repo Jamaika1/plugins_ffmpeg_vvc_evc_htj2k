@@ -19,9 +19,10 @@
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
+
 #include "libavfilter/avfilter.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/framesync.h"
-#include "libavfilter/internal.h"
 #include "libavfilter/opencl.h"
 #include "libavfilter/opencl_source.h"
 #include "libavfilter/video.h"
@@ -309,11 +310,12 @@ static const AVFilterPad overlay_opencl_outputs[] = {
     },
 };
 
-const AVFilter ff_vf_overlay_opencl = {
-    .name            = "overlay_opencl",
-    .description     = NULL_IF_CONFIG_SMALL("Overlay one video on top of another"),
+const FFFilter ff_vf_overlay_opencl = {
+    .p.name          = "overlay_opencl",
+    .p.description   = NULL_IF_CONFIG_SMALL("Overlay one video on top of another"),
+    .p.priv_class    = &overlay_opencl_class,
+    .p.flags         = AVFILTER_FLAG_HWDEVICE,
     .priv_size       = sizeof(OverlayOpenCLContext),
-    .priv_class      = &overlay_opencl_class,
     .init            = &overlay_opencl_init,
     .uninit          = &overlay_opencl_uninit,
     .activate        = &overlay_opencl_activate,
@@ -321,5 +323,4 @@ const AVFilter ff_vf_overlay_opencl = {
     FILTER_OUTPUTS(overlay_opencl_outputs),
     FILTER_SINGLE_PIXFMT(AV_PIX_FMT_OPENCL),
     .flags_internal  = FF_FILTER_FLAG_HWFRAME_AWARE,
-    .flags          = AVFILTER_FLAG_HWDEVICE,
 };

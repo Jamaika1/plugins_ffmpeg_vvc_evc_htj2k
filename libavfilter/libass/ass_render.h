@@ -98,7 +98,7 @@ typedef enum {
 // describes a combined bitmap
 typedef struct {
     FilterDesc filter;
-    uint32_t c[4];              // colors
+    uint32_t c[4];              // colors (with fade applied)
     Effect effect_type;
 
     // during render_and_combine_glyphs: distance in subpixels from the karaoke origin.
@@ -143,7 +143,6 @@ typedef struct glyph_info {
     char linebreak;             // the first (leading) glyph of some line ?
     bool starts_new_run;
     uint32_t c[4];              // colors
-    uint8_t a_pre_fade[4];      // alpha values before applying fades
     ASS_Vector advance;         // 26.6
     ASS_Vector cluster_advance;
     Effect effect_type;
@@ -210,7 +209,7 @@ typedef struct {
 // Values like current font face, color, screen position, clipping and so on are stored here.
 struct render_context {
     ASS_Renderer *renderer;
-    TextInfo *text_info;
+    TextInfo text_info;
     ASS_Shaper *shaper;
     RasterizerData rasterizer;
 
@@ -303,6 +302,7 @@ typedef struct {
     Cache *outline_cache;
     Cache *bitmap_cache;
     Cache *composite_cache;
+    Cache *face_size_metrics_cache;
     Cache *metrics_cache;
     size_t glyph_max;
     size_t bitmap_max_size;
@@ -334,7 +334,6 @@ struct ass_renderer {
     double par_scale_x;        // x scale applied to all glyphs to preserve text aspect ratio
 
     RenderContext state;
-    TextInfo text_info;
     CacheStore cache;
 
     BitmapEngine engine;

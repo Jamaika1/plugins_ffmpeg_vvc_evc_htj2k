@@ -20,7 +20,7 @@
 
 #include "libavutil/internal.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 
 static int null_filter_frame(AVFilterLink *link, AVFrame *frame)
 {
@@ -36,10 +36,10 @@ static const AVFilterPad avfilter_asink_anullsink_inputs[] = {
     },
 };
 
-const AVFilter ff_asink_anullsink = {
-    .name        = "anullsink",
-    .description = NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input audio."),
+const FFFilter ff_asink_anullsink = {
+    .p.name        = "anullsink",
+    .p.description = NULL_IF_CONFIG_SMALL("Do absolutely nothing with the input audio."),
+    .p.outputs     = NULL,
     .priv_size   = 0,
     FILTER_INPUTS(avfilter_asink_anullsink_inputs),
-    .outputs     = NULL,
 };

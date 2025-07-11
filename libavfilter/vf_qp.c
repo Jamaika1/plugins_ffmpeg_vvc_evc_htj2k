@@ -23,7 +23,7 @@
 #include "libavutil/opt.h"
 #include "libavutil/video_enc_params.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/video.h"
 
 typedef struct QPContext {
@@ -180,13 +180,13 @@ static const AVFilterPad qp_inputs[] = {
     },
 };
 
-const AVFilter ff_vf_qp = {
-    .name          = "qp",
-    .description   = NULL_IF_CONFIG_SMALL("Change video quantization parameters."),
+const FFFilter ff_vf_qp = {
+    .p.name        = "qp",
+    .p.description = NULL_IF_CONFIG_SMALL("Change video quantization parameters."),
+    .p.priv_class  = &qp_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL |
+                     AVFILTER_FLAG_METADATA_ONLY,
     .priv_size     = sizeof(QPContext),
     FILTER_INPUTS(qp_inputs),
     FILTER_OUTPUTS(ff_video_default_filterpad),
-    .priv_class    = &qp_class,
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_INTERNAL |
-                     AVFILTER_FLAG_METADATA_ONLY,
 };

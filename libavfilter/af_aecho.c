@@ -20,12 +20,12 @@
 
 #include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavutil/samplefmt.h"
 #include "libavfilter/avfilter.h"
 #include "libavfilter/audio.h"
 #include "libavfilter/filters.h"
-#include "libavfilter/internal.h"
 
 typedef struct AudioEchoContext {
     const AVClass *class;
@@ -336,11 +336,11 @@ static const AVFilterPad aecho_outputs[] = {
     },
 };
 
-const AVFilter ff_af_aecho = {
-    .name          = "aecho",
-    .description   = NULL_IF_CONFIG_SMALL("Add echoing to the audio."),
+const FFFilter ff_af_aecho = {
+    .p.name        = "aecho",
+    .p.description = NULL_IF_CONFIG_SMALL("Add echoing to the audio."),
+    .p.priv_class  = &aecho_class,
     .priv_size     = sizeof(AudioEchoContext),
-    .priv_class    = &aecho_class,
     .init          = init,
     .activate      = activate,
     .uninit        = uninit,

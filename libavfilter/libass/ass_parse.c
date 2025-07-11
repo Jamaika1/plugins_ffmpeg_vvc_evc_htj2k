@@ -111,7 +111,6 @@ void ass_update_font(RenderContext *state)
         val = 0;                // normal
     desc.italic = val;
 
-    ass_cache_dec_ref(state->font);
     state->font = ass_font_new(state->renderer, &desc);
 }
 
@@ -333,8 +332,11 @@ char *ass_parse_tags(RenderContext *state, char *p, char *end, double pwr,
                     // be either a backslash-argument or simply the last argument.
                     if (*r == '\\') {
                         has_backslash_arg = true;
-                        while (*r != ')' && r != end)
-                            ++r;
+                        char *paren = memchr(r, ')', end - r);
+                        if (paren)
+                            r = paren;
+                        else
+                            r = end;
                     }
                     push_arg(args, &nargs, q, r);
                     q = r;
@@ -1022,7 +1024,7 @@ void ass_apply_transition_effects(RenderContext *state)
  */
 void ass_process_karaoke_effects(RenderContext *state)
 {
-    TextInfo *text_info = state->text_info;
+    TextInfo *text_info = &state->text_info;
     long long tm_current = state->renderer->time - state->event->Start;
 
     int32_t timing = 0, skip_timing = 0;
@@ -1094,7 +1096,7 @@ void ass_process_karaoke_effects(RenderContext *state)
                     info->c[1] = tmp;
                 }
             }
-            x = x_start + lrint((x_end - x_start) * dt);
+            x = x_start + ass_lrint((x_end - x_start) * dt);
         }
 
         for (GlyphInfo *info = start; info < end; info++) {

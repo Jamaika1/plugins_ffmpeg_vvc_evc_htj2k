@@ -27,6 +27,7 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_OUTLINE_H
 #include FT_TRUETYPE_IDS_H
+#include FT_TYPE1_TABLES_H
 #include <limits.h>
 
 #include "ass.h"
@@ -61,7 +62,7 @@ static inline uint32_t pack_mbcs_bytes(const char *bytes, size_t length)
  * We don't exclude Cygwin for Windows since we use WideCharToMultiByte only,
  * this shall not violate any Cygwin restrictions on Windows APIs.
  */
-#if defined(_WIN32)
+/*#if defined(_WIN32)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -113,9 +114,10 @@ static uint32_t convert_unicode_to_mb(FT_Encoding encoding, uint32_t codepoint)
         return 0;
 
     return pack_mbcs_bytes(output_buffer, output_length);
-}
-#elif defined(CONFIG_ICONV)
+}*/
+#if defined(CONFIG_ICONV)
 
+//#include "../../libavcodec/librsvg/glib/win_iconv.c"
 #include <iconv.h>
 
 static uint32_t convert_unicode_to_mb(FT_Encoding encoding, uint32_t codepoint)
@@ -199,23 +201,35 @@ static uint32_t convert_unicode_to_mb(FT_Encoding encoding, uint32_t codepoint) 
 void ass_charmap_magic(ASS_Library *library, FT_Face face)
 {
     int i;
-    int ms_cmap = -1;
+    int ms_cmap = -1, ms_unicode_cmap = -1;
 
     // Search for a Microsoft Unicode cmap
     for (i = 0; i < face->num_charmaps; ++i) {
         FT_CharMap cmap = face->charmaps[i];
         unsigned pid = cmap->platform_id;
         unsigned eid = cmap->encoding_id;
-        if (pid == 3 /*microsoft */
-            && (eid == 1 /*unicode bmp */
-                || eid == 10 /*full unicode */ )) {
-            FT_Set_Charmap(face, cmap);
-            return;
-        } else if (pid == 3 && ms_cmap < 0)
-            ms_cmap = i;
+        if (pid == TT_PLATFORM_MICROSOFT) {
+            switch (eid) {
+            case TT_MS_ID_UCS_4:
+                // Full Unicode cmap: select this immediately
+                FT_Set_Charmap(face, cmap);
+                return;
+            case TT_MS_ID_UNICODE_CS:
+                // BMP-only Unicode cmap: select this
+                // if no fuller Unicode cmap exists
+                if (ms_unicode_cmap < 0)
+                    ms_unicode_cmap = ms_cmap = i;
+                break;
+            default:
+                // Non-Unicode cmap: select this if no Unicode cmap exists
+                if (ms_cmap < 0)
+                    ms_cmap = i;
+            }
+        }
     }
 
-    // Try the first Microsoft cmap if no Microsoft Unicode cmap was found
+    // Try the first Microsoft BMP cmap if no MS cmap had full Unicode,
+    // or the first MS cmap of any kind if none of them had Unicode at all
     if (ms_cmap >= 0) {
         FT_CharMap cmap = face->charmaps[ms_cmap];
         FT_Set_Charmap(face, cmap);
@@ -412,6 +426,7 @@ static int add_face(ASS_FontSelector *fontsel, ASS_Font *font, uint32_t ch)
     int i, index, uid;
     ASS_FontStream stream = { NULL, NULL };
     FT_Face face;
+    int ret = -1;
 
     if (font->n_faces == ASS_FONT_MAX_FACES)
         return -1;
@@ -445,9 +460,16 @@ static int add_face(ASS_FontSelector *fontsel, ASS_Font *font, uint32_t ch)
     set_font_metrics(face);
 
     font->faces[font->n_faces] = face;
-    font->faces_uid[font->n_faces++] = uid;
-    ass_face_set_size(face, font->size);
-    return font->n_faces - 1;
+    font->faces_uid[font->n_faces] = uid;
+    if (!ass_create_hb_font(font, font->n_faces)) {
+        FT_Done_Face(face);
+        goto fail;
+    }
+
+    ret = font->n_faces++;
+
+fail:
+    return ret;
 }
 
 /**
@@ -460,7 +482,6 @@ ASS_Font *ass_font_new(ASS_Renderer *render_priv, ASS_FontDesc *desc)
         return NULL;
     if (font->library)
         return font;
-    ass_cache_dec_ref(font);
     return NULL;
 }
 
@@ -472,14 +493,11 @@ size_t ass_font_construct(void *key, void *value, void *priv)
 
     font->library = render_priv->library;
     font->ftlibrary = render_priv->ftlibrary;
-    font->shaper_priv = NULL;
     font->n_faces = 0;
     font->desc.family = desc->family;
     font->desc.bold = desc->bold;
     font->desc.italic = desc->italic;
     font->desc.vertical = desc->vertical;
-
-    font->size = 0.;
 
     int error = add_face(render_priv->fontselect, font, 0);
     if (error == -1)
@@ -496,6 +514,12 @@ void ass_face_set_size(FT_Face face, double size)
     rq.height = double_to_d6(size);
     rq.horiResolution = rq.vertResolution = 0;
     FT_Request_Size(face, &rq);
+}
+
+bool ass_face_is_postscript(FT_Face face)
+{
+    PS_FontInfoRec postscript_info;
+    return !FT_Get_PS_Font_Info(face, &postscript_info);
 }
 
 /**
@@ -531,6 +555,29 @@ int ass_face_get_weight(FT_Face face)
     }
 }
 
+static FT_Long fsSelection_to_style_flags(uint16_t fsSelection)
+{
+    FT_Long ret = 0;
+
+    if (fsSelection & 1)
+        ret |= FT_STYLE_FLAG_ITALIC;
+    if (fsSelection & (1 << 5))
+        ret |= FT_STYLE_FLAG_BOLD;
+
+    return ret;
+}
+
+FT_Long ass_face_get_style_flags(FT_Face face)
+{
+    // If we have an OS/2 table, compute this ourselves, since FreeType
+    // will mix in some flags that GDI ignores.
+    TT_OS2 *os2 = FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
+    if (os2)
+        return fsSelection_to_style_flags(os2->fsSelection);
+
+    return face->style_flags;
+}
+
 /**
  * \brief Get maximal font ascender and descender.
  **/
@@ -562,16 +609,18 @@ static void ass_glyph_embolden(FT_GlyphSlot slot)
 /**
  * Slightly italicize a glyph
  */
-static void ass_glyph_italicize(FT_GlyphSlot slot)
+static void ass_glyph_italicize(FT_Face face)
 {
     FT_Matrix xfrm = {
         .xx = 0x10000L,
         .yx = 0x00000L,
-        .xy = 0x05700L,
+        .xy = ass_face_is_postscript(face)
+            ? 0x02d24L /* tan(10 deg) */
+            : 0x05700L /* matches GDI; effectively tan(18.77 deg) */,
         .yy = 0x10000L,
     };
 
-    FT_Outline_Transform(&slot->outline, &xfrm);
+    FT_Outline_Transform(&face->glyph->outline, &xfrm);
 }
 
 /**
@@ -676,9 +725,12 @@ bool ass_font_get_glyph(ASS_Font *font, int face_index, int index,
                 index);
         return false;
     }
-    if (!(face->style_flags & FT_STYLE_FLAG_ITALIC) && (font->desc.italic > 55))
-        ass_glyph_italicize(face->glyph);
-    if (font->desc.bold > ass_face_get_weight(face) + 150)
+
+    FT_Long style_flags = ass_face_get_style_flags(face);
+    if (!(style_flags & FT_STYLE_FLAG_ITALIC) && (font->desc.italic > 55))
+        ass_glyph_italicize(face);
+    if (!(style_flags & FT_STYLE_FLAG_BOLD) &&
+        font->desc.bold > ass_face_get_weight(face) + 150)
         ass_glyph_embolden(face->glyph);
     return true;
 }
@@ -689,11 +741,11 @@ bool ass_font_get_glyph(ASS_Font *font, int face_index, int index,
 void ass_font_clear(ASS_Font *font)
 {
     int i;
-    if (font->shaper_priv)
-        ass_shaper_font_data_free(font->shaper_priv);
     for (i = 0; i < font->n_faces; ++i) {
         if (font->faces[i])
             FT_Done_Face(font->faces[i]);
+        if (font->hb_fonts[i])
+            hb_font_destroy(font->hb_fonts[i]);
     }
     free((char *) font->desc.family.str);
 }

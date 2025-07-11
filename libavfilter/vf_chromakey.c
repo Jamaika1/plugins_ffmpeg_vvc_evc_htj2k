@@ -22,7 +22,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 
 typedef struct ChromakeyContext {
     const AVClass *class;
@@ -323,7 +323,7 @@ static int process_command(AVFilterContext *ctx, const char *cmd, const char *ar
     return config_output(ctx->outputs[0]);
 }
 
-static const AVFilterPad chromakey_inputs[] = {
+static const AVFilterPad inputs[] = {
     {
         .name           = "default",
         .type           = AVMEDIA_TYPE_VIDEO,
@@ -333,7 +333,7 @@ static const AVFilterPad chromakey_inputs[] = {
     },
 };
 
-static const AVFilterPad chromakey_outputs[] = {
+static const AVFilterPad outputs[] = {
     {
         .name           = "default",
         .type           = AVMEDIA_TYPE_VIDEO,
@@ -365,15 +365,15 @@ static const enum AVPixelFormat chromakey_fmts[] = {
 
 AVFILTER_DEFINE_CLASS(chromakey);
 
-const AVFilter ff_vf_chromakey = {
-    .name          = "chromakey",
-    .description   = NULL_IF_CONFIG_SMALL("Turns a certain color into transparency. Operates on YUV colors."),
+const FFFilter ff_vf_chromakey = {
+    .p.name        = "chromakey",
+    .p.description = NULL_IF_CONFIG_SMALL("Turns a certain color into transparency. Operates on YUV colors."),
+    .p.priv_class  = &chromakey_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(ChromakeyContext),
-    .priv_class    = &chromakey_class,
-    FILTER_INPUTS(chromakey_inputs),
-    FILTER_OUTPUTS(chromakey_outputs),
+    FILTER_INPUTS(inputs),
+    FILTER_OUTPUTS(outputs),
     FILTER_PIXFMTS_ARRAY(chromakey_fmts),
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = process_command,
 };
 
@@ -383,24 +383,6 @@ static const AVOption chromahold_options[] = {
     { "blend", "set the chromahold blend value", OFFSET(blend), AV_OPT_TYPE_FLOAT, { .dbl = 0.0 }, 0.0, 1.0, FLAGS },
     { "yuv", "color parameter is in yuv instead of rgb", OFFSET(is_yuv), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, FLAGS },
     { NULL }
-};
-
-static const AVFilterPad chromahold_inputs[] = {
-    {
-        .name           = "default",
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .flags          = AVFILTERPAD_FLAG_NEEDS_WRITABLE,
-        .filter_frame   = filter_frame,
-        .config_props   = config_input,
-    },
-};
-
-static const AVFilterPad chromahold_outputs[] = {
-    {
-        .name           = "default",
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .config_props   = config_output,
-    },
 };
 
 static const enum AVPixelFormat hold_pixel_fmts[] = {
@@ -424,14 +406,14 @@ static const enum AVPixelFormat hold_pixel_fmts[] = {
 
 AVFILTER_DEFINE_CLASS(chromahold);
 
-const AVFilter ff_vf_chromahold = {
-    .name          = "chromahold",
-    .description   = NULL_IF_CONFIG_SMALL("Turns a certain color range into gray."),
+const FFFilter ff_vf_chromahold = {
+    .p.name        = "chromahold",
+    .p.description = NULL_IF_CONFIG_SMALL("Turns a certain color range into gray."),
+    .p.priv_class  = &chromahold_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(ChromakeyContext),
-    .priv_class    = &chromahold_class,
-    FILTER_INPUTS(chromahold_inputs),
-    FILTER_OUTPUTS(chromahold_outputs),
+    FILTER_INPUTS(inputs),
+    FILTER_OUTPUTS(outputs),
     FILTER_PIXFMTS_ARRAY(hold_pixel_fmts),
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = process_command,
 };

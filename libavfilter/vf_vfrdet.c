@@ -20,7 +20,7 @@
 
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/video.h"
 
 typedef struct VFRDETContext {
@@ -96,13 +96,13 @@ static const AVFilterPad vfrdet_inputs[] = {
     },
 };
 
-const AVFilter ff_vf_vfrdet = {
-    .name        = "vfrdet",
-    .description = NULL_IF_CONFIG_SMALL("Variable frame rate detect filter."),
+const FFFilter ff_vf_vfrdet = {
+    .p.name        = "vfrdet",
+    .p.description = NULL_IF_CONFIG_SMALL("Variable frame rate detect filter."),
+    .p.flags       = AVFILTER_FLAG_METADATA_ONLY,
     .priv_size   = sizeof(VFRDETContext),
     .init        = init,
     .uninit      = uninit,
-    .flags       = AVFILTER_FLAG_METADATA_ONLY,
     FILTER_INPUTS(vfrdet_inputs),
     FILTER_OUTPUTS(ff_video_default_filterpad),
 };

@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "../../libavcodec/librsvg/fontconfig/fontconfig.h"
-#include "../../libavcodec/librsvg/fontconfig/fcfreetype.h"
+#include "fontconfig/fontconfig.h"
+#include "fontconfig/fcfreetype.h"
 
 #include "ass_fontconfig.h"
 #include "ass_fontselect.h"
@@ -71,6 +71,11 @@ static bool check_glyph(void *priv, uint32_t code)
     return false;
 }
 
+static void destroy_font(void *priv)
+{
+    FcPatternDestroy((FcPattern *) priv);
+}
+
 static void destroy(void *priv)
 {
     ProviderPrivate *fc = (ProviderPrivate *)priv;
@@ -83,14 +88,28 @@ static void destroy(void *priv)
     free(fc);
 }
 
-static void scan_fonts(FcConfig *config, ASS_FontProvider *provider)
+static bool scan_fonts(FcConfig *config, ASS_FontProvider *provider)
 {
     int i;
     FcFontSet *fonts;
     ASS_FontProviderMetaData meta = {0};
 
-    // get list of fonts
-    fonts = FcConfigGetFonts(config, FcSetSystem);
+    // get list of fonts;
+    // sorting by default pattern prefers regular variants
+    FcPattern *pat = FcPatternCreate();
+    if (!pat)
+        return false;
+
+    FcDefaultSubstitute(pat);
+    FcResult res;
+    // trim=FcFalse returns all system fonts
+    fonts = FcFontSort(config, pat, FcFalse, NULL, &res);
+    FcPatternDestroy(pat);
+    if (res != FcResultMatch) {
+        if (fonts)
+            FcFontSetDestroy(fonts);
+        return false;
+    }
 
     // fill font_info list
     for (i = 0; i < fonts->nfont; i++) {
@@ -98,6 +117,7 @@ static void scan_fonts(FcConfig *config, ASS_FontProvider *provider)
         FcBool outline;
         int index;
         double weight;
+        int slant;
         char *path;
         char *fullnames[MAX_NAME];
         char *families[MAX_NAME];
@@ -108,8 +128,7 @@ static void scan_fonts(FcConfig *config, ASS_FontProvider *provider)
             continue;
 
         // simple types
-        result  = FcPatternGetInteger(pat, FC_SLANT, 0, &meta.slant);
-        result |= FcPatternGetInteger(pat, FC_WIDTH, 0, &meta.width);
+        result  = FcPatternGetInteger(pat, FC_SLANT, 0, &slant);
         result |= FcPatternGetDouble(pat, FC_WEIGHT, 0, &weight);
         result |= FcPatternGetInteger(pat, FC_INDEX, 0, &index);
         if (result != FcResultMatch)
@@ -159,6 +178,9 @@ static void scan_fonts(FcConfig *config, ASS_FontProvider *provider)
             meta.weight = 1000;
 #endif
 
+        // Take a guess at the italic flag
+        meta.style_flags = (slant >= FC_SLANT_ITALIC) ? FT_STYLE_FLAG_ITALIC : 0;
+
         // path
         result = FcPatternGetString(pat, FC_FILE, 0, (FcChar8 **)&path);
         if (result != FcResultMatch)
@@ -186,8 +208,12 @@ static void scan_fonts(FcConfig *config, ASS_FontProvider *provider)
         if (result != FcResultMatch)
             meta.postscript_name = NULL;
 
+        FcPatternReference(pat);
         ass_font_provider_add_font(provider, &meta, path, index, (void *)pat);
     }
+
+    FcFontSetDestroy(fonts);
+    return true;
 }
 
 static void cache_fallbacks(ProviderPrivate *fc)
@@ -199,6 +225,8 @@ static void cache_fallbacks(ProviderPrivate *fc)
 
     // Create a suitable pattern
     FcPattern *pat = FcPatternCreate();
+    if (!pat)
+        return;
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     FcPatternAddBool(pat, FC_OUTLINE, FcTrue);
     FcConfigSubstitute (fc->config, pat, FcMatchPattern);
@@ -214,8 +242,12 @@ static void cache_fallbacks(ProviderPrivate *fc)
             &result);
 
     // If this fails, just add an empty set
-    if (result != FcResultMatch)
+    // (if it fails, cache_fallbacks will just be reattempted later)
+    if (result != FcResultMatch) {
+        if (fc->fallbacks)
+            FcFontSetDestroy(fc->fallbacks);
         fc->fallbacks = FcFontSetCreate();
+    }
 
     FcPatternDestroy(pat);
 }
@@ -311,6 +343,7 @@ cleanup:
 static ASS_FontProviderFuncs fontconfig_callbacks = {
     .check_postscript   = check_postscript,
     .check_glyph        = check_glyph,
+    .destroy_font       = destroy_font,
     .destroy_provider   = destroy,
     .get_substitutions  = get_substitutions,
     .get_fallback       = get_fallback,
@@ -320,7 +353,7 @@ ASS_FontProvider *
 ass_fontconfig_add_provider(ASS_Library *lib, ASS_FontSelector *selector,
                             const char *config, FT_Library ftlib)
 {
-    int rc;
+    int rc = FcResultNoMatch;
     ProviderPrivate *fc = NULL;
     ASS_FontProvider *provider = NULL;
 
@@ -330,18 +363,21 @@ ass_fontconfig_add_provider(ASS_Library *lib, ASS_FontSelector *selector,
 
     // build and load fontconfig configuration
     fc->config = FcConfigCreate();
-    rc = FcConfigParseAndLoad(fc->config, (unsigned char *) config, FcTrue);
+
+    if (fc->config)
+        rc = FcConfigParseAndLoad(fc->config, (unsigned char *) config, FcTrue);
     if (!rc) {
         ass_msg(lib, MSGL_WARN, "No usable fontconfig configuration "
                 "file found, using fallback.");
         FcConfigDestroy(fc->config);
         fc->config = FcInitLoadConfig();
     }
+
     if (fc->config)
         rc = FcConfigBuildFonts(fc->config);
 
     if (!rc || !fc->config) {
-        ass_msg(lib, MSGL_FATAL,
+        ass_msg(lib, MSGL_ERR,
                 "No valid fontconfig configuration found!");
         FcConfigDestroy(fc->config);
         free(fc);
@@ -352,7 +388,8 @@ ass_fontconfig_add_provider(ASS_Library *lib, ASS_FontSelector *selector,
     provider = ass_font_provider_new(selector, &fontconfig_callbacks, fc);
 
     // build database from system fonts
-    scan_fonts(fc->config, provider);
+    if (!scan_fonts(fc->config, provider))
+        ass_msg(lib, MSGL_ERR, "Failed to load fontconfig fonts!");
 
     return provider;
 }

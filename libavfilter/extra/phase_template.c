@@ -20,7 +20,6 @@
 
 #include "libavutil/avassert.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
 #include "libavfilter/video.h"
 
 #undef pixel

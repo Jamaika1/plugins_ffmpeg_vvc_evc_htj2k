@@ -24,13 +24,12 @@
  * Rich Felker.
  */
 
-#include "libavutil/emms.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/pixelutils.h"
 #include "libavutil/timestamp.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/video.h"
 
 typedef struct DecimateContext {
@@ -142,13 +141,10 @@ static int decimate_frame(AVFilterContext *ctx,
                         cur->data[plane], cur->linesize[plane],
                         ref->data[plane], ref->linesize[plane],
                         AV_CEIL_RSHIFT(ref->width,  hsub),
-                        AV_CEIL_RSHIFT(ref->height, vsub))) {
-            emms_c();
+                        AV_CEIL_RSHIFT(ref->height, vsub)))
             return 0;
-        }
     }
 
-    emms_c();
     return 1;
 }
 
@@ -241,13 +237,13 @@ static const AVFilterPad mpdecimate_inputs[] = {
     },
 };
 
-const AVFilter ff_vf_mpdecimate = {
-    .name          = "mpdecimate",
-    .description   = NULL_IF_CONFIG_SMALL("Remove near-duplicate frames."),
+const FFFilter ff_vf_mpdecimate = {
+    .p.name        = "mpdecimate",
+    .p.description = NULL_IF_CONFIG_SMALL("Remove near-duplicate frames."),
+    .p.priv_class  = &mpdecimate_class,
     .init          = init,
     .uninit        = uninit,
     .priv_size     = sizeof(DecimateContext),
-    .priv_class    = &mpdecimate_class,
     FILTER_INPUTS(mpdecimate_inputs),
     FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pix_fmts),

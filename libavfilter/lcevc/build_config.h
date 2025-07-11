@@ -1,0 +1,403 @@
+/* Copyright (c) V-Nova International Limited 2022-2025. All rights reserved.
+ * This software is licensed under the BSD-3-Clause-Clear License by V-Nova Limited.
+ * No patent licenses are granted under this license. For enquiries about patent licenses,
+ * please contact legal@v-nova.com.
+ * The LCEVCdec software is a stand-alone project and is NOT A CONTRIBUTION to any other project.
+ * If the software is incorporated into another project, THE TERMS OF THE BSD-3-CLAUSE-CLEAR LICENSE
+ * AND THE ADDITIONAL LICENSING INFORMATION CONTAINED IN THIS FILE MUST BE MAINTAINED, AND THE
+ * SOFTWARE DOES NOT AND MUST NOT ADOPT THE LICENSE OF THE INCORPORATING PROJECT. However, the
+ * software may be incorporated into a project under a compatible license provided the requirements
+ * of the BSD-3-Clause-Clear license are respected, and V-Nova Limited remains
+ * licensor of the software ONLY UNDER the BSD-3-Clause-Clear license (not the compatible license).
+ * ANY ONWARD DISTRIBUTION, WHETHER STAND-ALONE OR AS PART OF ANY OTHER PROJECT, REMAINS SUBJECT TO
+ * THE EXCLUSION OF PATENT LICENSES PROVISION OF THE BSD-3-CLAUSE-CLEAR LICENSE. */
+
+#ifndef VN_BUILD_CONFIG_H
+#define VN_BUILD_CONFIG_H
+
+/*
+    Use the below macros for compile time testing for conditional code compilation
+
+    ----------------------------------------------------------------------------
+
+    VN_OS:                  Target OS testing
+    VN_ARCH:                Target architecture testing
+    VN_COMPILER:            Host compiler testing
+    VN_CONFIG:              Build configuration testing
+    VN_SDK_FEATURE:         General SDK feature testing
+    VN_SDK_PIPELINE:        SDK pipeline toggles
+    VN_CORE_FEATURE:        Legacy core codec specific feature testing
+
+    ----------------------------------------------------------------------------
+
+    Available `VN_OS` values:
+        LINUX
+        WINDOWS
+        ANDROID
+        IOS
+        TVOS
+        MACOS
+        APPLE - Set for any Apple target
+        BROWSER
+
+    Available `VN_ARCH` values:
+        X86
+        X64
+        ARM64
+        ARM7A
+        ARM    - Set for any ARM target
+        MIPS
+        RISCV
+        WASM
+
+    Available `VN_COMPILER` values:
+        CLANG
+        GCC
+        MSVC
+
+    Available `VN_CONFIG` values:
+        DEBUG
+        RELEASE
+
+    Available `VN_SDK_FEATURE` values:
+        BASE_DECODER
+        TRACING
+        METRICS
+        DIAGNOSTICS_ASYNC
+        THREADS_CUSTOM
+        MAXIMUM_LOG_LEVEL
+        BUILD_DETAILS
+
+    Available `VN_SDK_PIPELINE` values:
+        CPU
+        VULKAN
+        LEGACY
+
+    Available `VN_CORE_FEATURE` values:
+        DEBUG_SYNTAX
+        FORCE_OVERLAY
+        SIMD
+        SSE
+        AVX2
+        NEON
+        THREADING
+        PTHREADS
+        WINTHREADS
+        EMSCRIPTEN_TRACING
+        EMSCRIPTEN_PTHREADS
+
+    ----------------------------------------------------------------------------
+
+    Usage:
+
+        #if VN_OS(WINDOWS)
+            // Windows specifics
+        #elif VN_OS(LINUX)
+            // Linux specifics
+        #endif
+
+        #if VN_ARCH(X64)
+            // x64 specifics
+        #else
+            // Other
+        #endif
+
+        #if VN_COMPILER(MSVC)
+            // MSVC specifics
+        #endif
+
+        #if VN_VARIANT(DEBUG)
+            // Debug build only functionality
+        #endif
+
+        #if VN_CORE_FEATURE(SSE)
+            // SSE specifics
+        #endif
+
+
+    ----------------------------------------------------------------------------
+
+    Note, it is recommended to avoid using negatives to check conditionally enabled
+    functionality.
+
+    e.g. Do not do:
+
+        if !VN_OS(WINDOWS)
+            // None-Windows feature
+        #endif
+
+    There are a couple issues with this:
+        * Will lead to more complex logic as more OSs are brought up that may wish
+          to exclude the functionality.
+
+        * Since there will be code that has functionality enablement by both inclusivity
+          AND exclusivity it becomes much more difficult to reason about what is enabled
+          and when - e.g. one can search for all places where VN_OS(LINUX) is used, but
+          they are unable to search for all the places where it is omitted to find where
+          code is enabled for Linux.
+
+    The above example should be written as:
+
+        #if VN_OS(LINUX) || VN_OS(ANDROID) || ...
+            // ...
+        #endif
+
+    If that becomes verbose/long or is required in multiple places there are a couple options:
+
+    1.  New feature flag - it may be desirable to just have a new feature flag declared
+        within this file. e.g.
+
+        #define VN_CORE_FEATURE_PRIVATE_DEF_MY_FEATURE() (VN_OS(LINUX) || VN_OS(ANDROID) || ...)
+
+        And then use it like a normal feature throughout the codebase.
+
+        #if VN_CORE_FEATURE(MY_FEATURE)
+            // ...
+        #endif()
+
+    2.  Local macro - if its not really a feature and doesn't need to cross translation units
+        then a local macro will be sufficient:
+
+        #define MY_FEATURE() (VN_OS(LINUX) || VN_OS(ANDROID) || ...)
+
+        #if MY_FEATURE()
+            // ...
+        #endif
+
+    ----------------------------------------------------------------------------
+*/
+
+/* clang-format off */
+
+/* CMake uses words for substitution flags. */
+#define VN_ON 1
+#define VN_OFF 0
+
+#define VN_True 1
+#define VN_true 1
+#define VN_TRUE 1
+#define VN_1 1
+
+/* Turn private cmake definitions into public macros */
+#define VN_OS(x)                    VN_OS_PRIVATE_DEF_##x()
+#define VN_ARCH(x)                  VN_ARCH_PRIVATE_DEF_##x()
+#define VN_COMPILER(x)              VN_COMPILER_PRIVATE_DEF_##x()
+#define VN_VARIANT(x)               VN_VARIANT_PRIVATE_DEF_##x()
+#define VN_SDK_FEATURE(x)           VN_SDK_FEATURE_PRIVATE_DEF_##x()
+#define VN_SDK_PIPELINE(x)          VN_SDK_PIPELINE_PRIVATE_DEF_##x()
+#define VN_CORE_FEATURE(x)          VN_CORE_FEATURE_PRIVATE_DEF_##x()
+
+/* Universal utility macro */
+#define VN_UNUSED(x) (void)(x)
+
+/* OS values */
+#if defined(__linux__) && !defined(__ANDROID__)
+#define VN_OS_PRIVATE_DEF_LINUX()   1
+#else
+#define VN_OS_PRIVATE_DEF_LINUX()   0
+#endif
+
+#if defined(_WIN32)
+#define VN_OS_PRIVATE_DEF_WINDOWS() 1
+#else
+#define VN_OS_PRIVATE_DEF_WINDOWS() 0
+#endif
+
+#if defined(__ANDROID__)
+#define VN_OS_PRIVATE_DEF_ANDROID() 1
+#else
+#define VN_OS_PRIVATE_DEF_ANDROID() 0
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+
+#define VN_OS_PRIVATE_DEF_APPLE() 1
+#if __is_target_os(ios)
+    #define VN_OS_PRIVATE_DEF_IOS() 1
+#else
+    #define VN_OS_PRIVATE_DEF_IOS() 0
+#endif
+
+#if __is_target_os(tvos)
+    #define VN_OS_PRIVATE_DEF_TVOS() 1
+#else
+    #define VN_OS_PRIVATE_DEF_TVOS() 0
+#endif
+
+#if __is_target_os(macos)
+    #define VN_OS_PRIVATE_DEF_MACOS() 1
+#else
+    #define VN_OS_PRIVATE_DEF_MACOS() 0
+#endif
+#else
+#define VN_OS_PRIVATE_DEF_APPLE() 0
+#define VN_OS_PRIVATE_DEF_TVOS()  0
+#define VN_OS_PRIVATE_DEF_IOS()   0
+#define VN_OS_PRIVATE_DEF_MACOS() 0
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#define VN_OS_PRIVATE_DEF_BROWSER() 1
+#else
+#define VN_OS_PRIVATE_DEF_BROWSER() 0
+#endif
+
+/* Arch values */
+#if defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#define VN_ARCH_PRIVATE_DEF_X86() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_X86() 0
+#endif
+
+#if defined(__x86_64__) || defined(_M_X64)
+#define VN_ARCH_PRIVATE_DEF_X64() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_X64() 0
+#endif
+
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define VN_ARCH_PRIVATE_DEF_ARM64() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_ARM64() 0
+#endif
+
+#if defined(__ARM_ARCH_7A__)
+#define VN_ARCH_PRIVATE_DEF_ARM7A() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_ARM7A() 0
+#endif
+
+#define VN_ARCH_PRIVATE_DEF_ARM() VN_ARCH(ARM64) || VN_ARCH(ARM7A)
+
+#if defined(_mips) || defined(__mips__) || defined(__mips)
+#define VN_ARCH_PRIVATE_DEF_MIPS() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_MIPS() 0
+#endif
+
+#if defined(_riscv) || defined(__riscv__) || defined(__riscv)
+#define VN_ARCH_PRIVATE_DEF_RISCV() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_RISCV() 0
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#define VN_ARCH_PRIVATE_DEF_WASM() 1
+#else
+#define VN_ARCH_PRIVATE_DEF_WASM() 0
+#endif
+
+/* Compiler values */
+#if defined(__clang__)
+#define VN_COMPILER_PRIVATE_DEF_CLANG() 1
+#else
+#define VN_COMPILER_PRIVATE_DEF_CLANG() 0
+#endif
+
+#if defined(__GNUC__) && !defined(__clang__)
+#define VN_COMPILER_PRIVATE_DEF_GCC() 1
+#else
+#define VN_COMPILER_PRIVATE_DEF_GCC() 0
+#endif
+
+#if defined(_MSC_VER)
+#define VN_COMPILER_PRIVATE_DEF_MSVC() 1
+#else
+#define VN_COMPILER_PRIVATE_DEF_MSVC() 0
+#endif
+
+/* Variant values */
+#define VN_VARIANT_PRIVATE_DEF_DEBUG() !NDEBUG
+#define VN_VARIANT_PRIVATE_DEF_RELEASE() NDEBUG
+
+/* Core library feature values */
+#define VN_CORE_FEATURE_PRIVATE_DEF_OVERLAY_IMAGE() 0
+#define VN_CORE_FEATURE_PRIVATE_DEF_FORCE_OVERLAY() 0
+#define VN_CORE_FEATURE_PRIVATE_DEF_SIMD() 1
+
+#if (VN_CORE_FEATURE(SIMD) && (defined(__SSE__) || _M_IX86_FP > 0 || (VN_COMPILER(MSVC) && VN_ARCH(X64))))
+#define VN_CORE_FEATURE_PRIVATE_DEF_SSE() 1
+#define VN_SDK_FEATURE_PRIVATE_DEF_SSE() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_SSE() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_SSE() 0
+#endif
+
+#if (VN_CORE_FEATURE(SIMD) && defined(__AVX2__))
+#define VN_CORE_FEATURE_PRIVATE_DEF_AVX2() 1
+#define VN_SDK_FEATURE_PRIVATE_DEF_AVX2() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_AVX2() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_AVX2() 0
+#endif
+
+#if (VN_CORE_FEATURE(SIMD) && defined(__ARM_NEON))
+#define VN_CORE_FEATURE_PRIVATE_DEF_NEON() 1
+#define VN_SDK_FEATURE_PRIVATE_DEF_NEON() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_NEON() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_NEON() 0
+#endif
+
+#if (VN_OS(BROWSER) && defined(__EMSCRIPTEN_TRACING__))
+#define VN_CORE_FEATURE_PRIVATE_DEF_EMSCRIPTEN_TRACING() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_EMSCRIPTEN_TRACING() 0
+#endif
+
+#define VN_CORE_FEATURE_PRIVATE_DEF_THREADING() 1
+
+#if (VN_OS(BROWSER) && defined(__EMSCRIPTEN_PTHREADS__))
+#define VN_CORE_FEATURE_PRIVATE_DEF_EMSCRIPTEN_PTHREADS() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_EMSCRIPTEN_PTHREADS() 0
+#endif
+
+#if (VN_CORE_FEATURE(THREADING) && (VN_OS(LINUX) || VN_OS(ANDROID) || VN_OS(IOS) || VN_OS(TVOS) || VN_OS(MACOS) || VN_CORE_FEATURE(EMSCRIPTEN_PTHREADS)))
+#define VN_CORE_FEATURE_PRIVATE_DEF_PTHREADS() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_PTHREADS() 0
+#endif
+
+#if (VN_CORE_FEATURE(THREADING) && VN_OS(WINDOWS))
+#define VN_CORE_FEATURE_PRIVATE_DEF_WINTHREADS() 1
+#else
+#define VN_CORE_FEATURE_PRIVATE_DEF_WINTHREADS() 0
+#endif
+
+/* Pipelines */
+#define VN_SDK_PIPELINE_PRIVATE_DEF_CPU() 1
+#define VN_SDK_PIPELINE_PRIVATE_DEF_LEGACY() 1
+#define VN_SDK_PIPELINE_PRIVATE_DEF_VULKAN() 1
+
+/* General SDK features */
+#define VN_SDK_FEATURE_PRIVATE_DEF_BASE_DECODER() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_TRACING() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_METRICS() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_DIAGNOSTICS_ASYNC() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_THREADS_CUSTOM() 0
+#define VN_SDK_FEATURE_PRIVATE_DEF_BUILD_DETAILS() 0
+
+/* Logging */
+#define VN_SDK_LOG_ENABLE_VERBOSE 1
+
+/* Make sure all log levels below highest are enabled */
+#ifdef VN_SDK_LOG_ENABLE_VERBOSE
+#define VN_SDK_LOG_ENABLE_DEBUG
+#endif
+#ifdef VN_SDK_LOG_ENABLE_DEBUG
+#define VN_SDK_LOG_ENABLE_INFO
+#endif
+#ifdef VN_SDK_LOG_ENABLE_INFO
+#define VN_SDK_LOG_ENABLE_WARNING
+#endif
+#ifdef VN_SDK_LOG_ENABLE_WARNING
+#define VN_SDK_LOG_ENABLE_ERROR
+#endif
+#ifdef VN_SDK_LOG_ENABLE_ERROR
+#define VN_SDK_LOG_ENABLE_FATAL
+#endif
+
+/* clang-format on */
+
+#endif /* VN_BUILD_CONFIG_H */

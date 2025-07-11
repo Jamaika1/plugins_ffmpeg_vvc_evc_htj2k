@@ -27,10 +27,11 @@
  * @see http://notbrainsurgery.livejournal.com/29773.html
  */
 
+#include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 
 #define HIST_SIZE (3*256)
 
@@ -59,10 +60,10 @@ typedef struct ThumbContext {
 
 static const AVOption thumbnail_options[] = {
     { "n", "set the frames batch size", OFFSET(n_frames), AV_OPT_TYPE_INT, {.i64=100}, 2, INT_MAX, FLAGS },
-    { "log", "force stats logging level", OFFSET(loglevel), AV_OPT_TYPE_INT, {.i64 = AV_LOG_INFO}, INT_MIN, INT_MAX, FLAGS, "level" },
-        { "quiet",   "logging disabled",          0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_QUIET},   0, 0, FLAGS, "level" },
-        { "info",    "information logging level", 0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_INFO},    0, 0, FLAGS, "level" },
-        { "verbose", "verbose logging level",     0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_VERBOSE}, 0, 0, FLAGS, "level" },
+    { "log", "force stats logging level", OFFSET(loglevel), AV_OPT_TYPE_INT, {.i64 = AV_LOG_INFO}, INT_MIN, INT_MAX, FLAGS, .unit = "level" },
+        { "quiet",   "logging disabled",          0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_QUIET},   0, 0, FLAGS, .unit = "level" },
+        { "info",    "information logging level", 0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_INFO},    0, 0, FLAGS, .unit = "level" },
+        { "verbose", "verbose logging level",     0, AV_OPT_TYPE_CONST, {.i64 = AV_LOG_VERBOSE}, 0, 0, FLAGS, .unit = "level" },
     { NULL }
 };
 
@@ -323,16 +324,16 @@ static const AVFilterPad thumbnail_outputs[] = {
     },
 };
 
-const AVFilter ff_vf_thumbnail = {
-    .name          = "thumbnail",
-    .description   = NULL_IF_CONFIG_SMALL("Select the most representative frame in a given sequence of consecutive frames."),
+const FFFilter ff_vf_thumbnail = {
+    .p.name        = "thumbnail",
+    .p.description = NULL_IF_CONFIG_SMALL("Select the most representative frame in a given sequence of consecutive frames."),
+    .p.priv_class  = &thumbnail_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC |
+                     AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(ThumbContext),
     .init          = init,
     .uninit        = uninit,
     FILTER_INPUTS(thumbnail_inputs),
     FILTER_OUTPUTS(thumbnail_outputs),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
-    .priv_class    = &thumbnail_class,
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC |
-                     AVFILTER_FLAG_SLICE_THREADS,
 };

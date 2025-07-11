@@ -29,6 +29,7 @@
 #include <inttypes.h>
 
 #ifdef CONFIG_ICONV
+//#include "../../libavcodec/librsvg/glib/win_iconv.c"
 #include <iconv.h>
 #endif
 
@@ -190,12 +191,27 @@ static int test_and_set_read_order_bit(ASS_Track *track, int id)
 {
     if (resize_read_order_bitmap(track, id) < 0)
         return -1;
-    int index = id / 32;
-    uint32_t bit = 1u << (id % 32);
+    int index = id >> 5;
+    uint32_t bit = 1u << (id & 0x1F);
     if (track->parser_priv->read_order_bitmap[index] & bit)
         return 1;
     track->parser_priv->read_order_bitmap[index] |= bit;
     return 0;
+}
+
+static inline void clear_read_order_bit(ASS_Track *track, int id)
+{
+    int index = id >> 5;
+    if (index < track->parser_priv->read_order_elems) {
+        uint32_t mask = ~(1u << (id & 0x1F));
+        track->parser_priv->read_order_bitmap[index] &= mask;
+    }
+}
+
+static inline void update_prune_ts(ASS_Track *track, const long long ts)
+{
+    if (ts < track->parser_priv->prune_next_ts)
+        track->parser_priv->prune_next_ts = ts;
 }
 
 // ==============================================================================================
@@ -784,7 +800,7 @@ static bool format_line_compare(const char *fmt1, const char *fmt2)
  * \param std   standard format line
  *
  * As of writing libass is the only renderer accepting custom format lines.
- * For years libass defaultet SBAS to yes instead of no.
+ * For years libass defaulted SBAS to yes instead of no.
  * To avoid breaking released scripts with custom format lines,
  * keep SBAS=1 default for custom format files.
  */
@@ -1015,8 +1031,10 @@ static int process_events_line(ASS_Track *track, char *str)
         event = track->events + eid;
 
         int ret = process_event_tail(track, event, str, 0);
-        if (!ret)
+        if (!ret) {
+            update_prune_ts(track, event->Start + event->Duration);
             return 0;
+        }
         // If something went wrong, discard the useless Event
         ass_free_event(track, eid);
         track->n_events--;
@@ -1222,7 +1240,7 @@ static int process_text(ASS_Track *track, char *str)
  * \param data string to parse
  * \param size length of data
 */
-void ass_process_data(ASS_Track *track, char *data, int size)
+void ass_process_data(ASS_Track *track, const char *data, int size)
 {
     char *str = malloc(size + 1);
     if (!str)
@@ -1243,7 +1261,7 @@ void ass_process_data(ASS_Track *track, char *data, int size)
  * \param size length of data
  CodecPrivate section contains [Stream Info] and [V4+ Styles] ([V4 Styles] for SSA) sections
 */
-void ass_process_codec_private(ASS_Track *track, char *data, int size)
+void ass_process_codec_private(ASS_Track *track, const char *data, int size)
 {
     ass_process_data(track, data, size);
 
@@ -1279,7 +1297,7 @@ void ass_set_check_readorder(ASS_Track *track, int check_readorder)
  * \param timecode starting time of the event (milliseconds)
  * \param duration duration of the event (milliseconds)
 */
-void ass_process_chunk(ASS_Track *track, char *data, int size,
+void ass_process_chunk(ASS_Track *track, const char *data, int size,
                        long long timecode, long long duration)
 {
     char *str = NULL;
@@ -1330,7 +1348,7 @@ void ass_process_chunk(ASS_Track *track, char *data, int size,
 
         event->Start = timecode;
         event->Duration = duration;
-
+        update_prune_ts(track, event->Start + event->Duration);
         goto cleanup;
 //              dump_events(tid);
     } while (0);
@@ -1359,6 +1377,46 @@ void ass_flush_events(ASS_Track *track)
     track->parser_priv->read_order_elems = 0;
 }
 
+void ass_configure_prune(ASS_Track *track, long long delay)
+{
+    track->parser_priv->prune_delay = delay;
+}
+
+void ass_prune_events(ASS_Track *track, long long deadline)
+{
+    if (deadline < track->parser_priv->prune_next_ts)
+        return;
+
+    const bool check_readorder = track->parser_priv->check_readorder;
+    const int old_n_events = track->n_events;
+
+    int n_kept = 0;
+    ASS_Event *events = track->events;
+
+    track->parser_priv->prune_next_ts = LLONG_MAX;
+    for (int k = 0; k < old_n_events;) {
+        // discardable sequence
+        for (; k < old_n_events && events[k].Start + events[k].Duration < deadline; k++) {
+            if (check_readorder)
+                clear_read_order_bit(track, events[k].ReadOrder);
+            ass_free_event(track, k);
+        }
+
+        // to-be-kept sequence
+        int move_from = k;
+        for (long long ts; k < old_n_events && (ts = events[k].Start + events[k].Duration) >= deadline; k++)
+            update_prune_ts(track, ts);
+
+        // Relocate kept events
+        if (move_from < k) {
+            int cnt = k - move_from;
+            memmove(events + n_kept, events + move_from, cnt * sizeof(*track->events));
+            n_kept += cnt;
+        }
+    }
+    track->n_events = n_kept;
+}
+
 #ifdef CONFIG_ICONV
 /** \brief recode buffer to utf-8
  * constraint: codepage != 0
@@ -1367,7 +1425,7 @@ void ass_flush_events(ASS_Track *track)
  * \return a pointer to recoded buffer, caller is responsible for freeing it
 **/
 static char *sub_recode(ASS_Library *library, char *data, size_t size,
-                        char *codepage)
+                        const char *codepage)
 {
     iconv_t icdsc;
     char *tocp = "UTF-8";
@@ -1535,7 +1593,7 @@ static ASS_Track *parse_memory(ASS_Library *library, char *buf)
  * \return newly allocated track
 */
 ASS_Track *ass_read_memory(ASS_Library *library, char *buf,
-                           size_t bufsize, char *codepage)
+                           size_t bufsize, const char *codepage)
 {
     ASS_Track *track;
     int copied = 0;
@@ -1571,8 +1629,8 @@ ASS_Track *ass_read_memory(ASS_Library *library, char *buf,
     return track;
 }
 
-static char *read_file_recode(ASS_Library *library, char *fname,
-                              char *codepage, size_t *size)
+static char *read_file_recode(ASS_Library *library, const char *fname,
+                              const char *codepage, size_t *size)
 {
     char *buf;
     size_t bufsize;
@@ -1600,8 +1658,8 @@ static char *read_file_recode(ASS_Library *library, char *fname,
  * \param codepage recode buffer contents from given codepage
  * \return newly allocated track
 */
-ASS_Track *ass_read_file(ASS_Library *library, char *fname,
-                         char *codepage)
+ASS_Track *ass_read_file(ASS_Library *library, const char *fname,
+                         const char *codepage)
 {
     char *buf;
     ASS_Track *track;
@@ -1627,7 +1685,7 @@ ASS_Track *ass_read_file(ASS_Library *library, char *fname,
 /**
  * \brief read styles from file into already initialized track
  */
-int ass_read_styles(ASS_Track *track, char *fname, char *codepage)
+int ass_read_styles(ASS_Track *track, const char *fname, const char *codepage)
 {
     char *buf;
     ParserState old_state;
@@ -1725,12 +1783,16 @@ ASS_Track *ass_new_track(ASS_Library *library)
     if (!track->styles[def_sid].Name || !track->styles[def_sid].FontName)
         goto fail;
     track->parser_priv->check_readorder = 1;
+    track->parser_priv->prune_delay = -1;
+    track->parser_priv->prune_next_ts = LLONG_MAX;
     return track;
 
 fail:
     if (track) {
-        if (def_sid >= 0)
+        if (def_sid >= 0) {
             ass_free_style(track, def_sid);
+            free(track->styles);
+        }
         free(track->parser_priv);
         free(track);
     }

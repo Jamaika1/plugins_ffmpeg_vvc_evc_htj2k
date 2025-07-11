@@ -23,7 +23,7 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/video.h"
 
 typedef struct MonochromeContext {
@@ -89,9 +89,9 @@ static int monochrome_slice8(AVFilterContext *ctx, void *arg, int jobnr, int nb_
     const int height = frame->height;
     const int slice_start = (height * jobnr) / nb_jobs;
     const int slice_end = (height * (jobnr + 1)) / nb_jobs;
-    const int ylinesize = frame->linesize[0];
-    const int ulinesize = frame->linesize[1];
-    const int vlinesize = frame->linesize[2];
+    const ptrdiff_t ylinesize = frame->linesize[0];
+    const ptrdiff_t ulinesize = frame->linesize[1];
+    const ptrdiff_t vlinesize = frame->linesize[2];
     uint8_t *yptr = frame->data[0] + slice_start * ylinesize;
     const float ihigh = 1.f - s->high;
     const float size = 1.f / s->size;
@@ -128,9 +128,9 @@ static int monochrome_slice16(AVFilterContext *ctx, void *arg, int jobnr, int nb
     const int height = frame->height;
     const int slice_start = (height * jobnr) / nb_jobs;
     const int slice_end = (height * (jobnr + 1)) / nb_jobs;
-    const int ylinesize = frame->linesize[0] / 2;
-    const int ulinesize = frame->linesize[1] / 2;
-    const int vlinesize = frame->linesize[2] / 2;
+    const ptrdiff_t ylinesize = frame->linesize[0] / 2;
+    const ptrdiff_t ulinesize = frame->linesize[1] / 2;
+    const ptrdiff_t vlinesize = frame->linesize[2] / 2;
     uint16_t *yptr = (uint16_t *)frame->data[0] + slice_start * ylinesize;
     const float ihigh = 1.f - s->high;
     const float size = 1.f / s->size;
@@ -166,8 +166,8 @@ static int clear_slice8(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
     const int height = AV_CEIL_RSHIFT(frame->height, subh);
     const int slice_start = (height * jobnr) / nb_jobs;
     const int slice_end = (height * (jobnr + 1)) / nb_jobs;
-    const int ulinesize = frame->linesize[1];
-    const int vlinesize = frame->linesize[2];
+    const ptrdiff_t ulinesize = frame->linesize[1];
+    const ptrdiff_t vlinesize = frame->linesize[2];
 
     for (int y = slice_start; y < slice_end; y++) {
         uint8_t *uptr = frame->data[1] + y * ulinesize;
@@ -192,8 +192,8 @@ static int clear_slice16(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs
     const int height = AV_CEIL_RSHIFT(frame->height, subh);
     const int slice_start = (height * jobnr) / nb_jobs;
     const int slice_end = (height * (jobnr + 1)) / nb_jobs;
-    const int ulinesize = frame->linesize[1] / 2;
-    const int vlinesize = frame->linesize[2] / 2;
+    const ptrdiff_t ulinesize = frame->linesize[1] / 2;
+    const ptrdiff_t vlinesize = frame->linesize[2] / 2;
 
     for (int y = slice_start; y < slice_end; y++) {
         uint16_t *uptr = (uint16_t *)frame->data[1] + y * ulinesize;
@@ -280,14 +280,14 @@ static const AVOption monochrome_options[] = {
 
 AVFILTER_DEFINE_CLASS(monochrome);
 
-const AVFilter ff_vf_monochrome = {
-    .name          = "monochrome",
-    .description   = NULL_IF_CONFIG_SMALL("Convert video to gray using custom color filter."),
+const FFFilter ff_vf_monochrome = {
+    .p.name        = "monochrome",
+    .p.description = NULL_IF_CONFIG_SMALL("Convert video to gray using custom color filter."),
+    .p.priv_class  = &monochrome_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(MonochromeContext),
-    .priv_class    = &monochrome_class,
     FILTER_INPUTS(monochrome_inputs),
     FILTER_OUTPUTS(ff_video_default_filterpad),
     FILTER_PIXFMTS_ARRAY(pixel_fmts),
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = ff_filter_process_command,
 };

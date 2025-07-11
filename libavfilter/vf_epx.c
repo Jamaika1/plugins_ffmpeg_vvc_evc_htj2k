@@ -18,7 +18,7 @@
 
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 #include "libavfilter/video.h"
 
 typedef struct EPXContext {
@@ -266,13 +266,13 @@ static const AVFilterPad outputs[] = {
     },
 };
 
-const AVFilter ff_vf_epx = {
-    .name          = "epx",
-    .description   = NULL_IF_CONFIG_SMALL("Scale the input using EPX algorithm."),
+const FFFilter ff_vf_epx = {
+    .p.name        = "epx",
+    .p.description = NULL_IF_CONFIG_SMALL("Scale the input using EPX algorithm."),
+    .p.priv_class  = &epx_class,
+    .p.flags       = AVFILTER_FLAG_SLICE_THREADS,
     FILTER_INPUTS(inputs),
     FILTER_OUTPUTS(outputs),
     FILTER_PIXFMTS_ARRAY(pix_fmts),
     .priv_size     = sizeof(EPXContext),
-    .priv_class    = &epx_class,
-    .flags         = AVFILTER_FLAG_SLICE_THREADS,
 };

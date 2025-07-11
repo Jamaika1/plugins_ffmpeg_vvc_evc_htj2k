@@ -24,7 +24,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/pixdesc.h"
 #include "libavfilter/avfilter.h"
-#include "libavfilter/internal.h"
+#include "libavfilter/filters.h"
 
 typedef struct HSVKeyContext {
     const AVClass *class;
@@ -265,7 +265,7 @@ static const enum AVPixelFormat key_pixel_fmts[] = {
     AV_PIX_FMT_NONE
 };
 
-static const AVFilterPad hsvkey_inputs[] = {
+static const AVFilterPad inputs[] = {
     {
         .name           = "default",
         .type           = AVMEDIA_TYPE_VIDEO,
@@ -275,7 +275,7 @@ static const AVFilterPad hsvkey_inputs[] = {
     },
 };
 
-static const AVFilterPad hsvkey_outputs[] = {
+static const AVFilterPad outputs[] = {
     {
         .name           = "default",
         .type           = AVMEDIA_TYPE_VIDEO,
@@ -297,15 +297,15 @@ static const AVOption hsvkey_options[] = {
 
 AVFILTER_DEFINE_CLASS(hsvkey);
 
-const AVFilter ff_vf_hsvkey = {
-    .name          = "hsvkey",
-    .description   = NULL_IF_CONFIG_SMALL("Turns a certain HSV range into transparency. Operates on YUV colors."),
+const FFFilter ff_vf_hsvkey = {
+    .p.name        = "hsvkey",
+    .p.description = NULL_IF_CONFIG_SMALL("Turns a certain HSV range into transparency. Operates on YUV colors."),
+    .p.priv_class  = &hsvkey_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(HSVKeyContext),
-    .priv_class    = &hsvkey_class,
-    FILTER_INPUTS(hsvkey_inputs),
-    FILTER_OUTPUTS(hsvkey_outputs),
+    FILTER_INPUTS(inputs),
+    FILTER_OUTPUTS(outputs),
     FILTER_PIXFMTS_ARRAY(key_pixel_fmts),
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = ff_filter_process_command,
 };
 
@@ -337,34 +337,16 @@ static const AVOption hsvhold_options[] = {
     { NULL }
 };
 
-static const AVFilterPad hsvhold_inputs[] = {
-    {
-        .name           = "default",
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .flags          = AVFILTERPAD_FLAG_NEEDS_WRITABLE,
-        .filter_frame   = filter_frame,
-        .config_props   = config_input,
-    },
-};
-
-static const AVFilterPad hsvhold_outputs[] = {
-    {
-        .name           = "default",
-        .type           = AVMEDIA_TYPE_VIDEO,
-        .config_props   = config_output,
-    },
-};
-
 AVFILTER_DEFINE_CLASS(hsvhold);
 
-const AVFilter ff_vf_hsvhold = {
-    .name          = "hsvhold",
-    .description   = NULL_IF_CONFIG_SMALL("Turns a certain HSV range into gray."),
+const FFFilter ff_vf_hsvhold = {
+    .p.name        = "hsvhold",
+    .p.description = NULL_IF_CONFIG_SMALL("Turns a certain HSV range into gray."),
+    .p.priv_class  = &hsvhold_class,
+    .p.flags       = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .priv_size     = sizeof(HSVKeyContext),
-    .priv_class    = &hsvhold_class,
-    FILTER_INPUTS(hsvhold_inputs),
-    FILTER_OUTPUTS(hsvhold_outputs),
+    FILTER_INPUTS(inputs),
+    FILTER_OUTPUTS(outputs),
     FILTER_PIXFMTS_ARRAY(hold_pixel_fmts),
-    .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC | AVFILTER_FLAG_SLICE_THREADS,
     .process_command = ff_filter_process_command,
 };
