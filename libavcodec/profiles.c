@@ -89,7 +89,6 @@ const AVProfile ff_h264_profiles[] = {
 };
 
 const AVProfile ff_vvc_profiles[] = {
-    { AV_PROFILE_VVC_MAIN,                      "Main" },
     { AV_PROFILE_VVC_MAIN_10,                   "Main 10" },
     { AV_PROFILE_VVC_MAIN_10_444,               "Main 10 4:4:4" },
     { AV_PROFILE_UNKNOWN },

@@ -25,11 +25,11 @@
  * DFPWM1a encoder
  */
 
-#include "libavutil/internal.h"
 #include "libavcodec/avcodec.h"
 #include "libavcodec/codec_id.h"
 #include "libavcodec/codec_internal.h"
 #include "libavcodec/encode.h"
+#include "libavcodec/internal.h"
 
 typedef struct {
     int q, s, lt;
